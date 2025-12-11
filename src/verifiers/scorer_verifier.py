@@ -124,15 +124,17 @@ class ScorerVerifier(BaseVerifier):
         
         # 调用scorer
         with torch.no_grad():
-            with self.count_nfe(value=1):
-                if self.scorer_type == "imagenet":
-                    # ImageNetScorer需要class_labels
-                    if labels_to_use is None:
-                        raise ValueError("class_labels must be provided for ImageNetScorer")
-                    scores = self.scorer(images_processed, labels_to_use, timesteps)
-                else:
-                    # BrightnessScorer和CompressibilityScorer不需要class_labels
-                    scores = self.scorer(images_processed, None, timesteps)
+            # 计数NFE（verifier调用也算NFE）
+            if self.nfe_counter is not None:
+                self.nfe_counter.add(1)
+            if self.scorer_type == "imagenet":
+                # ImageNetScorer需要class_labels
+                if labels_to_use is None:
+                    raise ValueError("class_labels must be provided for ImageNetScorer")
+                scores = self.scorer(images_processed, labels_to_use, timesteps)
+            else:
+                # BrightnessScorer和CompressibilityScorer不需要class_labels
+                scores = self.scorer(images_processed, None, timesteps)
         
         return scores.to(self.device)
 
