@@ -265,6 +265,8 @@ class ZeroOrderSearchTTS(BaseSearch):
                     class_labels_expanded = class_labels.repeat(n_candidates, 1)
                 
                 # 调用denoise_step，传入噪声（按照原始实现）
+                # 注意：denoise_step内部已经使用nfe_counter计数，不需要在这里再次计数
+                # 原始实现中，step函数内部调用net()，这会被计入NFE
                 x_candidates, x0_candidates = self.model.denoise_step(
                     x_cur_expanded, t,
                     class_labels=class_labels_expanded,
@@ -273,6 +275,7 @@ class ZeroOrderSearchTTS(BaseSearch):
                     noise=all_noises,  # 传入候选噪声
                     **kwargs
                 )
+                # denoise_step内部已处理NFE计数（每个候选调用一次模型，共N次）
                 
                 # 重塑为 [N, batch_size, C, H, W]（按照原始实现）
                 total_images = x_candidates.shape[0]
