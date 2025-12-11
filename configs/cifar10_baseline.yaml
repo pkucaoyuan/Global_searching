@@ -1,0 +1,38 @@
+# CIFAR-10 Baseline实验配置
+
+# 数据集
+dataset: cifar10
+image_size: 32
+num_classes: 10
+
+# 模型
+model_type: ddpm  # 可选: ddpm, edm, score_sde
+model_path: models/cifar10/ddpm.pt
+
+# 采样参数
+num_steps: 50  # 可以设置为 [25, 50, 100, 200] 进行scaling实验
+num_samples: 50000  # 用于评估的样本总数
+batch_size: 64
+
+# Verifier
+verifier_type: classifier
+verifier_path: models/cifar10/cifar10_classifier.pth
+
+# Search方法
+search_method: none  # none, random, zo, nlg
+
+# 评估
+eval_fid: true
+eval_is: true
+fid_stats_path: data/cifar10/fid_stats.npz  # 需要预先计算
+
+# 实验设置
+seed: 42
+device: cuda
+output_dir: results/cifar10_baseline
+
+# 日志
+log_interval: 100
+save_samples: false  # 是否保存生成的样本图像
+
+

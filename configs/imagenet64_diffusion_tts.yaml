@@ -1,0 +1,58 @@
+# ImageNet-64 Diffusion-TTS 实验配置
+# 复现论文实验 5.1: Class-Conditional Image Generation
+
+experiment_name: imagenet64_diffusion_tts
+dataset: imagenet64
+image_size: 64
+num_channels: 3
+num_classes: 1000
+batch_size: 36  # 论文中生成36张图像
+num_samples: 36  # 用于评估的样本数
+
+model:
+  name: edm_imagenet64
+  path: https://nvlabs-fi-cdn.nvidia.com/edm/pretrained/edm-imagenet-64x64-cond-adm.pkl
+  type: EDM
+  device: cuda
+  num_steps: 18  # 论文中固定18步
+
+verifier:
+  # 论文中使用三种scorer: brightness, compressibility, imagenet
+  # 这里可以配置使用哪个
+  name: imagenet_scorer  # 或 brightness_scorer, compressibility_scorer
+  type: ScorerVerifier
+  scorer_type: imagenet  # brightness, compressibility, imagenet
+  device: cuda
+
+pipeline:
+  method: local_search  # 使用local_search方法
+  
+  # 选择要使用的方法: best_of_n, zero_order_tts, epsilon_greedy
+  local_search:
+    type: epsilon_greedy  # 或 best_of_n, zero_order_tts
+    
+    # Best-of-N 参数
+    best_of_n:
+      n_candidates: 4
+    
+    # Zero-Order 参数
+    zero_order_tts:
+      n_candidates: 4
+      search_steps: 20  # K
+      lambda_param: 0.15  # λ
+    
+    # ε-greedy 参数
+    epsilon_greedy:
+      n_candidates: 4
+      search_steps: 20  # K
+      lambda_param: 0.15  # λ
+      epsilon: 0.4  # ε
+
+evaluation:
+  metrics: ["fid", "is"]
+  save_dir: results/imagenet64_diffusion_tts
+  save_images: true
+  # 论文中使用的scorer也会作为评估指标
+  scorer_metrics: ["brightness", "compressibility", "imagenet"]
+
+

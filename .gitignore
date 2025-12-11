@@ -1,0 +1,78 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# 虚拟环境
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 模型文件（通常很大）
+models/
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+
+# 数据和结果
+data/
+results/
+*.png
+*.jpg
+*.jpeg
+
+# 实验日志
+logs/
+wandb/
+tensorboard/
+
+# 临时文件
+*.tmp
+*.log
+.DS_Store
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+*.ipynb
+
+# 配置文件（如果包含敏感信息）
+# configs/*.yaml
+
+# 外部代码库（需要手动克隆，见README）
+code_repos/
+
+# 重复的外部代码库目录（如果存在）
+Diffusion-inference-scaling/
+tt-scale-flux/
+
+# 缓存和编译文件
+*.pyc
+.pytest_cache/
+.mypy_cache/
+
