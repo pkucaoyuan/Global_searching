@@ -238,34 +238,9 @@ def run_experiment(config: Config):
         print("Warning: Found NaN/Inf in final_images. Replacing with zeros.")
         images_tensor = torch.nan_to_num(images_tensor, nan=0.0, posinf=1.0, neginf=-1.0)
     
-    # 调试：检查原始值域
-    print(f"\nDebug: Raw image tensor stats - min: {images_tensor.min().item():.4f}, max: {images_tensor.max().item():.4f}, mean: {images_tensor.mean().item():.4f}")
-    print(f"Debug: Image tensor shape: {images_tensor.shape}, dtype: {images_tensor.dtype}")
-    
-    # EDM模型输出需要归一化：根据原始代码，假设输出在某个范围内
-    # 原始代码使用 (x_next * 127.5 + 128)，这假设输入在[-1, 1]范围内
-    # 但实际输出可能不在这个范围内，需要先归一化
-    # 检查值域范围，如果不在合理范围，先归一化到[-1, 1]
-    img_min = images_tensor.min().item()
-    img_max = images_tensor.max().item()
-    img_mean = images_tensor.mean().item()
-    
-    # 如果值域明显不在[-1, 1]（比如绝对值>10），需要先归一化
-    if abs(img_min) > 10 or abs(img_max) > 10:
-        print(f"Warning: Image values outside [-1, 1] range (min={img_min:.2f}, max={img_max:.2f}). Normalizing...")
-        # 使用min-max归一化到[-1, 1]
-        # 但为了保持与原始代码一致，先尝试简单的线性变换
-        # 如果值域太大，可能需要不同的归一化策略
-        # 先尝试将值域缩放到合理范围
-        if img_max > img_min:
-            # 线性缩放：将[min, max]映射到[-1, 1]
-            images_tensor = 2 * (images_tensor - img_min) / (img_max - img_min) - 1
-        else:
-            # 如果min==max，直接设为0
-            images_tensor = torch.zeros_like(images_tensor)
-        print(f"Debug: After normalization - min: {images_tensor.min().item():.4f}, max: {images_tensor.max().item():.4f}, mean: {images_tensor.mean().item():.4f}")
-    
-    # EDM输出转换为[0, 255] uint8（如原始代码）
+    # 按照原始论文代码：直接使用 (x_next * 127.5 + 128).clip(0, 255)
+    # 原始代码假设 EDM 输出在 [-1, 1] 范围内
+    # 原始代码位置：code_repos/diffusion-tts/edm/main.py:126, 869
     images_uint8 = (images_tensor * 127.5 + 128).clip(0, 255).to(torch.uint8)
     
     # 转换为numpy用于评估（已经是uint8 [0,255]）
