@@ -224,48 +224,30 @@ def run_experiment(config: Config):
     # 评估指标（对最终生成的图像进行评估）
     eval_results = {}
     
-    # 转换图像格式为numpy array [N, H, W, C]，值域[0, 255]
-    # 确保图像在合理范围内
+    # EDM模型输出的图像需要按照原始实现进行归一化
+    # 根据原始代码：image = (x_next * 127.5 + 128).clip(0, 255).to(torch.uint8)
     images_tensor = final_images.clone()
-    if images_tensor.max() <= 1.0:
-        images_tensor = images_tensor.clamp(0, 1)
-    else:
-        images_tensor = images_tensor.clamp(0, 255) / 255.0
     
-    # 转换为numpy用于评估
-    images_np = images_tensor.permute(0, 2, 3, 1).cpu().numpy()
-    images_np = (images_np * 255).clip(0, 255).astype(np.uint8)
-    
-    # 检查并修复NaN/Inf值
+    # 检查NaN/Inf
     if torch.isnan(images_tensor).any() or torch.isinf(images_tensor).any():
-        print("Warning: Found NaN/Inf in images. Replacing with zeros.")
-        images_tensor = torch.nan_to_num(images_tensor, nan=0.0, posinf=1.0, neginf=0.0)
+        print("Warning: Found NaN/Inf in final_images. Replacing with zeros.")
+        images_tensor = torch.nan_to_num(images_tensor, nan=0.0, posinf=1.0, neginf=-1.0)
     
-    # EDM模型输出的图像可能不在[0,1]范围，需要归一化
-    # 根据EDM论文，输出需要转换为有效的像素值
-    # 检查值域并归一化
-    img_min = images_tensor.min()
-    img_max = images_tensor.max()
-    
-    print(f"\nDebug: Image tensor stats BEFORE normalization - min: {img_min.item():.4f}, max: {img_max.item():.4f}, mean: {images_tensor.mean().item():.4f}")
+    # 调试：检查原始值域
+    print(f"\nDebug: Raw image tensor stats - min: {images_tensor.min().item():.4f}, max: {images_tensor.max().item():.4f}, mean: {images_tensor.mean().item():.4f}")
     print(f"Debug: Image tensor shape: {images_tensor.shape}, dtype: {images_tensor.dtype}")
     
-    # EDM输出通常在[-1, 1]或类似范围，需要转换到[0, 1]
-    # 如果值域很大，可能是未归一化的logits
-    if img_max > 10.0 or img_min < -10.0:
-        # 可能是在logit空间，使用sigmoid或tanh normalization
-        images_tensor = torch.tanh(images_tensor) * 0.5 + 0.5
-    elif img_max > 1.5 or img_min < -0.5:
-        # 在[-1, 1]或类似范围，转换到[0, 1]
-        images_tensor = (images_tensor - img_min) / (img_max - img_min + 1e-8)
-    else:
-        # 假设已经在[0, 1]范围，只需clamp
-        images_tensor = images_tensor.clamp(0, 1)
+    # EDM输出通常在[-1, 1]范围，转换为[0, 255] uint8（如原始代码）
+    images_uint8 = (images_tensor * 127.5 + 128).clip(0, 255).to(torch.uint8)
     
-    # 转换为torch tensor用于scorer（值域[0, 1]）
-    images_torch = images_tensor.to(device)
+    # 转换为numpy用于评估（已经是uint8 [0,255]）
+    images_np = images_uint8.permute(0, 2, 3, 1).cpu().numpy()
     
-    print(f"Debug: Image tensor stats AFTER normalization - min: {images_torch.min().item():.4f}, max: {images_torch.max().item():.4f}, mean: {images_torch.mean().item():.4f}")
+    # 转换为torch tensor用于scorer（值域[0, 1]，float32）
+    images_torch = images_uint8.float() / 255.0
+    images_torch = images_torch.to(device)
+    
+    print(f"Debug: Processed image tensor stats - min: {images_torch.min().item():.4f}, max: {images_torch.max().item():.4f}, mean: {images_torch.mean().item():.4f}")
     
     # 评估三种scorer（如论文中Table 1）
     print("\n=== Evaluating with all three scorers (as in paper Table 1) ===")
