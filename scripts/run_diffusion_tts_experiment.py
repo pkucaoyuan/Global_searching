@@ -8,8 +8,15 @@
     python scripts/run_diffusion_tts_experiment.py --config configs/imagenet64_diffusion_tts.yaml
 """
 
-import torch
+import sys
 import os
+from pathlib import Path
+
+# 添加项目根目录到Python路径
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
+import torch
 import yaml
 import argparse
 from tqdm import tqdm
