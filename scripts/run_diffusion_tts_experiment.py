@@ -236,14 +236,36 @@ def run_experiment(config: Config):
     images_np = images_tensor.permute(0, 2, 3, 1).cpu().numpy()
     images_np = (images_np * 255).clip(0, 255).astype(np.uint8)
     
+    # 检查并修复NaN/Inf值
+    if torch.isnan(images_tensor).any() or torch.isinf(images_tensor).any():
+        print("Warning: Found NaN/Inf in images. Replacing with zeros.")
+        images_tensor = torch.nan_to_num(images_tensor, nan=0.0, posinf=1.0, neginf=0.0)
+    
+    # EDM模型输出的图像可能不在[0,1]范围，需要归一化
+    # 根据EDM论文，输出需要转换为有效的像素值
+    # 检查值域并归一化
+    img_min = images_tensor.min()
+    img_max = images_tensor.max()
+    
+    print(f"\nDebug: Image tensor stats BEFORE normalization - min: {img_min.item():.4f}, max: {img_max.item():.4f}, mean: {images_tensor.mean().item():.4f}")
+    print(f"Debug: Image tensor shape: {images_tensor.shape}, dtype: {images_tensor.dtype}")
+    
+    # EDM输出通常在[-1, 1]或类似范围，需要转换到[0, 1]
+    # 如果值域很大，可能是未归一化的logits
+    if img_max > 10.0 or img_min < -10.0:
+        # 可能是在logit空间，使用sigmoid或tanh normalization
+        images_tensor = torch.tanh(images_tensor) * 0.5 + 0.5
+    elif img_max > 1.5 or img_min < -0.5:
+        # 在[-1, 1]或类似范围，转换到[0, 1]
+        images_tensor = (images_tensor - img_min) / (img_max - img_min + 1e-8)
+    else:
+        # 假设已经在[0, 1]范围，只需clamp
+        images_tensor = images_tensor.clamp(0, 1)
+    
     # 转换为torch tensor用于scorer（值域[0, 1]）
     images_torch = images_tensor.to(device)
     
-    # 调试：检查图像值域
-    print(f"\nDebug: Image tensor stats - min: {images_torch.min().item():.4f}, max: {images_torch.max().item():.4f}, mean: {images_torch.mean().item():.4f}")
-    print(f"Debug: Image tensor shape: {images_torch.shape}, dtype: {images_torch.dtype}")
-    # 确保值域在[0, 1]
-    images_torch = images_torch.clamp(0, 1)
+    print(f"Debug: Image tensor stats AFTER normalization - min: {images_torch.min().item():.4f}, max: {images_torch.max().item():.4f}, mean: {images_torch.mean().item():.4f}")
     
     # 评估三种scorer（如论文中Table 1）
     print("\n=== Evaluating with all three scorers (as in paper Table 1) ===")
@@ -255,7 +277,6 @@ def run_experiment(config: Config):
         device=device,
         image_size=config.image_size,
     )
-    brightness_verifier.to(device)
     with torch.no_grad():
         try:
             brightness_scores = brightness_verifier.score(images_torch)
@@ -294,7 +315,6 @@ def run_experiment(config: Config):
         device=device,
         image_size=config.image_size,
     )
-    imagenet_verifier.to(device)
     # 为最终生成的图像评估ImageNet分数（使用相同的class_labels）
     imagenet_verifier.class_labels = all_class_labels.to(device)
     print(f"Debug: Class labels shape: {all_class_labels.shape}, dtype: {all_class_labels.dtype}")

@@ -149,15 +149,39 @@ class EDMModel(BaseDiffusionModel):
             x_hat = x_t
         
         # 去噪
-        denoised = self.model(x_hat, t_hat, class_labels).to(torch.float64)
-        d_cur = (x_hat - denoised) / t_hat
+        with self.nfe_counter.count():
+            denoised = self.model(x_hat, t_hat, class_labels).to(torch.float64)
+        
+        # 检查NaN
+        if torch.isnan(denoised).any() or torch.isinf(denoised).any():
+            print(f"Warning: NaN/Inf in denoised at step {t}")
+            denoised = torch.nan_to_num(denoised, nan=0.0, posinf=1.0, neginf=-1.0)
+        
+        d_cur = (x_hat - denoised) / (t_hat + 1e-8)  # 避免除零
         x_next = x_hat + (t_next - t_hat) * d_cur
+        
+        # 检查NaN
+        if torch.isnan(x_next).any() or torch.isinf(x_next).any():
+            print(f"Warning: NaN/Inf in x_next after first step at t={t}")
+            x_next = torch.nan_to_num(x_next, nan=x_hat, posinf=x_hat, neginf=x_hat)
         
         # 二阶校正（Heun方法）
         if t < len(t_steps) - 1:
-            denoised = self.model(x_next, t_next, class_labels).to(torch.float64)
-            d_prime = (x_next - denoised) / t_next
+            with self.nfe_counter.count():
+                denoised = self.model(x_next, t_next, class_labels).to(torch.float64)
+            
+            # 检查NaN
+            if torch.isnan(denoised).any() or torch.isinf(denoised).any():
+                print(f"Warning: NaN/Inf in denoised (second step) at step {t}")
+                denoised = torch.nan_to_num(denoised, nan=0.0, posinf=1.0, neginf=-1.0)
+            
+            d_prime = (x_next - denoised) / (t_next + 1e-8)  # 避免除零
             x_next = x_hat + (t_next - t_hat) * (0.5 * d_cur + 0.5 * d_prime)
+            
+            # 最后检查NaN
+            if torch.isnan(x_next).any() or torch.isinf(x_next).any():
+                print(f"Warning: NaN/Inf in final x_next at t={t}")
+                x_next = torch.nan_to_num(x_next, nan=x_hat, posinf=x_hat, neginf=x_hat)
         
         return x_next.to(x_t.dtype)
     
