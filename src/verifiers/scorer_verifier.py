@@ -162,16 +162,22 @@ class BrightnessScorer(nn.Module):
         if images.dtype == torch.uint8:
             images = images.float() / 255.0
         
+        # 确保值域在[0, 1]并处理NaN/Inf
+        images = images.clamp(0, 1)
+        if torch.isnan(images).any() or torch.isinf(images).any():
+            images = torch.nan_to_num(images, nan=0.0, posinf=1.0, neginf=0.0)
+        
         # 应用感知亮度公式: 0.2126*R + 0.7152*G + 0.0722*B
         if images.size(1) == 3:  # RGB
-            weights = torch.tensor([0.2126, 0.7152, 0.0722], device=images.device).view(1, 3, 1, 1)
+            weights = torch.tensor([0.2126, 0.7152, 0.0722], device=images.device, dtype=images.dtype).view(1, 3, 1, 1)
             luminance = (images * weights).sum(dim=1).mean(dim=(1, 2))
         else:
             # 如果不是RGB，使用平均值
             luminance = images.mean(dim=(1, 2, 3))
         
-        # 确保值域在[0, 1]
+        # 确保值域在[0, 1]并处理NaN/Inf
         luminance = torch.clamp(luminance, 0.0, 1.0)
+        luminance = torch.nan_to_num(luminance, nan=0.0, posinf=1.0, neginf=0.0)
         return luminance
 
 
