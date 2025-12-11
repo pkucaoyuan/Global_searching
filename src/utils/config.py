@@ -31,6 +31,9 @@ class Config:
         # 从kwargs更新
         if kwargs:
             self.update(kwargs)
+        
+        # 将嵌套字典转换为Config对象
+        self._convert_nested()
     
     def _load_defaults(self):
         """加载默认配置"""
@@ -74,6 +77,8 @@ class Config:
             file_config = yaml.safe_load(f)
         if file_config:
             self._config.update(file_config)
+            # 重新转换嵌套字典
+            self._convert_nested()
     
     def save_to_file(self, path: str):
         """保存配置到YAML文件"""
@@ -84,6 +89,8 @@ class Config:
     def update(self, d: Dict[str, Any]):
         """更新配置"""
         self._config.update(d)
+        # 重新转换嵌套字典
+        self._convert_nested()
     
     def get(self, key: str, default: Any = None):
         """获取配置值"""
@@ -101,11 +108,42 @@ class Config:
         """支持in操作"""
         return key in self._config
     
+    def _convert_nested(self):
+        """将嵌套字典转换为Config对象（递归）"""
+        for key, value in list(self._config.items()):
+            if isinstance(value, dict) and not isinstance(value, Config):
+                self._config[key] = Config(**value)
+    
+    def __getattr__(self, key: str):
+        """支持属性访问，如 config.model.device"""
+        if key.startswith('_'):
+            return super().__getattribute__(key)
+        if key in self._config:
+            return self._config[key]
+        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{key}'")
+    
+    def __setattr__(self, key: str, value: Any):
+        """支持属性设置"""
+        if key.startswith('_') or key == '_config':
+            super().__setattr__(key, value)
+        else:
+            if not hasattr(self, '_config'):
+                super().__setattr__('_config', {})
+            if isinstance(value, dict):
+                value = Config(**value)
+            self._config[key] = value
+    
     def __repr__(self):
         return f"Config({self._config})"
     
     def to_dict(self) -> Dict[str, Any]:
         """转换为字典"""
-        return self._config.copy()
+        result = {}
+        for key, value in self._config.items():
+            if isinstance(value, Config):
+                result[key] = value.to_dict()
+            else:
+                result[key] = value
+        return result
 
 

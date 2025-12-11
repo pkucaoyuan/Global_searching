@@ -68,7 +68,13 @@ def create_model(config: Config, device: str) -> EDMModel:
 def create_verifier(config: Config, device: str, class_labels: Optional[torch.Tensor] = None) -> ScorerVerifier:
     """创建Scorer Verifier"""
     verifier_config = config.verifier
-    scorer_type = verifier_config.get("scorer_type", "imagenet")
+    # 支持Config对象和字典两种方式
+    if hasattr(verifier_config, 'scorer_type'):
+        scorer_type = verifier_config.scorer_type
+    elif isinstance(verifier_config, dict):
+        scorer_type = verifier_config.get("scorer_type", "imagenet")
+    else:
+        scorer_type = getattr(verifier_config, "scorer_type", "imagenet")
     
     verifier = ScorerVerifier(
         scorer_type=scorer_type,
@@ -108,7 +114,16 @@ def run_experiment(config: Config):
     
     # 选择要运行的方法
     method_type = config.pipeline.local_search.type
-    method_config = config.pipeline.local_search.get(method_type, {})
+    # 获取方法配置，支持Config对象和字典
+    if hasattr(config.pipeline.local_search, method_type):
+        method_config = getattr(config.pipeline.local_search, method_type)
+        # 如果是Config对象，转换为字典
+        if isinstance(method_config, Config):
+            method_config = method_config.to_dict()
+        elif not isinstance(method_config, dict):
+            method_config = {}
+    else:
+        method_config = {}
     
     # 创建search方法
     if method_type == "best_of_n":
