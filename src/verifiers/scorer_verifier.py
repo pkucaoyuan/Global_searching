@@ -231,19 +231,29 @@ class CompressibilityScorer(nn.Module):
             if image.max() <= 1.0:
                 image = (image * 255).astype(np.uint8)
             else:
-                image = image.astype(np.uint8)
+                image = np.clip(image, 0, 255).astype(np.uint8)
+        
+        # 确保图像值域正确
+        image = np.clip(image, 0, 255)
         
         # JPEG压缩
-        buffer = io.BytesIO()
-        img = Image.fromarray(image)
-        img.save(buffer, format="JPEG", quality=self.quality)
-        compressed_size = len(buffer.getvalue())
+        try:
+            buffer = io.BytesIO()
+            img = Image.fromarray(image)
+            img.save(buffer, format="JPEG", quality=self.quality)
+            compressed_size = len(buffer.getvalue())
+        except Exception as e:
+            print(f"Warning: Error compressing image: {e}, image stats: min={image.min()}, max={image.max()}, dtype={image.dtype}, shape={image.shape}")
+            return 0.0
         
         # 归一化到[0, 1]，越小（越可压缩）分数越高
-        normalized_score = 1.0 - min(1.0, max(0.0, 
-            (compressed_size - self.min_size) / (self.max_size - self.min_size)
-        ))
-        return normalized_score
+        if self.max_size > self.min_size:
+            normalized_score = 1.0 - min(1.0, max(0.0, 
+                (compressed_size - self.min_size) / (self.max_size - self.min_size)
+            ))
+        else:
+            normalized_score = 0.0
+        return float(normalized_score)
 
 
 class ImageNetScorer(nn.Module):

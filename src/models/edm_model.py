@@ -170,7 +170,10 @@ class EDMModel(BaseDiffusionModel):
             print(f"Warning: NaN/Inf in denoised at step {t}")
             denoised = torch.nan_to_num(denoised, nan=0.0, posinf=1.0, neginf=-1.0)
         
-        d_cur = (x_hat - denoised) / (t_hat + 1e-8)  # 避免除零
+        # 原始实现：d_cur = (x_hat - denoised) / t_hat
+        # 确保t_hat不为0
+        t_hat_safe = torch.clamp(t_hat, min=1e-8)
+        d_cur = (x_hat - denoised) / t_hat_safe
         x_next = x_hat + (t_next - t_hat) * d_cur
         
         # 保存第一次的denoised作为x_0估计
@@ -188,10 +191,17 @@ class EDMModel(BaseDiffusionModel):
             
             # 检查NaN
             if torch.isnan(denoised_2).any() or torch.isinf(denoised_2).any():
-                print(f"Warning: NaN/Inf in denoised (second step) at step {t}")
-                denoised_2 = torch.nan_to_num(denoised_2, nan=0.0, posinf=1.0, neginf=-1.0)
+                print(f"Warning: NaN/Inf in denoised (second step) at step {t}, t_next={t_next.item():.4f}, x_next stats: min={x_next.min().item():.4f}, max={x_next.max().item():.4f}")
+                # 使用更安全的NaN处理：如果denoised_2全是NaN，使用x_next
+                if torch.isnan(denoised_2).all():
+                    denoised_2 = x_next.clone()
+                else:
+                    denoised_2 = torch.nan_to_num(denoised_2, nan=x_next, posinf=x_next, neginf=x_next)
             
-            d_prime = (x_next - denoised_2) / (t_next + 1e-8)  # 避免除零
+            # 原始实现：d_prime = (x_next - denoised_2) / t_next
+            # 确保t_next不为0
+            t_next_safe = torch.clamp(t_next, min=1e-8)
+            d_prime = (x_next - denoised_2) / t_next_safe
             x_next = x_hat + (t_next - t_hat) * (0.5 * d_cur + 0.5 * d_prime)
             
             # 最后检查NaN

@@ -291,7 +291,11 @@ def run_experiment(config: Config):
     )
     with torch.no_grad():
         # CompressibilityScorer需要uint8格式，直接使用images_uint8
-        compressibility_scores = compressibility_verifier.score(images_uint8.to(device))
+        # 确保images_uint8是CHW格式（如果是HWC需要转换）
+        images_for_compressibility = images_uint8.to(device)
+        if images_for_compressibility.shape[-1] == 3:  # 如果是HWC，转换为CHW
+            images_for_compressibility = images_for_compressibility.permute(0, 3, 1, 2)
+        compressibility_scores = compressibility_verifier.score(images_for_compressibility)
         print(f"Debug: Compressibility scores shape: {compressibility_scores.shape}, values: {compressibility_scores[:5]}")
         compressibility_mean = compressibility_scores.mean().item()
         compressibility_std = compressibility_scores.std().item()
@@ -309,9 +313,18 @@ def run_experiment(config: Config):
         image_size=config.image_size,
     )
     # 为最终生成的图像评估ImageNet分数（使用相同的class_labels）
-    imagenet_verifier.class_labels = all_class_labels.to(device)
-    print(f"Debug: Class labels shape: {all_class_labels.shape}, dtype: {all_class_labels.dtype}")
-    print(f"Debug: Class labels sample: {all_class_labels[:3]}")
+    # 确保class_labels在CPU上（用于打印）和GPU上（用于计算）都正确
+    all_class_labels_cpu = all_class_labels.cpu()
+    all_class_labels_gpu = all_class_labels.to(device)
+    imagenet_verifier.class_labels = all_class_labels_gpu
+    print(f"Debug: Class labels shape: {all_class_labels_cpu.shape}, dtype: {all_class_labels_cpu.dtype}")
+    print(f"Debug: Class labels sample (first 3 rows, showing non-zero indices):")
+    for i in range(min(3, all_class_labels_cpu.shape[0])):
+        nonzero_idx = all_class_labels_cpu[i].nonzero(as_tuple=True)[0]
+        if len(nonzero_idx) > 0:
+            print(f"  Row {i}: has 1 at index {nonzero_idx[0].item()} (one-hot encoding)")
+        else:
+            print(f"  Row {i}: WARNING - all zeros!")
     with torch.no_grad():
         try:
             imagenet_scores = imagenet_verifier.score(images_torch, class_labels=all_class_labels.to(device))
