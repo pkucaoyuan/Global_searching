@@ -239,6 +239,12 @@ def run_experiment(config: Config):
     # 转换为torch tensor用于scorer（值域[0, 1]）
     images_torch = images_tensor.to(device)
     
+    # 调试：检查图像值域
+    print(f"\nDebug: Image tensor stats - min: {images_torch.min().item():.4f}, max: {images_torch.max().item():.4f}, mean: {images_torch.mean().item():.4f}")
+    print(f"Debug: Image tensor shape: {images_torch.shape}, dtype: {images_torch.dtype}")
+    # 确保值域在[0, 1]
+    images_torch = images_torch.clamp(0, 1)
+    
     # 评估三种scorer（如论文中Table 1）
     print("\n=== Evaluating with all three scorers (as in paper Table 1) ===")
     from src.verifiers.scorer_verifier import ScorerVerifier
@@ -249,10 +255,23 @@ def run_experiment(config: Config):
         device=device,
         image_size=config.image_size,
     )
+    brightness_verifier.to(device)
     with torch.no_grad():
-        brightness_scores = brightness_verifier.score(images_torch)
-        brightness_mean = brightness_scores.mean().item()
-        brightness_std = brightness_scores.std().item()
+        try:
+            brightness_scores = brightness_verifier.score(images_torch)
+            print(f"Debug: Brightness scores shape: {brightness_scores.shape}, values: {brightness_scores[:5]}")
+            brightness_mean = brightness_scores.mean().item()
+            brightness_std = brightness_scores.std().item()
+            if np.isnan(brightness_mean) or np.isinf(brightness_mean):
+                print(f"Warning: Brightness score is NaN/Inf. Scores: {brightness_scores}")
+                brightness_mean = 0.0
+                brightness_std = 0.0
+        except Exception as e:
+            print(f"Error computing brightness score: {e}")
+            import traceback
+            traceback.print_exc()
+            brightness_mean = 0.0
+            brightness_std = 0.0
     eval_results["brightness"] = {"mean": brightness_mean, "std": brightness_std}
     print(f"Brightness: {brightness_mean:.4f} ± {brightness_std:.4f}")
     
@@ -275,12 +294,27 @@ def run_experiment(config: Config):
         device=device,
         image_size=config.image_size,
     )
+    imagenet_verifier.to(device)
     # 为最终生成的图像评估ImageNet分数（使用相同的class_labels）
     imagenet_verifier.class_labels = all_class_labels.to(device)
+    print(f"Debug: Class labels shape: {all_class_labels.shape}, dtype: {all_class_labels.dtype}")
+    print(f"Debug: Class labels sample: {all_class_labels[:3]}")
     with torch.no_grad():
-        imagenet_scores = imagenet_verifier.score(images_torch)
-        imagenet_mean = imagenet_scores.mean().item()
-        imagenet_std = imagenet_scores.std().item()
+        try:
+            imagenet_scores = imagenet_verifier.score(images_torch, class_labels=all_class_labels.to(device))
+            print(f"Debug: ImageNet scores shape: {imagenet_scores.shape}, values: {imagenet_scores[:5]}")
+            imagenet_mean = imagenet_scores.mean().item()
+            imagenet_std = imagenet_scores.std().item()
+            if np.isnan(imagenet_mean) or np.isinf(imagenet_mean):
+                print(f"Warning: ImageNet score is NaN/Inf. Scores: {imagenet_scores}")
+                imagenet_mean = 0.0
+                imagenet_std = 0.0
+        except Exception as e:
+            print(f"Error computing ImageNet score: {e}")
+            import traceback
+            traceback.print_exc()
+            imagenet_mean = 0.0
+            imagenet_std = 0.0
     eval_results["imagenet"] = {"mean": imagenet_mean, "std": imagenet_std}
     print(f"ImageNet Classifier: {imagenet_mean:.4f} ± {imagenet_std:.4f}")
     
