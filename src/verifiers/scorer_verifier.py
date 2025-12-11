@@ -242,6 +242,11 @@ class CompressibilityScorer(nn.Module):
             img = Image.fromarray(image)
             img.save(buffer, format="JPEG", quality=self.quality)
             compressed_size = len(buffer.getvalue())
+            
+            # 调试：检查压缩大小
+            if compressed_size == 0:
+                print(f"Warning: Compressed size is 0 for image with stats: min={image.min()}, max={image.max()}, dtype={image.dtype}, shape={image.shape}")
+                return 0.0
         except Exception as e:
             print(f"Warning: Error compressing image: {e}, image stats: min={image.min()}, max={image.max()}, dtype={image.dtype}, shape={image.shape}")
             return 0.0
@@ -253,6 +258,11 @@ class CompressibilityScorer(nn.Module):
             ))
         else:
             normalized_score = 0.0
+        
+        # 调试：检查分数
+        if normalized_score == 0.0 and compressed_size > self.max_size:
+            print(f"Debug: Compressibility score is 0.0 for compressed_size={compressed_size} (max_size={self.max_size})")
+        
         return float(normalized_score)
 
 
