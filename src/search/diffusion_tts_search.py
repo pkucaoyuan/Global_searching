@@ -243,11 +243,13 @@ class ZeroOrderSearchTTS(BaseSearch):
                     candidate_noise = pivot_noise + scale * random_direction
                     candidate_noises.append(candidate_noise)
                 
-                # Denoise all candidates
-                all_noises = torch.cat(candidate_noises, dim=0)
-                x_cur_expanded = x_cur.repeat(n_candidates, 1, 1, 1)
+                # Denoise all candidates（按照原始实现）
+                # 原始：step(x_cur_expanded, t_cur, t_next, i, all_noises, class_labels_expanded)
+                # 返回 (x_candidates, x0_candidates)
+                all_noises = torch.cat(candidate_noises, dim=0)  # [N*batch_size, C, H, W]
+                x_cur_expanded = x_cur.repeat(n_candidates, 1, 1, 1)  # [N*batch_size, C, H, W]
                 
-                # 需要计算时间步信息
+                # 计算时间步信息
                 num_steps = kwargs.get("num_steps", 50)
                 step_indices = torch.arange(num_steps, dtype=torch.float64, device=device)
                 t_steps = (
@@ -257,46 +259,39 @@ class ZeroOrderSearchTTS(BaseSearch):
                 ) ** self.model.rho
                 t_steps = torch.cat([self.model.model.round_sigma(t_steps), torch.zeros_like(t_steps[:1])])
                 
-                t_cur = t_steps[t] if t < len(t_steps) else torch.zeros_like(t_steps[0])
-                t_next = t_steps[t + 1] if t < len(t_steps) - 1 else torch.zeros_like(t_cur)
-                
-                # 根据原始实现，需要在x_cur_expanded上添加噪声，然后去噪
-                # 原始：step函数内部处理噪声添加
-                # 我们需要直接调用denoise_step，但需要确保参数正确
-                
                 class_labels = kwargs.get("class_labels", None)
                 class_labels_expanded = None
                 if class_labels is not None:
                     class_labels_expanded = class_labels.repeat(n_candidates, 1)
                 
-                # 添加噪声到x_cur_expanded（模拟原始实现的step函数）
-                # 原始实现中，step函数会添加噪声：x_hat = x_cur + noise
-                # 这里我们直接在x_cur_expanded上添加候选噪声
-                gamma = min(40.0 / num_steps, np.sqrt(2) - 1) if 0.05 <= t_cur <= 50.0 else 0
-                t_hat = self.model.model.round_sigma(t_cur + gamma * t_cur) if gamma > 0 else t_cur
+                # 调用denoise_step，传入噪声（按照原始实现）
+                x_candidates, x0_candidates = self.model.denoise_step(
+                    x_cur_expanded, t,
+                    class_labels=class_labels_expanded,
+                    num_steps=num_steps,
+                    t_steps=t_steps,
+                    noise=all_noises,  # 传入候选噪声
+                    **kwargs
+                )
                 
-                # 对于每个候选噪声，添加到x_cur_expanded
-                # 原始实现：x_hat = x_cur + (t_hat^2 - t_cur^2)^0.5 * S_noise * eps_i
-                S_noise = 1.003
-                if gamma > 0:
-                    x_hat_expanded = x_cur_expanded + (t_hat ** 2 - t_cur ** 2).sqrt() * S_noise * all_noises
-                else:
-                    x_hat_expanded = x_cur_expanded
-                
-                # 去噪（获取x_0估计）
-                # 根据原始实现，我们需要调用模型获取denoised（x_0估计）
-                with nfe_counter.count(n_candidates):
-                    denoised_candidates = self.model.model(x_hat_expanded, t_hat, class_labels_expanded).to(torch.float64)
+                # 重塑为 [N, batch_size, C, H, W]（按照原始实现）
+                total_images = x_candidates.shape[0]
+                channels, height, width = x_cur.shape[1:]
+                effective_batch_size = total_images // n_candidates
+                x_candidates_reshaped = x_candidates.reshape(n_candidates, effective_batch_size, channels, height, width)
+                x0_candidates_reshaped = x0_candidates.reshape(n_candidates, effective_batch_size, channels, height, width)
                 
                 # 评分使用x_0估计（按照原始实现）
                 # 原始：x_for_scoring = x0_candidates.reshape(-1, *x0_candidates.shape[2:])
-                # 原始：x_for_scoring = (x_for_scoring * 127.5 + 128).clip(0, 255).to(torch.uint8)
-                x0_for_scoring = (denoised_candidates * 127.5 + 128).clip(0, 255).to(torch.uint8)
+                x0_for_scoring = x0_candidates_reshaped.reshape(-1, *x0_candidates_reshaped.shape[2:])
                 
-                # 评分
-                timesteps = torch.zeros(x0_for_scoring.shape[0], device=device)
+                # 转换为uint8格式用于评分
+                x0_for_scoring_uint8 = (x0_for_scoring * 127.5 + 128).clip(0, 255).to(torch.uint8)
+                
+                # 评分（按照原始实现）
+                timesteps = torch.zeros(x0_for_scoring_uint8.shape[0], device=device)
                 with torch.no_grad():
-                    scores = self.verifier.score(x0_for_scoring, class_labels=class_labels_expanded)
+                    scores = self.verifier.score(x0_for_scoring_uint8, class_labels=class_labels_expanded)
                 
                 scores = scores.view(n_candidates, batch_size)
                 history_scores_this_step.append(scores.cpu().numpy())
@@ -313,9 +308,25 @@ class ZeroOrderSearchTTS(BaseSearch):
                     for batch_idx, best_idx in enumerate(best_indices)
                 ])
             
-            # Use final pivot for actual denoising step
-            with nfe_counter.count():
-                x = self.model.denoise_step(x_cur, t)
+            # Use final pivot for actual denoising step（按照原始实现）
+            # 原始：x_next, _ = step(x_cur, t_cur, t_next, i, pivot_noise, class_labels)
+            num_steps = kwargs.get("num_steps", 50)
+            step_indices = torch.arange(num_steps, dtype=torch.float64, device=device)
+            t_steps = (
+                self.model.sigma_max ** (1 / self.model.rho) + 
+                step_indices / (num_steps - 1) * 
+                (self.model.sigma_min ** (1 / self.model.rho) - self.model.sigma_max ** (1 / self.model.rho))
+            ) ** self.model.rho
+            t_steps = torch.cat([self.model.model.round_sigma(t_steps), torch.zeros_like(t_steps[:1])])
+            
+            x, _ = self.model.denoise_step(
+                x_cur, t,
+                class_labels=kwargs.get("class_labels", None),
+                num_steps=num_steps,
+                t_steps=t_steps,
+                noise=pivot_noise,  # 使用最终选择的pivot噪声
+                **kwargs
+            )
             
             history_scores_all_steps.append(history_scores_this_step)
         

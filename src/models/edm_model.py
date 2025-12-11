@@ -139,23 +139,22 @@ class EDMModel(BaseDiffusionModel):
         t_next = t_steps[t + 1] if t < len(t_steps) - 1 else torch.zeros_like(t_cur)
         
         # EDM采样步骤
-        gamma = min(self.S_churn / num_steps, np.sqrt(2) - 1) if self.S_min <= t_cur <= self.S_max else 0
-        t_hat = self.model.round_sigma(t_cur + gamma * t_cur)
-        
         # 获取噪声向量（如果提供，用于step函数兼容性）
         # 原始实现：step函数接受eps_i作为参数，并在内部添加到x_cur
+        # 原始：x_hat = x_cur + (t_hat^2 - t_cur^2)^0.5 * S_noise * eps_i
         noise = kwargs.get("noise", None)
         if noise is not None:
             # 如果提供了噪声，使用它（用于Zero-Order Search等场景）
-            # 原始：x_hat = x_cur + (t_hat^2 - t_cur^2)^0.5 * S_noise * eps_i
-            eps_i = noise
-            if gamma > 0:
-                x_hat = x_t + (t_hat ** 2 - t_cur ** 2).sqrt() * self.S_noise * eps_i
-            else:
-                # 如果gamma=0，仍然添加噪声（如果提供）
-                x_hat = x_t + (t_hat ** 2 - t_cur ** 2).sqrt() * self.S_noise * eps_i if t_hat != t_cur else x_t
+            # 原始实现中，step函数总是添加噪声（即使gamma=0），因为eps_i是必需的参数
+            # 先计算gamma和t_hat（即使提供噪声也需要）
+            gamma = min(self.S_churn / num_steps, np.sqrt(2) - 1) if self.S_min <= t_cur <= self.S_max else 0
+            t_hat = self.model.round_sigma(t_cur + gamma * t_cur)
+            # 总是添加噪声（按照原始实现）
+            x_hat = x_t + (t_hat ** 2 - t_cur ** 2).sqrt() * self.S_noise * noise
         else:
-            # 如果没有提供噪声，在gamma>0时自动生成
+            # 如果没有提供噪声，按照标准EDM流程
+            gamma = min(self.S_churn / num_steps, np.sqrt(2) - 1) if self.S_min <= t_cur <= self.S_max else 0
+            t_hat = self.model.round_sigma(t_cur + gamma * t_cur)
             if gamma > 0:
                 eps_i = torch.randn_like(x_t)
                 x_hat = x_t + (t_hat ** 2 - t_cur ** 2).sqrt() * self.S_noise * eps_i
