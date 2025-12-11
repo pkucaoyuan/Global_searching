@@ -389,6 +389,10 @@ class ImageNetScorer(nn.Module):
         
         # 获取目标类别
         if class_labels.dim() > 1:  # one-hot
+            # 检查是否有非零元素
+            nonzero_mask = class_labels.sum(dim=1) > 0
+            if not nonzero_mask.all():
+                print(f"Warning: Found {(~nonzero_mask).sum().item()}/{len(nonzero_mask)} class_labels with all zeros in ImageNetScorer")
             target_classes = torch.argmax(class_labels, dim=1)
         else:  # class indices
             target_classes = class_labels
@@ -403,5 +407,12 @@ class ImageNetScorer(nn.Module):
         
         # 处理NaN/Inf
         scores = torch.nan_to_num(scores, nan=0.0, posinf=1.0, neginf=0.0)
+        
+        # 如果class_labels全为0，分数可能不正确，返回0
+        if class_labels.dim() > 1:
+            zero_mask = class_labels.sum(dim=1) == 0
+            if zero_mask.any():
+                scores[zero_mask] = 0.0
+        
         return scores
 

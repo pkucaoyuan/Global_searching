@@ -327,7 +327,18 @@ def run_experiment(config: Config):
             print(f"  Row {i}: WARNING - all zeros!")
     with torch.no_grad():
         try:
-            imagenet_scores = imagenet_verifier.score(images_torch, class_labels=all_class_labels.to(device))
+            # 确保class_labels正确传递
+            imagenet_class_labels = all_class_labels_gpu.clone()
+            # 验证class_labels不是全0
+            nonzero_counts = imagenet_class_labels.sum(dim=1)
+            if (nonzero_counts == 0).any():
+                print(f"Warning: Found {nonzero_counts.eq(0).sum().item()} class_labels with all zeros!")
+                # 打印一些调试信息
+                for idx in range(min(5, imagenet_class_labels.shape[0])):
+                    if nonzero_counts[idx] == 0:
+                        print(f"  Sample {idx} has all-zero class label")
+            
+            imagenet_scores = imagenet_verifier.score(images_torch, class_labels=imagenet_class_labels)
             print(f"Debug: ImageNet scores shape: {imagenet_scores.shape}, values: {imagenet_scores[:5]}")
             imagenet_mean = imagenet_scores.mean().item()
             imagenet_std = imagenet_scores.std().item()
