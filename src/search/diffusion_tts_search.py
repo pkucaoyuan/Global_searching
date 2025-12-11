@@ -57,58 +57,95 @@ class BestOfNSearch(BaseSearch):
         n_candidates = kwargs.get("n_candidates", self.n_candidates)
         device = kwargs.get("device", "cuda")
         
-        # Sample N complete trajectories
-        candidates = []
-        scores = []
+        # 根据原始实现，Best-of-N应该：
+        # 1. 使用相同的初始噪声，扩展到N倍batch
+        # 2. 在每个时间步，使用不同的随机噪声
+        # 3. 最后评分并选择最好的
         
-        for i in range(n_candidates):
-            # Sample initial noise (or use provided)
-            if initial_noise is None:
-                noise = self.model.sample_noise(batch_size, self.model.image_size)
-            else:
-                noise = initial_noise.clone()
-                if i > 0:  # Add small perturbation for other candidates
-                    noise = noise + torch.randn_like(noise) * 0.01
-            
-            # Sample complete trajectory
-            candidate_nfe = NFECounter()
-            x_0 = self.model.sample(
-                batch_size=batch_size,
-                num_steps=num_steps,
-                nfe_counter=candidate_nfe,
-                initial_noise=noise,
+        class_labels = kwargs.get("class_labels", None)
+        device = kwargs.get("device", "cuda")
+        
+        # 根据原始实现，Best-of-N使用相同的初始噪声，扩展到N倍
+        # 原始：x_next_expanded = x_next.repeat_interleave(N, dim=0)
+        # 其中x_next是 latents * t_steps[0]，latents是标准正态噪声
+        
+        # 准备初始噪声（如果提供，否则使用模型生成）
+        # 注意：在EDMModel.sample()中会处理噪声的缩放（乘以t_steps[0]）
+        if initial_noise is None:
+            # 生成标准正态噪声（原始实现中的latents）
+            base_noise = torch.randn(
+                batch_size,
+                self.model.num_channels,
+                self.model.image_size,
+                self.model.image_size,
+                device=device,
+                dtype=torch.float64
             )
-            candidates.append(x_0)
-            
-            # Score final image
-            with torch.no_grad():
-                # 获取class_labels（如果提供）
-                class_labels = kwargs.get("class_labels", None)
-                score = self.verifier.score(x_0, class_labels=class_labels)
-                if score.numel() == 1:
-                    score_val = score.item()
-                else:
-                    score_val = score.mean().item()
-                # 检查NaN
-                if np.isnan(score_val) or np.isinf(score_val):
-                    print(f"Warning: Invalid score value {score_val} for candidate {i}")
-                    score_val = 0.0
-                scores.append(score_val)
-            
-            # Accumulate NFE
-            nfe_counter.increment(candidate_nfe.current_nfe)
+        else:
+            base_noise = initial_noise.to(device).to(torch.float64)
         
-        # Select best candidate
-        best_idx = torch.tensor(scores).argmax().item()
-        best_sample = candidates[best_idx]
+        # 扩展到N倍：每个batch样本重复N次
+        # [batch_size, C, H, W] -> [batch_size * N, C, H, W]
+        # 注意：在EDMModel.sample()中会乘以t_steps[0]
+        x_expanded = base_noise.repeat_interleave(n_candidates, dim=0)
+        
+        # 扩展class_labels（如果有）
+        class_labels_expanded = None
+        if class_labels is not None:
+            class_labels_expanded = class_labels.repeat_interleave(n_candidates, dim=0).to(device)
+        
+        # 运行完整的采样流程（batch_size * N个样本）
+        candidate_nfe = NFECounter()
+        x_final_expanded = self.model.sample(
+            batch_size=batch_size * n_candidates,
+            num_steps=num_steps,
+            nfe_counter=candidate_nfe,
+            initial_noise=x_expanded,
+            class_labels=class_labels_expanded,
+        )
+        
+        # 转换为uint8用于评分（按照原始实现）
+        # 原始：image_for_scoring = (x_next_expanded * 127.5 + 128).clip(0, 255).to(torch.uint8)
+        images_for_scoring = (x_final_expanded * 127.5 + 128).clip(0, 255).to(torch.uint8)
+        
+        # 评分
+        with torch.no_grad():
+            scores_tensor = self.verifier.score(images_for_scoring, class_labels=class_labels_expanded)
+            if scores_tensor.dim() == 0:
+                scores_tensor = scores_tensor.unsqueeze(0)
+        
+        # 重塑为 [batch_size, N]
+        scores = scores_tensor.view(batch_size, n_candidates)
+        
+        # 选择最好的候选
+        best_indices = scores.argmax(dim=1)  # [batch_size]
+        
+        # 重塑x_final_expanded为 [batch_size, N, C, H, W]
+        x_final_reshaped = x_final_expanded.view(batch_size, n_candidates, *x_final_expanded.shape[1:])
+        
+        # 选择最好的候选（按照原始实现）
+        best_sample = torch.stack([
+            x_final_reshaped[i, idx] 
+            for i, idx in enumerate(best_indices)
+        ])  # [batch_size, C, H, W]
+        
+        # 记录所有分数（用于返回信息）
+        all_scores_list = scores.cpu().tolist()
+        
+        # Accumulate NFE
+        nfe_counter.increment(candidate_nfe.current_nfe)
+        
+        # 获取每个样本的最佳分数
+        best_scores_per_sample = scores[torch.arange(batch_size, device=device), best_indices].cpu().tolist()
         
         return best_sample, {
             "method": "best_of_n",
             "n_candidates": n_candidates,
             "nfe": nfe_counter.current_nfe,
-            "scores": scores,
-            "best_idx": best_idx,
-            "best_score": scores[best_idx],
+            "scores": all_scores_list,  # [batch_size, n_candidates]
+            "best_indices": best_indices.cpu().tolist(),  # [batch_size]
+            "best_scores": best_scores_per_sample,  # [batch_size]
+            "best_score": best_scores_per_sample[0] if batch_size == 1 else np.mean(best_scores_per_sample),
         }
 
 

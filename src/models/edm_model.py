@@ -244,10 +244,15 @@ class EDMModel(BaseDiffusionModel):
         t_steps = torch.cat([self.model.round_sigma(t_steps), torch.zeros_like(t_steps[:1])])
         
         # 初始化
+        # 根据原始实现：x_next = latents.to(torch.float64) * t_steps[0]
+        # latents是标准正态噪声 torch.randn([batch_size, 3, 64, 64])
         if initial_noise is None:
-            x = self.sample_noise(batch_size, self.image_size)
+            x = self.sample_noise(batch_size, self.image_size).to(torch.float64)
         else:
-            x = initial_noise.to(self.device) * t_steps[0]
+            # 原始实现中，latents是标准正态噪声，需要乘以t_steps[0]
+            # 但如果initial_noise来自sample_noise（已经乘以sigma_max），则需要除以sigma_max再乘以t_steps[0]
+            # 为简单起见，假设initial_noise是标准正态噪声（来自repeat_interleave等）
+            x = initial_noise.to(self.device).to(torch.float64) * t_steps[0]
         
         # 逐步去噪
         from tqdm import tqdm
