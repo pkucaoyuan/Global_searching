@@ -18,8 +18,8 @@ setup(
     author="Your Name",
     author_email="your.email@example.com",
     url="https://github.com/yourusername/global-search-diffusion",
-    packages=find_packages(where="src"),
-    package_dir={"": "src"},
+    packages=find_packages(),
+    package_dir={"": "."},
     python_requires=">=3.8",
     install_requires=[
         "torch>=2.0.0",

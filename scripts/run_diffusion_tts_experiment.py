@@ -13,8 +13,22 @@ import os
 from pathlib import Path
 
 # 添加项目根目录到Python路径
-project_root = Path(__file__).parent.parent
-sys.path.insert(0, str(project_root))
+# 获取脚本所在目录的父目录（项目根目录）
+script_dir = Path(__file__).resolve().parent
+project_root = script_dir.parent
+
+# 确保项目根目录在sys.path中
+project_root_str = str(project_root)
+if project_root_str not in sys.path:
+    sys.path.insert(0, project_root_str)
+
+# 验证src目录存在
+src_dir = project_root / "src"
+if not src_dir.exists():
+    raise RuntimeError(
+        f"Cannot find 'src' directory at {src_dir}. "
+        f"Please ensure you are running this script from the project root."
+    )
 
 import torch
 import yaml
