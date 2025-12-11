@@ -325,8 +325,8 @@ def run_experiment(config: Config):
         "config": method_config,
         "nfe": total_nfe_counter.current_nfe,
         "num_samples": final_images.shape[0],
-        "average_score": avg_score if all_scores else None,
-        "evaluation": eval_results if config.evaluation.metrics else None,
+        "average_score_during_search": avg_score if all_scores else None,
+        "scorer_metrics": eval_results,  # 包含三种scorer的结果（Brightness, Compressibility, ImageNet）
     }
     
     results_path = os.path.join(save_dir, f"{config.experiment_name}_{method_type}_{timestamp}.yaml")
