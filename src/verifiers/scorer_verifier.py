@@ -365,7 +365,10 @@ class ImageNetScorer(nn.Module):
         # 处理图像
         if images.dtype == torch.uint8:
             images = images.float() / 255.0
-        processed_images = images.to(device)
+        processed_images = images.to(device).clamp(0, 1)
+        # 处理NaN/Inf
+        if torch.isnan(processed_images).any() or torch.isinf(processed_images).any():
+            processed_images = torch.nan_to_num(processed_images, nan=0.0, posinf=1.0, neginf=0.0)
         
         # 处理timesteps
         timesteps = timesteps.to(device)
@@ -380,7 +383,15 @@ class ImageNetScorer(nn.Module):
         else:  # class indices
             target_classes = class_labels
         
+        # 确保target_classes在有效范围内
+        target_classes = target_classes.to(device).long()
+        target_classes = torch.clamp(target_classes, 0, probs.size(1) - 1)
+        
         # 提取目标类别的概率
-        scores = probs[torch.arange(probs.size(0), device=device), target_classes.to(device)]
+        batch_indices = torch.arange(probs.size(0), device=device)
+        scores = probs[batch_indices, target_classes]
+        
+        # 处理NaN/Inf
+        scores = torch.nan_to_num(scores, nan=0.0, posinf=1.0, neginf=0.0)
         return scores
 
