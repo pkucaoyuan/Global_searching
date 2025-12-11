@@ -173,14 +173,23 @@ def run_experiment(config: Config):
         # 更新verifier的class_labels
         verifier.class_labels = batch_class_labels
         
+        # 从method_config中移除已显式传递的参数，避免重复
+        search_kwargs = method_config.copy() if isinstance(method_config, dict) else {}
+        # 移除可能冲突的参数（这些参数已经显式传递）
+        search_kwargs.pop('num_steps', None)
+        search_kwargs.pop('batch_size', None)
+        search_kwargs.pop('nfe_counter', None)
+        search_kwargs.pop('device', None)
+        search_kwargs.pop('class_labels', None)
+        
         # 执行搜索
         samples, info = search_method.search(
             batch_size=current_batch_size,
             num_steps=num_steps,
-            class_labels=batch_class_labels,
             nfe_counter=total_nfe_counter,
+            class_labels=batch_class_labels,
             device=device,
-            **method_config
+            **search_kwargs
         )
         
         all_generated_images.append(samples.cpu())
