@@ -153,8 +153,13 @@ def run_experiment(config: Config):
         raise ValueError(f"Unknown method type: {method_type}")
     
     # 生成类别标签（随机）
+    # 根据原始实现：class_labels = torch.eye(1000)[torch.randint(1000, size=[g * g])]
     torch.manual_seed(42)
-    all_class_labels = torch.eye(num_classes)[torch.randint(num_classes, size=(num_samples,))]
+    random_indices = torch.randint(num_classes, size=(num_samples,))
+    all_class_labels = torch.eye(num_classes)[random_indices]
+    print(f"Debug: Generated class labels - shape: {all_class_labels.shape}")
+    print(f"Debug: First 5 class indices: {random_indices[:5]}")
+    print(f"Debug: Sample class label (first row): has 1 at index {all_class_labels[0].argmax().item()}")
     
     # 运行实验
     all_generated_images = []
@@ -278,16 +283,22 @@ def run_experiment(config: Config):
     eval_results["brightness"] = {"mean": brightness_mean, "std": brightness_std}
     print(f"Brightness: {brightness_mean:.4f} ± {brightness_std:.4f}")
     
-    # 2. Compressibility Scorer
+    # 2. Compressibility Scorer (需要uint8格式)
     compressibility_verifier = ScorerVerifier(
         scorer_type="compressibility",
         device=device,
         image_size=config.image_size,
     )
     with torch.no_grad():
-        compressibility_scores = compressibility_verifier.score(images_torch)
+        # CompressibilityScorer需要uint8格式，直接使用images_uint8
+        compressibility_scores = compressibility_verifier.score(images_uint8.to(device))
+        print(f"Debug: Compressibility scores shape: {compressibility_scores.shape}, values: {compressibility_scores[:5]}")
         compressibility_mean = compressibility_scores.mean().item()
         compressibility_std = compressibility_scores.std().item()
+        if np.isnan(compressibility_mean) or np.isinf(compressibility_mean):
+            print(f"Warning: Compressibility score is NaN/Inf. Scores: {compressibility_scores}")
+            compressibility_mean = 0.0
+            compressibility_std = 0.0
     eval_results["compressibility"] = {"mean": compressibility_mean, "std": compressibility_std}
     print(f"Compressibility: {compressibility_mean:.4f} ± {compressibility_std:.4f}")
     

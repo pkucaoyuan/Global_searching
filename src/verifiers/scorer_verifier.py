@@ -106,18 +106,18 @@ class ScorerVerifier(BaseVerifier):
         
         # 转换图像格式
         if images.dtype == torch.uint8:
-            # 如果是uint8，转换为float32 [0, 1]或保持uint8（根据scorer需要）
-            if self.scorer_type in ["brightness", "imagenet"]:
-                images_processed = images.float() / 255.0
-            else:
+            # 如果是uint8
+            if self.scorer_type == "compressibility":
                 images_processed = images  # CompressibilityScorer需要uint8
+            else:
+                images_processed = images.float() / 255.0  # Brightness和ImageNet需要float32 [0, 1]
         else:
             # 如果是float，假设在[0, 1]范围
             if self.scorer_type == "compressibility":
-                # CompressibilityScorer需要uint8
+                # CompressibilityScorer需要uint8，确保值域在[0, 1]然后转换
                 images_processed = (images.clamp(0, 1) * 255).to(torch.uint8)
             else:
-                images_processed = images
+                images_processed = images.clamp(0, 1)  # Brightness和ImageNet需要[0, 1]
         
         # 创建timesteps（某些scorer需要，但这里我们传0表示完全去噪的图像）
         timesteps = torch.zeros(images_processed.shape[0], device=self.device)
