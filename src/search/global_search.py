@@ -432,7 +432,7 @@ class GlobalSearch:
             # 如果action是NO_SEARCH，直接去噪一步
             if action.search_mode == SearchMode.NO_SEARCH:
                 with nfe_counter.count():
-                    x_t_minus_1 = self.model.denoise_step(x_t, step)
+                    x_t_minus_1, _ = self.model.denoise_step(x_t, step)
             else:
                 # 使用Local Search方法
                 # 注意：这里需要适配，因为Local Search通常是完整的采样流程
@@ -442,11 +442,11 @@ class GlobalSearch:
                     # 执行search（这里简化处理）
                     # 实际实现中，Local Search应该支持单步操作
                     with nfe_counter.count():
-                        x_t_minus_1 = self.model.denoise_step(x_t, step)
+                        x_t_minus_1, _ = self.model.denoise_step(x_t, step)
                     # TODO: 实现真正的单步Local Search
                 else:
                     with nfe_counter.count():
-                        x_t_minus_1 = self.model.denoise_step(x_t, step)
+                        x_t_minus_1, _ = self.model.denoise_step(x_t, step)
             
             # 评估reward
             with torch.no_grad():

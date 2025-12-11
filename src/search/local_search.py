@@ -203,7 +203,7 @@ class LocalNoiseSearch(BaseSearch):
             # 对当前步骤采样多个候选
             for _ in range(num_candidates):
                 with nfe_counter.count():
-                    x_t_minus_1 = self.model.denoise_step(x_t, t)
+                    x_t_minus_1, _ = self.model.denoise_step(x_t, t)
                 candidates.append(x_t_minus_1)
                 
                 # 使用verifier评估（这里简化：直接评估xt-1，实际可能需要解码到x0）

@@ -10,7 +10,7 @@ EDM (Elucidating the Design Space of Diffusion Models) Model Wrapper
 import torch
 import pickle
 import numpy as np
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Tuple
 import sys
 from pathlib import Path
 
@@ -104,7 +104,7 @@ class EDMModel(BaseDiffusionModel):
         t: int,
         class_labels: Optional[torch.Tensor] = None,
         **kwargs
-    ) -> torch.Tensor:
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         执行一步去噪（EDM采样器）
         
@@ -115,9 +115,10 @@ class EDMModel(BaseDiffusionModel):
             **kwargs: 其他参数，可能包含：
                 - num_steps: 总步数
                 - t_steps: 时间步张量（如果已计算）
+                - noise: 噪声向量（用于step函数）
         
         Returns:
-            x_{t-1}: 去噪后的图像
+            (x_{t-1}, denoised): 去噪后的图像和x_0估计（denoised）
         """
         # 获取时间步信息
         num_steps = kwargs.get("num_steps", 18)
@@ -141,14 +142,27 @@ class EDMModel(BaseDiffusionModel):
         gamma = min(self.S_churn / num_steps, np.sqrt(2) - 1) if self.S_min <= t_cur <= self.S_max else 0
         t_hat = self.model.round_sigma(t_cur + gamma * t_cur)
         
-        # 添加噪声（如果需要）
-        if gamma > 0:
-            eps_i = torch.randn_like(x_t)
-            x_hat = x_t + (t_hat ** 2 - t_cur ** 2).sqrt() * self.S_noise * eps_i
+        # 获取噪声向量（如果提供，用于step函数兼容性）
+        # 原始实现：step函数接受eps_i作为参数，并在内部添加到x_cur
+        noise = kwargs.get("noise", None)
+        if noise is not None:
+            # 如果提供了噪声，使用它（用于Zero-Order Search等场景）
+            # 原始：x_hat = x_cur + (t_hat^2 - t_cur^2)^0.5 * S_noise * eps_i
+            eps_i = noise
+            if gamma > 0:
+                x_hat = x_t + (t_hat ** 2 - t_cur ** 2).sqrt() * self.S_noise * eps_i
+            else:
+                # 如果gamma=0，仍然添加噪声（如果提供）
+                x_hat = x_t + (t_hat ** 2 - t_cur ** 2).sqrt() * self.S_noise * eps_i if t_hat != t_cur else x_t
         else:
-            x_hat = x_t
+            # 如果没有提供噪声，在gamma>0时自动生成
+            if gamma > 0:
+                eps_i = torch.randn_like(x_t)
+                x_hat = x_t + (t_hat ** 2 - t_cur ** 2).sqrt() * self.S_noise * eps_i
+            else:
+                x_hat = x_t
         
-        # 去噪
+        # 去噪（第一次预测x_0）
         with self.nfe_counter.count():
             denoised = self.model(x_hat, t_hat, class_labels).to(torch.float64)
         
@@ -160,6 +174,9 @@ class EDMModel(BaseDiffusionModel):
         d_cur = (x_hat - denoised) / (t_hat + 1e-8)  # 避免除零
         x_next = x_hat + (t_next - t_hat) * d_cur
         
+        # 保存第一次的denoised作为x_0估计
+        denoised_x0 = denoised.clone()
+        
         # 检查NaN
         if torch.isnan(x_next).any() or torch.isinf(x_next).any():
             print(f"Warning: NaN/Inf in x_next after first step at t={t}")
@@ -168,14 +185,14 @@ class EDMModel(BaseDiffusionModel):
         # 二阶校正（Heun方法）
         if t < len(t_steps) - 1:
             with self.nfe_counter.count():
-                denoised = self.model(x_next, t_next, class_labels).to(torch.float64)
+                denoised_2 = self.model(x_next, t_next, class_labels).to(torch.float64)
             
             # 检查NaN
-            if torch.isnan(denoised).any() or torch.isinf(denoised).any():
+            if torch.isnan(denoised_2).any() or torch.isinf(denoised_2).any():
                 print(f"Warning: NaN/Inf in denoised (second step) at step {t}")
-                denoised = torch.nan_to_num(denoised, nan=0.0, posinf=1.0, neginf=-1.0)
+                denoised_2 = torch.nan_to_num(denoised_2, nan=0.0, posinf=1.0, neginf=-1.0)
             
-            d_prime = (x_next - denoised) / (t_next + 1e-8)  # 避免除零
+            d_prime = (x_next - denoised_2) / (t_next + 1e-8)  # 避免除零
             x_next = x_hat + (t_next - t_hat) * (0.5 * d_cur + 0.5 * d_prime)
             
             # 最后检查NaN
@@ -183,7 +200,8 @@ class EDMModel(BaseDiffusionModel):
                 print(f"Warning: NaN/Inf in final x_next at t={t}")
                 x_next = torch.nan_to_num(x_next, nan=x_hat, posinf=x_hat, neginf=x_hat)
         
-        return x_next.to(x_t.dtype)
+        # 返回 (x_next, denoised_x0)，其中denoised_x0是x_0估计
+        return x_next.to(x_t.dtype), denoised_x0.to(x_t.dtype)
     
     def sample_noise(self, batch_size: int, image_size: int) -> torch.Tensor:
         """
@@ -263,7 +281,7 @@ class EDMModel(BaseDiffusionModel):
         for i in tqdm(range(num_steps), desc="EDM Sampling"):
             t = num_steps - 1 - i  # 从大到小
             with nfe_counter.count():
-                x = self.denoise_step(
+                x, _ = self.denoise_step(
                     x, t,
                     class_labels=class_labels,
                     num_steps=num_steps,
