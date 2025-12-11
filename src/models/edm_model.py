@@ -194,17 +194,21 @@ class EDMModel(BaseDiffusionModel):
             image_size: 图像尺寸
         
         Returns:
-            初始噪声 [B, C, H, W]
+            初始噪声 [B, C, H, W]，标准正态分布（不乘以sigma_max）
+            注意：在sample()中会乘以t_steps[0]，这与原始实现一致
         """
-        # EDM使用sigma_max作为初始噪声尺度
+        # 根据原始实现：latents = torch.randn([batch_size, 3, 64, 64])
+        # 然后在sample开始时：x_next = latents.to(torch.float64) * t_steps[0]
+        # 所以这里返回标准正态噪声即可
         noise = torch.randn(
             batch_size,
             self.num_channels,
             image_size,
             image_size,
-            device=self.device
+            device=self.device,
+            dtype=torch.float64
         )
-        return noise * self.sigma_max
+        return noise
     
     def sample(
         self,
