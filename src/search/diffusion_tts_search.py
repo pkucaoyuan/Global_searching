@@ -82,8 +82,18 @@ class BestOfNSearch(BaseSearch):
             
             # Score final image
             with torch.no_grad():
-                score = self.verifier.score(x_0)
-                scores.append(score.item() if score.numel() == 1 else score.mean().item())
+                # 获取class_labels（如果提供）
+                class_labels = kwargs.get("class_labels", None)
+                score = self.verifier.score(x_0, class_labels=class_labels)
+                if score.numel() == 1:
+                    score_val = score.item()
+                else:
+                    score_val = score.mean().item()
+                # 检查NaN
+                if np.isnan(score_val) or np.isinf(score_val):
+                    print(f"Warning: Invalid score value {score_val} for candidate {i}")
+                    score_val = 0.0
+                scores.append(score_val)
             
             # Accumulate NFE
             nfe_counter.increment(candidate_nfe.current_nfe)

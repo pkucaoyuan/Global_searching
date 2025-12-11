@@ -208,30 +208,92 @@ def run_experiment(config: Config):
     print(f"\nGenerated {final_images.shape[0]} samples.")
     print(f"Total NFE: {total_nfe_counter.current_nfe}")
     
-    # 计算平均分数
+    # 计算平均分数（搜索时使用的scorer）
     if all_scores:
-        avg_score = np.mean(all_scores)
-        print(f"Average {config.verifier.scorer_type} score: {avg_score:.4f}")
-    
-    # 评估指标（如果需要）
-    eval_results = {}
-    if config.evaluation.metrics:
-        print("\nEvaluating metrics...")
-        # 转换图像格式为numpy array [N, H, W, C]，值域[0, 255]
-        images_np = final_images.permute(0, 2, 3, 1).cpu().numpy()
-        if images_np.max() <= 1.0:
-            images_np = (images_np * 255).astype(np.uint8)
+        # 过滤NaN值
+        valid_scores = [s for s in all_scores if not np.isnan(s)]
+        if valid_scores:
+            avg_score = np.mean(valid_scores)
+            print(f"Average {config.verifier.scorer_type} score (during search): {avg_score:.4f} ± {np.std(valid_scores):.4f}")
         else:
-            images_np = images_np.astype(np.uint8)
-        
-        # 计算FID和IS
+            avg_score = None
+            print(f"Warning: All scores are NaN for {config.verifier.scorer_type}")
+    else:
+        avg_score = None
+    
+    # 评估指标（对最终生成的图像进行评估）
+    eval_results = {}
+    
+    # 转换图像格式为numpy array [N, H, W, C]，值域[0, 255]
+    # 确保图像在合理范围内
+    images_tensor = final_images.clone()
+    if images_tensor.max() <= 1.0:
+        images_tensor = images_tensor.clamp(0, 1)
+    else:
+        images_tensor = images_tensor.clamp(0, 255) / 255.0
+    
+    # 转换为numpy用于评估
+    images_np = images_tensor.permute(0, 2, 3, 1).cpu().numpy()
+    images_np = (images_np * 255).clip(0, 255).astype(np.uint8)
+    
+    # 转换为torch tensor用于scorer（值域[0, 1]）
+    images_torch = images_tensor.to(device)
+    
+    # 评估三种scorer（如论文中Table 1）
+    print("\n=== Evaluating with all three scorers (as in paper Table 1) ===")
+    from src.verifiers.scorer_verifier import ScorerVerifier
+    
+    # 1. Brightness Scorer
+    brightness_verifier = ScorerVerifier(
+        scorer_type="brightness",
+        device=device,
+        image_size=config.image_size,
+    )
+    with torch.no_grad():
+        brightness_scores = brightness_verifier.score(images_torch)
+        brightness_mean = brightness_scores.mean().item()
+        brightness_std = brightness_scores.std().item()
+    eval_results["brightness"] = {"mean": brightness_mean, "std": brightness_std}
+    print(f"Brightness: {brightness_mean:.4f} ± {brightness_std:.4f}")
+    
+    # 2. Compressibility Scorer
+    compressibility_verifier = ScorerVerifier(
+        scorer_type="compressibility",
+        device=device,
+        image_size=config.image_size,
+    )
+    with torch.no_grad():
+        compressibility_scores = compressibility_verifier.score(images_torch)
+        compressibility_mean = compressibility_scores.mean().item()
+        compressibility_std = compressibility_scores.std().item()
+    eval_results["compressibility"] = {"mean": compressibility_mean, "std": compressibility_std}
+    print(f"Compressibility: {compressibility_mean:.4f} ± {compressibility_std:.4f}")
+    
+    # 3. ImageNet Classifier Scorer
+    imagenet_verifier = ScorerVerifier(
+        scorer_type="imagenet",
+        device=device,
+        image_size=config.image_size,
+    )
+    # 为最终生成的图像评估ImageNet分数（使用相同的class_labels）
+    imagenet_verifier.class_labels = all_class_labels.to(device)
+    with torch.no_grad():
+        imagenet_scores = imagenet_verifier.score(images_torch)
+        imagenet_mean = imagenet_scores.mean().item()
+        imagenet_std = imagenet_scores.std().item()
+    eval_results["imagenet"] = {"mean": imagenet_mean, "std": imagenet_std}
+    print(f"ImageNet Classifier: {imagenet_mean:.4f} ± {imagenet_std:.4f}")
+    
+    # FID和IS评估（如果配置了）
+    if config.evaluation.metrics:
+        print("\n=== Standard Evaluation Metrics ===")
         if "fid" in config.evaluation.metrics:
-            # FID需要参考统计文件
             fid_stats_path = config.evaluation.get("fid_stats_path")
             if fid_stats_path:
                 from src.evaluation.metrics import compute_fid
                 fid_score = compute_fid(images_np, fid_stats_path, device)
                 eval_results["fid"] = fid_score
+                print(f"FID: {fid_score:.4f}")
             else:
                 print("Warning: FID calculation requires fid_stats_path in config")
         
@@ -240,8 +302,10 @@ def run_experiment(config: Config):
             is_mean, is_std = compute_is(images_np, device)
             eval_results["is_mean"] = is_mean
             eval_results["is_std"] = is_std
-        
-        print(f"Evaluation Results: {eval_results}")
+            print(f"IS: {is_mean:.4f} ± {is_std:.4f}")
+    
+    print(f"\n=== All Evaluation Results ===")
+    print(eval_results)
     
     # 保存结果
     save_dir = config.evaluation.save_dir
