@@ -66,7 +66,11 @@ tensorboard/
 # configs/*.yaml
 
 # 外部代码库（需要手动克隆，见README）
-code_repos/
+code_repos/*
+# 但是允许跟踪 diffusion-tts 中的修改
+!code_repos/diffusion-tts/
+code_repos/diffusion-tts/.git/
+code_repos/diffusion-tts/.git/**
 
 # 重复的外部代码库目录（如果存在）
 Diffusion-inference-scaling/
