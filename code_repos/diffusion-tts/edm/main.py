@@ -870,7 +870,7 @@ def generate_image_grid(
         num_steps_total = len(t_steps) - 1
         half_point = num_steps_total // 2
         
-        print(f"EPS_GREEDY_1 parameters: lambda={lambda_param / np.sqrt(3 * 64 * 64)}, N={N}, K1=5 (first {half_point} steps), K2=3 (remaining steps), eps={eps}")
+        print(f"EPS_GREEDY_1 parameters: lambda={lambda_param / np.sqrt(3 * 64 * 64)}, N={N}, K1=25 (first {half_point} steps), K2=15 (remaining steps), eps={eps}")
         
         # Use precomputed pivot noise if provided, otherwise generate a fresh one
         if precomputed_noise is not None and 'pivot' in precomputed_noise:
@@ -882,8 +882,8 @@ def generate_image_grid(
         for i, (t_cur, t_next) in tqdm.tqdm(list(enumerate(zip(t_steps[:-1], t_steps[1:]))), unit='step'):
             x_cur = x_next
             
-            # Determine K based on current step: first half K=5, second half K=3
-            K = 5 if i < half_point else 3
+            # Determine K based on current step: first half K=25, second half K=15
+            K = 25 if i < half_point else 15
             
             # Initialize pivot noise with a fresh Gaussian sample
             if precomputed_noise is not None and f'pivot_{i}' in precomputed_noise:

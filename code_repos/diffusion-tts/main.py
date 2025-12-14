@@ -156,8 +156,8 @@ def main():
         # EDM defaults
         model_root = 'https://nvlabs-fi-cdn.nvidia.com/edm/pretrained'
         network_pkl = f'{model_root}/edm-imagenet-64x64-cond-adm.pkl'
-        num_images = 1
-        gridw = gridh = 1
+        gridw = gridh = 6  # 生成36张图 (6x6 grid)
+        num_images = gridw * gridh  # 36
         latents = torch.randn([num_images, 3, 64, 64])
         class_labels = torch.eye(1000)[torch.randint(1000, size=[num_images])]
         device = torch.device(args.device)
