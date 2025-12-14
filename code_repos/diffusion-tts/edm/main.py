@@ -38,6 +38,8 @@ class SamplingParams:
     B: int = 2
     N: int = 4
     K: int = 20
+    K1: int = 25  # For EPS_GREEDY_1: K value for first half steps
+    K2: int = 15  # For EPS_GREEDY_1: K value for second half steps
     lambda_param: float = 0.15
     eps: float = 0.4
     S: int = 8
@@ -861,16 +863,18 @@ def generate_image_grid(
             x_next, _ = step(x_cur, t_cur, t_next, i, pivot_noise, class_labels)
     
     elif sampling_method == SamplingMethod.EPS_GREEDY_1:
-        # EPS_GREEDY variant with adaptive K: first half K=5, second half K=3
+        # EPS_GREEDY variant with adaptive K: first half K=K1, second half K=K2
         lambda_param = method_params.lambda_param * np.sqrt(3 * 64 * 64)
         N = method_params.N
         eps = method_params.eps
+        K1 = method_params.K1
+        K2 = method_params.K2
         
         # Calculate the midpoint for switching K
         num_steps_total = len(t_steps) - 1
         half_point = num_steps_total // 2
         
-        print(f"EPS_GREEDY_1 parameters: lambda={lambda_param / np.sqrt(3 * 64 * 64)}, N={N}, K1=25 (first {half_point} steps), K2=15 (remaining steps), eps={eps}")
+        print(f"EPS_GREEDY_1 parameters: lambda={lambda_param / np.sqrt(3 * 64 * 64)}, N={N}, K1={K1} (first {half_point} steps), K2={K2} (remaining steps), eps={eps}")
         
         # Use precomputed pivot noise if provided, otherwise generate a fresh one
         if precomputed_noise is not None and 'pivot' in precomputed_noise:
@@ -882,8 +886,8 @@ def generate_image_grid(
         for i, (t_cur, t_next) in tqdm.tqdm(list(enumerate(zip(t_steps[:-1], t_steps[1:]))), unit='step'):
             x_cur = x_next
             
-            # Determine K based on current step: first half K=25, second half K=15
-            K = 25 if i < half_point else 15
+            # Determine K based on current step: first half K=K1, second half K=K2
+            K = K1 if i < half_point else K2
             
             # Initialize pivot noise with a fresh Gaussian sample
             if precomputed_noise is not None and f'pivot_{i}' in precomputed_noise:
@@ -1011,14 +1015,18 @@ def generate_image_grid(
     avg_score = scores.mean().item()
     print(f'Average score: {avg_score}')
     
-    # Create and save the final grid
-    print(f'Saving image grid to "{dest_path}"...')
-    image = image.reshape(gridh, gridw, *image.shape[1:]).permute(0, 3, 1, 4, 2)
-    image = image.reshape(gridh * net.img_resolution, gridw * net.img_resolution, net.img_channels)
-    image = image.cpu().numpy()
-    PIL.Image.fromarray(image, 'RGB').save(dest_path)
+    # Create and save the final grid (only if dest_path is provided)
+    if dest_path is not None:
+        print(f'Saving image grid to "{dest_path}"...')
+        image = image.reshape(gridh, gridw, *image.shape[1:]).permute(0, 3, 1, 4, 2)
+        image = image.reshape(gridh * net.img_resolution, gridw * net.img_resolution, net.img_channels)
+        image = image.cpu().numpy()
+        PIL.Image.fromarray(image, 'RGB').save(dest_path)
     
     print('Done.')
+    
+    # Return average score for multiple runs
+    return avg_score
 
 #----------------------------------------------------------------------------
 

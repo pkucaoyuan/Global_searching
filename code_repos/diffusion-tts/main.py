@@ -91,10 +91,13 @@ def main():
     parser.add_argument('--lambda_', type=float, default=0.15, help='Master param lambda')
     parser.add_argument('--eps', type=float, default=0.4, help='Master param eps')
     parser.add_argument('--K', type=int, default=20, help='Master param K')
+    parser.add_argument('--K1', type=int, default=25, help='Master param K1 (for epsilon_1: first half steps)')
+    parser.add_argument('--K2', type=int, default=15, help='Master param K2 (for epsilon_1: second half steps)')
     parser.add_argument('--B', type=int, default=2, help='Master param B')
     parser.add_argument('--S', type=int, default=8, help='Master param S')
     parser.add_argument('--seed', type=int, default=0, help='Random seed')
     parser.add_argument('--device', type=str, default='cuda', help='Device')
+    parser.add_argument('--n_runs', type=int, default=1, help='Number of runs (if >1, output mean±std as in paper)')
     args = parser.parse_args()
 
     # -----------
@@ -158,8 +161,6 @@ def main():
         network_pkl = f'{model_root}/edm-imagenet-64x64-cond-adm.pkl'
         gridw = gridh = 6  # 生成36张图 (6x6 grid)
         num_images = gridw * gridh  # 36
-        latents = torch.randn([num_images, 3, 64, 64])
-        class_labels = torch.eye(1000)[torch.randint(1000, size=[num_images])]
         device = torch.device(args.device)
         num_steps = 18
 
@@ -193,26 +194,87 @@ def main():
                 sampling_params['B'] = args.B
             if args.S is not None:
                 sampling_params['S'] = args.S
+            # For epsilon_1, add K1 and K2
+            if args.method == 'epsilon_1':
+                if args.K1 is not None:
+                    sampling_params['K1'] = args.K1
+                if args.K2 is not None:
+                    sampling_params['K2'] = args.K2
 
         outname = args.output or f"edm_{args.method}_{args.scorer}.png"
-        generate_image_grid(
-            network_pkl,
-            outname,
-            latents,
-            class_labels,
-            seed=args.seed,
-            gridw=gridw,
-            gridh=gridh,
-            device=device,
-            num_steps=num_steps,
-            S_churn=40,
-            S_min=0.05,
-            S_max=50,
-            S_noise=1.003,
-            sampling_method=sampling_method,
-            sampling_params=sampling_params,
-        )
-        print(f"\n[EDM] Saved: {outname}\n")
+        
+        # Run multiple times if n_runs > 1
+        if args.n_runs == 1:
+            # Single run
+            torch.manual_seed(args.seed)
+            latents = torch.randn([num_images, 3, 64, 64])
+            class_labels = torch.eye(1000)[torch.randint(1000, size=[num_images])]
+            
+            avg_score = generate_image_grid(
+                network_pkl,
+                outname,
+                latents,
+                class_labels,
+                seed=args.seed,
+                gridw=gridw,
+                gridh=gridh,
+                device=device,
+                num_steps=num_steps,
+                S_churn=40,
+                S_min=0.05,
+                S_max=50,
+                S_noise=1.003,
+                sampling_method=sampling_method,
+                sampling_params=sampling_params,
+            )
+            print(f"\n[EDM] Score: {avg_score:.4f}")
+            print(f"[EDM] Saved: {outname}\n")
+        else:
+            # Multiple runs: collect scores and compute mean±std (as in paper)
+            import numpy as np
+            all_scores = []
+            
+            print(f"\nRunning {args.n_runs} times with different seeds...")
+            for run_idx in range(args.n_runs):
+                print(f"\n=== Run {run_idx + 1}/{args.n_runs} ===")
+                run_seed = args.seed + run_idx
+                
+                # Generate new latents and class_labels for each run
+                torch.manual_seed(run_seed)
+                run_latents = torch.randn([num_images, 3, 64, 64])
+                run_class_labels = torch.eye(1000)[torch.randint(1000, size=[num_images])]
+                
+                # Run with output file (only save last run's image)
+                temp_outname = outname if run_idx == args.n_runs - 1 else None
+                
+                score = generate_image_grid(
+                    network_pkl,
+                    temp_outname,
+                    run_latents,
+                    run_class_labels,
+                    seed=run_seed,
+                    gridw=gridw,
+                    gridh=gridh,
+                    device=device,
+                    num_steps=num_steps,
+                    S_churn=40,
+                    S_min=0.05,
+                    S_max=50,
+                    S_noise=1.003,
+                    sampling_method=sampling_method,
+                    sampling_params=sampling_params,
+                )
+                all_scores.append(score)
+            
+            # Compute mean and std (as in paper Table 1)
+            all_scores = np.array(all_scores)
+            mean_score = np.mean(all_scores)
+            std_score = np.std(all_scores)
+            
+            print(f"\n[EDM] Final results ({args.n_runs} runs):")
+            print(f"[EDM] Score: {mean_score:.4f} ± {std_score:.4f}")
+            if outname:
+                print(f"[EDM] Saved last run image: {outname}\n")
 
 if __name__ == '__main__':
     main()
