@@ -92,3 +92,6 @@ python -c "import torch; print(f'PyTorch: {torch.__version__}')"
 python -c "from src.models.edm_model import EDMModel; print('Installation successful!')"
 ```
 
+
+
+

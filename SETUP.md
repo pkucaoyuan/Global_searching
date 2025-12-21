@@ -83,3 +83,6 @@ A: 可以手动下载模型文件到`data/checkpoints/`目录
 **Q: 内存不足？**  
 A: 减小配置文件中的`batch_size`参数
 
+
+
+

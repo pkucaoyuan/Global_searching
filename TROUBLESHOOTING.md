@@ -108,3 +108,6 @@ print("src directory exists:", (project_root / "src").exists())
 3. **错误**: `ImportError: cannot import name 'EDMModel'`
    - **解决**: 检查 `src/models/edm_model.py` 是否存在且包含 `EDMModel` 类
 
+
+
+

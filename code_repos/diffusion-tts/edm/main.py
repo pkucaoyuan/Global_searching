@@ -9,7 +9,6 @@
 "Elucidating the Design Space of Diffusion-Based Generative Models"."""
 
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 import tqdm
 import pickle
@@ -42,6 +41,12 @@ class SamplingParams:
     K2: int = 15  # For EPS_GREEDY_1: K value for second half steps
     lambda_param: float = 0.15
     eps: float = 0.4
+    # 动态调度相关参数（默认关闭，extra_budget<=0 或 tau0<=0 时不启用）
+    extra_budget: float = 0.0  # 允许的额外 NFE 预算（相对 baseline）
+    gamma_reserve: float = 0.5  # 预算预留系数 γ
+    tau0: float = 0.0  # 动态阈值起点 τ0
+    alpha: float = 1.0  # 阈值随预算收紧的斜率 α
+    probe_M: int = 0  # 每步用于决策的 probe 噪声数 M（0 表示不做 probe）
     S: int = 8
     scorer: Scorer = field(default_factory=lambda: CompressibilityScorer(dtype=torch.float32))
 
@@ -720,6 +725,17 @@ def generate_image_grid(
         N = method_params.N
         K = method_params.K
         eps = method_params.eps
+        # 预算/阈值调度参数（extra_budget<=0 或 tau0<=0 时不启用）
+        use_budget_scheduler = method_params.extra_budget > 0 and method_params.tau0 > 0
+        B_extra = method_params.extra_budget
+        gamma_reserve = method_params.gamma_reserve
+        tau0 = method_params.tau0
+        alpha = method_params.alpha
+        probe_M = method_params.probe_M
+        B_used = 0.0
+        heavy_cost = float(K * N * 2 + 2)  # 近似每步 heavy search 的上限 NFE（两次 UNet 视为 2）
+        log_gain = sampling_method == SamplingMethod.EPS_GREEDY
+        gains_per_step = []  # 记录每个 timestep 内各迭代的 gain（对 EPS_GREEDY）
         
         print(f"Zero-Order parameters: lambda={lambda_param / np.sqrt(3 * 64 * 64)}, N={N}, K={K}, eps={eps}")
         
@@ -739,9 +755,59 @@ def generate_image_grid(
             else:
                 pivot_noise = torch.randn_like(x_cur)
             
+            # baseline：用当前 pivot 做一次 step，仅取 x0 评分（用于阈值/日志）
+            need_baseline = use_budget_scheduler or log_gain
+            base_scores = None
+            if need_baseline:
+                with torch.no_grad():
+                    _, x0_baseline = step(x_cur, t_cur, t_next, i, pivot_noise, class_labels)
+                x_base_for_scoring = (x0_baseline * 127.5 + 128).clip(0, 255).to(torch.uint8)
+                base_timesteps = torch.zeros(x_base_for_scoring.shape[0], device=device)
+                base_scores = method_params.scorer(x_base_for_scoring, class_labels, base_timesteps)
+                base_scores = base_scores.reshape(-1)  # [batch_size]
+
+            # -------- 预算 & 难度调度（可选）--------
+            if use_budget_scheduler:
+
+                # probe：M 个候选噪声，仅做“一步 x0 + score”
+                D_t = 0.0
+                if probe_M > 0:
+                    candidate_noises = [torch.randn_like(x_cur) for _ in range(probe_M)]
+                    all_noises = torch.cat(candidate_noises, dim=0)  # [M*batch, C, H, W]
+                    x_cur_expanded_probe = x_cur.repeat(probe_M, 1, 1, 1)
+                    class_labels_expanded_probe = None
+                    if class_labels is not None:
+                        class_labels_expanded_probe = class_labels.repeat(probe_M, 1)
+                    with torch.no_grad():
+                        _, x0_probe = step(x_cur_expanded_probe, t_cur, t_next, i, all_noises, class_labels_expanded_probe)
+                    x_probe_for_scoring = (x0_probe * 127.5 + 128).clip(0, 255).to(torch.uint8)
+                    probe_timesteps = torch.zeros(x_probe_for_scoring.shape[0], device=device)
+                    probe_scores = method_params.scorer(x_probe_for_scoring, class_labels_expanded_probe, probe_timesteps)
+                    probe_scores = probe_scores.reshape(probe_M, -1)  # [M, batch]
+                    # 使用 gain 作为难度度量：max - baseline
+                    D_t = (probe_scores.max(dim=0).values - base_scores).mean().item()
+                    # 注意：不计入 probe 成本，按用户要求忽略探针的 NFE
+                B_rem = max(B_extra - B_used, 0.0)
+                b_t = B_rem / B_extra  # 剩余预算比例
+                tau_t = tau0 * (1 + alpha * (1 - b_t))  # 动态阈值
+                steps_left = (len(t_steps) - 1) - (i + 1)
+                allow_budget = (B_rem - heavy_cost) >= gamma_reserve * steps_left * heavy_cost and B_rem >= heavy_cost
+
+                # 若难度不足或预算不够，则跳过 heavy search，直接 baseline 一步
+                if not (D_t > tau_t and allow_budget):
+                    x_next, _ = step(x_cur, t_cur, t_next, i, pivot_noise, class_labels)
+                    if log_gain:
+                        gains_per_step.append(0.0)
+                    continue
+
             # For each timestep, store the best noise from each local search iteration
             # Shape: [K, batch_size, C, H, W]
             best_noises_this_timestep = []
+            per_iter_gains = []  # 记录当前 timestep 内每次迭代的 gain
+            iter_cost_used = 0.0  # 实际使用的 NFE 成本
+            prev_best_scores = None
+            break_inner = False
+            last_best_scores = None
             
             # Run K iterations of local search
             for k in range(K):
@@ -843,6 +909,11 @@ def generate_image_grid(
                 
                 # Find the best noise for each sample in the batch
                 best_indices = scores.argmax(dim=0)  # [batch_size]
+                iteration_best_scores = scores.max(dim=0).values  # [batch_size]
+                last_best_scores = iteration_best_scores
+                if log_gain and base_scores is not None:
+                    gain_iter = (iteration_best_scores - base_scores).mean().item()
+                    per_iter_gains.append(gain_iter)
                 
                 # Gather best noise for each batch element
                 candidate_noises_batch = all_noises.reshape(N, batch_size, *all_noises.shape[1:])  # [N, batch_size, C, H, W]
@@ -858,9 +929,30 @@ def generate_image_grid(
                 
                 # Update pivot_noise for next iteration
                 pivot_noise = new_pivot_noise
+                iter_cost_used += float(N * 2)  # 本次迭代成本（约 N*2 次 UNet 调用）
+                
+                # -------- K 内动态早停（第一个迭代不判断）--------
+                if use_budget_scheduler and prev_best_scores is not None:
+                    gain_mean = (iteration_best_scores - prev_best_scores).mean().item()
+                    iter_tau = tau_t  # 使用同一动态阈值
+                    if gain_mean <= iter_tau:
+                        break_inner = True
+                        break
+                prev_best_scores = iteration_best_scores
             
             # Use the final best noise for this denoising step
             x_next, _ = step(x_cur, t_cur, t_next, i, pivot_noise, class_labels)
+            if use_budget_scheduler:
+                # 实际成本 = 已迭代成本 + 最终一步 step 成本（约 2 次 UNet）
+                actual_heavy_cost = iter_cost_used + 2.0
+                B_used += actual_heavy_cost
+            if log_gain:
+                if per_iter_gains:
+                    gains_per_step.append(per_iter_gains)
+                else:
+                    gains_per_step.append([0.0])
+        if log_gain:
+            print(f"[EPS_GREEDY] Gain per timestep & per-iteration (mean over batch): {gains_per_step}")
     
     elif sampling_method == SamplingMethod.EPS_GREEDY_1:
         # EPS_GREEDY variant with adaptive K: first half K=K1, second half K=K2
