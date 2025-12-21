@@ -913,9 +913,12 @@ def generate_image_grid(
                 best_indices = scores.argmax(dim=0)  # [batch_size]
                 iteration_best_scores = scores.max(dim=0).values  # [batch_size]
                 last_best_scores = iteration_best_scores
-                if log_gain and base_scores is not None:
-                    gain_iter = (iteration_best_scores - base_scores).mean().item()
-                    per_iter_gains.append(gain_iter)
+                if log_gain:
+                    if prev_best_scores is None:
+                        per_iter_gains.append(0.0)
+                    else:
+                        gain_iter = (iteration_best_scores - prev_best_scores).mean().item()
+                        per_iter_gains.append(gain_iter)
                 
                 # Gather best noise for each batch element
                 candidate_noises_batch = all_noises.reshape(N, batch_size, *all_noises.shape[1:])  # [N, batch_size, C, H, W]
