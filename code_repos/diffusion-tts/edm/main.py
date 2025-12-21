@@ -60,6 +60,7 @@ def generate_image_grid(
     sampling_method: SamplingMethod = SamplingMethod.NAIVE,
     sampling_params: Optional[Dict[str, Any]] = None,
     precomputed_noise: Optional[Dict[int, torch.Tensor]] = None,
+    log_gain: bool = False,
 ):
     # Set up environment and seed
     batch_size = gridw * gridh
@@ -727,6 +728,7 @@ def generate_image_grid(
         eps = method_params.eps
         # 预算/阈值调度参数（extra_budget<=0 或 tau0<=0 时不启用）
         use_budget_scheduler = method_params.extra_budget > 0 and method_params.tau0 > 0
+        log_gain = log_gain or (sampling_method == SamplingMethod.EPS_GREEDY)
         B_extra = method_params.extra_budget
         gamma_reserve = method_params.gamma_reserve
         tau0 = method_params.tau0

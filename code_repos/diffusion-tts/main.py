@@ -98,6 +98,7 @@ def main():
     parser.add_argument('--seed', type=int, default=0, help='Random seed')
     parser.add_argument('--device', type=str, default='cuda', help='Device')
     parser.add_argument('--n_runs', type=int, default=1, help='Number of runs (if >1, output mean±std as in paper)')
+    parser.add_argument('--log_gain', action='store_true', help='Log per-timestep gains for EPS_GREEDY')
     args = parser.parse_args()
 
     # -----------
@@ -226,6 +227,7 @@ def main():
                 S_noise=1.003,
                 sampling_method=sampling_method,
                 sampling_params=sampling_params,
+                log_gain=args.log_gain,
             )
             print(f"\n[EDM] Score: {avg_score:.4f}")
             print(f"[EDM] Saved: {outname}\n")
@@ -262,7 +264,8 @@ def main():
                     S_max=50,
                     S_noise=1.003,
                     sampling_method=sampling_method,
-                    sampling_params=sampling_params,
+                sampling_params=sampling_params,
+                log_gain=args.log_gain,
                 )
                 all_scores.append(score)
             
