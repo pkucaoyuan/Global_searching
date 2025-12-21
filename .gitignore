@@ -47,6 +47,7 @@ results/
 *.png
 *.jpg
 *.jpeg
+code_repos/diffusion-tts/log_*.txt
 
 # 实验日志
 logs/
