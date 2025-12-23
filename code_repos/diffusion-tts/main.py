@@ -93,6 +93,7 @@ def main():
     parser.add_argument('--K', type=int, default=20, help='Master param K')
     parser.add_argument('--K1', type=int, default=25, help='Master param K1 (epsilon_1: steps 0-1 & last 4)')
     parser.add_argument('--K2', type=int, default=15, help='Master param K2 (epsilon_1: remaining middle steps)')
+    parser.add_argument('--revert_on_negative', action='store_true', help='epsilon_1: 若本迭代增益为负则保持上一轮 pivot')
     parser.add_argument('--B', type=int, default=2, help='Master param B')
     parser.add_argument('--S', type=int, default=8, help='Master param S')
     parser.add_argument('--seed', type=int, default=0, help='Random seed')
@@ -201,6 +202,8 @@ def main():
                     sampling_params['K1'] = args.K1
                 if args.K2 is not None:
                     sampling_params['K2'] = args.K2
+                if args.revert_on_negative:
+                    sampling_params['revert_on_negative'] = True
 
         outname = args.output or f"edm_{args.method}_{args.scorer}.png"
         

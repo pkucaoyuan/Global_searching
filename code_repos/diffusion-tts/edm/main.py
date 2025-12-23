@@ -39,6 +39,7 @@ class SamplingParams:
     K: int = 20
     K1: int = 25  # For EPS_GREEDY_1: K for头两步+最后4步
     K2: int = 15  # For EPS_GREEDY_1: K for其余中间步
+    revert_on_negative: bool = False  # EPS_GREEDY_1: 负增益时是否回退到上一轮 pivot（首迭代不回退）
     lambda_param: float = 0.15
     eps: float = 0.4
     # 动态调度相关参数（默认关闭，extra_budget<=0 或 tau0<=0 时不启用）
@@ -972,6 +973,7 @@ def generate_image_grid(
         eps = method_params.eps
         K1 = method_params.K1
         K2 = method_params.K2
+        revert_on_negative = getattr(method_params, "revert_on_negative", False)
         
         num_steps_total = len(t_steps) - 1
         head_count = min(2, num_steps_total)  # 前2步（若存在）
@@ -1102,7 +1104,7 @@ def generate_image_grid(
                 ])  # [batch_size, C, H, W]
                 
                 # 负增益防护：若当前迭代平均提升为负，则保持上一轮 pivot、不更新（首迭代不触发）
-                if prev_best_scores is not None:
+                if revert_on_negative and prev_best_scores is not None:
                     gain_mean = (iteration_best_scores - prev_best_scores).mean().item()
                     if gain_mean < 0:
                         continue  # 保持旧 pivot，下一轮仍用旧 pivot 进行探索
