@@ -37,8 +37,8 @@ class SamplingParams:
     B: int = 2
     N: int = 4
     K: int = 20
-    K1: int = 25  # For EPS_GREEDY_1: K value for first half steps
-    K2: int = 15  # For EPS_GREEDY_1: K value for second half steps
+    K1: int = 25  # For EPS_GREEDY_1: K for头两步+最后4步
+    K2: int = 15  # For EPS_GREEDY_1: K for其余中间步
     lambda_param: float = 0.15
     eps: float = 0.4
     # 动态调度相关参数（默认关闭，extra_budget<=0 或 tau0<=0 时不启用）
@@ -768,6 +768,7 @@ def generate_image_grid(
                 base_scores = method_params.scorer(x_base_for_scoring, class_labels, base_timesteps)
                 base_scores = base_scores.reshape(-1)  # [batch_size]
 
+            iterations_run = 0  # 实际运行的迭代次数
             # -------- 预算 & 难度调度（可选）--------
             if use_budget_scheduler:
 
@@ -799,7 +800,8 @@ def generate_image_grid(
                 if not (D_t > tau_t and allow_budget):
                     x_next, _ = step(x_cur, t_cur, t_next, i, pivot_noise, class_labels)
                     if log_gain:
-                        gains_per_step.append(0.0)
+                        gains_per_step.append([0.0])
+                        print(f"[EPS_GREEDY] step {i}: K_used={iterations_run}")
                     continue
 
             # For each timestep, store the best noise from each local search iteration
@@ -935,6 +937,7 @@ def generate_image_grid(
                 # Update pivot_noise for next iteration
                 pivot_noise = new_pivot_noise
                 iter_cost_used += float(N * 2)  # 本次迭代成本（约 N*2 次 UNet 调用）
+                iterations_run += 1
                 
                 # -------- K 内动态早停（第一个迭代不判断）--------
                 if use_budget_scheduler and prev_best_scores is not None:
@@ -947,6 +950,7 @@ def generate_image_grid(
             
             # Use the final best noise for this denoising step
             x_next, _ = step(x_cur, t_cur, t_next, i, pivot_noise, class_labels)
+            print(f"[EPS_GREEDY_1] step {i}: K_used={iterations_run}")
             if use_budget_scheduler:
                 # 实际成本 = 已迭代成本 + 最终一步 step 成本（约 2 次 UNet）
                 actual_heavy_cost = iter_cost_used + 2.0
@@ -956,22 +960,29 @@ def generate_image_grid(
                     gains_per_step.append(per_iter_gains)
                 else:
                     gains_per_step.append([0.0])
+                print(f"[EPS_GREEDY] step {i}: K_used={iterations_run}")
         if log_gain:
             print(f"[EPS_GREEDY] Gain per timestep & per-iteration (mean over batch): {gains_per_step}")
     
     elif sampling_method == SamplingMethod.EPS_GREEDY_1:
-        # EPS_GREEDY variant with adaptive K: first half K=K1, second half K=K2
+        # EPS_GREEDY variant with adaptive K:
+        # steps 0-1 & last 4 steps use K1, middle steps use K2
         lambda_param = method_params.lambda_param * np.sqrt(3 * 64 * 64)
         N = method_params.N
         eps = method_params.eps
         K1 = method_params.K1
         K2 = method_params.K2
         
-        # Calculate the midpoint for switching K
         num_steps_total = len(t_steps) - 1
-        half_point = num_steps_total // 2
+        head_count = min(2, num_steps_total)  # 前2步（若存在）
+        tail_count = min(4, max(num_steps_total - head_count, 0))  # 后4步（若存在）
+        tail_start = num_steps_total - tail_count
         
-        print(f"EPS_GREEDY_1 parameters: lambda={lambda_param / np.sqrt(3 * 64 * 64)}, N={N}, K1={K1} (first {half_point} steps), K2={K2} (remaining steps), eps={eps}")
+        print(
+            f"EPS_GREEDY_1 parameters: lambda={lambda_param / np.sqrt(3 * 64 * 64)}, "
+            f"N={N}, K1={K1} (head {head_count} steps + tail {tail_count} steps), "
+            f"K2={K2} (middle steps), eps={eps}"
+        )
         
         # Use precomputed pivot noise if provided, otherwise generate a fresh one
         if precomputed_noise is not None and 'pivot' in precomputed_noise:
@@ -983,8 +994,10 @@ def generate_image_grid(
         for i, (t_cur, t_next) in tqdm.tqdm(list(enumerate(zip(t_steps[:-1], t_steps[1:]))), unit='step'):
             x_cur = x_next
             
-            # Determine K based on current step: first half K=K1, second half K=K2
-            K = K1 if i < half_point else K2
+            # Determine K based on current step: head/tail use K1, middle use K2
+            is_head_tail = (i < head_count) or (i >= tail_start)
+            K = K1 if is_head_tail else K2
+            iterations_run = K
             
             # Initialize pivot noise with a fresh Gaussian sample
             if precomputed_noise is not None and f'pivot_{i}' in precomputed_noise:
