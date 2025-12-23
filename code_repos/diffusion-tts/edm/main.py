@@ -998,6 +998,7 @@ def generate_image_grid(
             is_head_tail = (i < head_count) or (i >= tail_start)
             K = K1 if is_head_tail else K2
             iterations_run = K
+            prev_best_scores = None  # 用于跨迭代比较（首迭代不触发负增益回退）
             
             # Initialize pivot noise with a fresh Gaussian sample
             if precomputed_noise is not None and f'pivot_{i}' in precomputed_noise:
@@ -1090,6 +1091,7 @@ def generate_image_grid(
                 
                 # Find the best noise for each sample in the batch
                 best_indices = scores.argmax(dim=0)  # [batch_size]
+                iteration_best_scores = scores.max(dim=0).values  # [batch_size]
                 
                 # Gather best noise for each batch element
                 candidate_noises_batch = all_noises.reshape(N, batch_size, *all_noises.shape[1:])  # [N, batch_size, C, H, W]
@@ -1099,11 +1101,18 @@ def generate_image_grid(
                     for batch_idx, best_idx in enumerate(best_indices)
                 ])  # [batch_size, C, H, W]
                 
+                # 负增益防护：若当前迭代平均提升为负，则保持上一轮 pivot、不更新（首迭代不触发）
+                if prev_best_scores is not None:
+                    gain_mean = (iteration_best_scores - prev_best_scores).mean().item()
+                    if gain_mean < 0:
+                        continue  # 保持旧 pivot，下一轮仍用旧 pivot 进行探索
+                
                 # Store the best noise from this iteration
                 best_noises_this_timestep.append(new_pivot_noise.cpu().clone())
                 
                 # Update pivot_noise for next iteration
                 pivot_noise = new_pivot_noise
+                prev_best_scores = iteration_best_scores
             
             # Use the final best noise for this denoising step
             x_next, _ = step(x_cur, t_cur, t_next, i, pivot_noise, class_labels)
