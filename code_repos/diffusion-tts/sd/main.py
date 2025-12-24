@@ -106,8 +106,13 @@ def main():
 
     # Load prompts
     prompts = []
-    n_runs_effective = args.n_runs
+    # Interpretation:
+    # - n_runs 表示：从 CSV 取多少个 prompt；每个 prompt 只跑一次。
+    # - 若未提供 prompt_csv，则只用单个 prompt，忽略 n_runs。
+    n_runs_effective = 1
     if args.prompt_csv:
+        if args.n_runs is None or args.n_runs <= 0:
+            raise ValueError("When using prompt_csv, please set --n_runs to a positive number (prompt count).")
         with open(args.prompt_csv, 'r', encoding='utf-8') as f:
             reader = csv.reader(f)
             rows = list(reader)
@@ -117,9 +122,12 @@ def main():
             prompts = [row[0] for row in rows if row]
         if not prompts:
             raise ValueError("prompt_csv provided but no prompts found")
+        prompts = prompts[:args.n_runs]
+        if len(prompts) < args.n_runs:
+            print(f"[SD] Warning: requested n_runs={args.n_runs} prompts but CSV only has {len(prompts)}; using available prompts.")
     else:
         prompts = [args.prompt]
-        n_runs_effective = args.n_runs
+        n_runs_effective = 1  # 单 prompt 场景，不复用 n_runs
 
     def make_outname(idx: int):
         if args.output:
@@ -129,28 +137,12 @@ def main():
 
     all_scores = []
     for idx, prompt_text in enumerate(prompts):
-        if n_runs_effective == 1:
-            best_result, best_score = run_once(idx, prompt_text, args.seed)
-            outname = make_outname(idx)
-            best_result.images[0].save(outname)
-            print(f"\n[SD][{idx}] Prompt: {prompt_text}")
-            print(f"[SD] Saved: {outname}\nBest score: {best_score}\n")
-            all_scores.append(best_score)
-        else:
-            scores = []
-            last_result = None
-            for r in range(n_runs_effective):
-                result, score = run_once(idx * n_runs_effective + r, prompt_text, args.seed)
-                scores.append(score)
-                last_result = result
-            mean = float(np.mean(scores))
-            std = float(np.std(scores))
-            outname = make_outname(idx)
-            last_result.images[0].save(outname)
-            print(f"\n[SD][{idx}] Prompt: {prompt_text}")
-            print(f"[SD] Score: {mean:.4f} ± {std:.4f} over {n_runs_effective} runs")
-            print(f"[SD] Saved last run: {outname}\n")
-            all_scores.append(mean)
+        best_result, best_score = run_once(idx, prompt_text, args.seed)
+        outname = make_outname(idx)
+        best_result.images[0].save(outname)
+        print(f"\n[SD][{idx}] Prompt: {prompt_text}")
+        print(f"[SD] Saved: {outname}\nBest score: {best_score}\n")
+        all_scores.append(best_score)
 
     if len(prompts) > 1:
         overall_mean = float(np.mean(all_scores))
