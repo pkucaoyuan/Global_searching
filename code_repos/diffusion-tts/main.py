@@ -128,7 +128,19 @@ def main():
             torch_dtype=torch.float16,
         ).to(args.device)
 
-        method = args.method
+        # map EDM name to SD internal name
+        method_map_sd = {
+            'naive': 'naive',
+            'rejection': 'rejection',
+            'beam': 'beam',
+            'mcts': 'mcts',
+            'zero_order': 'zero_order',
+            'eps_greedy': 'eps_greedy',
+            'epsilon_1': 'eps_greedy_1',
+        }
+        if args.method not in method_map_sd:
+            raise ValueError(f"Unknown method for sd backend: {args.method}")
+        method = method_map_sd[args.method]
         MASTER_PARAMS = {
             'N': args.N,
             'lambda': args.lambda_,
