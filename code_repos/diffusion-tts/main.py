@@ -99,6 +99,7 @@ def main():
     parser.add_argument('--S', type=int, default=8, help='Master param S')
     parser.add_argument('--seed', type=int, default=0, help='Random seed')
     parser.add_argument('--device', type=str, default='cuda', help='Device')
+    parser.add_argument('--num_steps', type=int, default=50, help='Number of denoising steps (SD only)')
     parser.add_argument('--n_runs', type=int, default=1, help='Number of runs (if >1, output mean±std as in paper)')
     parser.add_argument('--log_gain', action='store_true', help='Log per-timestep gains for EPS_GREEDY')
     args = parser.parse_args()

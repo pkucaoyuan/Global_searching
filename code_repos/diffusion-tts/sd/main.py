@@ -31,7 +31,7 @@ def main():
     parser.add_argument('--scorer', type=str, choices=['brightness', 'compressibility', 'clip'], default='brightness', help='Scorer')
     parser.add_argument('--method', type=str, default='naive', help='Sampling method (naive, rejection, beam, mcts, zero_order, eps_greedy, epsilon_1)')
     parser.add_argument('--device', type=str, default='cuda', help='Device')
-    parser.add_argument('--num_steps', type=int, default=18, help='Number of denoising steps')
+    parser.add_argument('--num_steps', type=int, default=50, help='Number of denoising steps (default 50, align with SD baseline)')
     parser.add_argument('--seed', type=int, default=0, help='Random seed')
     parser.add_argument('--n_runs', type=int, default=1, help='Number of runs; if >1 report mean±std')
     # master params
