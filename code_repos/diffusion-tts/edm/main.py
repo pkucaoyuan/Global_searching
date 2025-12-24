@@ -974,6 +974,10 @@ def generate_image_grid(
         K1 = method_params.K1
         K2 = method_params.K2
         revert_on_negative = getattr(method_params, "revert_on_negative", False)
+        if log_gain and revert_on_negative:
+            print("[EPS_GREEDY_1] revert_on_negative enabled")
+        if log_gain:
+            gains_per_step = []
         
         num_steps_total = len(t_steps) - 1
         head_count = min(2, num_steps_total)  # 前2步（若存在）
@@ -999,7 +1003,7 @@ def generate_image_grid(
             # Determine K based on current step: head/tail use K1, middle use K2
             is_head_tail = (i < head_count) or (i >= tail_start)
             K = K1 if is_head_tail else K2
-            iterations_run = K
+            iterations_run = 0
             prev_best_scores = None  # 用于跨迭代比较（首迭代不触发负增益回退）
             
             # Initialize pivot noise with a fresh Gaussian sample
@@ -1010,9 +1014,11 @@ def generate_image_grid(
             
             # For each timestep, store the best noise from each local search iteration
             best_noises_this_timestep = []
+            per_iter_gains = [] if log_gain else None
             
             # Run K iterations of local search
             for k in range(K):
+                iterations_run += 1
                 base_noise = pivot_noise
                 
                 # Generate N candidate noises by adding scaled random vectors
@@ -1095,6 +1101,12 @@ def generate_image_grid(
                 best_indices = scores.argmax(dim=0)  # [batch_size]
                 iteration_best_scores = scores.max(dim=0).values  # [batch_size]
                 
+                gain_mean = None
+                if prev_best_scores is not None:
+                    gain_mean = (iteration_best_scores - prev_best_scores).mean().item()
+                if log_gain:
+                    per_iter_gains.append(0.0 if gain_mean is None else gain_mean)
+                
                 # Gather best noise for each batch element
                 candidate_noises_batch = all_noises.reshape(N, batch_size, *all_noises.shape[1:])  # [N, batch_size, C, H, W]
                 
@@ -1104,10 +1116,10 @@ def generate_image_grid(
                 ])  # [batch_size, C, H, W]
                 
                 # 负增益防护：若当前迭代平均提升为负，则保持上一轮 pivot、不更新（首迭代不触发）
-                if revert_on_negative and prev_best_scores is not None:
-                    gain_mean = (iteration_best_scores - prev_best_scores).mean().item()
-                    if gain_mean < 0:
-                        continue  # 保持旧 pivot，下一轮仍用旧 pivot 进行探索
+                if revert_on_negative and gain_mean is not None and gain_mean < 0:
+                    if log_gain:
+                        print(f"[EPS_GREEDY_1] step {i}, iter {k}: gain={gain_mean:.6f}<0, revert pivot")
+                    continue  # 保持旧 pivot，下一轮仍用旧 pivot 进行探索
                 
                 # Store the best noise from this iteration
                 best_noises_this_timestep.append(new_pivot_noise.cpu().clone())
@@ -1118,6 +1130,12 @@ def generate_image_grid(
             
             # Use the final best noise for this denoising step
             x_next, _ = step(x_cur, t_cur, t_next, i, pivot_noise, class_labels)
+            if log_gain:
+                gains_per_step.append(per_iter_gains if per_iter_gains else [0.0])
+            print(f"[EPS_GREEDY_1] step {i}: K_used={iterations_run}, revert_on_negative={revert_on_negative}")
+
+        if log_gain:
+            print(f"[EPS_GREEDY_1] Gain per timestep & per-iteration (mean over batch): {gains_per_step}")
 
     else:  # NAIVE (default)
         for i, (t_cur, t_next) in tqdm.tqdm(list(enumerate(zip(t_steps[:-1], t_steps[1:]))), unit='step'):
