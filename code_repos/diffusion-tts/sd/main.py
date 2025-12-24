@@ -27,7 +27,6 @@ def main():
     parser = argparse.ArgumentParser(description="Stable Diffusion T2I with search methods (align args with EDM)")
     parser.add_argument('--prompt', type=str, default="YOUR PROMPT HERE", help='Text prompt (ignored if prompt_csv set)')
     parser.add_argument('--prompt_csv', type=str, default=None, help='CSV file with prompts (first column). If set, iterate prompts.')
-    parser.add_argument('--num_prompts', type=int, default=None, help='Limit number of prompts loaded from CSV; if unset and prompt_csv is provided, n_runs will be used as prompt count')
     parser.add_argument('--output', type=str, default=None, help='Output file name (multi-prompt: will append index)')
     parser.add_argument('--scorer', type=str, choices=['brightness', 'compressibility', 'clip'], default='brightness', help='Scorer')
     parser.add_argument('--method', type=str, default='naive', help='Sampling method (naive, rejection, beam, mcts, zero_order, eps_greedy, epsilon_1)')
@@ -107,7 +106,6 @@ def main():
 
     # Load prompts
     prompts = []
-    prompt_limit = args.num_prompts
     n_runs_effective = args.n_runs
     if args.prompt_csv:
         with open(args.prompt_csv, 'r', encoding='utf-8') as f:
@@ -117,18 +115,10 @@ def main():
             if rows and rows[0] and 'prompt' in rows[0][0].lower():
                 rows = rows[1:]
             prompts = [row[0] for row in rows if row]
-        # If num_prompts is not set, use n_runs as prompt count, and do single run per prompt
-        if prompt_limit is None and args.n_runs is not None and args.n_runs > 1:
-            prompt_limit = args.n_runs
-            n_runs_effective = 1
-            print(f"[SD] prompt_csv provided without num_prompts; using n_runs={args.n_runs} to take first {prompt_limit} prompts (per-prompt n_runs=1)")
-        if prompt_limit is not None:
-            prompts = prompts[:prompt_limit]
         if not prompts:
             raise ValueError("prompt_csv provided but no prompts found")
     else:
         prompts = [args.prompt]
-        prompt_limit = len(prompts)
         n_runs_effective = args.n_runs
 
     def make_outname(idx: int):
