@@ -3,6 +3,7 @@ import sys
 import importlib.util
 import torch
 import argparse
+import csv
 from pathlib import Path
 import numpy as np
 from tqdm import tqdm
@@ -24,8 +25,10 @@ from scorers import BrightnessScorer, CompressibilityScorer, CLIPScorer
 
 def main():
     parser = argparse.ArgumentParser(description="Stable Diffusion T2I with search methods (align args with EDM)")
-    parser.add_argument('--prompt', type=str, default="YOUR PROMPT HERE", help='Text prompt')
-    parser.add_argument('--output', type=str, default=None, help='Output file name')
+    parser.add_argument('--prompt', type=str, default="YOUR PROMPT HERE", help='Text prompt (ignored if prompt_csv set)')
+    parser.add_argument('--prompt_csv', type=str, default=None, help='CSV file with prompts (first column). If set, iterate prompts.')
+    parser.add_argument('--num_prompts', type=int, default=None, help='Limit number of prompts loaded from CSV')
+    parser.add_argument('--output', type=str, default=None, help='Output file name (multi-prompt: will append index)')
     parser.add_argument('--scorer', type=str, choices=['brightness', 'compressibility', 'clip'], default='brightness', help='Scorer')
     parser.add_argument('--method', type=str, default='naive', help='Sampling method (naive, rejection, beam, mcts, zero_order, eps_greedy, epsilon_1)')
     parser.add_argument('--device', type=str, default='cuda', help='Device')
@@ -83,7 +86,7 @@ def main():
         'revert_on_negative': args.revert_on_negative,
     }
 
-    def run_once(run_idx: int):
+    def run_once(run_idx: int, prompt_text: str):
         if args.seed is not None:
             torch.manual_seed(args.seed + run_idx)
         best_result, best_score = None, float('-inf')
@@ -91,7 +94,7 @@ def main():
         repeats = base_params['N'] if sd_method == "rejection" else 1
         for _ in range(repeats):
             result, score = local_pipe(
-                prompt=args.prompt,
+                prompt=prompt_text,
                 num_inference_steps=args.num_steps,
                 score_function=scorer,
                 method=sd_method,
@@ -102,24 +105,58 @@ def main():
                 best_result, best_score = result, score_value
         return best_result, best_score
 
-    if args.n_runs == 1:
-        best_result, best_score = run_once(0)
-        outname = args.output or f"sd_{args.method}_{args.scorer}.png"
-        best_result.images[0].save(outname)
-        print(f"\n[SD] Saved: {outname}\nBest score: {best_score}\n")
+    # Load prompts
+    prompts = []
+    if args.prompt_csv:
+        with open(args.prompt_csv, 'r', encoding='utf-8') as f:
+            reader = csv.reader(f)
+            rows = list(reader)
+            # skip header if contains 'prompt'
+            if rows and rows[0] and 'prompt' in rows[0][0].lower():
+                rows = rows[1:]
+            prompts = [row[0] for row in rows if row]
+        if args.num_prompts is not None:
+            prompts = prompts[:args.num_prompts]
+        if not prompts:
+            raise ValueError("prompt_csv provided but no prompts found")
     else:
-        scores = []
-        last_result = None
-        for r in range(args.n_runs):
-            result, score = run_once(r)
-            scores.append(score)
-            last_result = result
-        mean = float(np.mean(scores))
-        std = float(np.std(scores))
-        outname = args.output or f"sd_{args.method}_{args.scorer}.png"
-        last_result.images[0].save(outname)
-        print(f"\n[SD] Score: {mean:.4f} ± {std:.4f} over {args.n_runs} runs")
-        print(f"[SD] Saved last run: {outname}\n")
+        prompts = [args.prompt]
+
+    def make_outname(idx: int):
+        if args.output:
+            stem = Path(args.output)
+            return f"{stem.stem}_{idx}{stem.suffix or '.png'}"
+        return f"sd_{args.method}_{args.scorer}_{idx}.png" if len(prompts) > 1 else f"sd_{args.method}_{args.scorer}.png"
+
+    all_scores = []
+    for idx, prompt_text in enumerate(prompts):
+        if args.n_runs == 1:
+            best_result, best_score = run_once(idx, prompt_text)
+            outname = make_outname(idx)
+            best_result.images[0].save(outname)
+            print(f"\n[SD][{idx}] Prompt: {prompt_text}")
+            print(f"[SD] Saved: {outname}\nBest score: {best_score}\n")
+            all_scores.append(best_score)
+        else:
+            scores = []
+            last_result = None
+            for r in range(args.n_runs):
+                result, score = run_once(idx * args.n_runs + r, prompt_text)
+                scores.append(score)
+                last_result = result
+            mean = float(np.mean(scores))
+            std = float(np.std(scores))
+            outname = make_outname(idx)
+            last_result.images[0].save(outname)
+            print(f"\n[SD][{idx}] Prompt: {prompt_text}")
+            print(f"[SD] Score: {mean:.4f} ± {std:.4f} over {args.n_runs} runs")
+            print(f"[SD] Saved last run: {outname}\n")
+            all_scores.append(mean)
+
+    if len(prompts) > 1:
+        overall_mean = float(np.mean(all_scores))
+        overall_std = float(np.std(all_scores))
+        print(f"[SD] Overall {len(prompts)} prompts mean score: {overall_mean:.4f} ± {overall_std:.4f}")
 
 
 if __name__ == "__main__":
