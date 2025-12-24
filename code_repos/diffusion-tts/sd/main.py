@@ -27,13 +27,16 @@ local_pipe = StableDiffusionPipeline.from_pretrained(
     torch_dtype=torch.float16,
 ).to(f'cuda')
 
-method = "naive" # can be either "naive", "rejection", "beam", "mcts", "zero_order", or "eps_greedy"
+method = "naive" # can be either "naive", "rejection", "beam", "mcts", "zero_order", "eps_greedy", or "eps_greedy_1"
 
 MASTER_PARAMS = {
     'N': 4,
     'lambda': 0.15,
     'eps': 0.4,
-    'K': 20,
+    'K': 20,    # eps_greedy / zero_order
+    'K1': 25,   # eps_greedy_1: head 2 + tail 4 steps
+    'K2': 15,   # eps_greedy_1: middle steps
+    'revert_on_negative': False,  # eps_greedy_1 optional pivot revert
     'B': 2,
     'S': 8,
 }

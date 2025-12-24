@@ -890,7 +890,7 @@ class StableDiffusionPipeline(
                 will be passed as `callback_kwargs` argument. You will only be able to include variables listed in the
                 `._callback_tensor_inputs` attribute of your pipeline class.
             method (`str`, *optional*, defaults to "eps_greedy"):
-                The method to use for generation. Can be "eps_greedy", "zero_order", "beam", or "mcts".
+                The method to use for generation. Can be "eps_greedy", "eps_greedy_1", "zero_order", "beam", or "mcts".
             params (`dict`, *optional*):
                 The parameters for the method.
         
@@ -1365,30 +1365,48 @@ class StableDiffusionPipeline(
 
                 pivot = torch.randn_like(latents)
 
-                if method == "eps_greedy" or method == "zero_order":
-                    for _ in range(params['K']):
+                if method in ("eps_greedy", "zero_order", "eps_greedy_1"):
+                    # determine K per timestep (eps_greedy_1: head 2 + tail 4 use K1, others K2)
+                    if method == "eps_greedy_1":
+                        total_steps = len(timesteps)
+                        head_count = min(2, total_steps)
+                        tail_count = min(4, max(total_steps - head_count, 0))
+                        tail_start = total_steps - tail_count
+                        is_head_tail = (i < head_count) or (i >= tail_start)
+                        K_cur = params.get("K1", 25) if is_head_tail else params.get("K2", 15)
+                        revert_on_negative = params.get("revert_on_negative", False)
+                    else:
+                        K_cur = params["K"]
+                        revert_on_negative = False
+
+                    prev_best_score = None
+
+                    for _k in range(K_cur):
                         noise_candidates = []
-                        for _ in range(params['N']):
-                            # choose random float between 0 and 1
+                        for _ in range(params["N"]):
                             r = torch.rand(1).item()
-                            if r < params['eps'] if method == "eps_greedy" else 0.0:
+                            if r < params["eps"] if method in ("eps_greedy", "eps_greedy_1") else 0.0:
                                 noise_candidates.append(torch.randn_like(latents))
                             else:
                                 to_add = torch.randn_like(latents)
                                 to_add = to_add / torch.norm(to_add)
-                                noise_candidates.append(pivot + to_add * torch.rand(1).item() * params['lambda'] * np.sqrt(latents.shape[-1] * latents.shape[-2] * latents.shape[-3]))
+                                scale = torch.rand(1).item() * params["lambda"] * np.sqrt(
+                                    latents.shape[-1] * latents.shape[-2] * latents.shape[-3]
+                                )
+                                noise_candidates.append(pivot + to_add * scale)
 
-                        noise2score = {}
+                        scores_list = []
 
                         for noise_candidate in noise_candidates:
-                            latents_cand, pred_x0 = self.scheduler.step(noise_pred, t, latents, variance_noise=noise_candidate, **extra_step_kwargs, return_dict=False)
-                            
+                            latents_cand, pred_x0 = self.scheduler.step(
+                                noise_pred, t, latents, variance_noise=noise_candidate, **extra_step_kwargs, return_dict=False
+                            )
 
-                            # expand the latents if we are doing classifier free guidance
-                            latent_model_input_tminusone = torch.cat([latents_cand] * 2) if self.do_classifier_free_guidance else latents_cand
+                            latent_model_input_tminusone = (
+                                torch.cat([latents_cand] * 2) if self.do_classifier_free_guidance else latents_cand
+                            )
                             latent_model_input_tminusone = self.scheduler.scale_model_input(latent_model_input_tminusone, t)
 
-                            # predict the noise residual
                             noise_pred_tminusone = self.unet(
                                 latent_model_input_tminusone,
                                 t,
@@ -1399,38 +1417,47 @@ class StableDiffusionPipeline(
                                 return_dict=False,
                             )[0]
 
-                            # perform guidance
                             if self.do_classifier_free_guidance:
                                 noise_pred_uncond_tminusone, noise_pred_text_tminusone = noise_pred_tminusone.chunk(2)
-                                noise_pred_tminusone = noise_pred_uncond_tminusone + self.guidance_scale * (noise_pred_text_tminusone - noise_pred_uncond_tminusone)
+                                noise_pred_tminusone = noise_pred_uncond_tminusone + self.guidance_scale * (
+                                    noise_pred_text_tminusone - noise_pred_uncond_tminusone
+                                )
 
                             if self.do_classifier_free_guidance and self.guidance_rescale > 0.0:
-                                # Based on 3.4. in https://arxiv.org/pdf/2305.08891.pdf
-                                noise_pred_tminusone = rescale_noise_cfg(noise_pred_tminusone, noise_pred_text, guidance_rescale=self.guidance_rescale)
+                                noise_pred_tminusone = rescale_noise_cfg(
+                                    noise_pred_tminusone, noise_pred_text, guidance_rescale=self.guidance_rescale
+                                )
 
-                            next_tminusone, pred_next_tminusone = self.scheduler.step(noise_pred_tminusone, t, latents_cand, **extra_step_kwargs, return_dict=False)
-
-                            with torch.no_grad():
-                                image = self.vae.decode(pred_next_tminusone / self.vae.config.scaling_factor, return_dict=False, generator=generator)[0]
-                            # score image
-                            score = score_function(
-                                images = [(image * 127.5 + 128).clip(0, 255).to(torch.uint8)],
-                                prompts = [prompt],
-                                timesteps= None,
+                            next_tminusone, pred_next_tminusone = self.scheduler.step(
+                                noise_pred_tminusone, t, latents_cand, **extra_step_kwargs, return_dict=False
                             )
 
-                            # Convert score to a Python float for reliable comparison
-                            if torch.is_tensor(score):
-                                # score might be a tensor of shape (1,) or scalar tensor
-                                score_value = score.item()
-                            else:
-                                score_value = float(score)
+                            with torch.no_grad():
+                                image = self.vae.decode(
+                                    pred_next_tminusone / self.vae.config.scaling_factor,
+                                    return_dict=False,
+                                    generator=generator,
+                                )[0]
+                            score = score_function(
+                                images=[(image * 127.5 + 128).clip(0, 255).to(torch.uint8)],
+                                prompts=[prompt],
+                                timesteps=None,
+                            )
 
-                            noise2score[noise_candidate] = score_value
-                        
-                        # Select the noise candidate with the highest score
-                        max_score = max(noise2score.values())
-                        pivot = max(noise2score, key=noise2score.get)
+                            score_value = score.item() if torch.is_tensor(score) else float(score)
+                            scores_list.append(score_value)
+
+                        # Select best candidate
+                        best_idx = int(np.argmax(scores_list))
+                        best_score = scores_list[best_idx]
+                        best_noise = noise_candidates[best_idx]
+
+                        if method == "eps_greedy_1" and revert_on_negative and prev_best_score is not None:
+                            if best_score - prev_best_score < 0:
+                                continue  # keep previous pivot
+
+                        pivot = best_noise
+                        prev_best_score = best_score
                 
                 latents, _ = self.scheduler.step(noise_pred, t, latents, variance_noise=pivot, **extra_step_kwargs, return_dict=False)
 
