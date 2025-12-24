@@ -176,7 +176,7 @@ def main():
                     torch.manual_seed(args.seed + seed_offset + r)
                 result, score = local_pipe(
                     prompt=prompt_text,
-                    num_inference_steps=50,
+                    num_inference_steps=args.num_steps,
                     score_function=scorer,
                     method=method,
                     params=MASTER_PARAMS,
