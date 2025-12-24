@@ -84,7 +84,8 @@ def main():
     parser.add_argument('--backend', type=str, choices=['edm', 'sd'], required=True, help='Backend: edm or sd')
     parser.add_argument('--scorer', type=str, choices=['brightness', 'compressibility', 'clip', 'imagenet'], required=True, help='Scorer name')
     parser.add_argument('--method', type=str, default='naive', help='Sampling method (naive, rejection, beam, mcts, zero_order, eps_greedy, epsilon_1)')
-    parser.add_argument('--prompt', type=str, default='YOUR PROMPT HERE', help='Prompt for SD')
+    parser.add_argument('--prompt', type=str, default='YOUR PROMPT HERE', help='Prompt for SD (ignored if prompt_csv set)')
+    parser.add_argument('--prompt_csv', type=str, default=None, help='CSV with prompts (first column); SD only')
     parser.add_argument('--output', type=str, default=None, help='Output filename (default: auto)')
     # Master params (with SD defaults)
     parser.add_argument('--N', type=int, default=4, help='Master param N')
@@ -114,6 +115,8 @@ def main():
     # SD Backend
     # -----------
     if args.backend == 'sd':
+        if args.prompt_csv and args.backend != 'sd':
+            raise ValueError('prompt_csv is only supported for sd backend')
         StableDiffusionPipeline, DDIMScheduler, BrightnessScorer, CompressibilityScorer, CLIPScorer = import_sd()
         scorer = get_scorer('sd', args.scorer, BrightnessScorer, CompressibilityScorer, CLIPScorer=CLIPScorer)
 
@@ -135,21 +138,53 @@ def main():
             'S': args.S,
         }
 
-        best_result, best_score = None, float('-inf')
-        for _ in range(MASTER_PARAMS['N'] if method == "rejection" else 1):
-            result, score = local_pipe(
-                prompt=args.prompt,
-                num_inference_steps=50,
-                score_function=scorer,
-                method=method,
-                params=MASTER_PARAMS,
-            )
-            if score > best_score:
-                best_result, best_score = result, score
+        # prompt handling: if prompt_csv provided, n_runs = number of prompts to take; each prompt runs once
+        prompts = []
+        if args.prompt_csv:
+            import csv
+            with open(args.prompt_csv, 'r', encoding='utf-8') as f:
+                rows = list(csv.reader(f))
+            if rows and rows[0] and 'prompt' in rows[0][0].lower():
+                rows = rows[1:]
+            prompts = [row[0] for row in rows if row]
+            if not prompts:
+                raise ValueError("prompt_csv provided but no prompts found")
+            prompt_count = args.n_runs if args.n_runs and args.n_runs > 0 else len(prompts)
+            prompts = prompts[:prompt_count]
+            repeat_per_prompt = 1  # each prompt once
+        else:
+            prompts = [args.prompt]
+            repeat_per_prompt = args.n_runs  # for single prompt, n_runs keeps repeat semantics
 
-        outname = args.output or f"sd_{method}_{args.scorer}.png"
-        best_result.images[0].save(outname)
-        print(f"\n[SD] Saved: {outname}\nBest score: {best_score}\n")
+        def run_one_prompt(prompt_text, seed_offset=0):
+            best_result, best_score = None, float('-inf')
+            repeats = MASTER_PARAMS['N'] if method == "rejection" else repeat_per_prompt
+            for r in range(repeats):
+                if args.seed is not None:
+                    torch.manual_seed(args.seed + seed_offset + r)
+                result, score = local_pipe(
+                    prompt=prompt_text,
+                    num_inference_steps=50,
+                    score_function=scorer,
+                    method=method,
+                    params=MASTER_PARAMS,
+                )
+                score_value = score.item() if torch.is_tensor(score) else float(score)
+                if score_value > best_score:
+                    best_result, best_score = result, score_value
+            return best_result, best_score
+
+        all_scores = []
+        for idx, ptxt in enumerate(prompts):
+            best_result, best_score = run_one_prompt(ptxt, seed_offset=idx)
+            outname = args.output or (f"sd_{method}_{args.scorer}_{idx}.png" if len(prompts) > 1 else f"sd_{method}_{args.scorer}.png")
+            best_result.images[0].save(outname)
+            print(f"\n[SD][{idx}] Prompt: {ptxt}")
+            print(f"[SD] Saved: {outname}\nBest score: {best_score}\n")
+            all_scores.append(best_score)
+        if len(all_scores) > 1:
+            import numpy as np
+            print(f"[SD] Overall {len(all_scores)} prompts mean score: {np.mean(all_scores):.4f} ± {np.std(all_scores):.4f}")
 
     # -----------
     # EDM Backend
