@@ -27,7 +27,7 @@ def main():
     parser = argparse.ArgumentParser(description="Stable Diffusion T2I with search methods (align args with EDM)")
     parser.add_argument('--prompt', type=str, default="YOUR PROMPT HERE", help='Text prompt (ignored if prompt_csv set)')
     parser.add_argument('--prompt_csv', type=str, default=None, help='CSV file with prompts (first column). If set, iterate prompts.')
-    parser.add_argument('--num_prompts', type=int, default=None, help='Limit number of prompts loaded from CSV')
+    parser.add_argument('--num_prompts', type=int, default=None, help='Limit number of prompts loaded from CSV; if unset and prompt_csv is provided, n_runs will be used as prompt count')
     parser.add_argument('--output', type=str, default=None, help='Output file name (multi-prompt: will append index)')
     parser.add_argument('--scorer', type=str, choices=['brightness', 'compressibility', 'clip'], default='brightness', help='Scorer')
     parser.add_argument('--method', type=str, default='naive', help='Sampling method (naive, rejection, beam, mcts, zero_order, eps_greedy, epsilon_1)')
@@ -86,9 +86,9 @@ def main():
         'revert_on_negative': args.revert_on_negative,
     }
 
-    def run_once(run_idx: int, prompt_text: str):
-        if args.seed is not None:
-            torch.manual_seed(args.seed + run_idx)
+    def run_once(run_idx: int, prompt_text: str, seed_base: int):
+        if seed_base is not None:
+            torch.manual_seed(seed_base + run_idx)
         best_result, best_score = None, float('-inf')
         # rejection runs multiple candidates; other methods single
         repeats = base_params['N'] if sd_method == "rejection" else 1
@@ -107,6 +107,8 @@ def main():
 
     # Load prompts
     prompts = []
+    prompt_limit = args.num_prompts
+    n_runs_effective = args.n_runs
     if args.prompt_csv:
         with open(args.prompt_csv, 'r', encoding='utf-8') as f:
             reader = csv.reader(f)
@@ -115,12 +117,19 @@ def main():
             if rows and rows[0] and 'prompt' in rows[0][0].lower():
                 rows = rows[1:]
             prompts = [row[0] for row in rows if row]
-        if args.num_prompts is not None:
-            prompts = prompts[:args.num_prompts]
+        # If num_prompts is not set, use n_runs as prompt count, and do single run per prompt
+        if prompt_limit is None and args.n_runs is not None and args.n_runs > 1:
+            prompt_limit = args.n_runs
+            n_runs_effective = 1
+            print(f"[SD] prompt_csv provided without num_prompts; using n_runs={args.n_runs} to take first {prompt_limit} prompts (per-prompt n_runs=1)")
+        if prompt_limit is not None:
+            prompts = prompts[:prompt_limit]
         if not prompts:
             raise ValueError("prompt_csv provided but no prompts found")
     else:
         prompts = [args.prompt]
+        prompt_limit = len(prompts)
+        n_runs_effective = args.n_runs
 
     def make_outname(idx: int):
         if args.output:
@@ -130,8 +139,8 @@ def main():
 
     all_scores = []
     for idx, prompt_text in enumerate(prompts):
-        if args.n_runs == 1:
-            best_result, best_score = run_once(idx, prompt_text)
+        if n_runs_effective == 1:
+            best_result, best_score = run_once(idx, prompt_text, args.seed)
             outname = make_outname(idx)
             best_result.images[0].save(outname)
             print(f"\n[SD][{idx}] Prompt: {prompt_text}")
@@ -140,8 +149,8 @@ def main():
         else:
             scores = []
             last_result = None
-            for r in range(args.n_runs):
-                result, score = run_once(idx * args.n_runs + r, prompt_text)
+            for r in range(n_runs_effective):
+                result, score = run_once(idx * n_runs_effective + r, prompt_text, args.seed)
                 scores.append(score)
                 last_result = result
             mean = float(np.mean(scores))
@@ -149,7 +158,7 @@ def main():
             outname = make_outname(idx)
             last_result.images[0].save(outname)
             print(f"\n[SD][{idx}] Prompt: {prompt_text}")
-            print(f"[SD] Score: {mean:.4f} ± {std:.4f} over {args.n_runs} runs")
+            print(f"[SD] Score: {mean:.4f} ± {std:.4f} over {n_runs_effective} runs")
             print(f"[SD] Saved last run: {outname}\n")
             all_scores.append(mean)
 
