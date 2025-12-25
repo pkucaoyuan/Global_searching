@@ -1333,10 +1333,6 @@ class StableDiffusionPipeline(
                     xm.mark_step()
         
         else: # ================================
-            log_gain = params.get("log_gain", False) if method in ("eps_greedy", "zero_order", "eps_greedy_1") else False
-            if log_gain:
-                gains_per_step = []
-
             for i, t in tqdm(enumerate(timesteps)):
                 if self.interrupt:
                     continue
@@ -1370,16 +1366,16 @@ class StableDiffusionPipeline(
                 pivot = torch.randn_like(latents)
 
                 if method in ("eps_greedy", "zero_order", "eps_greedy_1"):
-                    if method == "eps_greedy_1" and params.get("revert_on_negative", False) and log_gain and i == 0:
+                    log_gain = params.get("log_gain", False)
+                    if method == "eps_greedy_1" and params.get("revert_on_negative", False) and log_gain:
                         print("[SD][EPS_GREEDY_1] revert_on_negative enabled")
-                    # determine K per timestep (eps_greedy_1: head 2 + tail 4 use K1, others K2)
+                    if log_gain:
+                        gains_per_step = []
+                    # determine K per timestep (eps_greedy_1: first 20 steps use K1, remaining steps use K2)
                     if method == "eps_greedy_1":
                         total_steps = len(timesteps)
-                        head_count = min(2, total_steps)
-                        tail_count = min(4, max(total_steps - head_count, 0))
-                        tail_start = total_steps - tail_count
-                        is_head_tail = (i < head_count) or (i >= tail_start)
-                        K_cur = params.get("K1", 25) if is_head_tail else params.get("K2", 15)
+                        head_count = min(20, total_steps)
+                        K_cur = params.get("K1", 25) if i < head_count else params.get("K2", 15)
                         revert_on_negative = params.get("revert_on_negative", False)
                     else:
                         K_cur = params["K"]
