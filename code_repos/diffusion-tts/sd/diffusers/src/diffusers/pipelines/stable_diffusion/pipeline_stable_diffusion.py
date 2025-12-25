@@ -1333,6 +1333,10 @@ class StableDiffusionPipeline(
                     xm.mark_step()
         
         else: # ================================
+            log_gain = params.get("log_gain", False) if method in ("eps_greedy", "zero_order", "eps_greedy_1") else False
+            if log_gain:
+                gains_per_step = []
+
             for i, t in tqdm(enumerate(timesteps)):
                 if self.interrupt:
                     continue
@@ -1366,11 +1370,8 @@ class StableDiffusionPipeline(
                 pivot = torch.randn_like(latents)
 
                 if method in ("eps_greedy", "zero_order", "eps_greedy_1"):
-                    log_gain = params.get("log_gain", False)
-                    if method == "eps_greedy_1" and params.get("revert_on_negative", False) and log_gain:
+                    if method == "eps_greedy_1" and params.get("revert_on_negative", False) and log_gain and i == 0:
                         print("[SD][EPS_GREEDY_1] revert_on_negative enabled")
-                    if log_gain:
-                        gains_per_step = []
                     # determine K per timestep (eps_greedy_1: head 2 + tail 4 use K1, others K2)
                     if method == "eps_greedy_1":
                         total_steps = len(timesteps)
