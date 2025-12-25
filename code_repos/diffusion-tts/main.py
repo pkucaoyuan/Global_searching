@@ -147,6 +147,10 @@ def main():
             'lambda': args.lambda_,
             'eps': args.eps,
             'K': args.K,
+            'K1': args.K1,
+            'K2': args.K2,
+            'revert_on_negative': args.revert_on_negative,
+            'log_gain': args.log_gain,
             'B': args.B,
             'S': args.S,
         }
