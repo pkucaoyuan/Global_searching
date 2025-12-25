@@ -1366,6 +1366,11 @@ class StableDiffusionPipeline(
                 pivot = torch.randn_like(latents)
 
                 if method in ("eps_greedy", "zero_order", "eps_greedy_1"):
+                    log_gain = params.get("log_gain", False)
+                    if method == "eps_greedy_1" and params.get("revert_on_negative", False) and log_gain:
+                        print("[SD][EPS_GREEDY_1] revert_on_negative enabled")
+                    if log_gain:
+                        gains_per_step = []
                     # determine K per timestep (eps_greedy_1: head 2 + tail 4 use K1, others K2)
                     if method == "eps_greedy_1":
                         total_steps = len(timesteps)
@@ -1380,6 +1385,8 @@ class StableDiffusionPipeline(
                         revert_on_negative = False
 
                     prev_best_score = None
+                    iterations_run = 0
+                    per_iter_gains = [] if log_gain else None
 
                     for _k in range(K_cur):
                         noise_candidates = []
@@ -1451,15 +1458,21 @@ class StableDiffusionPipeline(
                         best_idx = int(np.argmax(scores_list))
                         best_score = scores_list[best_idx]
                         best_noise = noise_candidates[best_idx]
-
-                        if method == "eps_greedy_1" and revert_on_negative and prev_best_score is not None:
-                            if best_score - prev_best_score < 0:
-                                continue  # keep previous pivot
+                        gain_cur = 0.0 if prev_best_score is None else (best_score - prev_best_score)
+                        if log_gain:
+                            per_iter_gains.append(gain_cur)
+                        if method == "eps_greedy_1" and revert_on_negative and prev_best_score is not None and gain_cur < 0:
+                            continue  # keep previous pivot; do not update prev_best_score
 
                         pivot = best_noise
                         prev_best_score = best_score
+                        iterations_run += 1
                 
                 latents, _ = self.scheduler.step(noise_pred, t, latents, variance_noise=pivot, **extra_step_kwargs, return_dict=False)
+                if "log_gain" in params and params.get("log_gain", False):
+                    gains_per_step.append(per_iter_gains if per_iter_gains else [0.0])
+                    method_tag = "EPS_GREEDY_1" if method == "eps_greedy_1" else ("ZERO_ORDER" if method == "zero_order" else "EPS_GREEDY")
+                    print(f"[SD][{method_tag}] step {i}: K_used={len(per_iter_gains) if per_iter_gains else 0}, gains={per_iter_gains}")
 
                 if callback_on_step_end is not None:
                     callback_kwargs = {}
@@ -1505,6 +1518,10 @@ class StableDiffusionPipeline(
             do_denormalize = [not has_nsfw for has_nsfw in has_nsfw_concept]
         
         image = self.image_processor.postprocess(image, output_type=output_type, do_denormalize=do_denormalize)
+        
+        if "log_gain" in params and params.get("log_gain", False) and method in ("eps_greedy", "zero_order", "eps_greedy_1"):
+            method_tag = "EPS_GREEDY_1" if method == "eps_greedy_1" else ("ZERO_ORDER" if method == "zero_order" else "EPS_GREEDY")
+            print(f"[SD][{method_tag}] Gain per timestep & per-iteration: {gains_per_step}")
         
         # Offload all models
         self.maybe_free_model_hooks()

@@ -34,6 +34,7 @@ def main():
     parser.add_argument('--num_steps', type=int, default=50, help='Number of denoising steps (default 50, align with SD baseline)')
     parser.add_argument('--seed', type=int, default=0, help='Random seed')
     parser.add_argument('--n_runs', type=int, default=1, help='Number of runs; if >1 report mean±std')
+    parser.add_argument('--log_gain', action='store_true', help='Log逐步增益（与EDM定义一致，仅EPS_GREEDY/epsilon_1）')
     # master params
     parser.add_argument('--N', type=int, default=4, help='Master param N')
     parser.add_argument('--lambda_', type=float, default=0.15, help='Master param lambda')
@@ -83,6 +84,7 @@ def main():
         'K1': args.K1,
         'K2': args.K2,
         'revert_on_negative': args.revert_on_negative,
+        'log_gain': args.log_gain,
     }
 
     def run_once(run_idx: int, prompt_text: str, seed_base: int):
