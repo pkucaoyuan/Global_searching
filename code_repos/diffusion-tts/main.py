@@ -94,6 +94,7 @@ def main():
     parser.add_argument('--K', type=int, default=20, help='Master param K')
     parser.add_argument('--K1', type=int, default=25, help='Master param K1 (epsilon_1: steps 0-1 & last 4)')
     parser.add_argument('--K2', type=int, default=15, help='Master param K2 (epsilon_1: remaining middle steps)')
+    parser.add_argument('--high_slack', type=int, default=2, help='epsilon_online: slack for watch region (start early-stop checks after K_target - slack)')
     parser.add_argument('--revert_on_negative', action='store_true', help='epsilon_1: 若本迭代增益为负则保持上一轮 pivot')
     parser.add_argument('--B', type=int, default=2, help='Master param B')
     parser.add_argument('--S', type=int, default=8, help='Master param S')
@@ -152,6 +153,7 @@ def main():
             'K': args.K,
             'K1': args.K1,
             'K2': args.K2,
+            'high_slack': args.high_slack,
             'revert_on_negative': args.revert_on_negative,
             'log_gain': args.log_gain,
             'thresh_gain_coef': args.thresh_gain_coef,
