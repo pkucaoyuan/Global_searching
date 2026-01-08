@@ -1633,6 +1633,10 @@ class StableDiffusionPipeline(
                             iterations_run += 1
                 
                 latents, _ = self.scheduler.step(noise_pred, t, latents, variance_noise=pivot, **extra_step_kwargs, return_dict=False)
+                # Always report K used for eps_greedy_online
+                if method == "eps_greedy_online":
+                    k_used = iterations_run
+                    print(f"[SD][EPS_GREEDY_ONLINE] step {i}: K_used={k_used}")
                 if "log_gain" in params and params.get("log_gain", False):
                     gains_per_step.append(per_iter_gains if per_iter_gains else [0.0])
                     if method == "eps_greedy_1":
