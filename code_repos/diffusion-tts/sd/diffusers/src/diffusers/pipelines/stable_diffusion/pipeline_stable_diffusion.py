@@ -1057,6 +1057,8 @@ class StableDiffusionPipeline(
             high_used_acc = 0  # actual NFE used in high steps
             low_used_acc = 0   # actual NFE used in low steps
             low_steps_done = 0  # count processed low-value steps
+            low_schedule = None  # will be built once when entering low region
+            low_schedule_idx = 0
         
         # Initialize gain logger once (avoid per-step reset)
         if method in ("eps_greedy", "zero_order", "eps_greedy_1", "eps_greedy_online") and params.get("log_gain", False):
@@ -1410,19 +1412,17 @@ class StableDiffusionPipeline(
                             if i < 2:
                                 force_full_k1 = True
                         else:
-                            remaining_low_steps = max(1, low_count - low_steps_done)
-                            remaining_budget = total_budget - high_used_acc - low_used_acc
-                            # Mean per remaining low step
-                            k_mean = remaining_budget / remaining_low_steps
-                            k_floor = int(np.floor(k_mean))
-                            k_floor = max(1, k_floor)  # at least 1
-                            # leftover to front-load
-                            leftover = int(remaining_budget - k_floor * remaining_low_steps)
-                            leftover = max(0, min(remaining_low_steps, leftover))
-                            if low_steps_done < leftover:
-                                K_target = k_floor + 1
-                            else:
-                                K_target = k_floor
+                            if low_schedule is None:
+                                remaining_low_steps = max(1, total_steps - i)
+                                remaining_budget = total_budget - high_used_acc - low_used_acc
+                                k_mean = remaining_budget / remaining_low_steps
+                                k_floor = int(np.floor(k_mean))
+                                k_floor = max(1, k_floor)
+                                extra = int(remaining_budget - k_floor * remaining_low_steps)
+                                extra = max(0, min(remaining_low_steps, extra))
+                                low_schedule = [k_floor + 1] * extra + [k_floor] * (remaining_low_steps - extra)
+                            K_target = low_schedule[low_schedule_idx]
+                            low_schedule_idx = min(low_schedule_idx + 1, len(low_schedule) - 1)
                         slack = params.get("high_slack", 2)
                         revert_on_negative = False
                     else:
