@@ -1461,13 +1461,18 @@ class StableDiffusionPipeline(
                         else:
                             hist_mean_var = 0.0
 
-                        gain_thresh = hist_mean_gain * thresh_gain_coef if hist_mean_gain > 0 else 0.0
-                        var_thresh = hist_mean_var * thresh_var_coef if hist_mean_var > 0 else 0.0
-                        # Fallbacks if still zero
-                        if gain_thresh == 0.0:
-                            gain_thresh = 0.01
-                        if var_thresh == 0.0:
-                            var_thresh = 0.02
+                        # If user sets both coeffs <= 0, treat as "disable early stop"
+                        if thresh_gain_coef <= 0 and thresh_var_coef <= 0:
+                            gain_thresh = -float("inf")
+                            var_thresh = -float("inf")
+                        else:
+                            gain_thresh = hist_mean_gain * thresh_gain_coef if hist_mean_gain > 0 else 0.0
+                            var_thresh = hist_mean_var * thresh_var_coef if hist_mean_var > 0 else 0.0
+                            # Fallbacks if still zero
+                            if gain_thresh == 0.0:
+                                gain_thresh = 0.01
+                            if var_thresh == 0.0:
+                                var_thresh = 0.02
                         
                         watch_start = max(1, K_target - slack)   # start early-stop checks
                         max_iter = K_target + slack              # hard cap
@@ -1582,12 +1587,16 @@ class StableDiffusionPipeline(
                                 else:
                                     hist_mean_var = 0.0
 
-                                gain_thresh = hist_mean_gain * thresh_gain_coef if hist_mean_gain > 0 else 0.0
-                                var_thresh = hist_mean_var * thresh_var_coef if hist_mean_var > 0 else 0.0
-                                if gain_thresh == 0.0:
-                                    gain_thresh = 0.01
-                                if var_thresh == 0.0:
-                                    var_thresh = 0.02
+                                if thresh_gain_coef <= 0 and thresh_var_coef <= 0:
+                                    gain_thresh = -float("inf")
+                                    var_thresh = -float("inf")
+                                else:
+                                    gain_thresh = hist_mean_gain * thresh_gain_coef if hist_mean_gain > 0 else 0.0
+                                    var_thresh = hist_mean_var * thresh_var_coef if hist_mean_var > 0 else 0.0
+                                    if gain_thresh == 0.0:
+                                        gain_thresh = 0.01
+                                    if var_thresh == 0.0:
+                                        var_thresh = 0.02
                                 
                                 # Check early stop: gain too small and variance too small
                                 if gain_cur < gain_thresh and var_score < var_thresh:
