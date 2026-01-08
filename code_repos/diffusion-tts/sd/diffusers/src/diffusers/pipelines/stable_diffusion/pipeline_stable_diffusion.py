@@ -1461,8 +1461,9 @@ class StableDiffusionPipeline(
                         else:
                             hist_mean_var = 0.0
 
+                        disable_early_stop = thresh_gain_coef <= 0 and thresh_var_coef <= 0
                         # If user sets both coeffs <= 0, treat as "disable early stop"
-                        if thresh_gain_coef <= 0 and thresh_var_coef <= 0:
+                        if disable_early_stop:
                             gain_thresh = -float("inf")
                             var_thresh = -float("inf")
                         else:
@@ -1479,6 +1480,9 @@ class StableDiffusionPipeline(
                         if force_full_k1:
                             watch_start = K_target + 1  # disable early stop
                             max_iter = K_target         # run full K1
+                        elif disable_early_stop:
+                            watch_start = K_target + 1  # never trigger early stop
+                            max_iter = K_target         # run exactly K_target
                         while True:
                             # Check maximum iterations
                             if iterations_run >= max_iter:
