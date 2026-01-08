@@ -1056,6 +1056,7 @@ class StableDiffusionPipeline(
             high_noise_budget = head_count * K1_base  # Expected NFE for high noise steps
             high_noise_used = 0  # Actual NFE used in high noise steps
             K2_adjusted = K2_base  # Adjusted K2 for low noise steps
+            k2_remainder_acc = 0.0  # fractional carry for low-value steps
         
         # Initialize gain logger once (avoid per-step reset)
         if method in ("eps_greedy", "zero_order", "eps_greedy_1", "eps_greedy_online") and params.get("log_gain", False):
@@ -1407,10 +1408,18 @@ class StableDiffusionPipeline(
                             if high_noise_used > high_noise_budget:
                                 # High noise steps exceeded budget, reduce K2 proportionally
                                 excess_ratio = high_noise_used / high_noise_budget
-                                K2_adjusted = max(1, int(K2_base / excess_ratio))
+                                K2_adjusted_float = max(1.0, K2_base / excess_ratio)
                             else:
-                                K2_adjusted = K2_base
-                            K_target = K2_adjusted
+                                K2_adjusted_float = float(K2_base)
+
+                            # Split fractional part to early low-value steps via accumulator
+                            K2_int = int(np.floor(K2_adjusted_float))
+                            remainder = K2_adjusted_float - K2_int
+                            k2_remainder_acc += remainder
+                            extra = 1 if k2_remainder_acc >= 1.0 else 0
+                            if extra:
+                                k2_remainder_acc -= 1.0
+                            K_target = max(1, K2_int + extra)
                         slack = params.get("high_slack", 2)
                         revert_on_negative = False
                     else:
