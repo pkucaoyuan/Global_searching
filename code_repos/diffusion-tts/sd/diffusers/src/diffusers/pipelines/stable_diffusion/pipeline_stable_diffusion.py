@@ -1057,6 +1057,10 @@ class StableDiffusionPipeline(
             high_noise_used = 0  # Actual NFE used in high noise steps
             K2_adjusted = K2_base  # Adjusted K2 for low noise steps
         
+        # Initialize gain logger once (avoid per-step reset)
+        if method in ("eps_greedy", "zero_order", "eps_greedy_1", "eps_greedy_online") and params.get("log_gain", False):
+            gains_per_step = []
+
         if method == "beam": # ================================
             best_latents = [copy.deepcopy(latents) for _ in range(params['B'])]
 
@@ -1384,7 +1388,7 @@ class StableDiffusionPipeline(
                     log_gain = params.get("log_gain", False)
                     if method == "eps_greedy_1" and params.get("revert_on_negative", False) and log_gain:
                         print("[SD][EPS_GREEDY_1] revert_on_negative enabled")
-                    if log_gain:
+                    if log_gain and "gains_per_step" not in locals():
                         gains_per_step = []
                     # determine K per timestep (eps_greedy_1: first 20 steps use K1, remaining steps use K2)
                     if method == "eps_greedy_1":
