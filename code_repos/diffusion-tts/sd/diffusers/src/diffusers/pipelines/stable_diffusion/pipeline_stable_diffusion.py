@@ -1050,6 +1050,7 @@ class StableDiffusionPipeline(
             # NFE budget tracking: high noise steps (first 20) vs low noise steps
             total_steps = len(timesteps)
             head_count = min(20, total_steps)
+            low_count = max(0, total_steps - head_count)
             K1_base = params.get("K1", 25)
             K2_base = params.get("K2", 15)
             # Budget: high noise steps should use K1, low noise steps should use K2
@@ -1404,13 +1405,12 @@ class StableDiffusionPipeline(
                         if is_high_noise:
                             K_target = params.get("K1", 25)
                         else:
-                            # Adjust K2 based on high noise budget usage
-                            if high_noise_used > high_noise_budget:
-                                # High noise steps exceeded budget, reduce K2 proportionally
-                                excess_ratio = high_noise_used / high_noise_budget
-                                K2_adjusted_float = max(1.0, K2_base / excess_ratio)
-                            else:
-                                K2_adjusted_float = float(K2_base)
+                            # Adjust K2 based on remaining low-value budget:
+                            # remaining_low_budget = original_low_budget - overspend_from_high
+                            original_low_budget = low_count * K2_base if low_count > 0 else 0.0
+                            overspend = max(0.0, high_noise_used - high_noise_budget)
+                            remaining_low_budget = max(1.0, original_low_budget - overspend) if low_count > 0 else 1.0
+                            K2_adjusted_float = remaining_low_budget / max(1, low_count)
 
                             # Split fractional part to early low-value steps via accumulator
                             K2_int = int(np.floor(K2_adjusted_float))
@@ -1553,12 +1553,7 @@ class StableDiffusionPipeline(
                             iterations_run += 1
                             
                             # Early stop conditions: only when close to target (watch region)
-                            # For high-value steps, skip first 2 iterations to ensure variance/gain is available
-                            if (
-                                prev_best_score is not None
-                                and iterations_run >= watch_start
-                                and not (is_high_noise and iterations_run < 2)
-                            ):
+                            if prev_best_score is not None and iterations_run >= watch_start:
                                 # Recalculate thresholds with updated history
                                 if len(all_historical_gains) > 0:
                                     hist_mean_gain = np.mean(all_historical_gains)
