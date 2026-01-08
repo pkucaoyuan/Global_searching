@@ -1541,7 +1541,12 @@ class StableDiffusionPipeline(
                             iterations_run += 1
                             
                             # Early stop conditions: only when close to target (watch region)
-                            if prev_best_score is not None and iterations_run >= watch_start:
+                            # For high-value steps, skip first 2 iterations to ensure variance/gain is available
+                            if (
+                                prev_best_score is not None
+                                and iterations_run >= watch_start
+                                and not (is_high_noise and iterations_run < 2)
+                            ):
                                 # Recalculate thresholds with updated history
                                 if len(all_historical_gains) > 0 and len(all_historical_variances) > 0:
                                     hist_mean_gain = np.mean(all_historical_gains)
