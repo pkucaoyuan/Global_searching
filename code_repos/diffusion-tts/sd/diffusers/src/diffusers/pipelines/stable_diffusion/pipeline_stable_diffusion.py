@@ -1465,7 +1465,11 @@ class StableDiffusionPipeline(
                         
                         watch_start = max(1, K_target - slack)   # start early-stop checks
                         max_iter = K_target + slack              # hard cap
-                        if force_full_k1:
+                        if not is_high_noise:
+                            # Low-value steps: never early stop, no slack extension
+                            watch_start = K_target + 1
+                            max_iter = K_target
+                        elif force_full_k1:
                             watch_start = K_target + 1  # disable early stop
                             max_iter = K_target         # run full K1
                         elif disable_early_stop:
