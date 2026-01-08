@@ -1387,6 +1387,8 @@ class StableDiffusionPipeline(
 
                 if method in ("eps_greedy", "zero_order", "eps_greedy_1", "eps_greedy_online"):
                     log_gain = params.get("log_gain", False)
+                    thresh_gain_coef = params.get("thresh_gain_coef", 1.0)
+                    thresh_var_coef = params.get("thresh_var_coef", 1.0)
                     if method == "eps_greedy_1" and params.get("revert_on_negative", False) and log_gain:
                         print("[SD][EPS_GREEDY_1] revert_on_negative enabled")
                     if log_gain and "gains_per_step" not in locals():
