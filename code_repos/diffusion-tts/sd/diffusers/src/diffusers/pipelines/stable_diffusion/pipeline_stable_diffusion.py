@@ -1436,19 +1436,22 @@ class StableDiffusionPipeline(
                         thresh_gain_coef = params.get("thresh_gain_coef", 1.0)
                         thresh_var_coef = params.get("thresh_var_coef", 1.0)
                         
-                        # Compute thresholds from historical data
-                        if len(all_historical_gains) > 0 and len(all_historical_variances) > 0:
+                        # Compute thresholds from historical data (mean gain / mean var, separately)
+                        if len(all_historical_gains) > 0:
                             hist_mean_gain = np.mean(all_historical_gains)
-                            hist_mean_var = np.mean(all_historical_variances)
-                            if hist_mean_var > 0:
-                                gain_thresh = (hist_mean_gain / hist_mean_var) * thresh_gain_coef
-                                var_thresh = (hist_mean_gain / hist_mean_var) * thresh_var_coef
-                            else:
-                                gain_thresh = 0.01  # fallback
-                                var_thresh = 0.02  # fallback
                         else:
-                            # No history yet, use default thresholds
+                            hist_mean_gain = 0.0
+                        if len(all_historical_variances) > 0:
+                            hist_mean_var = np.mean(all_historical_variances)
+                        else:
+                            hist_mean_var = 0.0
+
+                        gain_thresh = hist_mean_gain * thresh_gain_coef if hist_mean_gain > 0 else 0.0
+                        var_thresh = hist_mean_var * thresh_var_coef if hist_mean_var > 0 else 0.0
+                        # Fallbacks if still zero
+                        if gain_thresh == 0.0:
                             gain_thresh = 0.01
+                        if var_thresh == 0.0:
                             var_thresh = 0.02
                         
                         watch_start = max(1, K_target - slack)   # start early-stop checks
@@ -1557,12 +1560,21 @@ class StableDiffusionPipeline(
                                 and not (is_high_noise and iterations_run < 2)
                             ):
                                 # Recalculate thresholds with updated history
-                                if len(all_historical_gains) > 0 and len(all_historical_variances) > 0:
+                                if len(all_historical_gains) > 0:
                                     hist_mean_gain = np.mean(all_historical_gains)
+                                else:
+                                    hist_mean_gain = 0.0
+                                if len(all_historical_variances) > 0:
                                     hist_mean_var = np.mean(all_historical_variances)
-                                    if hist_mean_var > 0:
-                                        gain_thresh = (hist_mean_gain / hist_mean_var) * thresh_gain_coef
-                                        var_thresh = (hist_mean_gain / hist_mean_var) * thresh_var_coef
+                                else:
+                                    hist_mean_var = 0.0
+
+                                gain_thresh = hist_mean_gain * thresh_gain_coef if hist_mean_gain > 0 else 0.0
+                                var_thresh = hist_mean_var * thresh_var_coef if hist_mean_var > 0 else 0.0
+                                if gain_thresh == 0.0:
+                                    gain_thresh = 0.01
+                                if var_thresh == 0.0:
+                                    var_thresh = 0.02
                                 
                                 # Check early stop: gain too small and variance too small
                                 if gain_cur < gain_thresh and var_score < var_thresh:
