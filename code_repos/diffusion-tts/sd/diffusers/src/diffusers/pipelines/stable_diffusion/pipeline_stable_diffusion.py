@@ -1402,13 +1402,17 @@ class StableDiffusionPipeline(
                         total_steps = len(timesteps)
                         head_count = min(20, total_steps)
                         is_high_noise = i < head_count
+                        force_full_k1 = False
                         if is_high_noise:
                             K_target = params.get("K1", 25)
+                            # First two high-value timesteps: force full K1 (no early stop)
+                            if i < 2:
+                                force_full_k1 = True
                         else:
                             # Adjust K2 based on remaining low-value budget:
                             # remaining_low_budget = original_low_budget - overspend_from_high
                             original_low_budget = low_count * K2_base if low_count > 0 else 0.0
-                            overspend = max(0.0, high_noise_used - high_noise_budget)
+                            overspend = high_noise_used - high_noise_budget  # can be negative (under-spend)
                             remaining_low_budget = max(1.0, original_low_budget - overspend) if low_count > 0 else 1.0
                             K2_adjusted_float = remaining_low_budget / max(1, low_count)
 
@@ -1456,6 +1460,9 @@ class StableDiffusionPipeline(
                         
                         watch_start = max(1, K_target - slack)   # start early-stop checks
                         max_iter = K_target + slack              # hard cap
+                        if force_full_k1:
+                            watch_start = K_target + 1  # disable early stop
+                            max_iter = K_target         # run full K1
                         while True:
                             # Check maximum iterations
                             if iterations_run >= max_iter:
