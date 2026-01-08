@@ -1411,6 +1411,7 @@ class StableDiffusionPipeline(
                             else:
                                 K2_adjusted = K2_base
                             K_target = K2_adjusted
+                        slack = params.get("high_slack", 2)
                         revert_on_negative = False
                     else:
                         K_cur = params["K"]
@@ -1441,9 +1442,11 @@ class StableDiffusionPipeline(
                             gain_thresh = 0.01
                             var_thresh = 0.02
                         
+                        watch_start = max(1, K_target - slack)   # start early-stop checks
+                        max_iter = K_target + slack              # hard cap
                         while True:
                             # Check maximum iterations
-                            if iterations_run >= K_target:
+                            if iterations_run >= max_iter:
                                 break
                             
                             # Generate noise candidates
@@ -1537,8 +1540,8 @@ class StableDiffusionPipeline(
                             prev_best_score = best_score if prev_best_score is None else max(prev_best_score, best_score)
                             iterations_run += 1
                             
-                            # Early stop conditions (only check after first iteration)
-                            if prev_best_score is not None and iterations_run > 1:
+                            # Early stop conditions: only when close to target (watch region)
+                            if prev_best_score is not None and iterations_run >= watch_start:
                                 # Recalculate thresholds with updated history
                                 if len(all_historical_gains) > 0 and len(all_historical_variances) > 0:
                                     hist_mean_gain = np.mean(all_historical_gains)
