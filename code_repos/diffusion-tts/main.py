@@ -83,7 +83,7 @@ def main():
     )
     parser.add_argument('--backend', type=str, choices=['edm', 'sd'], required=True, help='Backend: edm or sd')
     parser.add_argument('--scorer', type=str, choices=['brightness', 'compressibility', 'clip', 'imagenet'], required=True, help='Scorer name')
-    parser.add_argument('--method', type=str, default='naive', help='Sampling method (naive, rejection, beam, mcts, zero_order, eps_greedy, epsilon_1)')
+    parser.add_argument('--method', type=str, default='naive', help='Sampling method (naive, rejection, beam, mcts, zero_order, eps_greedy, epsilon_1, epsilon_online)')
     parser.add_argument('--prompt', type=str, default='YOUR PROMPT HERE', help='Prompt for SD (ignored if prompt_csv set)')
     parser.add_argument('--prompt_csv', type=str, default=None, help='CSV with prompts (first column); SD only')
     parser.add_argument('--output', type=str, default=None, help='Output filename (default: auto)')
@@ -102,6 +102,8 @@ def main():
     parser.add_argument('--num_steps', type=int, default=50, help='Number of denoising steps (SD only)')
     parser.add_argument('--n_runs', type=int, default=1, help='Number of runs (if >1, output mean±std as in paper)')
     parser.add_argument('--log_gain', action='store_true', help='Log per-timestep gains for EPS_GREEDY')
+    parser.add_argument('--thresh_gain_coef', type=float, default=1.0, help='epsilon_online: gain threshold coefficient (hist_mean_gain / hist_mean_var * coef)')
+    parser.add_argument('--thresh_var_coef', type=float, default=1.0, help='epsilon_online: variance threshold coefficient (hist_mean_gain / hist_mean_var * coef)')
     args = parser.parse_args()
 
     # -----------
@@ -138,6 +140,7 @@ def main():
             'zero_order': 'zero_order',
             'eps_greedy': 'eps_greedy',
             'epsilon_1': 'eps_greedy_1',
+            'epsilon_online': 'eps_greedy_online',
         }
         if args.method not in method_map_sd:
             raise ValueError(f"Unknown method for sd backend: {args.method}")
@@ -151,6 +154,8 @@ def main():
             'K2': args.K2,
             'revert_on_negative': args.revert_on_negative,
             'log_gain': args.log_gain,
+            'thresh_gain_coef': args.thresh_gain_coef,
+            'thresh_var_coef': args.thresh_var_coef,
             'B': args.B,
             'S': args.S,
         }
