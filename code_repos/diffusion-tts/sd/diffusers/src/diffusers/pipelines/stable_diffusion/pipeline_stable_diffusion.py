@@ -1047,20 +1047,32 @@ class StableDiffusionPipeline(
             # Track historical gains and variances across all steps
             all_historical_gains = []  # List of gains from all iterations
             all_historical_variances = []  # List of variances from all iterations (including all candidates)
-            # NFE budget tracking: high noise steps (first 20) vs low noise steps
+            # Precompute per-step K schedule with deterministic budget split
             total_steps = len(timesteps)
             head_count = min(20, total_steps)
             low_count = max(0, total_steps - head_count)
             K1_base = params.get("K1", 25)
             K2_base = params.get("K2", 15)
-            # Budget: high noise steps should use K1, low noise steps should use K2
-            high_noise_budget = head_count * K1_base  # Expected NFE for high noise steps
-            high_noise_used = 0  # Actual NFE used in high noise steps
-            K2_adjusted = K2_base  # Adjusted K2 for low noise steps
-            k2_remainder_acc = 0.0  # fractional carry for low-value steps
-            low_steps_done = 0  # count processed low-value steps
-            original_low_budget = low_count * K2_base
-            low_used_acc = 0.0  # track NFE used in low-value steps
+            # Total budget based on global target K2_base per step
+            total_budget = total_steps * K2_base
+            high_budget = head_count * K1_base
+            remaining_low_budget = max(0, total_budget - high_budget)
+            # Average low-step K and remainder
+            if low_count > 0:
+                low_int = remaining_low_budget // low_count
+                low_rem = remaining_low_budget - low_int * low_count
+                low_int = int(max(1, low_int))  # at least 1
+            else:
+                low_int, low_rem = 0, 0
+            # Build schedule: high steps first, then low steps front-load remainder
+            K_schedule = []
+            for i in range(total_steps):
+                if i < head_count:
+                    K_schedule.append(K1_base)
+                else:
+                    idx = i - head_count
+                    extra = 1 if idx < low_rem else 0
+                    K_schedule.append(int(low_int + extra))
         
         # Initialize gain logger once (avoid per-step reset)
         if method in ("eps_greedy", "zero_order", "eps_greedy_1", "eps_greedy_online") and params.get("log_gain", False):
@@ -1406,35 +1418,9 @@ class StableDiffusionPipeline(
                         head_count = min(20, total_steps)
                         is_high_noise = i < head_count
                         force_full_k1 = False
-                        if is_high_noise:
-                            K_target = params.get("K1", 25)
-                            # First two high-value timesteps: force full K1 (no early stop)
-                            if i < 2:
-                                force_full_k1 = True
-                        else:
-                            # Adjust K2 based on remaining low-value budget:
-                            # remaining_low_budget = original_low_budget - overspend_from_high - used_by_low
-                            overspend = high_noise_used - high_noise_budget  # can be negative (under-spend)
-                            remaining_low_count = max(1, low_count - low_steps_done)
-                            remaining_low_budget = original_low_budget - overspend - low_used_acc
-                            remaining_low_budget = max(float(remaining_low_count), remaining_low_budget)  # at least 1 per step
-
-                            # Base K2 plus fractional leftover (only fractional part distributed)
-                            base_component = float(K2_base)
-                            fractional_budget = max(0.0, remaining_low_budget - remaining_low_count * base_component)
-                            per_step_extra = fractional_budget / remaining_low_count if remaining_low_count > 0 else 0.0
-                            K2_adjusted_float = base_component + per_step_extra
-
-                            # Split fractional part to early low-value steps via accumulator
-                            K2_int = int(np.floor(K2_adjusted_float))
-                            remainder = K2_adjusted_float - K2_int
-                            k2_remainder_acc += remainder
-                            extra = 1 if k2_remainder_acc >= 1.0 else 0
-                            if extra:
-                                k2_remainder_acc -= 1.0
-                            K_target = max(1, K2_int + extra)
-                            low_steps_done += 1
-                            low_used_acc += K_target
+                        K_target = K_schedule[i]
+                        if is_high_noise and i < 2:
+                            force_full_k1 = True
                         slack = params.get("high_slack", 2)
                         revert_on_negative = False
                     else:
