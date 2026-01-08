@@ -1047,32 +1047,16 @@ class StableDiffusionPipeline(
             # Track historical gains and variances across all steps
             all_historical_gains = []  # List of gains from all iterations
             all_historical_variances = []  # List of variances from all iterations (including all candidates)
-            # Precompute per-step K schedule with deterministic budget split
             total_steps = len(timesteps)
             head_count = min(20, total_steps)
             low_count = max(0, total_steps - head_count)
             K1_base = params.get("K1", 25)
             K2_base = params.get("K2", 15)
-            # Total budget based on global target K2_base per step
-            total_budget = total_steps * K2_base
-            high_budget = head_count * K1_base
-            remaining_low_budget = max(0, total_budget - high_budget)
-            # Average low-step K and remainder
-            if low_count > 0:
-                low_int = remaining_low_budget // low_count
-                low_rem = remaining_low_budget - low_int * low_count
-                low_int = int(max(1, low_int))  # at least 1
-            else:
-                low_int, low_rem = 0, 0
-            # Build schedule: high steps first, then low steps front-load remainder
-            K_schedule = []
-            for i in range(total_steps):
-                if i < head_count:
-                    K_schedule.append(K1_base)
-                else:
-                    idx = i - head_count
-                    extra = 1 if idx < low_rem else 0
-                    K_schedule.append(int(low_int + extra))
+            # Budget tracking (dynamic): total_budget = H*K1 + L*K2
+            total_budget = head_count * K1_base + low_count * K2_base
+            high_used_acc = 0  # actual NFE used in high steps
+            low_used_acc = 0   # actual NFE used in low steps
+            low_steps_done = 0  # count processed low-value steps
         
         # Initialize gain logger once (avoid per-step reset)
         if method in ("eps_greedy", "zero_order", "eps_greedy_1", "eps_greedy_online") and params.get("log_gain", False):
@@ -1418,9 +1402,25 @@ class StableDiffusionPipeline(
                         head_count = min(20, total_steps)
                         is_high_noise = i < head_count
                         force_full_k1 = False
-                        K_target = K_schedule[i]
-                        if is_high_noise and i < 2:
-                            force_full_k1 = True
+                        disable_early_stop = thresh_gain_coef <= 0 and thresh_var_coef <= 0
+                        if is_high_noise:
+                            K_target = K1_base
+                            if i < 2:
+                                force_full_k1 = True
+                        else:
+                            remaining_low_steps = max(1, low_count - low_steps_done)
+                            remaining_budget = total_budget - high_used_acc - low_used_acc
+                            # Mean per remaining low step
+                            k_mean = remaining_budget / remaining_low_steps
+                            k_floor = int(np.floor(k_mean))
+                            k_floor = max(1, k_floor)  # at least 1
+                            # leftover to front-load
+                            leftover = int(remaining_budget - k_floor * remaining_low_steps)
+                            leftover = max(0, min(remaining_low_steps, leftover))
+                            if low_steps_done < leftover:
+                                K_target = k_floor + 1
+                            else:
+                                K_target = k_floor
                         slack = params.get("high_slack", 2)
                         revert_on_negative = False
                     else:
@@ -1592,9 +1592,12 @@ class StableDiffusionPipeline(
                                 if gain_cur < gain_thresh and var_score < var_thresh:
                                     break
                         
-                        # Update NFE tracking for high noise steps
+                        # Update NFE tracking
                         if is_high_noise:
-                            high_noise_used += iterations_run
+                            high_used_acc += iterations_run
+                        else:
+                            low_used_acc += iterations_run
+                            low_steps_done += 1
                     else:
                         # Original for loop for other methods
                         for _k in range(K_cur):
