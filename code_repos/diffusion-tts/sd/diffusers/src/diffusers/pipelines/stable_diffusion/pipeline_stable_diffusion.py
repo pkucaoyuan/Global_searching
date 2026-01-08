@@ -1042,6 +1042,21 @@ class StableDiffusionPipeline(
         num_warmup_steps = len(timesteps) - num_inference_steps * self.scheduler.order
         self._num_timesteps = len(timesteps)
         
+        # Initialize global tracking for eps_greedy_online
+        if method == "eps_greedy_online":
+            # Track historical gains and variances across all steps
+            all_historical_gains = []  # List of gains from all iterations
+            all_historical_variances = []  # List of variances from all iterations (including all candidates)
+            # NFE budget tracking: high noise steps (first 20) vs low noise steps
+            total_steps = len(timesteps)
+            head_count = min(20, total_steps)
+            K1_base = params.get("K1", 25)
+            K2_base = params.get("K2", 15)
+            # Budget: high noise steps should use K1, low noise steps should use K2
+            high_noise_budget = head_count * K1_base  # Expected NFE for high noise steps
+            high_noise_used = 0  # Actual NFE used in high noise steps
+            K2_adjusted = K2_base  # Adjusted K2 for low noise steps
+        
         if method == "beam": # ================================
             best_latents = [copy.deepcopy(latents) for _ in range(params['B'])]
 
@@ -1365,7 +1380,7 @@ class StableDiffusionPipeline(
 
                 pivot = torch.randn_like(latents)
 
-                if method in ("eps_greedy", "zero_order", "eps_greedy_1"):
+                if method in ("eps_greedy", "zero_order", "eps_greedy_1", "eps_greedy_online"):
                     log_gain = params.get("log_gain", False)
                     if method == "eps_greedy_1" and params.get("revert_on_negative", False) and log_gain:
                         print("[SD][EPS_GREEDY_1] revert_on_negative enabled")
@@ -1377,6 +1392,22 @@ class StableDiffusionPipeline(
                         head_count = min(20, total_steps)
                         K_cur = params.get("K1", 25) if i < head_count else params.get("K2", 15)
                         revert_on_negative = params.get("revert_on_negative", False)
+                    elif method == "eps_greedy_online":
+                        total_steps = len(timesteps)
+                        head_count = min(20, total_steps)
+                        is_high_noise = i < head_count
+                        if is_high_noise:
+                            K_target = params.get("K1", 25)
+                        else:
+                            # Adjust K2 based on high noise budget usage
+                            if high_noise_used > high_noise_budget:
+                                # High noise steps exceeded budget, reduce K2 proportionally
+                                excess_ratio = high_noise_used / high_noise_budget
+                                K2_adjusted = max(1, int(K2_base / excess_ratio))
+                            else:
+                                K2_adjusted = K2_base
+                            K_target = K2_adjusted
+                        revert_on_negative = False
                     else:
                         K_cur = params["K"]
                         revert_on_negative = False
@@ -1385,90 +1416,233 @@ class StableDiffusionPipeline(
                     iterations_run = 0
                     per_iter_gains = [] if log_gain else None
 
-                    for _k in range(K_cur):
-                        noise_candidates = []
-                        for _ in range(params["N"]):
-                            r = torch.rand(1).item()
-                            if r < params["eps"] if method in ("eps_greedy", "eps_greedy_1") else 0.0:
-                                noise_candidates.append(torch.randn_like(latents))
+                    # For eps_greedy_online, use while loop with early stop
+                    if method == "eps_greedy_online":
+                        # Calculate adaptive thresholds based on historical data
+                        thresh_gain_coef = params.get("thresh_gain_coef", 1.0)
+                        thresh_var_coef = params.get("thresh_var_coef", 1.0)
+                        
+                        # Compute thresholds from historical data
+                        if len(all_historical_gains) > 0 and len(all_historical_variances) > 0:
+                            hist_mean_gain = np.mean(all_historical_gains)
+                            hist_mean_var = np.mean(all_historical_variances)
+                            if hist_mean_var > 0:
+                                gain_thresh = (hist_mean_gain / hist_mean_var) * thresh_gain_coef
+                                var_thresh = (hist_mean_gain / hist_mean_var) * thresh_var_coef
                             else:
-                                to_add = torch.randn_like(latents)
-                                to_add = to_add / torch.norm(to_add)
-                                scale = torch.rand(1).item() * params["lambda"] * np.sqrt(
-                                    latents.shape[-1] * latents.shape[-2] * latents.shape[-3]
-                                )
-                                noise_candidates.append(pivot + to_add * scale)
+                                gain_thresh = 0.01  # fallback
+                                var_thresh = 0.02  # fallback
+                        else:
+                            # No history yet, use default thresholds
+                            gain_thresh = 0.01
+                            var_thresh = 0.02
+                        
+                        while True:
+                            # Check maximum iterations
+                            if iterations_run >= K_target:
+                                break
+                            
+                            # Generate noise candidates
+                            noise_candidates = []
+                            for _ in range(params["N"]):
+                                r = torch.rand(1).item()
+                                if r < params["eps"]:
+                                    noise_candidates.append(torch.randn_like(latents))
+                                else:
+                                    to_add = torch.randn_like(latents)
+                                    to_add = to_add / torch.norm(to_add)
+                                    scale = torch.rand(1).item() * params["lambda"] * np.sqrt(
+                                        latents.shape[-1] * latents.shape[-2] * latents.shape[-3]
+                                    )
+                                    noise_candidates.append(pivot + to_add * scale)
 
-                        scores_list = []
+                            # Score all candidates (including those not selected)
+                            scores_list = []
+                            all_candidate_scores = []  # Track all scores for variance calculation
 
-                        for noise_candidate in noise_candidates:
-                            latents_cand, pred_x0 = self.scheduler.step(
-                                noise_pred, t, latents, variance_noise=noise_candidate, **extra_step_kwargs, return_dict=False
-                            )
-
-                            latent_model_input_tminusone = (
-                                torch.cat([latents_cand] * 2) if self.do_classifier_free_guidance else latents_cand
-                            )
-                            latent_model_input_tminusone = self.scheduler.scale_model_input(latent_model_input_tminusone, t)
-
-                            noise_pred_tminusone = self.unet(
-                                latent_model_input_tminusone,
-                                t,
-                                encoder_hidden_states=prompt_embeds,
-                                timestep_cond=timestep_cond,
-                                cross_attention_kwargs=self.cross_attention_kwargs,
-                                added_cond_kwargs=added_cond_kwargs,
-                                return_dict=False,
-                            )[0]
-
-                            if self.do_classifier_free_guidance:
-                                noise_pred_uncond_tminusone, noise_pred_text_tminusone = noise_pred_tminusone.chunk(2)
-                                noise_pred_tminusone = noise_pred_uncond_tminusone + self.guidance_scale * (
-                                    noise_pred_text_tminusone - noise_pred_uncond_tminusone
-                                )
-
-                            if self.do_classifier_free_guidance and self.guidance_rescale > 0.0:
-                                noise_pred_tminusone = rescale_noise_cfg(
-                                    noise_pred_tminusone, noise_pred_text, guidance_rescale=self.guidance_rescale
+                            for noise_candidate in noise_candidates:
+                                latents_cand, pred_x0 = self.scheduler.step(
+                                    noise_pred, t, latents, variance_noise=noise_candidate, **extra_step_kwargs, return_dict=False
                                 )
 
-                            next_tminusone, pred_next_tminusone = self.scheduler.step(
-                                noise_pred_tminusone, t, latents_cand, **extra_step_kwargs, return_dict=False
-                            )
+                                latent_model_input_tminusone = (
+                                    torch.cat([latents_cand] * 2) if self.do_classifier_free_guidance else latents_cand
+                                )
+                                latent_model_input_tminusone = self.scheduler.scale_model_input(latent_model_input_tminusone, t)
 
-                            with torch.no_grad():
-                                image = self.vae.decode(
-                                    pred_next_tminusone / self.vae.config.scaling_factor,
+                                noise_pred_tminusone = self.unet(
+                                    latent_model_input_tminusone,
+                                    t,
+                                    encoder_hidden_states=prompt_embeds,
+                                    timestep_cond=timestep_cond,
+                                    cross_attention_kwargs=self.cross_attention_kwargs,
+                                    added_cond_kwargs=added_cond_kwargs,
                                     return_dict=False,
-                                    generator=generator,
                                 )[0]
-                            score = score_function(
-                                images=[(image * 127.5 + 128).clip(0, 255).to(torch.uint8)],
-                                prompts=[prompt],
-                                timesteps=None,
-                            )
 
-                            score_value = score.item() if torch.is_tensor(score) else float(score)
-                            scores_list.append(score_value)
+                                if self.do_classifier_free_guidance:
+                                    noise_pred_uncond_tminusone, noise_pred_text_tminusone = noise_pred_tminusone.chunk(2)
+                                    noise_pred_tminusone = noise_pred_uncond_tminusone + self.guidance_scale * (
+                                        noise_pred_text_tminusone - noise_pred_uncond_tminusone
+                                    )
 
-                        # Select best candidate
-                        best_idx = int(np.argmax(scores_list))
-                        best_score = scores_list[best_idx]
-                        best_noise = noise_candidates[best_idx]
-                        gain_cur = 0.0 if prev_best_score is None else (best_score - prev_best_score)
-                        if log_gain:
-                            per_iter_gains.append(gain_cur)
-                        if method == "eps_greedy_1" and revert_on_negative and prev_best_score is not None and gain_cur < 0:
-                            continue  # keep previous pivot; do not update prev_best_score
+                                if self.do_classifier_free_guidance and self.guidance_rescale > 0.0:
+                                    noise_pred_tminusone = rescale_noise_cfg(
+                                        noise_pred_tminusone, noise_pred_text, guidance_rescale=self.guidance_rescale
+                                    )
 
-                        pivot = best_noise
-                        prev_best_score = best_score
-                        iterations_run += 1
+                                next_tminusone, pred_next_tminusone = self.scheduler.step(
+                                    noise_pred_tminusone, t, latents_cand, **extra_step_kwargs, return_dict=False
+                                )
+
+                                with torch.no_grad():
+                                    image = self.vae.decode(
+                                        pred_next_tminusone / self.vae.config.scaling_factor,
+                                        return_dict=False,
+                                        generator=generator,
+                                    )[0]
+                                score = score_function(
+                                    images=[(image * 127.5 + 128).clip(0, 255).to(torch.uint8)],
+                                    prompts=[prompt],
+                                    timesteps=None,
+                                )
+
+                                score_value = score.item() if torch.is_tensor(score) else float(score)
+                                scores_list.append(score_value)
+                                all_candidate_scores.append(score_value)  # Track all for variance
+
+                            # Calculate variance of all candidate scores (not just selected)
+                            var_score = np.var(all_candidate_scores) if len(all_candidate_scores) > 1 else 0.0
+                            
+                            # Select best candidate
+                            best_idx = int(np.argmax(scores_list))
+                            best_score = scores_list[best_idx]
+                            best_noise = noise_candidates[best_idx]
+                            gain_cur = 0.0 if prev_best_score is None else (best_score - prev_best_score)
+                            
+                            # Update historical data
+                            if prev_best_score is not None:
+                                all_historical_gains.append(gain_cur)
+                            all_historical_variances.append(var_score)
+                            
+                            if log_gain:
+                                per_iter_gains.append(gain_cur)
+                            
+                            # Update pivot
+                            pivot = best_noise
+                            prev_best_score = best_score if prev_best_score is None else max(prev_best_score, best_score)
+                            iterations_run += 1
+                            
+                            # Early stop conditions (only check after first iteration)
+                            if prev_best_score is not None and iterations_run > 1:
+                                # Recalculate thresholds with updated history
+                                if len(all_historical_gains) > 0 and len(all_historical_variances) > 0:
+                                    hist_mean_gain = np.mean(all_historical_gains)
+                                    hist_mean_var = np.mean(all_historical_variances)
+                                    if hist_mean_var > 0:
+                                        gain_thresh = (hist_mean_gain / hist_mean_var) * thresh_gain_coef
+                                        var_thresh = (hist_mean_gain / hist_mean_var) * thresh_var_coef
+                                
+                                # Check early stop: gain too small and variance too small
+                                if gain_cur < gain_thresh and var_score < var_thresh:
+                                    break
+                        
+                        # Update NFE tracking for high noise steps
+                        if is_high_noise:
+                            high_noise_used += iterations_run
+                    else:
+                        # Original for loop for other methods
+                        for _k in range(K_cur):
+                            noise_candidates = []
+                            for _ in range(params["N"]):
+                                r = torch.rand(1).item()
+                                if r < params["eps"] if method in ("eps_greedy", "eps_greedy_1") else 0.0:
+                                    noise_candidates.append(torch.randn_like(latents))
+                                else:
+                                    to_add = torch.randn_like(latents)
+                                    to_add = to_add / torch.norm(to_add)
+                                    scale = torch.rand(1).item() * params["lambda"] * np.sqrt(
+                                        latents.shape[-1] * latents.shape[-2] * latents.shape[-3]
+                                    )
+                                    noise_candidates.append(pivot + to_add * scale)
+
+                            scores_list = []
+
+                            for noise_candidate in noise_candidates:
+                                latents_cand, pred_x0 = self.scheduler.step(
+                                    noise_pred, t, latents, variance_noise=noise_candidate, **extra_step_kwargs, return_dict=False
+                                )
+
+                                latent_model_input_tminusone = (
+                                    torch.cat([latents_cand] * 2) if self.do_classifier_free_guidance else latents_cand
+                                )
+                                latent_model_input_tminusone = self.scheduler.scale_model_input(latent_model_input_tminusone, t)
+
+                                noise_pred_tminusone = self.unet(
+                                    latent_model_input_tminusone,
+                                    t,
+                                    encoder_hidden_states=prompt_embeds,
+                                    timestep_cond=timestep_cond,
+                                    cross_attention_kwargs=self.cross_attention_kwargs,
+                                    added_cond_kwargs=added_cond_kwargs,
+                                    return_dict=False,
+                                )[0]
+
+                                if self.do_classifier_free_guidance:
+                                    noise_pred_uncond_tminusone, noise_pred_text_tminusone = noise_pred_tminusone.chunk(2)
+                                    noise_pred_tminusone = noise_pred_uncond_tminusone + self.guidance_scale * (
+                                        noise_pred_text_tminusone - noise_pred_uncond_tminusone
+                                    )
+
+                                if self.do_classifier_free_guidance and self.guidance_rescale > 0.0:
+                                    noise_pred_tminusone = rescale_noise_cfg(
+                                        noise_pred_tminusone, noise_pred_text, guidance_rescale=self.guidance_rescale
+                                    )
+
+                                next_tminusone, pred_next_tminusone = self.scheduler.step(
+                                    noise_pred_tminusone, t, latents_cand, **extra_step_kwargs, return_dict=False
+                                )
+
+                                with torch.no_grad():
+                                    image = self.vae.decode(
+                                        pred_next_tminusone / self.vae.config.scaling_factor,
+                                        return_dict=False,
+                                        generator=generator,
+                                    )[0]
+                                score = score_function(
+                                    images=[(image * 127.5 + 128).clip(0, 255).to(torch.uint8)],
+                                    prompts=[prompt],
+                                    timesteps=None,
+                                )
+
+                                score_value = score.item() if torch.is_tensor(score) else float(score)
+                                scores_list.append(score_value)
+
+                            # Select best candidate
+                            best_idx = int(np.argmax(scores_list))
+                            best_score = scores_list[best_idx]
+                            best_noise = noise_candidates[best_idx]
+                            gain_cur = 0.0 if prev_best_score is None else (best_score - prev_best_score)
+                            if log_gain:
+                                per_iter_gains.append(gain_cur)
+                            if method == "eps_greedy_1" and revert_on_negative and prev_best_score is not None and gain_cur < 0:
+                                continue  # keep previous pivot; do not update prev_best_score
+
+                            pivot = best_noise
+                            prev_best_score = best_score
+                            iterations_run += 1
                 
                 latents, _ = self.scheduler.step(noise_pred, t, latents, variance_noise=pivot, **extra_step_kwargs, return_dict=False)
                 if "log_gain" in params and params.get("log_gain", False):
                     gains_per_step.append(per_iter_gains if per_iter_gains else [0.0])
-                    method_tag = "EPS_GREEDY_1" if method == "eps_greedy_1" else ("ZERO_ORDER" if method == "zero_order" else "EPS_GREEDY")
+                    if method == "eps_greedy_1":
+                        method_tag = "EPS_GREEDY_1"
+                    elif method == "eps_greedy_online":
+                        method_tag = "EPS_GREEDY_ONLINE"
+                    elif method == "zero_order":
+                        method_tag = "ZERO_ORDER"
+                    else:
+                        method_tag = "EPS_GREEDY"
                     print(f"[SD][{method_tag}] step {i}: K_used={len(per_iter_gains) if per_iter_gains else 0}, gains={per_iter_gains}")
 
                 if callback_on_step_end is not None:
@@ -1516,8 +1690,15 @@ class StableDiffusionPipeline(
         
         image = self.image_processor.postprocess(image, output_type=output_type, do_denormalize=do_denormalize)
         
-        if "log_gain" in params and params.get("log_gain", False) and method in ("eps_greedy", "zero_order", "eps_greedy_1"):
-            method_tag = "EPS_GREEDY_1" if method == "eps_greedy_1" else ("ZERO_ORDER" if method == "zero_order" else "EPS_GREEDY")
+        if "log_gain" in params and params.get("log_gain", False) and method in ("eps_greedy", "zero_order", "eps_greedy_1", "eps_greedy_online"):
+            if method == "eps_greedy_1":
+                method_tag = "EPS_GREEDY_1"
+            elif method == "eps_greedy_online":
+                method_tag = "EPS_GREEDY_ONLINE"
+            elif method == "zero_order":
+                method_tag = "ZERO_ORDER"
+            else:
+                method_tag = "EPS_GREEDY"
             print(f"[SD][{method_tag}] Gain per timestep & per-iteration: {gains_per_step}")
         
         # Offload all models

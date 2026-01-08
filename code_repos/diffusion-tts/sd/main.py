@@ -29,7 +29,7 @@ def main():
     parser.add_argument('--prompt_csv', type=str, default=None, help='CSV file with prompts (first column). If set, iterate prompts.')
     parser.add_argument('--output', type=str, default=None, help='Output file name (multi-prompt: will append index)')
     parser.add_argument('--scorer', type=str, choices=['brightness', 'compressibility', 'clip'], default='brightness', help='Scorer')
-    parser.add_argument('--method', type=str, default='naive', help='Sampling method (naive, rejection, beam, mcts, zero_order, eps_greedy, epsilon_1)')
+    parser.add_argument('--method', type=str, default='naive', help='Sampling method (naive, rejection, beam, mcts, zero_order, eps_greedy, epsilon_1, epsilon_online)')
     parser.add_argument('--device', type=str, default='cuda', help='Device')
     parser.add_argument('--num_steps', type=int, default=50, help='Number of denoising steps (default 50, align with SD baseline)')
     parser.add_argument('--seed', type=int, default=0, help='Random seed')
@@ -40,9 +40,12 @@ def main():
     parser.add_argument('--lambda_', type=float, default=0.15, help='Master param lambda')
     parser.add_argument('--eps', type=float, default=0.4, help='Master param eps')
     parser.add_argument('--K', type=int, default=20, help='Master param K (eps_greedy/zero_order)')
-    parser.add_argument('--K1', type=int, default=25, help='epsilon_1: K for head 2 + tail 4 steps')
-    parser.add_argument('--K2', type=int, default=15, help='epsilon_1: K for middle steps')
+    parser.add_argument('--K1', type=int, default=25, help='epsilon_1/epsilon_online: K for high noise steps (first 20 steps)')
+    parser.add_argument('--K2', type=int, default=15, help='epsilon_1/epsilon_online: K for low noise steps (remaining steps)')
     parser.add_argument('--revert_on_negative', action='store_true', help='epsilon_1: revert pivot when gain<0 (after first iter)')
+    # epsilon_online specific params
+    parser.add_argument('--thresh_gain_coef', type=float, default=1.0, help='epsilon_online: coefficient for gain threshold (历史平均gain / 历史平均方差 × 系数)')
+    parser.add_argument('--thresh_var_coef', type=float, default=1.0, help='epsilon_online: coefficient for variance threshold (历史平均gain / 历史平均方差 × 系数)')
     args = parser.parse_args()
 
     torch.manual_seed(args.seed)
@@ -71,6 +74,7 @@ def main():
         "zero_order": "zero_order",
         "eps_greedy": "eps_greedy",
         "epsilon_1": "eps_greedy_1",
+        "epsilon_online": "eps_greedy_online",
     }
     if args.method not in method_map:
         raise ValueError(f"Unknown method {args.method}")
@@ -85,6 +89,8 @@ def main():
         'K2': args.K2,
         'revert_on_negative': args.revert_on_negative,
         'log_gain': args.log_gain,
+        'thresh_gain_coef': args.thresh_gain_coef,
+        'thresh_var_coef': args.thresh_var_coef,
     }
 
     def run_once(run_idx: int, prompt_text: str, seed_base: int):
