@@ -1636,6 +1636,12 @@ class StableDiffusionPipeline(
                                 
                                 # Check early stop: gain too small and variance too small
                                 if gain_cur < gain_thresh and var_score < var_thresh:
+                                    print(
+                                        f"[SD][EPS_GREEDY_ONLINE][EARLY_STOP] step {i} iter {iterations_run}: "
+                                        f"gain_cur={gain_cur:.6f}, gain_thresh={gain_thresh:.6f}, "
+                                        f"var_cur={var_score:.6f}, var_thresh={var_thresh:.6f}, "
+                                        f"hist_mean_gain={hist_mean_gain:.6f}, hist_mean_var={hist_mean_var:.6f}"
+                                    )
                                     break
                         
                         # Final per-timestep variance (using all candidate scores across iterations)
