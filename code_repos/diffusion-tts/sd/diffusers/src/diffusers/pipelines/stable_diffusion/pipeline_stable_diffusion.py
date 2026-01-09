@@ -1575,6 +1575,31 @@ class StableDiffusionPipeline(
                             # Update pivot
                             if revert_on_negative and prev_best_score is not None and gain_cur < 0:
                                 iterations_run += 1
+                                # still allow early-stop check on this iter (even though we don't update pivot)
+                                if iterations_run >= watch_start:
+                                    # recompute thresholds with current history
+                                    if len(all_historical_gains) > 0:
+                                        hist_mean_gain = np.mean(all_historical_gains)
+                                    else:
+                                        hist_mean_gain = 0.0
+                                    if len(all_historical_variances) > 0:
+                                        hist_mean_var = np.mean(all_historical_variances)
+                                    else:
+                                        hist_mean_var = 0.0
+
+                                    if thresh_gain_coef <= 0 and thresh_var_coef <= 0:
+                                        gain_thresh = -float("inf")
+                                        var_thresh = -float("inf")
+                                    else:
+                                        gain_thresh = hist_mean_gain * thresh_gain_coef if hist_mean_gain > 0 else 0.0
+                                        var_thresh = hist_mean_var * thresh_var_coef if hist_mean_var > 0 else 0.0
+                                        if gain_thresh == 0.0:
+                                            gain_thresh = 0.01
+                                        if var_thresh == 0.0:
+                                            var_thresh = 0.02
+
+                                    if gain_cur < gain_thresh and var_score < var_thresh:
+                                        break
                                 if iterations_run >= max_iter:
                                     break
                                 # do not update pivot/prev_best_score
