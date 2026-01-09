@@ -34,6 +34,7 @@ def main():
     parser.add_argument('--num_steps', type=int, default=50, help='Number of denoising steps (default 50, align with SD baseline)')
     parser.add_argument('--seed', type=int, default=0, help='Random seed')
     parser.add_argument('--n_runs', type=int, default=1, help='Number of runs; if >1 report mean±std')
+    parser.add_argument('--repeat_per_prompt', type=int, default=1, help='For SD: repeat each prompt with different seeds')
     parser.add_argument('--log_gain', action='store_true', help='Log逐步增益（与EDM定义一致，仅EPS_GREEDY/epsilon_1）')
     # master params
     parser.add_argument('--N', type=int, default=4, help='Master param N')
@@ -93,13 +94,13 @@ def main():
         'thresh_var_coef': args.thresh_var_coef,
     }
 
-    def run_once(run_idx: int, prompt_text: str, seed_base: int):
-        if seed_base is not None:
-            torch.manual_seed(seed_base + run_idx)
-        best_result, best_score = None, float('-inf')
-        # rejection runs multiple candidates; other methods single
-        repeats = base_params['N'] if sd_method == "rejection" else 1
-        for _ in range(repeats):
+    def run_one_prompt(prompt_text: str, prompt_idx: int):
+        results = []
+        repeats = args.repeat_per_prompt if sd_method != "rejection" else base_params['N']
+        for r in range(repeats):
+            seed_to_use = args.seed + prompt_idx * repeats + r if args.seed is not None else None
+            if seed_to_use is not None:
+                torch.manual_seed(seed_to_use)
             result, score = local_pipe(
                 prompt=prompt_text,
                 num_inference_steps=args.num_steps,
@@ -108,9 +109,8 @@ def main():
                 params=base_params,
             )
             score_value = score.item() if torch.is_tensor(score) else float(score)
-            if score_value > best_score:
-                best_result, best_score = result, score_value
-        return best_result, best_score
+            results.append((result, score_value, r, seed_to_use))
+        return results
 
     # Load prompts
     prompts = []
@@ -137,20 +137,30 @@ def main():
         prompts = [args.prompt]
         n_runs_effective = 1  # 单 prompt 场景，不复用 n_runs
 
-    def make_outname(idx: int):
+    def make_outname(idx: int, repeat_idx: int, total_repeats: int):
         if args.output:
             stem = Path(args.output)
-            return f"{stem.stem}_{idx}{stem.suffix or '.png'}"
-        return f"sd_{args.method}_{args.scorer}_{idx}.png" if len(prompts) > 1 else f"sd_{args.method}_{args.scorer}.png"
+            base = f"{stem.stem}_{idx}"
+            if total_repeats > 1:
+                base += f"_r{repeat_idx}"
+            return f"{base}{stem.suffix or '.png'}"
+        base = f"sd_{args.method}_{args.scorer}_{idx}"
+        if total_repeats > 1:
+            base += f"_r{repeat_idx}"
+        return f"{base}.png"
 
     all_scores = []
     for idx, prompt_text in enumerate(prompts):
-        best_result, best_score = run_once(idx, prompt_text, args.seed)
-        outname = make_outname(idx)
-        best_result.images[0].save(outname)
-        print(f"\n[SD][{idx}] Prompt: {prompt_text}")
-        print(f"[SD] Saved: {outname}\nBest score: {best_score}\n")
-        all_scores.append(best_score)
+        results = run_one_prompt(prompt_text, idx)
+        total_repeats = len(results)
+        for res, score, r_idx, seed_used in results:
+            outname = make_outname(idx, r_idx, total_repeats)
+            res.images[0].save(outname)
+            print(f"\n[SD][{idx}][r{r_idx}] Prompt: {prompt_text}")
+            if seed_used is not None:
+                print(f"[SD] Seed: {seed_used}")
+            print(f"[SD] Saved: {outname}\nScore: {score}\n")
+            all_scores.append(score)
 
     if len(prompts) > 1:
         overall_mean = float(np.mean(all_scores))
