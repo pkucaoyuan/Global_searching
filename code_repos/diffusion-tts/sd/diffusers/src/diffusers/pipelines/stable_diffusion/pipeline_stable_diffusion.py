@@ -1432,6 +1432,7 @@ class StableDiffusionPipeline(
                     prev_best_score = None
                     iterations_run = 0
                     per_iter_gains = [] if log_gain else None
+                    timestep_scores = [] if method == "eps_greedy_online" else None
 
                     # For eps_greedy_online, use while loop with early stop
                     if method == "eps_greedy_online":
@@ -1549,12 +1550,10 @@ class StableDiffusionPipeline(
                                 scores_list.append(score_value)
                                 all_candidate_scores.append(score_value)  # Track all for variance
 
-                            # Calculate variance for current timestep: collect scores across iterations
-                            var_score_iter = np.var(all_candidate_scores) if len(all_candidate_scores) > 1 else 0.0
-                            # Accumulate per-timestep scores to compute timestep-level variance
-                            if "timestep_scores" not in locals():
-                                timestep_scores = []
-                            timestep_scores.append(all_candidate_scores)
+                            # Variance for this iteration (current timestep)
+                            var_score = np.var(all_candidate_scores) if len(all_candidate_scores) > 1 else 0.0
+                            if timestep_scores is not None:
+                                timestep_scores.append(all_candidate_scores)
                             
                             # Select best candidate
                             best_idx = int(np.argmax(scores_list))
@@ -1609,6 +1608,12 @@ class StableDiffusionPipeline(
                                 if gain_cur < gain_thresh and var_score < var_thresh:
                                     break
                         
+                        # Final per-timestep variance (using all candidate scores across iterations)
+                        if timestep_scores is not None:
+                            flat_scores = [s for sub in timestep_scores for s in sub]
+                            var_timestep = np.var(flat_scores) if len(flat_scores) > 1 else 0.0
+                            all_historical_variances.append(var_timestep)
+
                         # Update NFE tracking
                         if is_high_noise:
                             high_used_acc += iterations_run
@@ -1759,25 +1764,3 @@ class StableDiffusionPipeline(
         
         image = self.image_processor.postprocess(image, output_type=output_type, do_denormalize=do_denormalize)
         
-                        # Final per-timestep variance (using all candidate scores across iterations)
-                        if "timestep_scores" in locals():
-                            flat_scores = [s for sub in timestep_scores for s in sub]
-                            var_timestep = np.var(flat_scores) if len(flat_scores) > 1 else 0.0
-                            all_historical_variances.append(var_timestep)
-                            del timestep_scores
-
-                        if "log_gain" in params and params.get("log_gain", False) and method in ("eps_greedy", "zero_order", "eps_greedy_1", "eps_greedy_online"):
-            if method == "eps_greedy_1":
-                method_tag = "EPS_GREEDY_1"
-            elif method == "eps_greedy_online":
-                method_tag = "EPS_GREEDY_ONLINE"
-            elif method == "zero_order":
-                method_tag = "ZERO_ORDER"
-            else:
-                method_tag = "EPS_GREEDY"
-            print(f"[SD][{method_tag}] Gain per timestep & per-iteration: {gains_per_step}")
-        
-        # Offload all models
-        self.maybe_free_model_hooks()
-        
-        return StableDiffusionPipelineOutput(images=image, nsfw_content_detected=has_nsfw_concept), max_score
