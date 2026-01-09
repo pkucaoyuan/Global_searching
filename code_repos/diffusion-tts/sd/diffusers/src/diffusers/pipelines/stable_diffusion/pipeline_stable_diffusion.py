@@ -1434,6 +1434,8 @@ class StableDiffusionPipeline(
                     per_iter_gains = [] if log_gain else None
                     # For online variance: accumulate candidate scores across iterations within a timestep
                     timestep_scores_flat = [] if method == "eps_greedy_online" else None
+                    # For smoothed gain: keep last 2 gains (current + previous)
+                    recent_gains_window = [] if method == "eps_greedy_online" else None
 
                     # For eps_greedy_online, use while loop with early stop
                     if method == "eps_greedy_online":
@@ -1562,7 +1564,16 @@ class StableDiffusionPipeline(
                             best_idx = int(np.argmax(scores_list))
                             best_score = scores_list[best_idx]
                             best_noise = noise_candidates[best_idx]
-                            gain_cur = 0.0 if prev_best_score is None else (best_score - prev_best_score)
+                            gain_raw = 0.0 if prev_best_score is None else (best_score - prev_best_score)
+
+                            # Smooth gain_cur by averaging last 2 gains (current + previous)
+                            if recent_gains_window is not None:
+                                recent_gains_window.append(gain_raw)
+                                if len(recent_gains_window) > 2:
+                                    recent_gains_window.pop(0)
+                                gain_cur = float(np.mean(recent_gains_window))
+                            else:
+                                gain_cur = gain_raw
                             
                             # Update historical data (gain: per-iter best; var: per-timestep aggregated)
                             if prev_best_score is not None:
