@@ -1432,7 +1432,8 @@ class StableDiffusionPipeline(
                     prev_best_score = None
                     iterations_run = 0
                     per_iter_gains = [] if log_gain else None
-                    timestep_scores = [] if method == "eps_greedy_online" else None
+                    # For online variance: accumulate candidate scores across iterations within a timestep
+                    timestep_scores_flat = [] if method == "eps_greedy_online" else None
 
                     # For eps_greedy_online, use while loop with early stop
                     if method == "eps_greedy_online":
@@ -1551,9 +1552,11 @@ class StableDiffusionPipeline(
                                 all_candidate_scores.append(score_value)  # Track all for variance
 
                             # Variance for this iteration (current timestep)
-                            var_score = np.var(all_candidate_scores) if len(all_candidate_scores) > 1 else 0.0
-                            if timestep_scores is not None:
-                                timestep_scores.append(all_candidate_scores)
+                            if timestep_scores_flat is not None:
+                                timestep_scores_flat.extend(all_candidate_scores)
+                                var_score = np.var(timestep_scores_flat) if len(timestep_scores_flat) > 1 else 0.0
+                            else:
+                                var_score = np.var(all_candidate_scores) if len(all_candidate_scores) > 1 else 0.0
                             
                             # Select best candidate
                             best_idx = int(np.argmax(scores_list))
@@ -1609,9 +1612,8 @@ class StableDiffusionPipeline(
                                     break
                         
                         # Final per-timestep variance (using all candidate scores across iterations)
-                        if timestep_scores is not None:
-                            flat_scores = [s for sub in timestep_scores for s in sub]
-                            var_timestep = np.var(flat_scores) if len(flat_scores) > 1 else 0.0
+                        if timestep_scores_flat is not None:
+                            var_timestep = np.var(timestep_scores_flat) if len(timestep_scores_flat) > 1 else 0.0
                             all_historical_variances.append(var_timestep)
 
                         # Update NFE tracking
