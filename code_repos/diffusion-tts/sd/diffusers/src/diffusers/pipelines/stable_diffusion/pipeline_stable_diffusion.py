@@ -1407,6 +1407,7 @@ class StableDiffusionPipeline(
                         is_high_noise = i < head_count
                         force_full_k1 = False
                         disable_early_stop = thresh_gain_coef <= 0 and thresh_var_coef <= 0
+                        revert_on_negative = params.get("revert_on_negative", False)
                         if is_high_noise:
                             K_target = K1_base
                             if i < 2:
@@ -1567,6 +1568,13 @@ class StableDiffusionPipeline(
                                 per_iter_gains.append(gain_cur)
                             
                             # Update pivot
+                            if revert_on_negative and prev_best_score is not None and gain_cur < 0:
+                                iterations_run += 1
+                                if iterations_run >= max_iter:
+                                    break
+                                # do not update pivot/prev_best_score
+                                continue
+
                             pivot = best_noise
                             prev_best_score = best_score if prev_best_score is None else max(prev_best_score, best_score)
                             iterations_run += 1
