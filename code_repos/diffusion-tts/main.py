@@ -105,6 +105,7 @@ def main():
     parser.add_argument('--log_gain', action='store_true', help='Log per-timestep gains for EPS_GREEDY')
     parser.add_argument('--thresh_gain_coef', type=float, default=1.0, help='epsilon_online: gain threshold coefficient (hist_mean_gain / hist_mean_var * coef)')
     parser.add_argument('--thresh_var_coef', type=float, default=1.0, help='epsilon_online: variance threshold coefficient (hist_mean_gain / hist_mean_var * coef)')
+    parser.add_argument('--repeat_per_prompt', type=int, default=1, help='For SD: repeat each prompt with different seeds')
     args = parser.parse_args()
 
     # -----------
@@ -162,7 +163,7 @@ def main():
             'S': args.S,
         }
 
-        # prompt handling: if prompt_csv provided, n_runs = number of prompts to take; each prompt runs once
+        # prompt handling
         prompts = []
         if args.prompt_csv:
             import csv
@@ -175,17 +176,18 @@ def main():
                 raise ValueError("prompt_csv provided but no prompts found")
             prompt_count = args.n_runs if args.n_runs and args.n_runs > 0 else len(prompts)
             prompts = prompts[:prompt_count]
-            repeat_per_prompt = 1  # each prompt once
+            repeat_per_prompt = max(1, args.repeat_per_prompt)
         else:
             prompts = [args.prompt]
-            repeat_per_prompt = args.n_runs  # for single prompt, n_runs keeps repeat semantics
+            repeat_per_prompt = max(1, args.repeat_per_prompt)
 
-        def run_one_prompt(prompt_text, seed_offset=0):
-            best_result, best_score = None, float('-inf')
+        def run_one_prompt(prompt_text: str, prompt_idx: int):
+            results = []
             repeats = MASTER_PARAMS['N'] if method == "rejection" else repeat_per_prompt
             for r in range(repeats):
-                if args.seed is not None:
-                    torch.manual_seed(args.seed + seed_offset + r)
+                seed_to_use = args.seed + prompt_idx * repeats + r if args.seed is not None else None
+                if seed_to_use is not None:
+                    torch.manual_seed(seed_to_use)
                 result, score = local_pipe(
                     prompt=prompt_text,
                     num_inference_steps=args.num_steps,
@@ -194,21 +196,34 @@ def main():
                     params=MASTER_PARAMS,
                 )
                 score_value = score.item() if torch.is_tensor(score) else float(score)
-                if score_value > best_score:
-                    best_result, best_score = result, score_value
-            return best_result, best_score
+                results.append((result, score_value, r, seed_to_use))
+            return results
 
         all_scores = []
         for idx, ptxt in enumerate(prompts):
-            best_result, best_score = run_one_prompt(ptxt, seed_offset=idx)
-            outname = args.output or (f"sd_{method}_{args.scorer}_{idx}.png" if len(prompts) > 1 else f"sd_{method}_{args.scorer}.png")
-            best_result.images[0].save(outname)
-            print(f"\n[SD][{idx}] Prompt: {ptxt}")
-            print(f"[SD] Saved: {outname}\nBest score: {best_score}\n")
-            all_scores.append(best_score)
+            results = run_one_prompt(ptxt, idx)
+            total_repeats = len(results)
+            for res, score, r_idx, seed_used in results:
+                if args.output:
+                    stem = Path(args.output)
+                    base = f"{stem.stem}_{idx}"
+                    if total_repeats > 1:
+                        base += f"_r{r_idx}"
+                    outname = f"{base}{stem.suffix or '.png'}"
+                else:
+                    base = f"sd_{method}_{args.scorer}_{idx}"
+                    if total_repeats > 1:
+                        base += f"_r{r_idx}"
+                    outname = f"{base}.png"
+                res.images[0].save(outname)
+                print(f"\n[SD][{idx}][r{r_idx}] Prompt: {ptxt}")
+                if seed_used is not None:
+                    print(f"[SD] Seed: {seed_used}")
+                print(f"[SD] Saved: {outname}\nScore: {score}\n")
+                all_scores.append(score)
         if len(all_scores) > 1:
             import numpy as np
-            print(f"[SD] Overall {len(all_scores)} prompts mean score: {np.mean(all_scores):.4f} ± {np.std(all_scores):.4f}")
+            print(f"[SD] Overall {len(all_scores)} samples mean score: {np.mean(all_scores):.4f} ± {np.std(all_scores):.4f}")
 
     # -----------
     # EDM Backend
