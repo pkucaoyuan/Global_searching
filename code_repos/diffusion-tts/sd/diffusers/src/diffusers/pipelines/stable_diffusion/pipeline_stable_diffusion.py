@@ -1425,7 +1425,6 @@ class StableDiffusionPipeline(
                             K_target = low_schedule[low_schedule_idx]
                             low_schedule_idx = min(low_schedule_idx + 1, len(low_schedule) - 1)
                         slack = params.get("high_slack", 2)
-                        revert_on_negative = False
                     else:
                         K_cur = params["K"]
                         revert_on_negative = False
