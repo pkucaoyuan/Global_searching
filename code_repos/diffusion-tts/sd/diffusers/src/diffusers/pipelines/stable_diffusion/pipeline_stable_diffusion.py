@@ -1549,8 +1549,12 @@ class StableDiffusionPipeline(
                                 scores_list.append(score_value)
                                 all_candidate_scores.append(score_value)  # Track all for variance
 
-                            # Calculate variance of all candidate scores (not just selected)
-                            var_score = np.var(all_candidate_scores) if len(all_candidate_scores) > 1 else 0.0
+                            # Calculate variance for current timestep: collect scores across iterations
+                            var_score_iter = np.var(all_candidate_scores) if len(all_candidate_scores) > 1 else 0.0
+                            # Accumulate per-timestep scores to compute timestep-level variance
+                            if "timestep_scores" not in locals():
+                                timestep_scores = []
+                            timestep_scores.append(all_candidate_scores)
                             
                             # Select best candidate
                             best_idx = int(np.argmax(scores_list))
@@ -1558,10 +1562,10 @@ class StableDiffusionPipeline(
                             best_noise = noise_candidates[best_idx]
                             gain_cur = 0.0 if prev_best_score is None else (best_score - prev_best_score)
                             
-                            # Update historical data
+                            # Update historical data (gain: per-iter best; var: per-timestep aggregated)
                             if prev_best_score is not None:
                                 all_historical_gains.append(gain_cur)
-                            all_historical_variances.append(var_score)
+                            # defer variance update to end of timestep
                             
                             if log_gain:
                                 per_iter_gains.append(gain_cur)
@@ -1755,7 +1759,14 @@ class StableDiffusionPipeline(
         
         image = self.image_processor.postprocess(image, output_type=output_type, do_denormalize=do_denormalize)
         
-        if "log_gain" in params and params.get("log_gain", False) and method in ("eps_greedy", "zero_order", "eps_greedy_1", "eps_greedy_online"):
+                        # Final per-timestep variance (using all candidate scores across iterations)
+                        if "timestep_scores" in locals():
+                            flat_scores = [s for sub in timestep_scores for s in sub]
+                            var_timestep = np.var(flat_scores) if len(flat_scores) > 1 else 0.0
+                            all_historical_variances.append(var_timestep)
+                            del timestep_scores
+
+                        if "log_gain" in params and params.get("log_gain", False) and method in ("eps_greedy", "zero_order", "eps_greedy_1", "eps_greedy_online"):
             if method == "eps_greedy_1":
                 method_tag = "EPS_GREEDY_1"
             elif method == "eps_greedy_online":
