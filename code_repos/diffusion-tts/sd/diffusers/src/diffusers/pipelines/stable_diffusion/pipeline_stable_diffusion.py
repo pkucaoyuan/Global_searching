@@ -1765,4 +1765,19 @@ class StableDiffusionPipeline(
             do_denormalize = [not has_nsfw for has_nsfw in has_nsfw_concept]
         
         image = self.image_processor.postprocess(image, output_type=output_type, do_denormalize=do_denormalize)
-        
+        # Final gain summary logging (optional)
+        if params.get("log_gain", False) and method in ("eps_greedy", "zero_order", "eps_greedy_1", "eps_greedy_online"):
+            if method == "eps_greedy_1":
+                method_tag = "EPS_GREEDY_1"
+            elif method == "eps_greedy_online":
+                method_tag = "EPS_GREEDY_ONLINE"
+            elif method == "zero_order":
+                method_tag = "ZERO_ORDER"
+            else:
+                method_tag = "EPS_GREEDY"
+            print(f"[SD][{method_tag}] Gain per timestep & per-iteration: {gains_per_step}")
+
+        # Offload all models
+        self.maybe_free_model_hooks()
+
+        return StableDiffusionPipelineOutput(images=image, nsfw_content_detected=has_nsfw_concept), max_score
