@@ -1059,6 +1059,15 @@ class StableDiffusionPipeline(
             low_steps_done = 0  # count processed low-value steps
             low_schedule = None  # will be built once when entering low region
             low_schedule_idx = 0
+            # Log run-time parameters once at start
+            print(
+                "[SD][EPS_GREEDY_ONLINE] params: "
+                f"K1={K1_base}, K2={K2_base}, head_count={head_count}, low_count={low_count}, "
+                f"total_budget={total_budget}, N={params.get('N')}, eps={params.get('eps')}, "
+                f"lambda={params.get('lambda')}, thresh_gain_coef={params.get('thresh_gain_coef', 1.0)}, "
+                f"thresh_var_coef={params.get('thresh_var_coef', 1.0)}, high_slack={params.get('high_slack', 2)}, "
+                f"revert_on_negative={params.get('revert_on_negative', False)}"
+            )
         
         # Initialize gain logger once (avoid per-step reset)
         if method in ("eps_greedy", "zero_order", "eps_greedy_1", "eps_greedy_online") and params.get("log_gain", False):
