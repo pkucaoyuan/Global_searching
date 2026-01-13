@@ -51,6 +51,9 @@ class SamplingParams:
     probe_M: int = 0  # 每步用于决策的 probe 噪声数 M（0 表示不做 probe）
     S: int = 8
     scorer: Scorer = field(default_factory=lambda: CompressibilityScorer(dtype=torch.float32))
+    # eps1_trace & replay support (ignored unless SamplingMethod.EPS_GREEDY_1)
+    record_eps1_trace: bool = False
+    replay_noise_plan: Optional[Any] = None
 
 #----------------------------------------------------------------------------
 
