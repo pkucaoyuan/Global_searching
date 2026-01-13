@@ -1164,12 +1164,19 @@ def generate_image_grid(
         # Online scheduling variant for EDM:
         # - Middle steps are "high" and use K1
         # - Low-value steps are the first 2 and last 4 steps; they share the remaining budget
+        # 早停策略与 SD 一致：高价值区默认启用阈值判断，高区前两步不做早停；低价值区不早停。
         lambda_param = method_params.lambda_param * np.sqrt(3 * 64 * 64)
         N = method_params.N
         eps = method_params.eps
         K1 = method_params.K1
         K2_fallback = getattr(method_params, "K2", K1)  # only used for fallback budget if total_budget not provided
         revert_on_negative = getattr(method_params, "revert_on_negative", False)
+        high_slack = getattr(method_params, "high_slack", 2)
+        thresh_gain_coef = getattr(method_params, "thresh_gain_coef", 1.0)
+        thresh_var_coef = getattr(method_params, "thresh_var_coef", 1.0)
+        disable_early_stop_global = thresh_gain_coef <= 0 and thresh_var_coef <= 0
+        all_historical_gains = []
+        all_historical_variances = []
         total_steps = len(t_steps) - 1
         low_head = min(2, total_steps)
         low_tail = min(4, max(total_steps - low_head, 0))
@@ -1217,6 +1224,7 @@ def generate_image_grid(
             tail_start = total_steps - low_tail
             is_low_tail = i >= tail_start
             is_low = is_low_head or is_low_tail
+            force_full_k1 = (not is_low) and (i < 2)
 
             if is_low:
                 if is_low_head:
@@ -1231,9 +1239,18 @@ def generate_image_grid(
             iterations_run = 0
             prev_best_scores = None
             per_iter_gains = [] if log_gain else None
+            timestep_scores_flat = []
+            recent_gains_window = []
 
-            for k in range(K_cur):
-                iterations_run += 1
+            # 早停窗口
+            disable_early_stop = disable_early_stop_global
+            watch_start = max(1, K_cur - high_slack)
+            max_iter = K_cur + high_slack
+            if is_low or force_full_k1 or disable_early_stop:
+                watch_start = K_cur + 1  # 不触发早停
+                max_iter = K_cur
+
+            while iterations_run < max_iter:
                 base_noise = pivot_noise
 
                 candidate_noises = []
@@ -1243,7 +1260,7 @@ def generate_image_grid(
                         dims = tuple(range(1, random_direction.dim()))
                         random_direction = random_direction / torch.norm(random_direction, p=2, dim=dims, keepdim=True)
                         if seed is not None:
-                            scale_seed = hash(f"{i}_{k}_{n}") % 1000 / 1000.0
+                            scale_seed = hash(f"{i}_{iterations_run}_{n}") % 1000 / 1000.0
                             shape = [random_direction.shape[0]] + [1] * (random_direction.dim() - 1)
                             scale = torch.ones(shape, device=device) * scale_seed * lambda_param
                         else:
@@ -1279,11 +1296,25 @@ def generate_image_grid(
                 best_indices = scores.argmax(dim=0)
                 iteration_best_scores = scores.max(dim=0).values
 
+                # 记录方差
+                timestep_scores_flat.extend(scores.detach().cpu().numpy().ravel().tolist())
+                var_score = np.var(timestep_scores_flat) if len(timestep_scores_flat) > 1 else 0.0
+
                 gain_mean = None
                 if prev_best_scores is not None:
                     gain_mean = (iteration_best_scores - prev_best_scores).mean().item()
+
+                if gain_mean is not None:
+                    recent_gains_window.append(gain_mean)
+                    if len(recent_gains_window) > 2:
+                        recent_gains_window.pop(0)
+                    gain_cur = float(np.mean(recent_gains_window))
+                    all_historical_gains.append(gain_cur)
+                else:
+                    gain_cur = 0.0
+
                 if log_gain:
-                    per_iter_gains.append(0.0 if gain_mean is None else gain_mean)
+                    per_iter_gains.append(gain_cur)
 
                 candidate_noises_batch = all_noises.reshape(N, batch_size, *all_noises.shape[1:])
                 new_pivot_noise = torch.stack([
@@ -1291,13 +1322,50 @@ def generate_image_grid(
                     for batch_idx, best_idx in enumerate(best_indices)
                 ])
 
+                iterations_run += 1
+
                 if revert_on_negative and gain_mean is not None and gain_mean < 0:
-                    if log_gain:
-                        print(f"[EPS_GREEDY_ONLINE][EDM] step {i}, iter {k}: gain={gain_mean:.6f}<0, revert pivot")
+                    # 仅回退 pivot，但仍允许计次、继续早停判定
+                    if iterations_run >= watch_start:
+                        if disable_early_stop_global:
+                            pass
+                        else:
+                            hist_mean_gain = np.mean(all_historical_gains) if len(all_historical_gains) > 0 else 0.0
+                            hist_mean_var = np.mean(all_historical_variances) if len(all_historical_variances) > 0 else 0.0
+                            gain_thresh = -float("inf") if disable_early_stop_global else hist_mean_gain * thresh_gain_coef
+                            var_thresh = -float("inf") if disable_early_stop_global else hist_mean_var * thresh_var_coef
+                            if gain_cur < gain_thresh and var_score < var_thresh:
+                                print(
+                                    f\"[EPS_GREEDY_ONLINE][EDM][EARLY_STOP][revert] step {i} iter {iterations_run}: "
+                                    f\"gain_cur={gain_cur:.6f}, gain_thresh={gain_thresh:.6f}, "
+                                    f\"var_cur={var_score:.6f}, var_thresh={var_thresh:.6f}, "
+                                    f\"hist_mean_gain={hist_mean_gain:.6f}, hist_mean_var={hist_mean_var:.6f}\"
+                                )
+                                break
+                    if iterations_run >= max_iter:
+                        break
                     continue
 
                 pivot_noise = new_pivot_noise
                 prev_best_scores = iteration_best_scores
+
+                if iterations_run >= watch_start:
+                    hist_mean_gain = np.mean(all_historical_gains) if len(all_historical_gains) > 0 else 0.0
+                    hist_mean_var = np.mean(all_historical_variances) if len(all_historical_variances) > 0 else 0.0
+                    gain_thresh = -float("inf") if disable_early_stop_global else hist_mean_gain * thresh_gain_coef
+                    var_thresh = -float("inf") if disable_early_stop_global else hist_mean_var * thresh_var_coef
+                    if not disable_early_stop and gain_cur < gain_thresh and var_score < var_thresh:
+                        print(
+                            f\"[EPS_GREEDY_ONLINE][EDM][EARLY_STOP] step {i} iter {iterations_run}: "
+                            f\"gain_cur={gain_cur:.6f}, gain_thresh={gain_thresh:.6f}, "
+                            f\"var_cur={var_score:.6f}, var_thresh={var_thresh:.6f}, "
+                            f\"hist_mean_gain={hist_mean_gain:.6f}, hist_mean_var={hist_mean_var:.6f}\"
+                        )
+                        break
+
+            # 记录本步方差统计
+            var_timestep = np.var(timestep_scores_flat) if len(timestep_scores_flat) > 1 else 0.0
+            all_historical_variances.append(var_timestep)
 
             x_next, _ = step(x_cur, t_cur, t_next, i, pivot_noise, class_labels)
             if log_gain:
