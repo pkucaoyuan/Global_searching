@@ -72,7 +72,7 @@ def compute_iter_avg_gains(rows):
 def plot_step_gains(steps, gains, out_path):
     plt.figure(figsize=(10, 4))
     plt.plot(steps, gains, marker="o")
-    plt.title("Per-step gain (last - first iteration)")
+    plt.title("Per-step gain (last - first)")
     plt.xlabel("Timestep")
     plt.ylabel("Gain")
     plt.grid(True, alpha=0.3)
@@ -85,7 +85,7 @@ def plot_step_gains(steps, gains, out_path):
 def plot_iter_avg_gains(iter_indices, gains, out_path):
     plt.figure(figsize=(8, 4))
     plt.bar(iter_indices, gains)
-    plt.title("Average gain per iteration (n+1 - n across steps)")
+    plt.title("Avg gain per iteration (n+1 - n)")
     plt.xlabel("Iteration index (n -> n+1)")
     plt.ylabel("Average gain")
     plt.grid(True, axis="y", alpha=0.3)
