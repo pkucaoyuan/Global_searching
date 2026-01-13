@@ -1270,6 +1270,16 @@ def generate_image_grid(
             disable_early_stop = disable_early_stop_global
             watch_start = max(1, K_cur - high_slack)
             max_iter = K_cur + high_slack
+            # 全局预算约束：避免高区因 slack 过度消耗预算
+            remaining_budget_total = total_budget - high_used_acc - low_used_acc
+            future_high_steps = max(0, high_count - high_steps_done - (0 if is_low else 1))
+            future_low_steps = max(0, low_total - low_steps_done - (1 if is_low else 0))
+            # 未来低区至少每步1（包含固定为1的尾部）
+            min_future_budget = future_high_steps * K1 + future_low_steps * 1
+            max_iter_cap = remaining_budget_total - min_future_budget
+            if max_iter_cap < 1:
+                max_iter_cap = 1
+            max_iter = min(max_iter, max_iter_cap)
             if is_low or force_full_k1 or disable_early_stop:
                 watch_start = K_cur + 1  # 不触发早停
                 max_iter = K_cur
