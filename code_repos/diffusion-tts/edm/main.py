@@ -1201,14 +1201,15 @@ def generate_image_grid(
         k_floor = max(1, k_floor)
         extra = int(round(remaining_budget - k_floor * low_total))
         extra = max(min(extra, low_total), 0)
-        low_schedule = [k_floor + 1] * extra + [k_floor] * (low_total - extra)
-        # indices: first two low steps consume first two entries; tail steps consume remaining entries
-        low_idx_head = 0
-        low_idx_tail_start = low_head
+        # 动态预算跟踪，低区每步重算（使尾部能补足预算）
+        high_used_acc = 0
+        low_used_acc = 0
+        high_steps_done = 0
+        low_steps_done = 0
 
         print(
             f"[EPS_GREEDY_ONLINE][EDM] params: K1={K1}, total_budget={total_budget}, "
-            f"low_head={low_head}, low_tail={low_tail}, low_schedule={low_schedule}"
+            f"low_head={low_head}, low_tail={low_tail}"
         )
 
         if log_gain:
@@ -1227,12 +1228,18 @@ def generate_image_grid(
             force_full_k1 = (not is_low) and (i < 2)
 
             if is_low:
-                if is_low_head:
-                    sched_idx = low_idx_head
-                    low_idx_head += 1
-                else:
-                    sched_idx = low_idx_tail_start + (i - tail_start)
-                K_cur = low_schedule[min(sched_idx, len(low_schedule) - 1)]
+                remaining_low_steps = max(1, low_total - low_steps_done)
+                remaining_high_steps = max(0, high_count - high_steps_done)
+                # 预留未来高区预算 = 剩余高步数 * K1
+                remaining_budget = total_budget - high_used_acc - low_used_acc - remaining_high_steps * K1
+                k_mean = remaining_budget / remaining_low_steps
+                k_floor = int(np.floor(k_mean))
+                k_floor = max(1, k_floor)
+                extra = int(round(remaining_budget - k_floor * remaining_low_steps))
+                extra = max(min(extra, remaining_low_steps), 0)
+                # 前置小数
+                low_schedule_dynamic = [k_floor + 1] * extra + [k_floor] * (remaining_low_steps - extra)
+                K_cur = low_schedule_dynamic[0]
             else:
                 K_cur = K1
 
@@ -1371,6 +1378,13 @@ def generate_image_grid(
             if log_gain:
                 gains_per_step.append(per_iter_gains if per_iter_gains else [0.0])
             print(f"[EPS_GREEDY_ONLINE][EDM] step {i}: K_used={iterations_run}, is_low={is_low}")
+            # 记录已用预算
+            if is_low:
+                low_used_acc += iterations_run
+                low_steps_done += 1
+            else:
+                high_used_acc += iterations_run
+                high_steps_done += 1
 
         if log_gain:
             print(f"[EPS_GREEDY_ONLINE][EDM] Gain per timestep & per-iteration (mean over batch): {gains_per_step}")
