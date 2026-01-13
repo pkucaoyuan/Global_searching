@@ -94,6 +94,7 @@ def main():
     parser.add_argument('--K', type=int, default=20, help='Master param K')
     parser.add_argument('--K1', type=int, default=25, help='Master param K1 (epsilon_1: steps 0-1 & last 4)')
     parser.add_argument('--K2', type=int, default=15, help='Master param K2 (epsilon_1: remaining middle steps)')
+    parser.add_argument('--total_budget', type=int, default=None, help='epsilon_online: total NFE budget (overrides K2-based budget)')
     parser.add_argument('--high_slack', type=int, default=2, help='epsilon_online: slack for watch region (start early-stop checks after K_target - slack)')
     parser.add_argument('--revert_on_negative', action='store_true', help='epsilon_1: 若本迭代增益为负则保持上一轮 pivot')
     parser.add_argument('--B', type=int, default=2, help='Master param B')
@@ -154,6 +155,7 @@ def main():
             'K': args.K,
             'K1': args.K1,
             'K2': args.K2,
+            'total_budget': args.total_budget,
             'high_slack': args.high_slack,
             'revert_on_negative': args.revert_on_negative,
             'log_gain': args.log_gain,
@@ -250,6 +252,7 @@ def main():
             'zero_order': SamplingMethod.ZERO_ORDER,
             'eps_greedy': SamplingMethod.EPS_GREEDY,
             'epsilon_1': SamplingMethod.EPS_GREEDY_1,
+            'epsilon_online': SamplingMethod.EPS_GREEDY_ONLINE,
         }
         if args.method not in method_map:
             raise ValueError(f"Unknown method: {args.method}")
@@ -257,7 +260,7 @@ def main():
         sampling_params = {'scorer': scorer}
 
         # Add master params if relevant for method
-        if args.method in ['rejection', 'zero_order', 'eps_greedy', 'epsilon_1', 'beam', 'mcts']:
+        if args.method in ['rejection', 'zero_order', 'eps_greedy', 'epsilon_1', 'epsilon_online', 'beam', 'mcts']:
             if args.N is not None:
                 sampling_params['N'] = args.N
             if args.K is not None:
@@ -271,13 +274,15 @@ def main():
             if args.S is not None:
                 sampling_params['S'] = args.S
             # For epsilon_1, add K1 and K2
-            if args.method == 'epsilon_1':
+            if args.method in ['epsilon_1', 'epsilon_online']:
                 if args.K1 is not None:
                     sampling_params['K1'] = args.K1
                 if args.K2 is not None:
                     sampling_params['K2'] = args.K2
                 if args.revert_on_negative:
                     sampling_params['revert_on_negative'] = True
+                if args.total_budget is not None:
+                    sampling_params['total_budget'] = args.total_budget
 
         outname = args.output or f"edm_{args.method}_{args.scorer}.png"
         

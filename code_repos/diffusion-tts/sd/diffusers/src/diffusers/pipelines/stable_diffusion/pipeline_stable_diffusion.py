@@ -1051,9 +1051,12 @@ class StableDiffusionPipeline(
             head_count = min(20, total_steps)
             low_count = max(0, total_steps - head_count)
             K1_base = params.get("K1", 25)
-            K2_base = params.get("K2", 15)
-            # Budget tracking (dynamic): total_budget = H*K1 + L*K2
-            total_budget = head_count * K1_base + low_count * K2_base
+            # Budget tracking (dynamic): user can provide total_budget explicitly; fallback to legacy H*K1+L*K2
+            if "total_budget" in params and params["total_budget"] is not None:
+                total_budget = params["total_budget"]
+            else:
+                K2_base_legacy = params.get("K2", 15)
+                total_budget = head_count * K1_base + low_count * K2_base_legacy
             high_used_acc = 0  # actual NFE used in high steps
             low_used_acc = 0   # actual NFE used in low steps
             low_steps_done = 0  # count processed low-value steps
@@ -1062,8 +1065,8 @@ class StableDiffusionPipeline(
             # Log run-time parameters once at start
             print(
                 "[SD][EPS_GREEDY_ONLINE] params: "
-                f"K1={K1_base}, K2={K2_base}, head_count={head_count}, low_count={low_count}, "
-                f"total_budget={total_budget}, N={params.get('N')}, eps={params.get('eps')}, "
+                f"K1={K1_base}, total_budget={total_budget}, head_count={head_count}, low_count={low_count}, "
+                f"N={params.get('N')}, eps={params.get('eps')}, "
                 f"lambda={params.get('lambda')}, thresh_gain_coef={params.get('thresh_gain_coef', 1.0)}, "
                 f"thresh_var_coef={params.get('thresh_var_coef', 1.0)}, high_slack={params.get('high_slack', 2)}, "
                 f"revert_on_negative={params.get('revert_on_negative', False)}"
@@ -1364,6 +1367,10 @@ class StableDiffusionPipeline(
                     xm.mark_step()
         
         else: # ================================
+            record_eps1_trace = params.get("record_eps1_trace", False) if method == "eps_greedy_1" else False
+            replay_noise_plan = params.get("replay_noise_plan") if method == "eps_greedy_1" else None
+            eps1_best_noises = [] if method == "eps_greedy_1" and record_eps1_trace else None
+            eps1_final_noises = [] if method == "eps_greedy_1" and record_eps1_trace else None
             for i, t in tqdm(enumerate(timesteps)):
                 if self.interrupt:
                     continue
@@ -1445,6 +1452,18 @@ class StableDiffusionPipeline(
                     timestep_scores_flat = [] if method == "eps_greedy_online" else None
                     # For smoothed gain: keep last 2 gains (current + previous)
                     recent_gains_window = [] if method == "eps_greedy_online" else None
+                    replay_mode = method == "eps_greedy_1" and replay_noise_plan is not None
+
+                    if method == "eps_greedy_1" and record_eps1_trace:
+                        best_noises_this_timestep = []
+
+                    if replay_mode:
+                        if i >= len(replay_noise_plan):
+                            raise ValueError(f"replay_noise_plan length {len(replay_noise_plan)} is shorter than required steps {i+1}")
+                        pivot = replay_noise_plan[i].to(device=latents.device, dtype=latents.dtype)
+                        iterations_run = 1
+                        if log_gain and per_iter_gains is not None:
+                            per_iter_gains.append(0.0)
 
                     # For eps_greedy_online, use while loop with early stop
                     if method == "eps_greedy_online":
@@ -1671,86 +1690,92 @@ class StableDiffusionPipeline(
                             low_used_acc += iterations_run
                             low_steps_done += 1
                     else:
-                        # Original for loop for other methods
-                        for _k in range(K_cur):
-                            noise_candidates = []
-                            for _ in range(params["N"]):
-                                r = torch.rand(1).item()
-                                if r < params["eps"] if method in ("eps_greedy", "eps_greedy_1") else 0.0:
-                                    noise_candidates.append(torch.randn_like(latents))
-                                else:
-                                    to_add = torch.randn_like(latents)
-                                    to_add = to_add / torch.norm(to_add)
-                                    scale = torch.rand(1).item() * params["lambda"] * np.sqrt(
-                                        latents.shape[-1] * latents.shape[-2] * latents.shape[-3]
-                                    )
-                                    noise_candidates.append(pivot + to_add * scale)
+                        # Original for loop for other methods (eps_greedy / zero_order / eps_greedy_1)
+                        if replay_mode and method == "eps_greedy_1":
+                            # In replay mode, pivot already provided; skip search
+                            pass
+                        else:
+                            for _k in range(K_cur):
+                                noise_candidates = []
+                                for _ in range(params["N"]):
+                                    r = torch.rand(1).item()
+                                    if r < params["eps"] if method in ("eps_greedy", "eps_greedy_1") else 0.0:
+                                        noise_candidates.append(torch.randn_like(latents))
+                                    else:
+                                        to_add = torch.randn_like(latents)
+                                        to_add = to_add / torch.norm(to_add)
+                                        scale = torch.rand(1).item() * params["lambda"] * np.sqrt(
+                                            latents.shape[-1] * latents.shape[-2] * latents.shape[-3]
+                                        )
+                                        noise_candidates.append(pivot + to_add * scale)
 
-                            scores_list = []
+                                scores_list = []
 
-                            for noise_candidate in noise_candidates:
-                                latents_cand, pred_x0 = self.scheduler.step(
-                                    noise_pred, t, latents, variance_noise=noise_candidate, **extra_step_kwargs, return_dict=False
-                                )
-
-                                latent_model_input_tminusone = (
-                                    torch.cat([latents_cand] * 2) if self.do_classifier_free_guidance else latents_cand
-                                )
-                                latent_model_input_tminusone = self.scheduler.scale_model_input(latent_model_input_tminusone, t)
-
-                                noise_pred_tminusone = self.unet(
-                                    latent_model_input_tminusone,
-                                    t,
-                                    encoder_hidden_states=prompt_embeds,
-                                    timestep_cond=timestep_cond,
-                                    cross_attention_kwargs=self.cross_attention_kwargs,
-                                    added_cond_kwargs=added_cond_kwargs,
-                                    return_dict=False,
-                                )[0]
-
-                                if self.do_classifier_free_guidance:
-                                    noise_pred_uncond_tminusone, noise_pred_text_tminusone = noise_pred_tminusone.chunk(2)
-                                    noise_pred_tminusone = noise_pred_uncond_tminusone + self.guidance_scale * (
-                                        noise_pred_text_tminusone - noise_pred_uncond_tminusone
+                                for noise_candidate in noise_candidates:
+                                    latents_cand, pred_x0 = self.scheduler.step(
+                                        noise_pred, t, latents, variance_noise=noise_candidate, **extra_step_kwargs, return_dict=False
                                     )
 
-                                if self.do_classifier_free_guidance and self.guidance_rescale > 0.0:
-                                    noise_pred_tminusone = rescale_noise_cfg(
-                                        noise_pred_tminusone, noise_pred_text, guidance_rescale=self.guidance_rescale
+                                    latent_model_input_tminusone = (
+                                        torch.cat([latents_cand] * 2) if self.do_classifier_free_guidance else latents_cand
                                     )
+                                    latent_model_input_tminusone = self.scheduler.scale_model_input(latent_model_input_tminusone, t)
 
-                                next_tminusone, pred_next_tminusone = self.scheduler.step(
-                                    noise_pred_tminusone, t, latents_cand, **extra_step_kwargs, return_dict=False
-                                )
-
-                                with torch.no_grad():
-                                    image = self.vae.decode(
-                                        pred_next_tminusone / self.vae.config.scaling_factor,
+                                    noise_pred_tminusone = self.unet(
+                                        latent_model_input_tminusone,
+                                        t,
+                                        encoder_hidden_states=prompt_embeds,
+                                        timestep_cond=timestep_cond,
+                                        cross_attention_kwargs=self.cross_attention_kwargs,
+                                        added_cond_kwargs=added_cond_kwargs,
                                         return_dict=False,
-                                        generator=generator,
                                     )[0]
-                                score = score_function(
-                                    images=[(image * 127.5 + 128).clip(0, 255).to(torch.uint8)],
-                                    prompts=[prompt],
-                                    timesteps=None,
-                                )
 
-                                score_value = score.item() if torch.is_tensor(score) else float(score)
-                                scores_list.append(score_value)
+                                    if self.do_classifier_free_guidance:
+                                        noise_pred_uncond_tminusone, noise_pred_text_tminusone = noise_pred_tminusone.chunk(2)
+                                        noise_pred_tminusone = noise_pred_uncond_tminusone + self.guidance_scale * (
+                                            noise_pred_text_tminusone - noise_pred_uncond_tminusone
+                                        )
 
-                            # Select best candidate
-                            best_idx = int(np.argmax(scores_list))
-                            best_score = scores_list[best_idx]
-                            best_noise = noise_candidates[best_idx]
-                            gain_cur = 0.0 if prev_best_score is None else (best_score - prev_best_score)
-                            if log_gain:
-                                per_iter_gains.append(gain_cur)
-                            if method == "eps_greedy_1" and revert_on_negative and prev_best_score is not None and gain_cur < 0:
-                                continue  # keep previous pivot; do not update prev_best_score
+                                    if self.do_classifier_free_guidance and self.guidance_rescale > 0.0:
+                                        noise_pred_tminusone = rescale_noise_cfg(
+                                            noise_pred_tminusone, noise_pred_text, guidance_rescale=self.guidance_rescale
+                                        )
 
-                            pivot = best_noise
-                            prev_best_score = best_score
-                            iterations_run += 1
+                                    next_tminusone, pred_next_tminusone = self.scheduler.step(
+                                        noise_pred_tminusone, t, latents_cand, **extra_step_kwargs, return_dict=False
+                                    )
+
+                                    with torch.no_grad():
+                                        image = self.vae.decode(
+                                            pred_next_tminusone / self.vae.config.scaling_factor,
+                                            return_dict=False,
+                                            generator=generator,
+                                        )[0]
+                                    score = score_function(
+                                        images=[(image * 127.5 + 128).clip(0, 255).to(torch.uint8)],
+                                        prompts=[prompt],
+                                        timesteps=None,
+                                    )
+
+                                    score_value = score.item() if torch.is_tensor(score) else float(score)
+                                    scores_list.append(score_value)
+
+                                # Select best candidate
+                                best_idx = int(np.argmax(scores_list))
+                                best_score = scores_list[best_idx]
+                                best_noise = noise_candidates[best_idx]
+                                if method == "eps_greedy_1" and record_eps1_trace:
+                                    best_noises_this_timestep.append(best_noise.detach().cpu())
+                                gain_cur = 0.0 if prev_best_score is None else (best_score - prev_best_score)
+                                if log_gain:
+                                    per_iter_gains.append(gain_cur)
+                                if method == "eps_greedy_1" and revert_on_negative and prev_best_score is not None and gain_cur < 0:
+                                    continue  # keep previous pivot; do not update prev_best_score
+
+                                pivot = best_noise
+                                prev_best_score = best_score
+                                iterations_run += 1
                 
                 latents, _ = self.scheduler.step(noise_pred, t, latents, variance_noise=pivot, **extra_step_kwargs, return_dict=False)
                 # Always report K used for eps_greedy_online
@@ -1792,6 +1817,13 @@ class StableDiffusionPipeline(
         # ================================
 
         # For regular mode, use the standard output code
+        eps1_trace = None
+        if method == "eps_greedy_1" and record_eps1_trace:
+            eps1_trace = {
+                "best_noises_per_step": eps1_best_noises,
+                "final_noise_per_step": eps1_final_noises,
+            }
+
         if not output_type == "latent":
             image = self.vae.decode(latents / self.vae.config.scaling_factor, return_dict=False, generator=generator)[0]
             has_nsfw_concept = None
@@ -1828,4 +1860,7 @@ class StableDiffusionPipeline(
         # Offload all models
         self.maybe_free_model_hooks()
 
-        return StableDiffusionPipelineOutput(images=image, nsfw_content_detected=has_nsfw_concept), max_score
+        output_obj = StableDiffusionPipelineOutput(images=image, nsfw_content_detected=has_nsfw_concept)
+        if eps1_trace is not None:
+            output_obj.eps1_trace = eps1_trace
+        return output_obj, max_score

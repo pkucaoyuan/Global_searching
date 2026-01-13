@@ -31,6 +31,7 @@ class SamplingMethod(Enum):
     REJECTION_SAMPLING = auto()
     EPS_GREEDY = auto()
     EPS_GREEDY_1 = auto()
+    EPS_GREEDY_ONLINE = auto()
 
 @dataclass
 class SamplingParams:
@@ -974,6 +975,10 @@ def generate_image_grid(
         K1 = method_params.K1
         K2 = method_params.K2
         revert_on_negative = getattr(method_params, "revert_on_negative", False)
+        record_eps1_trace = sampling_params.get("record_eps1_trace", False)
+        replay_noise_plan = sampling_params.get("replay_noise_plan")
+        eps1_best_noises = [] if record_eps1_trace else None
+        eps1_final_noises = [] if record_eps1_trace else None
         if log_gain and revert_on_negative:
             print("[EPS_GREEDY_1] revert_on_negative enabled")
         if log_gain:
@@ -1013,35 +1018,214 @@ def generate_image_grid(
                 pivot_noise = torch.randn_like(x_cur)
             
             # For each timestep, store the best noise from each local search iteration
-            best_noises_this_timestep = []
+            best_noises_this_timestep = [] if record_eps1_trace else []
             per_iter_gains = [] if log_gain else None
             
-            # Run K iterations of local search
-            for k in range(K):
+            if replay_noise_plan is not None:
+                if i >= len(replay_noise_plan):
+                    raise ValueError(f"replay_noise_plan length {len(replay_noise_plan)} is shorter than required steps {i+1}")
+                pivot_noise = replay_noise_plan[i].to(device=x_cur.device, dtype=x_cur.dtype)
+                iterations_run = 1
+            else:
+                # Run K iterations of local search
+                for k in range(K):
+                    iterations_run += 1
+                    base_noise = pivot_noise
+                    
+                    # Generate N candidate noises by adding scaled random vectors
+                    candidate_noises = []
+                    for n in range(N):
+                        # Decide between perturbed noise or fresh noise
+                        if torch.rand(1, device=device) < (1 - eps):
+                            # Use precomputed noise if available
+                            if precomputed_noise is not None and i in precomputed_noise and k < precomputed_noise[i].shape[1] and n < precomputed_noise[i].shape[2]:
+                                # Extract direction from precomputed noise
+                                random_direction = precomputed_noise[i][:, k, n]
+                                if random_direction.shape != base_noise.shape:
+                                    random_direction = random_direction.reshape(base_noise.shape)
+                                # Normalize to get a unit vector
+                                dims = tuple(range(1, random_direction.dim()))
+                                random_direction = random_direction / torch.norm(random_direction, p=2, dim=dims, keepdim=True)
+                            else:
+                                # Generate random unit vector (by normalizing a Gaussian)
+                                random_direction = torch.randn_like(base_noise)
+                                dims = tuple(range(1, random_direction.dim()))
+                                random_direction = random_direction / torch.norm(random_direction, p=2, dim=dims, keepdim=True)
+                            
+                            # Scale by random factor between 0 and lambda
+                            if seed is not None:
+                                scale_seed = hash(f"{i}_{k}_{n}") % 1000 / 1000.0
+                                shape = [random_direction.shape[0]] + [1] * (random_direction.dim() - 1)
+                                scale = torch.ones(shape, device=device) * scale_seed * lambda_param
+                            else:
+                                shape = [random_direction.shape[0]] + [1] * (random_direction.dim() - 1)
+                                scale = torch.rand(shape, device=device) * lambda_param
+                            
+                            candidate_noise = base_noise + scale * random_direction
+                        else:
+                            # Use precomputed fresh noise if available
+                            if precomputed_noise is not None and f'fresh_{i}_{k}_{n}' in precomputed_noise:
+                                candidate_noise = precomputed_noise[f'fresh_{i}_{k}_{n}']
+                            else:
+                                # With probability eps, just use a fresh Gaussian sample
+                                candidate_noise = torch.randn_like(x_cur)
+                    
+                        candidate_noises.append(candidate_noise)
+                    
+                    # Concatenate all candidate noises
+                    all_noises = torch.cat(candidate_noises, dim=0)  # [N*batch_size, C, H, W]
+                    
+                    # Repeat x_cur and class_labels for each candidate
+                    x_cur_expanded = x_cur.repeat(N, 1, 1, 1)  # [N*batch_size, C, H, W]
+                    class_labels_expanded = None
+                    if class_labels is not None:
+                        class_labels_expanded = class_labels.repeat(N, 1)  # [N*batch_size, num_classes]
+                    
+                    # Run denoising step for all candidates at once
+                    x_candidates, x0_candidates = step(x_cur_expanded, t_cur, t_next, i, all_noises, class_labels_expanded)
+                    
+                    # Properly reshape based on actual dimensions
+                    total_images = x_candidates.shape[0]
+                    channels, height, width = x_cur.shape[1:]
+                    effective_batch_size = total_images // N
+                    
+                    # Reshape using the effective batch size
+                    x_candidates = x_candidates.reshape(N, effective_batch_size, channels, height, width)
+                    x0_candidates = x0_candidates.reshape(N, effective_batch_size, channels, height, width)
+                    
+                    # Score candidates based on predicted x0 (denoised result)
+                    x_for_scoring = x0_candidates.reshape(-1, *x0_candidates.shape[2:])
+                    x_for_scoring = (x_for_scoring * 127.5 + 128).clip(0, 255).to(torch.uint8)
+                    timesteps = torch.zeros(x_for_scoring.shape[0], device=device)
+                    
+                    # Make sure class labels are properly formatted for scorer
+                    if class_labels is not None:
+                        scorer_class_labels = class_labels.repeat(N, 1)
+                    else:
+                        scorer_class_labels = None
+                    
+                    # Get scores for all candidates
+                    scores = method_params.scorer(x_for_scoring, scorer_class_labels, timesteps)
+                    scores = scores.reshape(N, batch_size)  # [N, batch_size]
+                    
+                    # Find the best noise for each sample in the batch
+                    best_indices = scores.argmax(dim=0)  # [batch_size]
+                    iteration_best_scores = scores.max(dim=0).values  # [batch_size]
+                    
+                    gain_mean = None
+                    if prev_best_scores is not None:
+                        gain_mean = (iteration_best_scores - prev_best_scores).mean().item()
+                    if log_gain:
+                        per_iter_gains.append(0.0 if gain_mean is None else gain_mean)
+                    
+                    # Gather best noise for each batch element
+                    candidate_noises_batch = all_noises.reshape(N, batch_size, *all_noises.shape[1:])  # [N, batch_size, C, H, W]
+                    
+                    new_pivot_noise = torch.stack([
+                        candidate_noises_batch[best_idx, batch_idx] 
+                        for batch_idx, best_idx in enumerate(best_indices)
+                    ])  # [batch_size, C, H, W]
+                    
+                    # 负增益防护：若当前迭代平均提升为负，则保持上一轮 pivot、不更新（首迭代不触发）
+                    if revert_on_negative and gain_mean is not None and gain_mean < 0:
+                        if log_gain:
+                            print(f"[EPS_GREEDY_1] step {i}, iter {k}: gain={gain_mean:.6f}<0, revert pivot")
+                        continue  # 保持旧 pivot，下一轮仍用旧 pivot 进行探索
+                    
+                    # Store the best noise from this iteration
+                    if record_eps1_trace:
+                        best_noises_this_timestep.append(new_pivot_noise.cpu().clone())
+                    
+                    # Update pivot_noise for next iteration
+                    pivot_noise = new_pivot_noise
+                    prev_best_scores = iteration_best_scores
+            
+            # Use the final best noise for this denoising step
+            x_next, _ = step(x_cur, t_cur, t_next, i, pivot_noise, class_labels)
+            if log_gain:
+                gains_per_step.append(per_iter_gains if per_iter_gains else [0.0])
+            print(f"[EPS_GREEDY_1] step {i}: K_used={iterations_run}, revert_on_negative={revert_on_negative}")
+            if record_eps1_trace:
+                eps1_final_noises.append(pivot_noise.cpu().clone())
+                eps1_best_noises.append(best_noises_this_timestep if best_noises_this_timestep is not None else [])
+
+        if log_gain:
+            print(f"[EPS_GREEDY_1] Gain per timestep & per-iteration (mean over batch): {gains_per_step}")
+
+    elif sampling_method == SamplingMethod.EPS_GREEDY_ONLINE:
+        # Online scheduling variant for EDM:
+        # - Middle steps are "high" and use K1
+        # - Low-value steps are the first 2 and last 4 steps; they share the remaining budget
+        lambda_param = method_params.lambda_param * np.sqrt(3 * 64 * 64)
+        N = method_params.N
+        eps = method_params.eps
+        K1 = method_params.K1
+        K2_fallback = getattr(method_params, "K2", K1)  # only used for fallback budget if total_budget not provided
+        revert_on_negative = getattr(method_params, "revert_on_negative", False)
+        total_steps = len(t_steps) - 1
+        low_head = min(2, total_steps)
+        low_tail = min(4, max(total_steps - low_head, 0))
+        low_total = low_head + low_tail
+        high_count = max(0, total_steps - low_total)
+        total_budget = sampling_params.get("total_budget", None)
+        if total_budget is None:
+            # fallback: use legacy budget estimate
+            total_budget = high_count * K1 + low_total * K2_fallback
+        remaining_budget = max(1, total_budget - high_count * K1)
+        # build low schedule (front-load fractional budget)
+        k_mean = remaining_budget / max(1, low_total)
+        k_floor = int(np.floor(k_mean))
+        k_floor = max(1, k_floor)
+        extra = int(round(remaining_budget - k_floor * low_total))
+        extra = max(min(extra, low_total), 0)
+        low_schedule = [k_floor + 1] * extra + [k_floor] * (low_total - extra)
+        # indices: first two low steps consume first two entries; tail steps consume remaining entries
+        low_idx_head = 0
+        low_idx_tail_start = low_head
+
+        print(
+            f"[EPS_GREEDY_ONLINE][EDM] params: K1={K1}, total_budget={total_budget}, "
+            f"low_head={low_head}, low_tail={low_tail}, low_schedule={low_schedule}"
+        )
+
+        if log_gain:
+            gains_per_step = []
+
+        pivot_noise = torch.randn_like(x_next)
+
+        for i, (t_cur, t_next) in tqdm.tqdm(list(enumerate(zip(t_steps[:-1], t_steps[1:]))), unit='step'):
+            x_cur = x_next
+
+            # determine if this step is low or high
+            is_low_head = i < low_head
+            tail_start = total_steps - low_tail
+            is_low_tail = i >= tail_start
+            is_low = is_low_head or is_low_tail
+
+            if is_low:
+                if is_low_head:
+                    sched_idx = low_idx_head
+                    low_idx_head += 1
+                else:
+                    sched_idx = low_idx_tail_start + (i - tail_start)
+                K_cur = low_schedule[min(sched_idx, len(low_schedule) - 1)]
+            else:
+                K_cur = K1
+
+            iterations_run = 0
+            prev_best_scores = None
+            per_iter_gains = [] if log_gain else None
+
+            for k in range(K_cur):
                 iterations_run += 1
                 base_noise = pivot_noise
-                
-                # Generate N candidate noises by adding scaled random vectors
+
                 candidate_noises = []
                 for n in range(N):
-                    # Decide between perturbed noise or fresh noise
                     if torch.rand(1, device=device) < (1 - eps):
-                        # Use precomputed noise if available
-                        if precomputed_noise is not None and i in precomputed_noise and k < precomputed_noise[i].shape[1] and n < precomputed_noise[i].shape[2]:
-                            # Extract direction from precomputed noise
-                            random_direction = precomputed_noise[i][:, k, n]
-                            if random_direction.shape != base_noise.shape:
-                                random_direction = random_direction.reshape(base_noise.shape)
-                            # Normalize to get a unit vector
-                            dims = tuple(range(1, random_direction.dim()))
-                            random_direction = random_direction / torch.norm(random_direction, p=2, dim=dims, keepdim=True)
-                        else:
-                            # Generate random unit vector (by normalizing a Gaussian)
-                            random_direction = torch.randn_like(base_noise)
-                            dims = tuple(range(1, random_direction.dim()))
-                            random_direction = random_direction / torch.norm(random_direction, p=2, dim=dims, keepdim=True)
-                        
-                        # Scale by random factor between 0 and lambda
+                        random_direction = torch.randn_like(base_noise)
+                        dims = tuple(range(1, random_direction.dim()))
+                        random_direction = random_direction / torch.norm(random_direction, p=2, dim=dims, keepdim=True)
                         if seed is not None:
                             scale_seed = hash(f"{i}_{k}_{n}") % 1000 / 1000.0
                             shape = [random_direction.shape[0]] + [1] * (random_direction.dim() - 1)
@@ -1049,93 +1233,63 @@ def generate_image_grid(
                         else:
                             shape = [random_direction.shape[0]] + [1] * (random_direction.dim() - 1)
                             scale = torch.rand(shape, device=device) * lambda_param
-                        
                         candidate_noise = base_noise + scale * random_direction
                     else:
-                        # Use precomputed fresh noise if available
-                        if precomputed_noise is not None and f'fresh_{i}_{k}_{n}' in precomputed_noise:
-                            candidate_noise = precomputed_noise[f'fresh_{i}_{k}_{n}']
-                        else:
-                            # With probability eps, just use a fresh Gaussian sample
-                            candidate_noise = torch.randn_like(x_cur)
-                    
+                        candidate_noise = torch.randn_like(x_cur)
                     candidate_noises.append(candidate_noise)
-                
-                # Concatenate all candidate noises
-                all_noises = torch.cat(candidate_noises, dim=0)  # [N*batch_size, C, H, W]
-                
-                # Repeat x_cur and class_labels for each candidate
-                x_cur_expanded = x_cur.repeat(N, 1, 1, 1)  # [N*batch_size, C, H, W]
+
+                all_noises = torch.cat(candidate_noises, dim=0)
+                x_cur_expanded = x_cur.repeat(N, 1, 1, 1)
                 class_labels_expanded = None
                 if class_labels is not None:
-                    class_labels_expanded = class_labels.repeat(N, 1)  # [N*batch_size, num_classes]
-                
-                # Run denoising step for all candidates at once
+                    class_labels_expanded = class_labels.repeat(N, 1)
+
                 x_candidates, x0_candidates = step(x_cur_expanded, t_cur, t_next, i, all_noises, class_labels_expanded)
-                
-                # Properly reshape based on actual dimensions
                 total_images = x_candidates.shape[0]
                 channels, height, width = x_cur.shape[1:]
                 effective_batch_size = total_images // N
-                
-                # Reshape using the effective batch size
-                x_candidates = x_candidates.reshape(N, effective_batch_size, channels, height, width)
                 x0_candidates = x0_candidates.reshape(N, effective_batch_size, channels, height, width)
-                
-                # Score candidates based on predicted x0 (denoised result)
                 x_for_scoring = x0_candidates.reshape(-1, *x0_candidates.shape[2:])
                 x_for_scoring = (x_for_scoring * 127.5 + 128).clip(0, 255).to(torch.uint8)
                 timesteps = torch.zeros(x_for_scoring.shape[0], device=device)
-                
-                # Make sure class labels are properly formatted for scorer
+
+                scorer_class_labels = None
                 if class_labels is not None:
                     scorer_class_labels = class_labels.repeat(N, 1)
-                else:
-                    scorer_class_labels = None
-                
-                # Get scores for all candidates
+
                 scores = method_params.scorer(x_for_scoring, scorer_class_labels, timesteps)
-                scores = scores.reshape(N, batch_size)  # [N, batch_size]
-                
-                # Find the best noise for each sample in the batch
-                best_indices = scores.argmax(dim=0)  # [batch_size]
-                iteration_best_scores = scores.max(dim=0).values  # [batch_size]
-                
+                scores = scores.reshape(N, batch_size)
+
+                best_indices = scores.argmax(dim=0)
+                iteration_best_scores = scores.max(dim=0).values
+
                 gain_mean = None
                 if prev_best_scores is not None:
                     gain_mean = (iteration_best_scores - prev_best_scores).mean().item()
                 if log_gain:
                     per_iter_gains.append(0.0 if gain_mean is None else gain_mean)
-                
-                # Gather best noise for each batch element
-                candidate_noises_batch = all_noises.reshape(N, batch_size, *all_noises.shape[1:])  # [N, batch_size, C, H, W]
-                
+
+                candidate_noises_batch = all_noises.reshape(N, batch_size, *all_noises.shape[1:])
                 new_pivot_noise = torch.stack([
-                    candidate_noises_batch[best_idx, batch_idx] 
+                    candidate_noises_batch[best_idx, batch_idx]
                     for batch_idx, best_idx in enumerate(best_indices)
-                ])  # [batch_size, C, H, W]
-                
-                # 负增益防护：若当前迭代平均提升为负，则保持上一轮 pivot、不更新（首迭代不触发）
+                ])
+
                 if revert_on_negative and gain_mean is not None and gain_mean < 0:
                     if log_gain:
-                        print(f"[EPS_GREEDY_1] step {i}, iter {k}: gain={gain_mean:.6f}<0, revert pivot")
-                    continue  # 保持旧 pivot，下一轮仍用旧 pivot 进行探索
-                
-                # Store the best noise from this iteration
-                best_noises_this_timestep.append(new_pivot_noise.cpu().clone())
-                
-                # Update pivot_noise for next iteration
+                        print(f"[EPS_GREEDY_ONLINE][EDM] step {i}, iter {k}: gain={gain_mean:.6f}<0, revert pivot")
+                    continue
+
                 pivot_noise = new_pivot_noise
                 prev_best_scores = iteration_best_scores
-            
-            # Use the final best noise for this denoising step
+
             x_next, _ = step(x_cur, t_cur, t_next, i, pivot_noise, class_labels)
             if log_gain:
                 gains_per_step.append(per_iter_gains if per_iter_gains else [0.0])
-            print(f"[EPS_GREEDY_1] step {i}: K_used={iterations_run}, revert_on_negative={revert_on_negative}")
+            print(f"[EPS_GREEDY_ONLINE][EDM] step {i}: K_used={iterations_run}, is_low={is_low}")
 
         if log_gain:
-            print(f"[EPS_GREEDY_1] Gain per timestep & per-iteration (mean over batch): {gains_per_step}")
+            print(f"[EPS_GREEDY_ONLINE][EDM] Gain per timestep & per-iteration (mean over batch): {gains_per_step}")
 
     else:  # NAIVE (default)
         for i, (t_cur, t_next) in tqdm.tqdm(list(enumerate(zip(t_steps[:-1], t_steps[1:]))), unit='step'):
@@ -1164,7 +1318,16 @@ def generate_image_grid(
     
     print('Done.')
     
+    eps1_trace = None
+    if sampling_method == SamplingMethod.EPS_GREEDY_1 and record_eps1_trace:
+        eps1_trace = {
+            "best_noises_per_step": eps1_best_noises,
+            "final_noise_per_step": eps1_final_noises,
+        }
+    
     # Return average score for multiple runs
+    if eps1_trace is not None:
+        return avg_score, eps1_trace
     return avg_score
 
 #----------------------------------------------------------------------------
