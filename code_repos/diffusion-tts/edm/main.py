@@ -43,6 +43,11 @@ class SamplingParams:
     revert_on_negative: bool = False  # EPS_GREEDY_1: 负增益时是否回退到上一轮 pivot（首迭代不回退）
     lambda_param: float = 0.15
     eps: float = 0.4
+    # Online/early-stop related (ignored when不适用)
+    total_budget: Optional[float] = None
+    high_slack: int = 2
+    thresh_gain_coef: float = 1.0
+    thresh_var_coef: float = 1.0
     # 动态调度相关参数（默认关闭，extra_budget<=0 或 tau0<=0 时不启用）
     extra_budget: float = 0.0  # 允许的额外 NFE 预算（相对 baseline）
     gamma_reserve: float = 0.5  # 预算预留系数 γ
