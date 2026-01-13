@@ -1179,7 +1179,15 @@ def generate_image_grid(
         if total_budget is None:
             # fallback: use legacy budget estimate
             total_budget = high_count * K1 + low_total * K2_fallback
-        remaining_budget = max(1, total_budget - high_count * K1)
+        remaining_budget = total_budget - high_count * K1
+        if remaining_budget <= 0:
+            # 如果用户给的 total_budget 只够高价值步，回退为低价值步使用 K2_fallback
+            remaining_budget = low_total * K2_fallback
+            total_budget = high_count * K1 + remaining_budget
+            print(
+                f"[EPS_GREEDY_ONLINE][EDM][warn] remaining_budget<=0, "
+                f"fallback low budget = {remaining_budget} (K2_fallback={K2_fallback})"
+            )
         # build low schedule (front-load fractional budget)
         k_mean = remaining_budget / max(1, low_total)
         k_floor = int(np.floor(k_mean))
