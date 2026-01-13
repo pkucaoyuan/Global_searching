@@ -1179,7 +1179,7 @@ def generate_image_grid(
         all_historical_variances = []
         total_steps = len(t_steps) - 1
         low_head = min(2, total_steps)
-        low_tail = min(7, max(total_steps - low_head, 0))  # 低价值尾部改为7步
+        low_tail = min(8, max(total_steps - low_head, 0))  # 低价值尾部改为8步
         low_total = low_head + low_tail
         high_count = max(0, total_steps - low_total)
         total_budget = sampling_params.get("total_budget", None)
@@ -1226,23 +1226,29 @@ def generate_image_grid(
             is_low_tail = i >= tail_start
             is_low = is_low_head or is_low_tail
             force_full_k1 = (not is_low) and (i < 2)
+            last_six_start = total_steps - 6  # 倒数6步固定为1
 
             if is_low:
-                if is_low_head:
-                    # 默认前两步固定为1
+                if is_low_head or i >= last_six_start:
+                    # 前两步固定1；最后6步固定1
                     K_cur = 1
                 else:
+                    # 动态预算只在倒数第7、第8步分配
                     remaining_low_steps = max(1, low_total - low_steps_done)
                     remaining_high_steps = max(0, high_count - high_steps_done)
-                    # 预留未来高区预算 = 剩余高步数 * K1
-                    remaining_budget = total_budget - high_used_acc - low_used_acc - remaining_high_steps * K1
-                    k_mean = remaining_budget / remaining_low_steps
+                    # 未来固定为1的低步（不含当前）：从 max(i+1, last_six_start) 到末尾
+                    future_fixed_count = max(0, total_steps - max(i + 1, last_six_start))
+                    # 为高区预留预算
+                    remaining_budget = total_budget - high_used_acc - low_used_acc - remaining_high_steps * K1 - future_fixed_count * 1
+                    remaining_budget = max(remaining_budget, remaining_low_steps)  # 至少保证每步>=1
+                    dynamic_steps = max(1, remaining_low_steps - future_fixed_count)
+                    k_mean = remaining_budget / dynamic_steps
                     k_floor = int(np.floor(k_mean))
                     k_floor = max(1, k_floor)
-                    extra = int(round(remaining_budget - k_floor * remaining_low_steps))
-                    extra = max(min(extra, remaining_low_steps), 0)
+                    extra = int(round(remaining_budget - k_floor * dynamic_steps))
+                    extra = max(min(extra, dynamic_steps), 0)
                     # 前置小数
-                    low_schedule_dynamic = [k_floor + 1] * extra + [k_floor] * (remaining_low_steps - extra)
+                    low_schedule_dynamic = [k_floor + 1] * extra + [k_floor] * (dynamic_steps - extra)
                     K_cur = low_schedule_dynamic[0]
             else:
                 K_cur = K1
