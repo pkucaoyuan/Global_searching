@@ -1778,6 +1778,10 @@ class StableDiffusionPipeline(
                                 iterations_run += 1
                 
                 latents, _ = self.scheduler.step(noise_pred, t, latents, variance_noise=pivot, **extra_step_kwargs, return_dict=False)
+                # Record epsilon_1 trace (per-step best noises + final noise used for this step)
+                if method == "eps_greedy_1" and record_eps1_trace:
+                    eps1_best_noises.append([bn.detach().cpu() for bn in best_noises_this_timestep])
+                    eps1_final_noises.append(pivot.detach().cpu())
                 # Always report K used for eps_greedy_online
                 if method == "eps_greedy_online":
                     k_used = iterations_run
