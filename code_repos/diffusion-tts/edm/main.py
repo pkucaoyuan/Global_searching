@@ -1228,18 +1228,22 @@ def generate_image_grid(
             force_full_k1 = (not is_low) and (i < 2)
 
             if is_low:
-                remaining_low_steps = max(1, low_total - low_steps_done)
-                remaining_high_steps = max(0, high_count - high_steps_done)
-                # 预留未来高区预算 = 剩余高步数 * K1
-                remaining_budget = total_budget - high_used_acc - low_used_acc - remaining_high_steps * K1
-                k_mean = remaining_budget / remaining_low_steps
-                k_floor = int(np.floor(k_mean))
-                k_floor = max(1, k_floor)
-                extra = int(round(remaining_budget - k_floor * remaining_low_steps))
-                extra = max(min(extra, remaining_low_steps), 0)
-                # 前置小数
-                low_schedule_dynamic = [k_floor + 1] * extra + [k_floor] * (remaining_low_steps - extra)
-                K_cur = low_schedule_dynamic[0]
+                if is_low_head:
+                    # 默认前两步固定为1
+                    K_cur = 1
+                else:
+                    remaining_low_steps = max(1, low_total - low_steps_done)
+                    remaining_high_steps = max(0, high_count - high_steps_done)
+                    # 预留未来高区预算 = 剩余高步数 * K1
+                    remaining_budget = total_budget - high_used_acc - low_used_acc - remaining_high_steps * K1
+                    k_mean = remaining_budget / remaining_low_steps
+                    k_floor = int(np.floor(k_mean))
+                    k_floor = max(1, k_floor)
+                    extra = int(round(remaining_budget - k_floor * remaining_low_steps))
+                    extra = max(min(extra, remaining_low_steps), 0)
+                    # 前置小数
+                    low_schedule_dynamic = [k_floor + 1] * extra + [k_floor] * (remaining_low_steps - extra)
+                    K_cur = low_schedule_dynamic[0]
             else:
                 K_cur = K1
 
