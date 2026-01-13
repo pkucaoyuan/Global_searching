@@ -1217,6 +1217,9 @@ def generate_image_grid(
 
         pivot_noise = torch.randn_like(x_next)
 
+        fixed_tail_count = 4  # 最后4步固定为1
+        fixed_tail_start = max(0, total_steps - fixed_tail_count)
+
         for i, (t_cur, t_next) in tqdm.tqdm(list(enumerate(zip(t_steps[:-1], t_steps[1:]))), unit='step'):
             x_cur = x_next
 
@@ -1224,31 +1227,35 @@ def generate_image_grid(
             is_low_head = i < low_head
             tail_start = total_steps - low_tail
             is_low_tail = i >= tail_start
+            is_fixed_tail = i >= fixed_tail_start
             is_low = is_low_head or is_low_tail
             force_full_k1 = (not is_low) and (i < 2)
-            last_six_start = total_steps - 6  # 倒数6步固定为1
 
             if is_low:
-                if is_low_head or i >= last_six_start:
-                    # 前两步固定1；最后6步固定1
+                if is_low_head or is_fixed_tail:
+                    # 默认前两步 & 最后4步固定为1
                     K_cur = 1
                 else:
-                    # 动态预算只在倒数第7、第8步分配
-                    remaining_low_steps = max(1, low_total - low_steps_done)
+                    # 动态预算仅在倒数第8~第5步（4步）分配
+                    remaining_low_steps_total = max(1, low_total - low_steps_done)
                     remaining_high_steps = max(0, high_count - high_steps_done)
-                    # 未来固定为1的低步（不含当前）：从 max(i+1, last_six_start) 到末尾
-                    future_fixed_count = max(0, total_steps - max(i + 1, last_six_start))
-                    # 为高区预留预算
-                    remaining_budget = total_budget - high_used_acc - low_used_acc - remaining_high_steps * K1 - future_fixed_count * 1
-                    remaining_budget = max(remaining_budget, remaining_low_steps)  # 至少保证每步>=1
-                    dynamic_steps = max(1, remaining_low_steps - future_fixed_count)
-                    k_mean = remaining_budget / dynamic_steps
+                    # 未来固定低区步数（不含当前）：从 max(i+1, fixed_tail_start) 到末尾
+                    future_fixed_low = max(0, total_steps - max(i + 1, fixed_tail_start))
+                    # 动态低区剩余步数（含当前）
+                    dynamic_remaining = remaining_low_steps_total - future_fixed_low
+                    dynamic_remaining = max(1, dynamic_remaining)
+                    # 预留未来高区预算 + 固定低区预算
+                    remaining_budget = total_budget - high_used_acc - low_used_acc - remaining_high_steps * K1 - future_fixed_low * 1
+                    # 至少保证每个动态步 >=1
+                    if remaining_budget < dynamic_remaining:
+                        remaining_budget = dynamic_remaining
+                    k_mean = remaining_budget / dynamic_remaining
                     k_floor = int(np.floor(k_mean))
                     k_floor = max(1, k_floor)
-                    extra = int(round(remaining_budget - k_floor * dynamic_steps))
-                    extra = max(min(extra, dynamic_steps), 0)
+                    extra = int(round(remaining_budget - k_floor * dynamic_remaining))
+                    extra = max(min(extra, dynamic_remaining), 0)
                     # 前置小数
-                    low_schedule_dynamic = [k_floor + 1] * extra + [k_floor] * (dynamic_steps - extra)
+                    low_schedule_dynamic = [k_floor + 1] * extra + [k_floor] * (dynamic_remaining - extra)
                     K_cur = low_schedule_dynamic[0]
             else:
                 K_cur = K1
