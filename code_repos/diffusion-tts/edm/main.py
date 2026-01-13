@@ -1217,7 +1217,7 @@ def generate_image_grid(
 
         pivot_noise = torch.randn_like(x_next)
 
-        fixed_tail_count = 4  # 最后4步固定为1
+        fixed_tail_count = 2  # 最后2步固定为1
         fixed_tail_start = max(0, total_steps - fixed_tail_count)
 
         for i, (t_cur, t_next) in tqdm.tqdm(list(enumerate(zip(t_steps[:-1], t_steps[1:]))), unit='step'):
@@ -1236,7 +1236,7 @@ def generate_image_grid(
                     # 默认前两步 & 最后4步固定为1
                     K_cur = 1
                 else:
-                    # 动态预算仅在倒数第8~第5步（4步）分配
+                    # 动态预算仅在倒数第8~第3步（6步）分配
                     remaining_low_steps_total = max(1, low_total - low_steps_done)
                     remaining_high_steps = max(0, high_count - high_steps_done)
                     # 未来固定低区步数（不含当前）：从 max(i+1, fixed_tail_start) 到末尾
