@@ -325,9 +325,10 @@ def main():
             all_scores = []
             
             print(f"\nRunning {args.n_runs} times with different seeds...")
+            rng = np.random.RandomState(args.seed if args.seed is not None else None)
             for run_idx in range(args.n_runs):
                 print(f"\n=== Run {run_idx + 1}/{args.n_runs} ===")
-                run_seed = args.seed + run_idx
+                run_seed = int(rng.randint(0, 2**31 - 1))
                 
                 # Generate new latents and class_labels for each run
                 torch.manual_seed(run_seed)
