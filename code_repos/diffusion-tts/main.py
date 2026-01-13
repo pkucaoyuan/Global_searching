@@ -283,6 +283,12 @@ def main():
                     sampling_params['revert_on_negative'] = True
                 if args.total_budget is not None:
                     sampling_params['total_budget'] = args.total_budget
+                if args.high_slack is not None:
+                    sampling_params['high_slack'] = args.high_slack
+                if args.thresh_gain_coef is not None:
+                    sampling_params['thresh_gain_coef'] = args.thresh_gain_coef
+                if args.thresh_var_coef is not None:
+                    sampling_params['thresh_var_coef'] = args.thresh_var_coef
 
         outname = args.output or f"edm_{args.method}_{args.scorer}.png"
         
