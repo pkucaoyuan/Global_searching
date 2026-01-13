@@ -1179,7 +1179,7 @@ def generate_image_grid(
         all_historical_variances = []
         total_steps = len(t_steps) - 1
         low_head = min(2, total_steps)
-        low_tail = min(6, max(total_steps - low_head, 0))  # 低价值尾部改为6步
+        low_tail = min(7, max(total_steps - low_head, 0))  # 低价值尾部改为7步
         low_total = low_head + low_tail
         high_count = max(0, total_steps - low_total)
         total_budget = sampling_params.get("total_budget", None)
