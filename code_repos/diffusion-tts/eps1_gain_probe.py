@@ -51,6 +51,11 @@ def run_sd_probe(args, output_csv: Path):
 
     final_noise_per_step: List[torch.Tensor] = trace["final_noise_per_step"]
     best_noises_per_step: List[List[torch.Tensor]] = trace["best_noises_per_step"]
+    total_replays = sum(len(x) for x in best_noises_per_step)
+    print(
+        f"[eps1_gain_probe][SD] baseline={baseline_score:.6f}, "
+        f"steps={len(best_noises_per_step)}, total_replays={total_replays}"
+    )
 
     rows = []
     rows.append(
@@ -64,6 +69,7 @@ def run_sd_probe(args, output_csv: Path):
 
     # Replay each timestep/iter noise with others fixed to final noise
     for step_idx, iter_list in enumerate(best_noises_per_step):
+        print(f"[eps1_gain_probe][SD] replay step {step_idx} iters={len(iter_list)}")
         for iter_idx, noise in enumerate(iter_list):
             plan = [n.clone() for n in final_noise_per_step]
             plan[step_idx] = noise
@@ -144,12 +150,18 @@ def run_edm_probe(args, output_csv: Path):
     baseline_score, trace = baseline_result
     final_noise_per_step = trace["final_noise_per_step"]
     best_noises_per_step = trace["best_noises_per_step"]
+    total_replays = sum(len(x) for x in best_noises_per_step)
+    print(
+        f"[eps1_gain_probe][EDM] baseline={float(baseline_score):.6f}, "
+        f"steps={len(best_noises_per_step)}, total_replays={total_replays}"
+    )
 
     rows = [
         {"backend": "edm", "timestep": "baseline", "iter": "baseline", "score": float(baseline_score)}
     ]
 
     for step_idx, iter_list in enumerate(best_noises_per_step):
+        print(f"[eps1_gain_probe][EDM] replay step {step_idx} iters={len(iter_list)}")
         for iter_idx, noise in enumerate(iter_list):
             plan = [n.clone() for n in final_noise_per_step]
             plan[step_idx] = noise
