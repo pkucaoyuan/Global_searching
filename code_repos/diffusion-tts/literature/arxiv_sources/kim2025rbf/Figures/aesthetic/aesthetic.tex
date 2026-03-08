@@ -1,0 +1,99 @@
+\begin{figure*}[t!]
+    \centering
+    \begin{minipage}{0.44\linewidth}
+        \centering
+        \scriptsize
+        \setlength{\tabcolsep}{2.9pt}
+        \newcommand{\good}[1]{\tiny{\textcolor{blue}{+#1\%}}}
+        \newcommand{\bad}[1]{\tiny{\textcolor{red}{-#1\%}}}
+        \captionof{table}
+        {\textbf{Quantitative results of aesthetic image generation.} \textsuperscript{\textdagger} denotes the given reward used in inference time. The best result in each row is highlighted in \textbf{bold}.}
+        \label{tab:aesthetic}
+        \newcolumntype{Z}{>{\centering\arraybackslash}m{0.4\linewidth}}
+        \newcolumntype{X}{>{\centering\arraybackslash}m{0.27\linewidth}}
+        % \begin{tabular}{Z | Y | X | X | X }
+        %     \toprule
+        %     Metric & \makecell{FLUX\\\cite{BlackForestLabs:2024Flux}} & \makecell{DPS\\\cite{Chung:2023DPS}} & \makecell{SVDD~\cite{Li2024:SVDD}\\+DPS~\cite{Chung:2023DPS}} & \makecell{{\Oursbf{}} (Ours) \\+DPS~\cite{Chung:2023DPS}} \\
+        %     \midrule 
+        %     \makecell{Aesthetic\\Score\textsuperscript{\textdagger}~\cite{Schuhmann:aesthetics}} & 5.795 & \makecell{6.438 \\ \good{11.10}} & \makecell{6.887 \\ \good{18.85}} & \makecell{\textbf{7.170} \\ \good{23.73}} \\
+        %     \midrule
+        %     \makecell{ImageReward\\~\cite{Xu2023:ImageReward} (held-out)} & 0.991 & \makecell{ 0.605 \\ \bad{-38.97} } & \makecell{1.077 \\ \good{8.61}} & \makecell{ \textbf{1.152} \\ \good{16.20} } \\
+        %     \bottomrule
+        % \end{tabular}
+        \begin{tabular}{Z | X | X }
+        \toprule
+        Model & \makecell{Aesthetic\\Score\textsuperscript{\textdagger}~\cite{Schuhmann:aesthetics}} & \makecell{ImageReward\\~\cite{Xu2023:ImageReward} (held-out)} \\
+        \midrule
+        \makecell{FLUX~\cite{BlackForestLabs:2024Flux}} 
+        & 5.795 
+        & 0.991 \\
+        \makecell{DPS~\cite{Chung:2023DPS}} 
+        & \makecell{6.438} 
+        & \makecell{0.605} \\
+        \makecell{SVDD~\cite{Li2024:SVDD}+DPS~\cite{Chung:2023DPS}} 
+        & \makecell{6.887} 
+        & \makecell{1.077} \\
+        \midrule
+        \makecell{{\Oursbf{}} (Ours)+DPS~\cite{Chung:2023DPS}} 
+        & \makecell{\textbf{7.170}} 
+        & \makecell{\textbf{1.152}} \\
+        \bottomrule
+    \end{tabular}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.52\linewidth}
+        \centering
+        \scriptsize
+        \setlength{\tabcolsep}{0.0em}
+        \def\arraystretch{1.2}
+        \newcolumntype{Z}{>{\centering\arraybackslash}m{0.24\textwidth}}
+        \begin{tabularx}{0.96\textwidth}{Z Z Z Z}
+            \toprule
+             FLUX~\cite{BlackForestLabs:2024Flux} & DPS~\cite{Chung:2023DPS} & SVDD~\cite{Li2024:SVDD} + DPS~\cite{Chung:2023DPS} & \makecell{{\Oursbf{}} (Ours) \\ + DPS~\cite{Chung:2023DPS}} \\
+            \midrule
+            \multicolumn{4}{c}{\textit{``Bird''}} \\
+            \includegraphics[width=0.24\textwidth]{Figures/aesthetic/base_bird.jpg} &
+            \includegraphics[width=0.24\textwidth]{Figures/aesthetic/dps_bird.jpg} &
+            \includegraphics[width=0.24\textwidth]{Figures/aesthetic/svdd_bird.jpg} &
+            \includegraphics[width=0.24\textwidth]{Figures/aesthetic/ours_bird.jpg} \\
+            \midrule
+            \multicolumn{4}{c}{\textit{``Bat''}} \\ 
+            \includegraphics[width=0.24\textwidth]{Figures/aesthetic/base_bat.jpg} &
+            \includegraphics[width=0.24\textwidth]{Figures/aesthetic/dps_bat.jpg} &
+            \includegraphics[width=0.24\textwidth]{Figures/aesthetic/svdd_bat.jpg} &
+            \includegraphics[width=0.24\textwidth]{Figures/aesthetic/ours_bat.jpg} \\
+            \bottomrule
+        \end{tabularx}
+        \caption{\textbf{Qualitative results of aesthetic image generation.} At inference-time, we guide generate using the aesthetic score~\cite{Schuhmann:aesthetics} as the given reward, which assesses \textbf{visual appeal}.}
+        \label{fig:aesthetic}
+    \end{minipage}
+\end{figure*}
+
+
+
+% \begin{figure*}[t!]
+% {\scriptsize
+% \setlength{\tabcolsep}{0.0em}
+% \def\arraystretch{1.2}
+% \newcolumntype{Z}{>{\centering\arraybackslash}m{0.24\textwidth}}
+%     \begin{tabularx}{0.96\textwidth}{Z Z Z Z}
+%         \toprule
+%          Flux~\cite{BlackForestLabs:2024Flux} & DPS~\cite{Chung:2023DPS} & SVDD~\cite{Li2024:SVDD} + DPS~\cite{Chung:2023DPS} & {\Oursbf{}} + DPS~\cite{Chung:2023DPS} \\
+%         \midrule
+%         \multicolumn{4}{c}{\textit{``Bird''}} \\
+%         \includegraphics[width=0.24\textwidth]{Figures/aesthetic/base_bird.jpg} &
+%         \includegraphics[width=0.24\textwidth]{Figures/aesthetic/dps_bird.jpg} &
+%         \includegraphics[width=0.24\textwidth]{Figures/aesthetic/svdd_bird.jpg} &
+%         \includegraphics[width=0.24\textwidth]{Figures/aesthetic/ours_bird.jpg} \\
+%         \midrule
+%         \multicolumn{4}{c}{\textit{``Bat''}} \\ 
+%         \includegraphics[width=0.24\textwidth]{Figures/aesthetic/base_bat.jpg} &
+%         \includegraphics[width=0.24\textwidth]{Figures/aesthetic/dps_bat.jpg} &
+%         \includegraphics[width=0.24\textwidth]{Figures/aesthetic/svdd_bat.jpg} &
+%         \includegraphics[width=0.24\textwidth]{Figures/aesthetic/ours_bat.jpg} \\
+%         \bottomrule
+%     \end{tabularx}
+%   \caption{\textbf{Qualitative results of aesthetic image generation.} }
+%   \label{fig:aesthetic}
+% }
+% \end{figure*}

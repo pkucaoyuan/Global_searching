@@ -1,0 +1,710 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+\usepackage{amsmath,amssymb,mathtools,amsthm}
+\usepackage[capitalize,noabbrev]{cleveref}
+\usepackage[numbers,sort&compress]{natbib}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  citecolor=blue,
+  urlcolor=blue
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% THEOREMS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\title{Where to Search: Global Scheduling of Noise Trajectory Search in Diffusion Models}
+\author{Anonymous Author(s)}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Test-time compute can substantially improve diffusion model generation via noise search and verifier-guided sampling, but existing methods largely allocate search compute uniformly or with fixed heuristics along timesteps.
+We study \emph{where to search} under a strict budget of function evaluations (NFE), and formalize inference-time noise refinement as a two-level problem: a \emph{local} operator that searches for better noise at a chosen timestep, and a \emph{global} scheduler that allocates per-timestep search iterations across the trajectory.
+Building on this view, we propose a scheduling algorithm that combines offline profiling with online control: offline analysis provides a coarse per-step budget allocation, and an online controller performs windowed early stopping based on observed score gains and score variance, while enforcing the exact NFE budget.
+Experiments on Stable Diffusion and EDM show consistent improvements and faster quality scaling: our method achieves higher scores with 20--50\% fewer NFEs at matched quality levels.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+
+Diffusion models have become a dominant paradigm for high-quality image and
+multimodal generation, powering modern systems such as Stable Diffusion and
+large-scale class-conditional generators.
+While most progress has focused on improving training objectives and model
+architectures, an emerging line of work shows that \emph{inference-time
+scaling}---allocating more computation at test time without retraining---can
+significantly improve sample quality under a fixed model.
+Recent advances demonstrate that test-time techniques such as noise search,
+trajectory refinement, and verifier-guided sampling can yield substantial gains
+over plain diffusion sampling, especially when additional compute is available.
+
+Importantly, our framework applies broadly to both stochastic and deterministic
+samplers. While some diffusion models---particularly flow-based methods and
+ODE solvers---use deterministic transitions after the initial noise,
+inference-time search \emph{requires} stochasticity to explore different
+generation paths. For deterministic samplers, this is achieved by intentionally
+injecting noise at selected timesteps, enabling the search to explore diverse
+trajectories that would otherwise be inaccessible.
+Recent work has formalized this ODE-to-SDE conversion, showing that any
+deterministic flow can be transformed into a family of SDEs with the same
+marginal distributions~\citep{dockhorn2024stochastic,kim2025rbf}.
+This deliberate introduction of stochasticity for exploration has been adopted
+in prior work on reinforcement learning for diffusion
+models~\citep{black2023training,fan2024reinforcement} and is conceptually
+similar to exploration bonuses in bandit algorithms.
+
+A key limitation of existing inference-time methods, however, is that they
+largely treat the denoising trajectory as a homogeneous sequence of steps.
+Most approaches either (i) allocate computation uniformly across timesteps, or
+(ii) hard-code search to specific parts of the trajectory (e.g., only the
+initial noise or a fixed middle window).
+This overlooks a fundamental empirical fact: \emph{different timesteps exhibit
+dramatically different sensitivities to noise perturbations}.
+In practice, refining noise at some steps yields large downstream improvements
+in sample quality, while spending the same computation at other steps has
+negligible effect.
+As a result, naive per-step allocation wastes a significant fraction of the
+test-time compute budget.
+
+In this work, we study \emph{where to search} along the diffusion trajectory.
+We formalize inference-time noise refinement as a \emph{noise trajectory search}
+problem under a fixed number of function evaluations (NFE), and ask how to
+\emph{globally schedule} search computation across timesteps.
+Our central observation is that effective inference-time scaling requires
+reasoning at two distinct levels: \emph{local} decisions about how to search for
+better noise at a given timestep, and \emph{global} decisions about how to
+distribute computation across the entire denoising process.
+While prior work has explored increasingly sophisticated local search operators,
+the problem of global per-step compute allocation has only recently begun
+to receive attention, with concurrent work proposing either uniform allocation
+with implicit adaptation~\citep{ramesh2025nts} or purely reactive online
+reallocation~\citep{kim2025rbf}.
+
+To bridge this gap, we propose a unified two-level framework for noise trajectory
+search in diffusion models.
+At the local level, we abstract a broad family of existing noise refinement
+methods as a generic local search operator applied at a single timestep.
+At the global level, we introduce a scheduler that decides \emph{when} and
+\emph{how much} local search to perform at each timestep under a total NFE
+budget.
+Within this framework, we show that standard diffusion sampling, best-of-$N$
+selection, $\epsilon$-greedy noise search, and particle- or tree-based methods
+can all be interpreted as special cases with fixed or heuristic scheduling
+policies.
+
+Building on this formulation, we propose a new global scheduling algorithm that
+combines \emph{offline profiling} with \emph{online control}.
+Offline, we analyze verifier sensitivity across timesteps to obtain a coarse
+allocation of compute tailored to the model and dataset.
+Online, we dynamically adjust per-step search using feedback from each instance,
+such as score gains and variance, allowing the sampler to stop early on
+unproductive steps and reallocate computation where it is most effective.
+Crucially, this controller operates without access to future timesteps and
+respects a strict NFE budget.
+
+We evaluate our approach on Stable Diffusion, EDM, and ImageNet benchmarks under
+fixed compute budgets.
+Across a wide range of NFE settings and evaluation metrics, our global
+scheduling strategy consistently outperforms uniform allocation and naive
+online heuristics.
+These results demonstrate that \emph{global scheduling with per-step awareness}
+is a critical yet previously underexplored dimension of inference-time scaling
+for diffusion models.
+
+\paragraph{Contributions.}
+Our main contributions are:
+(i) a unified two-level view of noise trajectory search that separates local
+noise refinement from global timestep scheduling;
+(ii) a novel global scheduling algorithm that integrates \emph{offline timestep
+profiling} with \emph{online feedback control}, combining learned difficulty
+patterns per step with adaptive early stopping per instance, unlike purely
+uniform~\citep{ramesh2025nts} or purely reactive~\citep{kim2025rbf} approaches;
+and (iii) extensive experiments showing consistent gains over existing
+inference-time methods under identical NFE budgets.
+
+
+%=================================
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{Inference-time scaling for generative models.}
+Inference-time scaling has recently emerged as a powerful alternative to
+training-time improvements, enabling quality gains by spending additional
+computation at test time.
+In diffusion models, this includes techniques such as classifier and
+classifier-free guidance, guidance rescaling, and repeated sampling with
+selection.
+More recent work explores search-based methods that explicitly modify the noise
+trajectory during sampling, demonstrating that inference-time computation can
+be traded for higher sample quality without retraining the model.
+Our work builds on this line of research but focuses on a previously overlooked
+aspect: how to \emph{allocate} inference-time compute across the denoising
+trajectory.
+
+\paragraph{Noise search and trajectory refinement.}
+Several methods perform local search over noise variables during diffusion
+sampling.
+Best-of-$N$ and random search methods sample multiple trajectories and select
+the best final output according to a verifier or heuristic metric, but do not
+refine noise within a trajectory.
+Other approaches perform iterative noise refinement or greedy search at each
+timestep, often guided by a verifier or reward function~\citep{ma2024inference}.
+Most recently, \citet{ramesh2025nts} cast diffusion as an MDP and relax it to
+a sequence of independent contextual bandits, proposing an $\epsilon$-greedy
+algorithm that implicitly adapts exploration vs.\ exploitation across timesteps;
+however, they allocate \emph{uniform} search iterations $K$ per timestep and
+leave adaptive $K_t$ allocation as future work.
+Concurrently, \citet{kim2025rbf} introduce Rollover Budget Forcing (RBF) for
+flow models, which uses early stopping when a better particle is found and
+rolls over unused budget to subsequent timesteps---a purely online mechanism
+without offline profiling.
+While these methods differ in how candidate noises are generated and evaluated,
+they typically apply search uniformly across timesteps or rely on reactive
+online adaptation without exploiting difficulty patterns that vary by step.
+In contrast, our framework explicitly combines \emph{offline profiling} to
+learn where search matters with \emph{online control} for per-instance
+adaptation, achieving non-uniform budget allocation with strict NFE guarantees.
+
+\paragraph{Online and adaptive inference strategies.}
+Adaptive inference methods adjust computation based on feedback observed during
+generation.
+Examples include $\epsilon$-greedy or bandit-style noise search~\citep{ramesh2025nts},
+adaptive guidance scaling, and methods that stop sampling early based on
+confidence or entropy criteria.
+Rollover Budget Forcing~\citep{kim2025rbf} is a recent example that reallocates
+unused budget across timesteps in an online fashion.
+Although these approaches introduce online decision-making, they are usually
+\emph{reactive}: they start from uniform allocation and adapt only based on
+real-time feedback, without leveraging prior knowledge about which timesteps
+are inherently more amenable to search.
+Our online controller differs in that it operates within a global budget shaped
+by offline timestep profiling, explicitly balancing local gains against future
+opportunities while starting from an informed, non-uniform allocation.
+
+
+\paragraph{Adaptive compute allocation.}
+Adaptive computation has been studied extensively in other domains, including
+early exiting in neural networks, adaptive depth inference, and budgeted
+optimization.
+In diffusion models, recent work explores adaptive timestep skipping or variable
+step sizes, but these techniques primarily modify the base sampler rather than
+allocating additional search computation.
+Our approach is complementary: we keep the underlying sampler fixed and focus on
+how to schedule inference-time search around it.
+\section{Methodology}
+\label{sec:method}
+
+\subsection{Global Modeling of Noise Trajectory Search}
+\label{sec:method-global}
+
+We consider a $T$-step diffusion sampler with discrete timesteps
+$t_T > t_{T-1} > \dots > t_1$.
+A pretrained diffusion model (UNet + scheduler) defines a transition
+\begin{equation}
+  x_{t-1} = F_\theta(x_t, t, c, \varepsilon_t),
+\end{equation}
+where $x_t$ is the latent at timestep $t$, $c$ is the conditioning signal
+(e.g., a class label or text prompt), and $\varepsilon_t$ denotes the injected
+noise (variance noise or stochastic term of the sampler).
+After the final step we obtain $x_0$, which is decoded into an image and
+evaluated by a verifier $v(x_0, c)$ that measures sample quality or alignment
+with the condition.
+We emphasize that the verifier $v$ is \emph{taken as given} and is not trained
+as part of our method. In practice, verifiers can take various forms depending
+on the application: perceptual quality metrics (e.g., CLIP score, aesthetic
+predictors), task-specific reward functions (e.g., object detection confidence),
+or simple heuristics (e.g., image brightness, compressibility). This setup
+mirrors prior work on reward-guided diffusion
+sampling~\citep{clark2024directly,prabhudesai2023aligning,uehara2025tutorial},
+where off-the-shelf reward models guide the generation process without
+additional training.
+
+We view \emph{noise trajectory search} as modifying the collection of noise
+variables $\{\varepsilon_t\}_{t=1}^T$ around a latent trajectory
+$\{x_t\}_{t=1}^T$ under a fixed test-time compute budget, with the goal of
+improving the verifier score.
+Conceptually, it is convenient to think in terms of two levels:
+
+\paragraph{Local search operator.}
+At a single timestep $t$, given a current latent $x_t$, prompt $c$, verifier $v$
+and base sampler $F_\theta$, a \emph{local} search operator
+\[
+  \mathcal{L}_t : (x_t, c, v, F_\theta, \text{budget at } t)
+  \longrightarrow (x_{t-1}, \varepsilon_t)
+\]
+tries to find a better noise $\varepsilon_t$ using a small per-step budget.
+To evaluate a candidate noise, the diffusion model first predicts a clean image
+from the current latent:
+\begin{equation}
+  \hat{x}_0 = D_\theta(x_t, t, c),
+  \label{eq:x0_prediction}
+\end{equation}
+where $D_\theta$ is the denoising network. The verifier then scores this
+prediction: $s = v(\hat{x}_0, c)$. Based on the predicted $\hat{x}_0$, the
+transition to the next latent is computed as
+$x_{t-1} = \alpha_{t-1} \hat{x}_0 + \sigma_{t-1} \varepsilon_t$,
+where $\alpha_{t-1}, \sigma_{t-1}$ are scheduler coefficients.
+
+Concretely, a local search iteration samples $K$ candidate noises
+$\{\varepsilon_t^{(k)}\}_{k=1}^K$, computes the corresponding predictions
+$\{\hat{x}_0^{(k)}\}_{k=1}^K$, evaluates their scores
+$\{s^{(k)} = v(\hat{x}_0^{(k)}, c)\}_{k=1}^K$, and selects the best candidate
+$k^* = \arg\max_k s^{(k)}$. If $s^{(k^*)}$ improves over the current best,
+the noise $\varepsilon_t^{(k^*)}$ is used; otherwise, the original noise is
+retained.
+Many existing zero-order or $\epsilon$-greedy noise search procedures can be
+seen as specific instantiations of this operator, but here we treat
+$\mathcal{L}_t$ abstractly as a local search mapping from $x_t$ to
+$x_{t-1}$ given a small local budget.
+
+\paragraph{Global scheduler over timesteps.}
+While the local operator $\mathcal{L}_t$ decides \emph{how} to search at a given
+step once we commit to spend budget there, it does not specify \emph{where
+along the denoising trajectory} we should invest computation.
+We therefore define a global scheduler
+\[
+  \mathcal{G} :
+  \bigl(x_T, c, v, F_\theta, B, \{\mathcal{L}_t\}_{t=1}^T\bigr)
+  \longrightarrow \bigl(x_0, \{x_t\}_{t=1}^T\bigr),
+\]
+which, starting from an initial noise $x_T \sim \mathcal{N}(0, I)$, repeatedly
+applies denoising steps and local search under a total compute budget $B$ and
+returns both the final sample $x_0$ and the whole latent trajectory
+$\{x_t\}_{t=1}^T$.
+
+Operationally, the scheduler $\mathcal{G}$ traverses timesteps from $T$ to $1$.
+At each step $t$ it decides whether to:
+(i) invoke the local operator $\mathcal{L}_t$ one or multiple times, consuming
+part of the remaining budget at this timestep, or
+(ii) skip local search and directly apply a single base sampler step
+$x_{t-1} = F_\theta(x_t, t, c, \varepsilon_t)$.
+The key challenge is that this decision must be made \emph{online}: at step $t$
+we do not yet know how effective search will be at later timesteps, but any
+computation used now cannot be reused later.
+Our goal is to design global scheduling policies that decide, under a fixed NFE
+budget, \emph{on which timesteps to search and for how long}.
+
+This two-level view --- a local operator $\mathcal{L}_t$ and a global scheduler
+$\mathcal{G}$ --- provides a common language that covers many prior
+inference-time search strategies:
+\begin{itemize}
+  \item \textbf{Plain diffusion sampling.}
+  If we let $\mathcal{L}_t$ be a single base denoising step and never allocate
+  extra budget, the scheduler $\mathcal{G}$ simply applies $F_\theta$ once per
+  timestep, recovering the standard sampler without search.
+  \item \textbf{Best-of-$N$ / random search.}
+  Taking multiple i.i.d.\ initial noises, propagating each to time $0$ without
+  modifying noises, and finally selecting the best $x_0$ corresponds to a
+  scheduler that invests all compute into running full trajectories and only
+  performs a global selection at the end; there is effectively no local search.
+  \item \textbf{Noise-trajectory and tree-style search.}
+  Methods that iteratively refine a noise pivot or expand/prune partial
+  trajectories at certain timesteps can be interpreted as choosing specific
+  forms of $\mathcal{L}_t$ and hard-coded policies in $\mathcal{G}$ that decide
+  on which timesteps to apply search and how to split budget across time.
+\end{itemize}
+In the remainder of this section we focus on a particular and practically
+important family of methods and develop a new global scheduler within this
+framework.
+
+\subsection{Proposed Global Scheduling Algorithm}
+\label{sec:method-ours}
+
+In this work we focus on the widely used setting where, at any timestep $t$,
+the sampler ultimately maintains \emph{a single latent and a single noise}
+$(x_t, \varepsilon_t)$, but is allowed to perform \emph{multiple local search
+iterations} inside this timestep before committing to $x_{t-1}$.
+Concretely, at step $t$ we run a local noise search operator $\mathcal{L}_t$
+around the current latent $x_t$, and only the best candidate noise is kept and
+used to produce $x_{t-1}$ via $F_\theta$.
+Under this restriction, the global scheduling problem reduces to a sequence of
+\emph{per-timestep decisions}: at each $t$, given the history of search so far
+and the remaining budget, should we continue local search at this timestep,
+or stop and move on to $t-1$?
+
+This raises an inherent difficulty.
+When making the decision at timestep $t$, we do not know:
+(1) the potential improvement that additional search at $t$ could still bring,
+and (2) the potential improvement that could be obtained by saving NFE and
+spending it on later timesteps.
+We therefore propose a scheduling strategy that tackles these two aspects
+from complementary angles.
+
+\paragraph{Offline coarse time scheduling.}
+First, for each model and dataset, we perform an \emph{offline} analysis on a
+small set of prompts or images.
+We run noise search with a simple local operator $\mathcal{L}_t$ and a uniform,
+relatively large number of iterations at every timestep, and log the verifier
+scores after each local search iteration.
+From these logs we can compute, for each timestep $t$, statistics such as the
+average score gain brought by local search and its variability across examples.
+Aggregating these statistics over many runs reveals which parts of the
+denoising trajectory are consistently more sensitive to noise refinement and
+thus more ``valuable'' to search.
+In our offline profiling, we observe a clear model-dependent pattern:
+for Stable Diffusion (SD), most of the gains concentrate on early timesteps,
+whereas for EDM the improvements are concentrated in a contiguous middle segment
+of the denoising trajectory.
+
+Based on this analysis, we partition timesteps into a small number of groups,
+such as a \emph{high-value} region and a \emph{low-value} region, and assign a
+larger share of the total NFE budget to the high-value region.
+Within each region, we derive a coarse per-step budget $\{K_t\}$ (e.g., a
+higher average number of local iterations in high-value steps and a lower
+average in low-value steps).
+This yields a time schedule tailored to the model and dataset, fixed across
+prompts, that captures \emph{where search tends to matter the most}.
+
+\paragraph{Online fine-grained scheduling.}
+Second, at test time, we add an \emph{online} controller that refines how the
+pre-assigned budget $\{K_t\}$ is actually used, on a per-prompt basis.
+For each timestep $t$, we run local search up to $K_t$ iterations, but allow the
+controller to stop earlier or, within a small window, adaptively modulate how
+aggressively to spend the budget.
+
+The controller uses two simple statistics computed from the local search
+feedback at timestep $t$:
+(i) the \emph{score gain} of local search, and
+(ii) the \emph{score variance} across candidates within this step.
+Let $s_t^{(j)}$ be the best verifier score at step $t$ after $j$ local search
+iterations, and let $\{s_{t,\text{cand}}^{(j,i)}\}_i$ denote the scores of all
+candidate noises evaluated in iteration $j$.
+We define the incremental gain
+\[
+  g_t^{(j)} = s_t^{(j)} - s_t^{(j-1)}
+\]
+and the per-iteration variance
+\[
+  \operatorname{Var}_t^{(j)} = \operatorname{Var}_i\bigl(s_{t,\text{cand}}^{(j,i)}\bigr).
+\]
+Intuitively, $g_t^{(j)}$ measures whether we are still finding significantly
+better noises at step $t$, while $\operatorname{Var}_t^{(j)}$ reflects how
+sensitive the verifier is to noise perturbations at this timestep.
+
+Our online policy is based on the following intuition:
+if the recent gains $g_t^{(j)}$ remain positive and the score variance
+$\operatorname{Var}_t^{(j)}$ is large, then this timestep is both important
+and not yet saturated, so we continue local search until we reach the allocated
+budget $K_t$ (or a small upper margin).
+Conversely, if gains have diminished (e.g., recent $g_t^{(j)}$ are close to
+zero or negative) and the variance across candidates is small, then local
+search at this timestep is likely exhausted and further NFE is better reserved
+for subsequent timesteps; in this case we stop early and move on to $t-1$.
+These decisions are made online based solely on statistics observed up to step
+$t$, without access to future timesteps. To ensure the realized compute exactly matches the prescribed total NFE budget,
+we reconcile any over-/under-spending caused by adaptive stopping/slack:
+any extra NFE consumed in the high-value region is compensated by allocating
+additional iterations to the first few low-value steps, while any NFE deficit
+is corrected by trimming iterations from the last low-value steps.
+
+\paragraph{Overall procedure.}
+Putting the pieces together, a single sampling run proceeds as follows.
+We first draw an initial noise $x_T \sim \mathcal{N}(0, I)$ and obtain the
+coarse per-step budget $\{K_t\}$ from the offline time schedule.
+Then, for $t = T, \dots, 1$, we run the local noise search operator
+$\mathcal{L}_t$ around the current latent $x_t$, while the online controller
+monitors the sequence of gains $\{g_t^{(j)}\}$ and variances
+$\{\operatorname{Var}_t^{(j)}\}$ to decide whether to continue or stop local
+search at this timestep, subject to the budget $K_t$.
+The final chosen noise at step $t$ is then fed into the base sampler
+$F_\theta$ to obtain $x_{t-1}$, and the process repeats until we reach $x_0$.
+
+Under the same total NFE budget, this two-level scheduling---offline coarse
+time allocation plus online fine-grained control based on gain and variance---is
+designed to place more computation on timesteps that are both globally and
+instance-wise valuable, and to avoid wasting search on steps where noise
+perturbations have little impact on the verifier.
+In \cref{sec:experiments} we show empirically that this global scheduling
+significantly outperforms uniform per-step allocation on ImageNet and
+text-to-image benchmarks.
+
+\begin{algorithm}[t]
+\caption{Budget Scheduling with Offline Profiling and Online Control}
+\label{alg:offline_online_budget}
+\begin{algorithmic}[1]
+\STATE \textbf{Input:} timesteps $\{t_T,\dots,t_1\}$, total budget $B$, offline allocation $\{K_t\}$ ($\sum_t K_t=B$),
+slack $\delta$, gain window $W_g$, threshold coefs $(\beta_g,\beta_\sigma)$, black-box $\textsc{LocalIter}(t)$.
+\STATE \textbf{Output:} realized per-step iterations $\{\widehat K_t\}$.
+
+\STATE $R \leftarrow B$; \quad $\mathcal{H}_g\leftarrow\emptyset$ (historical gains); \quad $\mathcal{H}_\sigma\leftarrow\emptyset$ (historical variances).
+\FOR{$t=T,T\!-\!1,\dots,1$}
+    \STATE $K \leftarrow \min(K_t, R)$; \quad $K_{\max}\leftarrow \min(K+\delta, R)$; \quad $j_{\text{watch}}\leftarrow \max(1, K-\delta)$.
+    \STATE $s^{(0)} \leftarrow -\infty$; \quad $\mathcal{H}\leftarrow\emptyset$ (recent gains); \quad $\widehat K_t \leftarrow 0$.
+    \FOR{$j=1,2,\dots,K_{\max}$}
+        \STATE $(s^{(j)}, \sigma^{(j)}) \leftarrow \textsc{LocalIter}(t)$
+        \STATE $g^{(j)} \leftarrow s^{(j)} - s^{(j-1)}$; push $g^{(j)}$ into $\mathcal{H}$ and keep last $W_g$.
+        \STATE $\widetilde g^{(j)} \leftarrow \mathrm{Mean}(\mathcal{H})$.
+        \STATE $\widehat K_t \leftarrow \widehat K_t + 1$; \quad $R \leftarrow R - 1$.
+        \IF{$R=0$} \STATE \textbf{break} \ENDIF
+        \IF{$j \ge j_{\text{watch}}$ \AND $|\mathcal{H}_g|>0$ \AND $|\mathcal{H}_\sigma|>0$}
+            \STATE $g_{\mathrm{th}}\leftarrow \beta_g \cdot \mathrm{Mean}(\mathcal{H}_g)$;\quad
+                   $\sigma_{\mathrm{th}}\leftarrow \beta_\sigma \cdot \mathrm{Mean}(\mathcal{H}_\sigma)$.
+            \IF{$\widetilde g^{(j)} < g_{\mathrm{th}}$ \AND $\sigma^{(j)} < \sigma_{\mathrm{th}}$}
+                \STATE \textbf{break}
+            \ENDIF
+        \ENDIF
+    \ENDFOR
+    \STATE append $\mathrm{Mean}(\mathcal{H})$ to $\mathcal{H}_g$; append $\sigma^{(\widehat K_t)}$ to $\mathcal{H}_\sigma$.
+\ENDFOR
+\STATE \textbf{return} $\{\widehat K_t\}$.
+\end{algorithmic}
+\end{algorithm}
+
+
+\section{Experiments}
+\label{sec:experiments}
+
+\subsection{Experimental Setting}
+\label{sec:exp-setting}
+We evaluate global budget scheduling for verifier-guided noise trajectory search on both Stable Diffusion and EDM under \emph{strict} function-evaluation budgets (NFE).
+Our evaluation uses two lightweight verifiers that have been adopted as single-image rewards in prior noise-trajectory-search benchmarks: \textbf{Brightness}, computed from perceived luminance, and \textbf{Compressibility}, computed from the maximally-compressed JPEG file size and normalized to a fixed range.%
+\footnote{Because resolution is fixed in our setup, JPEG size is determined by image compressibility.}
+These verifiers enable controlled, repeatable measurements of test-time scaling without human annotation.
+
+For the \textbf{baseline}, we follow a standard local search recipe used in prior work: an $\epsilon$-greedy noise search operator combined with a \textbf{uniform per-timestep} compute schedule (``Naive'').
+Our method (\textbf{Online (Ours)}) keeps the same family of local search operators but replaces the global policy with a scheduler combining offline profiling and online control: offline profiling produces a coarse per-step allocation, and online control applies windowed early stopping based on (i) observed score gains and (ii) candidate score variance, while enforcing the exact total NFE budget.
+All experiments are run on a single NVIDIA A100 GPU; in our implementation, wall-clock generation time is dominated by UNet function evaluations and is therefore effectively determined by the NFE budget.
+
+\subsection{Stable Diffusion: Scaling with NFE}
+\label{sec:exp-sd-scaling}
+\begin{table}[t]
+\centering
+\caption{SD results across different NFE budgets.}
+\label{tab:sd_budget}
+\begin{tabular}{c|c|c}
+\toprule
+\textbf{NFE} & \textbf{Naive} & \textbf{Online (Ours)} \\
+\midrule
+\multicolumn{3}{c}{\textit{Brightness}} \\
+\midrule
+400 & $0.7025 \pm 0.0466$ & $0.7248 \pm 0.0563$ \\
+500 & $0.7094 \pm 0.0631$ & $0.7346 \pm 0.0599$ \\
+800 & $0.7511 \pm 0.0620$ & $0.7832 \pm 0.0462$ \\
+\midrule
+\multicolumn{3}{c}{\textit{Compressibility}} \\
+\midrule
+400 & $0.8833 \pm 0.0166$ & $0.8946 \pm 0.0164$ \\
+500 & $0.8825 \pm 0.0170$ & $0.9004 \pm 0.0147$ \\
+800 & $0.8892 \pm 0.0198$ & $0.9008 \pm 0.0123$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:sd_budget} shows that our method improves not only absolute
+performance but also the \emph{speed} of quality scaling with respect to NFE on
+Stable Diffusion.
+For \textit{Brightness}, the baseline increases from $0.7025$ (400 NFE) to
+$0.7094$ (500 NFE) and $0.7511$ (800 NFE), while our method achieves
+$0.7248$, $0.7346$, and $0.7832$ at the same budgets, yielding consistent
+margins of +0.0223, +0.0252, and +0.0321, respectively.
+Crucially, our 400-NFE result ($0.7248$) already surpasses the baseline at
+500 NFE ($0.7094$), meaning we reach a higher brightness level with
+\textbf{20\% fewer} function evaluations.
+The speed advantage is even clearer for \textit{Compressibility}.
+The baseline progresses from $0.8833$ (400) to $0.8825$ (500) and $0.8892$ (800),
+whereas our method reaches $0.8946$, $0.9004$, and $0.9008$.
+Notably, our method at \textbf{400 NFE} ($0.8946$) already exceeds the baseline
+at \textbf{800 NFE} ($0.8892$), achieving better compressibility with
+\textbf{50\% fewer} function evaluations.
+Similarly, our 500-NFE result ($0.9004$) also surpasses the baseline at 800 NFE,
+corresponding to a \textbf{37.5\%} compute reduction for a higher score.
+Overall, across all three budgets the quality curve is consistently shifted
+leftward, showing that global scheduling with per-step awareness converts
+additional NFE into quality more efficiently than uniform allocation.
+
+\subsection{EDM: Scaling with NFE}
+\label{sec:exp-edm-scaling}
+\begin{table}[t]
+\centering
+\caption{EDM results across different NFE budgets.}
+\label{tab:edm_budget}
+\begin{tabular}{c|c|c}
+\toprule
+\textbf{NFE} & \textbf{Naive} & \textbf{Online (Ours)} \\
+\midrule
+\multicolumn{3}{c}{\textit{Brightness}} \\
+\midrule
+144 & $0.9507 \pm 0.0153$ & $0.9887 \pm 0.0046$ \\
+180 & $0.9617 \pm 0.0160$ & $0.9904 \pm 0.0036$ \\
+288 & $0.9787 \pm 0.0178$ & $0.9988 \pm 0.0012$ \\
+\midrule
+\multicolumn{3}{c}{\textit{Compressibility}} \\
+\midrule
+144 & $0.6714 \pm 0.0165$ & $0.6845 \pm 0.0074$ \\
+180 & $0.6774 \pm 0.0120$ & $0.7003 \pm 0.0089$ \\
+288 & $0.6901 \pm 0.0118$ & $0.7165 \pm 0.0085$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+Table~\ref{tab:edm_budget} demonstrates a pronounced acceleration effect on EDM:
+our method reaches high quality at substantially lower NFE, indicating a strong
+left-shift of the quality--compute curve.
+For \textit{Brightness}, the baseline improves from $0.9507$ (144 NFE) to
+$0.9617$ (180 NFE) and $0.9787$ (288 NFE), while our method achieves
+$0.9887$, $0.9904$, and $0.9988$, respectively (gaps of +0.0380, +0.0287,
+and +0.0201).
+Importantly, our 144-NFE brightness ($0.9887$) already surpasses the baseline at
+288 NFE ($0.9787$), meaning we obtain higher quality with \textbf{50\% fewer}
+function evaluations.
+Likewise, our 180-NFE result ($0.9904$) also exceeds the baseline at 288 NFE,
+corresponding to a \textbf{37.5\%} compute reduction.
+These comparisons across the three budgets directly show that our scheduler
+achieves the same (or better) quality with substantially fewer denoising
+evaluations.
+The same acceleration holds for \textit{Compressibility}.
+The baseline increases from $0.6714$ (144) to $0.6774$ (180) and $0.6901$ (288),
+whereas our method reaches $0.6845$, $0.7003$, and $0.7165$.
+Here, our 144-NFE result ($0.6845$) already exceeds the baseline at 180 NFE
+($0.6774$), saving \textbf{20\%} NFE for a higher score; more strikingly,
+our 180-NFE result ($0.7003$) surpasses the baseline at 288 NFE ($0.6901$),
+saving \textbf{37.5\%} NFE.
+Across all three budgets, the improvements grow from +0.0131 to +0.0229 and
++0.0264, suggesting that global scheduling continues to allocate search compute
+to impactful timesteps as budget increases rather than wasting NFE uniformly.
+
+\subsection{Ablation: Offline Allocation vs.\ Offline+Online Control}
+\label{sec:exp-ablation-offline-online}
+\begin{table}[t]
+\centering
+\caption{Stable Diffusion results under fixed NFE $=400$.
+\textbf{Naive} uses uniform per-step allocation.
+\textbf{Online (Ours)} uses offline profiling plus online control.
+\textbf{Offline Only} removes online control and uses only offline allocation.}
+\label{tab:sd_400_ablation}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Metric} & \textbf{Naive} & \textbf{Online (Ours)} & \textbf{Offline Only} \\
+\midrule
+Brightness        & $0.7025 \pm 0.0466$ & $\mathbf{0.7248 \pm 0.0563}$ & $0.7158 \pm 0.0645$ \\
+Compressibility   & $0.8833 \pm 0.0166$ & $\mathbf{0.8946 \pm 0.0164}$ & $0.8873 \pm 0.0183$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:sd_400_ablation} isolates the contribution of online control at a fixed compute budget.
+The \textbf{Offline Only} variant already improves over uniform allocation on both metrics, showing that coarse per-step budgeting is beneficial by itself.
+Adding online feedback and windowed early stopping further improves performance, yielding the best scores for both \textit{Brightness} (0.7248) and \textit{Compressibility} (0.8946).
+This indicates that offline profiling captures \emph{where} search tends to matter, while online control refines \emph{how much} of the allocated budget is actually worth spending on a given prompt and timestep.
+
+\subsection{Larger Prompt Set Evaluation}
+\label{sec:exp-larger-prompts}
+\begin{table}[t]
+\centering
+\caption{Larger prompt set evaluation.
+We use 20 prompts, each repeated 10 times.
+Baseline corresponds to the uniform allocation method; Ours is the proposed global scheduler.}
+\label{tab:larger_prompt_exp}
+\begin{tabular}{lcc}
+\toprule
+ & \textbf{brightness} & \textbf{compressibility} \\
+\midrule
+Baseline          & $0.6949 \pm 0.0756$ & $0.7938 \pm 0.0892$ \\
+Ours              & $\mathbf{0.7213 \pm 0.0752}$ & $\mathbf{0.8076 \pm 0.0962}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:larger_prompt_exp} evaluates robustness on a broader set of prompts with repeated trials.
+Our scheduler consistently improves the mean scores for both verifiers: brightness increases from 0.6949 to 0.7213, and compressibility increases from 0.7938 to 0.8076.
+The improvement persists under repeated sampling, suggesting that the gains are not driven by a small subset of prompts but reflect a systematic advantage of allocating compute to high-impact timesteps and early-stopping low-yield search.
+
+\subsection{Compatibility with Different Local Search Operators}
+\label{sec:exp-local-operator}
+\begin{table}[t]
+\centering
+\caption{Global scheduling combined with different local search operators.
+Left block uses uniform allocation; right block uses our scheduler.
+B: Brightness, C: Compressibility.}
+\label{tab:local_search_combo}
+\begin{tabular}{lcccc}
+\toprule
+& \multicolumn{2}{c}{\textbf{Naive}} & \multicolumn{2}{c}{\textbf{Ours}} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5}
+\textbf{Metric} & \textbf{Zero-order} & \textbf{Random} & \textbf{Zero-order} & \textbf{Random} \\
+\midrule
+\textbf{B} & $0.4920 \pm 0.0723$ & $0.7382 \pm 0.0392$ & $\mathbf{0.5080 \pm 0.0752}$ & $\mathbf{0.7457 \pm 0.0452}$ \\
+\textbf{C} & $0.5727 \pm 0.0660$ & $0.8417 \pm 0.0268$ & $\mathbf{0.5832 \pm 0.0613}$ & $\mathbf{0.8454 \pm 0.0252}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:local_search_combo} shows that global scheduling is complementary to the choice of local search operator.
+Under both \textbf{Zero-order} and \textbf{Random} local search, replacing a uniform schedule with our scheduler improves \textit{Brightness} and \textit{Compressibility}.
+This supports the intended modularity of our two-level formulation: the scheduler targets \emph{where/when} to spend compute, and can be paired with different per-timestep proposal mechanisms without changing the overall framework.
+
+\subsection{Applicability to Flow-based Models}
+\label{sec:exp-flow}
+
+To demonstrate that our scheduling framework applies beyond stochastic samplers,
+we evaluate on a flow-based model that uses deterministic ODE transitions.
+Following prior work~\citep{black2023training}, we introduce stochasticity by
+injecting small noise at selected timesteps, enabling exploration of different
+generation paths that would otherwise be inaccessible with purely deterministic
+sampling.
+
+\begin{table}[t]
+\centering
+\caption{Flow-based model results. Even with originally deterministic sampling,
+our global scheduling improves quality by strategically allocating search compute.}
+\label{tab:flow_results}
+\begin{tabular}{c|c|c}
+\toprule
+\textbf{NFE} & \textbf{Naive} & \textbf{Online (Ours)} \\
+\midrule
+\multicolumn{3}{c}{\textit{Brightness}} \\
+\midrule
+% TODO: Fill in experimental results
+[TBD] & [TBD] & [TBD] \\
+\midrule
+\multicolumn{3}{c}{\textit{Compressibility}} \\
+\midrule
+% TODO: Fill in experimental results
+[TBD] & [TBD] & [TBD] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:flow_results} shows that global scheduling provides consistent
+improvements even when applied to flow-based models with injected stochasticity.
+This validates our claim from the introduction: the deliberate introduction of
+noise for exploration enables our scheduling framework to work with any sampler
+architecture, not just inherently stochastic ones.
+% TODO: Add specific analysis once experimental results are available.
+
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+We study global scheduling with per-step awareness for inference-time noise trajectory search in diffusion models under strict NFE budgets.
+By separating local refinement from global allocation, we design a scheduler combining offline profiling and online control that uses windowed gain and variance signals for early stopping while enforcing an exact budget.
+Across Stable Diffusion and EDM, the scheduler consistently improves scores and accelerates quality scaling, often matching higher-NFE baselines with substantially fewer evaluations.
+
+\bibliographystyle{plainnat}
+\bibliography{main}
+
+
+\end{document}

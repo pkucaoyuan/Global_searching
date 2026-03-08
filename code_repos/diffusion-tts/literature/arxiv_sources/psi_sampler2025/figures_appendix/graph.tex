@@ -1,0 +1,57 @@
+\vspace{-0.6em}
+\begin{figure}[h!]
+    \centering
+
+    % Row 1: Quantity-aware generation
+    \textbf{\large Quantity-aware Generation} \\
+    \vspace{1em}
+    \begin{minipage}[b]{0.24\textwidth}
+        \centering
+        \textbf{\scriptsize \hspace{1.6em}Acceptance} \\
+        \includegraphics[width=\linewidth]{figures_appendix/graph/acceptence_counting.png}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.24\textwidth}
+        \centering
+        \textbf{\scriptsize \hspace{2.0em}T2I-Count~\cite{qian2025t2icount}} \\
+        \includegraphics[width=\linewidth]{figures_appendix/graph/reward_counting.png}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.24\textwidth}
+        \centering
+        \textbf{\scriptsize \hspace{1.6em}MAE~\cite{AminiNaieni2024countgd}} \\
+        \includegraphics[width=\linewidth]{figures_appendix/graph/MAE_counting.png}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.24\textwidth}
+        \centering
+        \textbf{\scriptsize \hspace{2.0em}LPIPS MPD~\cite{zhang2018unreasonableLPIPS}} \\
+        \includegraphics[width=\linewidth]{figures_appendix/graph/lpips_mdp_counting.png}
+    \end{minipage}
+
+    \vspace{1.0em}
+
+    % Row 2: Aesthetic-preference generation
+    \textbf{\large Aesthetic-preference Generation} \\
+    \vspace{1em}
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \textbf{\scriptsize \hspace{2.0em}Acceptance} \\
+        \includegraphics[width=\linewidth]{figures_appendix/graph/acceptence_aesthetic.png}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \textbf{\scriptsize \hspace{2.3em}Aesthetic Score~\cite{schuhmann2022aesthetic}} \\
+        \includegraphics[width=\linewidth]{figures_appendix/graph/reward_aesthetic.png}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.32\textwidth}
+        \centering
+        \textbf{\scriptsize \hspace{3.0em}LPIPS MPD~\cite{zhang2018unreasonableLPIPS}} \\
+        \includegraphics[width=\linewidth]{figures_appendix/graph/lpips_mdp_aesthetic.png}
+    \end{minipage}
+
+    \caption{Performance comparison of MALA and pCNL across different evaluation metrics under two generation settings: \textit{quantity-aware generation} (top row) and \textit{aesthetic-preference generation} (bottom row). Each graph illustrates the performance trend with varying step sizes.}
+    \label{fig:mcmc_comparison}
+\end{figure}

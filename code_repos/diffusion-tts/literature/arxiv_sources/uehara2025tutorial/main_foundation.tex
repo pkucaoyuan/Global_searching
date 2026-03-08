@@ -1,0 +1,187 @@
+
+{ \section{Foundations of Inference-Time Controlled Generation}\label{sec:foundation}
+} 
+
+In this section, we establish the foundation of inference-time techniques in diffusion models. Specifically, we describe the form of the optimal policy (i.e., denoising process) for the objective introduced in Section~\ref{sec:goal}, which involves guiding natural-like designs with high functionality. All the methods presented in the following sections, from \pref{sec:derivative_free} to \pref{sec:derivative_discrete}, aim to approximate this policy.
+
+
+\subsection{Soft Optimal Policies (Denoising Processes) in Diffusion Models}\label{sec:soft}
+
+We introduce several key concepts essential for understanding our target policies (i.e., target denoising processes) for inference-time techniques that are detailed in the following section. These concepts are well established through the lens of RL, recognizing that diffusion models can be framed with MDPs. For further details, refer to \citet[Section 3]{uehara2024understanding}. A summary is provided below.
+
+\begin{figure}[!th]
+\centering
+\begin{tikzpicture}[%
+>=latex',node distance=2.5cm, minimum height=1.5cm, minimum width=1.5cm,
+state/.style={draw, shape=circle, draw=red, fill=red!10, line width=0.5pt},
+state-emp/.style={draw, shape=rectangle, draw=red, fill=red!10, line width=0.5pt,opacity=0.0},
+reward/.style={draw, shape=rectangle, draw=green, fill=green!10, line width=0.5pt}
+]
+\node[state] (xT) at (0,0) {$x_{T}$};
+\node[state,right of=xT] (xT1) {$x_{T-1}$};
+\node[state,right of=xT1] (xT2) {$x_{T-2}$};
+\node[state-emp,right of=xT2] (xT3) {...};
+\node[state] (x1) at (10,0) {$x_{1}$};
+\node[state,right of=x1] (x0) {$x_{0}$};
+\node[reward,right of=x0] (r0) {$r$};
+\draw[->] (xT) -- (xT1);
+\node[text width=2cm] at (1.8,0.2) {$p_T$};
+\draw[->] (xT1) -- (xT2);
+\node[text width=2cm] at (4.3,0.2) {$p_{T-1}$};
+\draw[->] (xT2) -- (xT3);
+\node[text width=2cm] at (6.8,0.2) {$p_{T-2}$};
+\draw[->] (xT3) -- (x1);
+\node[text width=2cm] at (9.5,0.2) {$p_{2}$};
+\draw[->] (x1) -- (x0);
+\node[text width=2cm] at (12.0,0.2) {$p_{1}$};
+\draw[dashed,->] (x0) -- (r0);
+\end{tikzpicture}
+\caption{Formulating diffusion models using MDPs.}
+\end{figure}
+
+
+\paragraph{Soft Value Function.} For $t \in [T+1, \cdots, 1]$, we define the \emph{soft value function} as:
+\begin{align}\label{eq:soft}
+     v_{t-1}(\cdot ):=\alpha \log \EE_{x_0 \sim p^{\pre}(x_0|x_{t-1})}\left [\exp\left (\frac{r(x_0)}{\alpha} \right)|x_{t-1}=\cdot \right ], 
+\end{align}
+where $\EE_{x_0\sim p^{\pre}(x_0|x_{t-1})\}}[\cdot]$ is induced by pre-trained polices $\{ p^{\pre}_{t}(\cdot|x_{t+1})\}_{t=T}^0$. Since this plays a key role in our tutorial, we highlight it as follows: 
+
+\begin{AIbox}{Soft Value Function} This soft value function captures the expected future reward at $t=0$ from the intermediate state at $t-1$. Intuitively, it serves as a look-ahead function that predicts future rewards $r(x_0)$ based on the intermediate state $x_{t-1}$. It enables us to guide an inference procedure efficiently from $t=0$ to $t=T$, as we will see shortly.  
+\end{AIbox}
+
+
+
+To further illustrate, consider a scenario where $r$ is a classifier $r(\cdot )=\log p(y|\cdot)$ for class $y$ and $\alpha = 1$. In this case, the above expression simplifies to:
+\begin{align*}
+    v_{t-1}(\cdot) = \log \EE_{x_0 \sim p^{\pre}(x_0|x_{t-1})}[p(y|x_0)|x_{t-1}=\cdot ], 
+\end{align*}
+which aligns with the formulation used in classifier guidance \citep{dhariwal2021diffusion,song2021score}.
+
+\paragraph{Soft-Bellman Equation.} Soft-Bellman equations (e.g., \citet{haarnoja2017reinforcement,geist2019theory}) characterize value functions recursively as follows:
+\begin{align}\label{eq:soft_bellman}
+    \int p^{\pre}_{t-1}(x|x_{t})\exp(v_{t-1}(x)/\alpha)dx = \exp(v_{t}(x_t)/\alpha). 
+\end{align}
+By iterating the above equation, we can easily derive \eqref{eq:soft} as follows:
+\begin{align*}
+    \exp\left ( \frac{v_{t}(x_t)}{\alpha} \right) &= \EE_{p^{\pre}}\left [ \exp\left (\frac{v_{t-1}(x_{t-1})}{\alpha} \right)|x_t \right ]=\EE_{p^{\pre}}\left [\exp\left ( \frac{v_{t-2}(x_{t-2})}{\alpha } \right) |x_t\right ]=\cdots \\
+     &=\EE_{p^{\pre}}\left [ \exp\left (\frac{r(x_{0})}{\alpha}\right ) |x_t \right ]. 
+\end{align*}
+
+\paragraph{Soft Optimal Policy.} We define the \emph{soft optimal policy}  $p^{\star}_{t-1}:\Xcal  \to \Delta(\Xcal)$ as a weighted pre-trained policy with value functions $v_{t-1}:\Xcal \to \RR$: 
+\begin{align}\label{eq:optimal_policy}
+p^{\star}_{t-1}(\cdot|x_{t})&=\frac{p^{\pre}_{t-1}(\cdot |x_{t})\exp(v_{t-1}(\cdot)/\alpha)}{\int_{x\in \Xcal} p^{\pre}_{t-1}(x|x_{t})\exp(v_{t-1}(x)/\alpha)dx }. 
+\end{align}
+Intuitively, this policy retains the characteristics of the pre-trained policy while guiding generation toward optimizing reward functions through soft value functions. Using the soft-Bellman equation \eqref{eq:soft_bellman} and  substituting  the denominator in \eqref{eq:optimal_policy}, the above optimal policy simplifies to 
+\begin{align*}
+     p^{\star}_{t-1}(\cdot|x_{t})=\frac{p^{\pre}_{t-1}(\cdot |x_{t})\exp(v_{t-1}(\cdot)/\alpha)}{\exp(v_{t}(x_t)/\alpha) }.  
+\end{align*}
+The term ``optimal'' reflects that this policy maximizes the following entropy-regularized objective: 
+\begin{align*}
+   \argmax_{\{p_t:\Xcal \to \Delta(\Xcal) \}_{t=T}^0 } \EE_{ \{p_t\}_{t=T}^0  } \left[r(x_0)- \alpha \sum_{t=T}^0 \KL(p_{t-1}(\cdot|x_t) \| p^{\pre}_{t-1}(\cdot|x_t))   \right], 
+\end{align*}
+which is a standard objective in RL-based fine-tuning for diffusion models \citep{fan2023dpok,uehara2024understanding}. 
+
+
+
+With this setup, we present the following key theorem:
+
+\begin{Thmbox}{}
+\begin{theorem}[From Theorem 1 in \citet{uehara2024bridging}]\label{thm:key}
+The distribution induced by $\{ p^{\star}_t(\cdot|x_{t+1})\}_{t=T}^0$ (i.e., $\int \left\{ \prod_{t=T+1}^1 p^{\star}_{t-1}(x_{t-1}|x_t)\right \}d x_{1:T}$) is the target distribution $p^{(\alpha)}(\cdot)$ in \eqref{eq:target_dist}, i.e., 
+\begin{align*} 
+\frac{\exp(r(\cdot )/\alpha)p^{\pre}(\cdot)}{\int_{x\in \Xcal} \exp(r(x)/\alpha)p^{\pre}(x)dx}. 
+\end{align*}
+\end{theorem}
+\end{Thmbox}
+
+Thus, by sequentially sampling from soft optimal policies during inference, we can generate natural-like designs with high functionality. However, this approach presents practical challenges due to two key factors:
+\begin{enumerate}
+    \item The absence of an exact value function $v_t(\cdot)$
+    \item  { The large action space $\Xcal$, making it challenging to compute the normalizing constant in the denominator (i.e., $\int_{x\in \Xcal} \exp(r(x)/\alpha)p^{\pre}(x)dx$) or evaluate value functions in the numerator within a reasonable computational time. } 
+\end{enumerate}
+In the following section, we first review methods that address the first challenge of value function approximation in \pref{sec:method_value}, followed by approaches that attempt to address the second challenge using these approximated value functions in \pref{sec:derivative_free}-\pref{sec:derivative_discrete}. The key message is as follows. 
+
+\begin{AIbox}{Takeaways}
+Each guidance method discussed in this tutorial aims to approximate the soft-optimal policy through different approaches. The method in \pref{sec:derivative_free} seeks to achieve this approximation in a derivative-free manner, while the methods in \pref{sec:derivative} and \ref{sec:derivative_discrete} leverage the gradient of value functions to approximate the policy.
+\end{AIbox}
+
+Before addressing solutions to the first challenge, we highlight several additional points related to \pref{thm:key}. 
+\begin{itemize} 
+ \item \textbf{Extension from Discrete-Time to Continuous-Time Formulation:} Although \pref{thm:key} is formulated for discrete-time diffusion models, it has been extended to continuous-time diffusion models in later work. See \citet[Theorem 1]{uehara2024finetuning} for continuous space diffusion models and \citet[Theorem 1]{wang2024finetuning} for discrete space diffusion models.
+\item \textbf{RL-Based Fine-Tuning:} In RL-based fine-tuning, this framework is implicitly employed as the target policy. However, practical implementations differ due to various associated errors (e.g., optimization or function approximation errors), and value functions are typically not directly employed in RL-based fine-tuning.
+\item \textbf{Avoiding Curse of Token Length in Discrete Diffusion Models:} In discrete diffusion models (Example~\ref{exa:discrete}), the space $\Xcal$ appears to be $K^L$, where $K$ is the vocabulary size and $L$ is the token length. However, the effective action space is actually $KL$, enabling exact sampling from optimal policies (with approximated value functions) when $L$ and $K$ are relatively small. We will discuss this aspect in more detail in \pref{sec:discrete_first}. 
+\item \textbf{For Pre-Defined MDPs:} Our results can be readily extended to scenarios where MDPs are pre-defined, particularly in synthesizable molecular generation \citep{cretu2024synflownet,seo2024generative}. This setting has been widely explored in the literature on GFlowNets \citep{bengio2023gflownet}.
+\item \textbf{Relation with Other Works:} Similar (and essentially equivalent) results to \pref{thm:key} have been known in various fields, including soft RL \citep{haarnoja2017reinforcement,levine2018reinforcement}, language models \citep{mudgal2023controlled,han2024value}. In addition, in the computational statistics literature, soft value functions are referred to as twisting potentials, while soft optimal policies are known as optimally twisted policies \citep{doucet2009tutorial,naesseth2019elements,heng2020controlled}.  
+\end{itemize}
+
+\subsection{Approximating Soft Value Functions}\label{sec:method_value}
+
+
+We present several representative methods for approximating value functions, each of which can be integrated into inference-time techniques. They are used for the inference-time technique discussed in subsequent sections, recalling that the inference-time technique aims to approximate soft-optimal policies, which are expressed as the product of value functions and pre-trained policies.
+
+\subsubsection{Posterior Mean Approximation}\label{sec:posterior_mean}
+
+The most straightforward approach is to use the following approximation:
+\begin{align*}
+    \EE_{x_0\sim p^{\pre}(x_t) } [r(x_0)|x_t]=\int r(x_0)p^{\pre}(x_0|x_t)dx_0\approx r(\EE_{x_0\sim p^{\pre}(x_t) }[x_0|x_t]). 
+\end{align*}
+In pre-trained models, we have a decoder from $x_t$ to $x_0$, denoted by $\hat x_0(x_t)$ in Example~\ref{exa:continuous} and \ref{exa:discrete}. Thus, a natural approach is to use $r(\hat{x}_0(x_t))$. The whole algorithm is summarized in \pref{alg:PM}. This approximation has been applied for conditioning where the reward functions are classifiers, such as in DPS \citep{chung2022diffusion}, universal guidance \citep{bansal2023universal}, and reconstruction guidance \citep{ho2022video}. 
+
+\begin{algorithm}[!th]
+\caption{Value Function Estimation using Posterior Mean Approximation}\label{alg:PM}
+
+\begin{algorithmic}[!th] 
+     \STATE {\bf Require}:  Pre-trained diffusion models, reward $r:\Xcal \to \RR$
+    \STATE  Set $\hat v^{\diamond}(\cdot,t):= r(\hat x_0(x_t=\cdot))$ 
+      \STATE {\bf Output}: $ \hat v^{\diamond}$
+\end{algorithmic}
+\end{algorithm}
+
+
+\subsubsection{Monte Carlo Regression}
+
+Another natural approach is to train a value function regressor. From the definition \eqref{eq:soft} of soft value functions, we can show:
+\begin{align*}
+    \exp(v(\cdot)/\alpha)=\argmin_{f: \Xcal \to \RR}\EE_{x_0\sim p^{\pre}(x_t), x_t\sim u_t}[\{\exp(r(x_0)/\alpha)- f(x_t)\}^2],   
+\end{align*}
+where $u_t \in \Delta(\Xcal)$ represents a roll-in distribution. By replacing this approximation with an empirical objective and applying function approximation, the complete algorithm is summarized in \pref{alg:MC} when we use distributions induced by pre-trained models as roll-in distributions. 
+
+
+
+\begin{algorithm}[!th]
+\caption{Value Function Estimation using Monte Carlo Regression}\label{alg:MC}
+\begin{algorithmic}[1]
+     \STATE {\bf Require}:  Pre-trained diffusion models $\{p^{\pre}_t\}^0_{t=T}$, reward $r:\Xcal \to \RR$, function class $\Phi: \Xcal  \times [0,T]\to \RR$.
+    \STATE Collect datasets $\{x^{(s)}_{T},\cdots,x^{(s)}_0\}_{s=1}^S$ by rolling-out $\{ p^{\pre}_t\}_{t=T}^0$ from $t=T$ to $t=0$. 
+    \STATE 
+\begin{align*}
+     \hat f = \argmin_{f \in \Phi}\sum_{t=T}^{0} \sum_{s=1}^S \left \{\exp\left (\frac{r(x^{(s)}_0)}{\alpha} \right) - \exp \left ( \frac{f(x^{(s)}_t, t)}{\alpha}\right) \right \}^2. 
+\end{align*}
+      \STATE {\bf Output}: $\hat f(\cdot)$
+\end{algorithmic}
+\end{algorithm}
+
+
+
+\subsubsection{Soft Q-Learning}
+
+Another natural approach is to use soft Q-learning \citep{haarnoja2017reinforcement,levine2018reinforcement}. Recall the soft-Bellman equations \eqref{eq:soft_bellman}, we have:
+\begin{align*}
+    \exp\left (\frac{v_t(\cdot)}{\alpha} \right ) =\argmin_{f:\Xcal \to \RR}\EE_{x_t \sim u_t} \left [\left \{\exp\left (\frac{v_{t-1}(x_{t-1})}{\alpha} \right )-f(x_t) \right \}^2 \right], 
+\end{align*}
+where $u_t \in \Delta(\Xcal)$ is a roll-in distribution. Although the right-hand side is not directly accessible, we can estimate the value functions by recursively applying regression, a procedure known as Fitted Q-iteration (FQI) in RL \citep{ernst2005tree,mnih2015human}. The complete algorithm is summarized in \pref{alg:FQI}.
+
+\begin{algorithm}[!ht]
+\caption{Value Function Estimation using Soft Q-learning}\label{alg:FQI}
+\begin{algorithmic}[1]
+     \STATE {\bf Require}:  Pre-trained diffusion models $\{p^{\pre}_t\}^0_{t=T}$, value function class $\Phi:\Xcal \times [0,T] \to \RR$
+    \STATE Collect datasets $\{x^{(s)}_{T},\cdots,x^{(s)}_0\}_{s=1}^S$ by rolling-out $\{ p^{\pre}_t\}_{t=T}^0$ from $t=T$ to $t=0$. 
+      \FOR{$j \in [0,\cdots, J] $}
+    \STATE  Run regression:  
+    \begin{align*}
+          \hat f^{j} \leftarrow \argmin_{f \in \Phi}\sum_{t=T}^{0} \sum_{s=1}^S \left \{ \exp\left( \frac{f (x^{(s)}_t)}{\alpha} \right ) - \exp\left (\frac{ \hat f^{j-1}(x^{(s)}_{t-1})}{\alpha}\right ) \right \}^2.
+    \end{align*}
+     \ENDFOR  
+      \STATE {\bf Output}:  $\alpha \log \hat f^{J}$ 
+\end{algorithmic}
+\end{algorithm}

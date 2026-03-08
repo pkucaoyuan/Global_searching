@@ -1,0 +1,29 @@
+\section{Related work}
+
+Transport learning methods learn a mapping between two distributions, where the learned model can transform a sample from one distribution into a sample from the other one.
+Typically, one of the distributions is easy to sample (such as a Gaussian) and the other one is the data distribution that one is interested in modeling.
+The learned mapping can either be deterministic or stochastic.
+A thorough overview of related areas can be found in \citet{yang2024diffusion}.
+
+\paragraph{Deterministic transport.}
+Deterministic transport methods implement a change of variable, either explicitly or approximately, that can be used to uniquely map a sample from one distribution to the other.
+The normalizing flow family~\citep{rezende2015variational,dinh2017density,kingma2018glow} of methods construct an explicit invertible model that realizes this map either in one step or a finite number of discrete steps.
+Neural ODEs~\citep{chen2018neural,grathwohl2018scalable} generalize from discrete steps to a continuous time mapping by inferring and learning the gradient field for all times.
+However, Neural ODEs are difficult to train due to the need for simulating the ODEs as part of the training.
+Rectified flows, flow matching, and iterative denoising methods~\citep{liu2022flow,lipman2022flow,tong2023improving,heitz2023iterative,delbracio2023inversion} either implicitly or explicitly specify a continuous mapping and learn a model to approximate the continuous time mapping.
+Similarly, probability flow ODEs~\citep{song2020score} learned by diffusion models~\citep{sohl2015deep} approximate an implicitly defined continuous mapping.
+Our work is useful for flexible sampling from such pre-trained continuous time deterministic Gaussian flows, or more generally where the score function for all the marginal distributions is either provided or can be deduced from the learned flow model.
+
+\paragraph{Stochastic transport.}
+Stochastic transport methods learn a stochastic mapping, where a sample from one distribution gets stochastically mapped to a sample from the other.
+Gaussian diffusion models are a salient example of such discrete~\cite{sohl2015deep,ho2020denoising} or continuous time~\cite{song2020score,kingma2021variational} mappings where one of the distributions is constrained to be Gaussian.
+Several generalizations have been proposed that extend from Gaussian to more general families of distributions~\cite{yoon2024score}.
+The stochastic interpolants framework~\citep{albergo2022building,albergo2023stochastic,ma2024sit} further generalizes to a larger family of distributions by introducing a random latent variable allowing efficient estimation of the score function at all times.
+Our work is directly applicable to models learned with such methods where the score function is accessible and can be used to construct and explore a large family of samplers.
+The convergence rates of diffusion models have been studied in \cite{chen2023score,benton2023linear} with respect to the number of data samples and dimensionality.
+However, since our method does not require retraining, it does not affect these properties of the original training algorithms.
+
+\paragraph{Schr\"odinger bridge and optimal transport.}
+These methods consider a more general problem of learning transport maps with additional constraints.
+k-Rectified flows~\cite{liu2022flow} provide an iterative procedure for tackling deterministic optimal transports for a family of costs, while the more general Schr\"odinger bridge problem, viewed as an entropy regularized optimal transport, is an active area of research \cite{shi2024diffusion,liu2023i2sb}.
+Our work is complementary to these methods as we focus on flexible sampling, given the access to the score function for the marginal distributions.

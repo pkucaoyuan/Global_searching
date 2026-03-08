@@ -1,0 +1,144 @@
+\vspace{-0.5\baselineskip}
+\section{Related Work}
+\vspace{-0.5\baselineskip}
+\label{sec:related}
+% \begin{enumerate}
+%     \begin{itemize}
+%         \item SVDD, ARGS: Alignment as Reward-Guided Search (LLM), FUDGE: Controlled Text Generation With Future Discriminators (LLM), COLD Decoding: Energy-based Constrained Text Generation with Langevin Dynamics: Nested IS
+%         \item DAS, FPS, TDS, MCGDiff, SMCDiff, Practical and Asymptotically Exact Conditional Sampling in Diffusion Models, Correcting Diffusion Generation through Resampling, Probabilistic Inference in Language Models via Twisted Sequential Monte Carlo (LLM): SMC
+%         \item SANA 1.5, RealFill: Best-of-N (Vision)
+%         \item Blockwise Best-of-N: Controlled Decoding (LLM), CoDe (Vision)
+%         \item Inference-Time Scaling for Diffusion Models beyond Scaling Denoising Steps: SoP, verifier analysis
+%         \item RAIN: Your Language Models Can Align Themselves without Finetuning: Ours while loop, Guaranteed Generation from Large Language Models
+%     \end{itemize}
+% \end{enumerate}
+
+
+
+% % \begin{enumerate}
+% %     \item Direct fine-tuning
+% %     \begin{itemize}
+% %         \item ImageReward, DRaFT, AlignProp, Aligning Text-to-Image Models using Human Feedback, Human Preference Score (HPS): (Reward fitting) + direct fine-tuning 
+% %     \end{itemize}
+% %     \item RL fine-tuning 
+% %     \begin{itemize}
+% %         \item DPO, ConstitutionAI, Training language models to follow instructions with human feedback: LLM domain 
+% %         \item DDPO, D3PO: Reward maximization
+% %         \item DPOK, Diffusion-DPO, Fine-Tuning of Continuous-Time Diffusion Models as Entropy-Regularized Control: Entropy regularization
+% %         \item Adjoint Matching, CHATS: Flow model fine-tuning
+% %     \end{itemize}
+% % \end{enumerate}
+
+
+
+% % \begin{enumerate}
+% %     \item Training-based 
+% %     \begin{itemize}
+% %         \item Classifier Guidance: Trains classifier on noisy samples
+% %         \item Score-based generative modeling: Trains classifier on noisy samples
+% %         \item CFG: Un/conditional joint training for implicit classifier 
+% %     \end{itemize}
+% %     \item Tweedie Approximation
+% %     \begin{itemize}
+% %         \item DPS: Tweedie approximation
+% %         \item LGD: DPS+MCMC
+% %         \item FreeDoM: DPS+Rewind
+% %         \item UGD: DPS+Rewind
+% %         \item TFG: Grid searched DPS 
+% %     \end{itemize}
+% %     \item Initial latent optimization
+% %     \begin{itemize}
+% %         \item DNO: Motion domain
+% %         \item DITTO: Music domain
+% %         \item InitNo: Efficient backpropation to multi-step model
+% %         \item ReNo: One-step diffusion model backpropagation
+% %         \item D-Flow: Flow model latent optimization
+% %         \item A Noise is Worth Diffusion Guidance: Vision domain 
+% %         \item DOODL: EDIT-based inversion gradient descent
+% %     \end{itemize}
+% % \end{enumerate}
+
+
+% -------------------------------------------------------------------------------
+\vspace{-0.2\baselineskip}
+\subsection{Reward Alignment in Diffusion Models}
+\vspace{-0.5\baselineskip}
+In the literature of diffusion models, reward alignment approaches can be broadly categorized into fine-tuning-based methods~\cite{Black2024:DDPO, Yang2024:D3PO, Wallace:2024DiffusionDPO, Clark2024:DRaFT, Prabhudesai2023:AlignProp, Xu2023:ImageReward} and inference-time-scaling-based methods~\cite{Li2024:SVDD, Singh:2025CoDE, Dou2024:FPS, Wu:2023TDS, Cardoso2024:MCGDiff}. 
+While fine-tuning diffusion models enables the generation of samples aligned with user preferences, it requires fine-tuning for each task, potentially limiting scalability. In contrast, inference-time scaling approaches offer a significant advantage as they can be applied to any reward without requiring additional fine-tuning. 
+Moreover, inference-time scaling can also be applied to fine-tuned models to further enhance alignment with the reward. 
+Since our proposed approach is an inference-time scaling method, we focus our review on related literature in this domain. 
+
+When the reward is differentiable, gradient-based methods~\cite{Chung:2023DPS, Bansal:2023UGD, Yu:2023FreeDOM, Eyring2024:ReNO, Guo:2024InitNO, Wallace:2023DOODL, Benhamu:2024DFlow} have been extensively studied. 
+We note that inference-time scaling can be integrated with gradient-based approaches to achieve synergistic performance improvements. 
+% We demonstrate this synergistic improvement in our experimental results but omit a detailed review of the literature due to space limitations.
+
+\vspace{-0.55\baselineskip}
+\subsection{Particle Sampling with Diffusion Models}
+\vspace{-0.5\baselineskip}
+\label{sec:inference_time_scaling}
+The simplest iterative sampling method that can be applied to any generative model is Best-of-N (BoN)~\cite{Stiennon:2020BoN, Touvron:2023llama2, Tang:2024Realfill}, which generates $N$ samples and selects the one with the highest reward. For diffusion models, however, incorporating particle sampling during the denoising process has been shown to be far more effective than na\"ive BoN~\cite{Singh:2025CoDE, Li2024:SVDD}. This idea has been further developed through various approaches that sample particles at intermediate steps. For instance, SVDD~\cite{Li2024:SVDD} proposed selecting the particle with the highest reward at every step. 
+CoDe~\cite{Singh:2025CoDE} extends this idea by selecting the highest-reward particle only at specific intervals. 
+On the other hand, methods based on Sequential Monte Carlo (SMC)~\cite{Wu:2023TDS, Cardoso2024:MCGDiff, Kim:2025DAS, Dou2024:FPS} employ a probabilistic selection approach, in which particles are sampled from a multinomial distribution according to their importance weights. 
+% with larger importance weights are more likely to generate a greater number of descendant particles. 
+% are more likely to generate higher reward samples.
+Despite the success of particle sampling approaches for diffusion models, they have not been applicable to flow models due to the absence of stochasticity in their generative process. In this work, we present the first inference-time scaling method for flow models based on particle sampling by introducing stochasticity into the generative process and further increasing sampling diversity through trajectory modification.
+
+\vspace{-0.55\baselineskip}
+\subsection{Inference-Time Scaling with Flow Models}
+\vspace{-0.5\baselineskip}
+To our knowledge, Search over Paths (SoP)~\cite{Ma2025:SoP} is the only inference-time scaling method proposed for flow models, which applies a forward kernel to sample particles from the deterministic sampling process of flow models. 
+However, SoP does not explore the possibility of modifying the reverse kernel, which could enable the application of more diverse particle-sampling-based methods~\cite{Li2024:SVDD, Singh:2025CoDE, Kim:2025DAS}.
+To the best of our knowledge, we are the \emph{first} to investigate the application of particle sampling to flow models through the lens of the reverse kernel.
+
+% Inference time scaling enhances the performance of pretrained models by allocating additional compute at test time. 
+% We review search algorithms that navigate the sample space of pretrained models to identify high-reward outputs. 
+% The simplest inference-time search algorithm is Best-of-N (BoN)~\cite{Stiennon:2020BoN,Touvron:2023llama2,Tang:2024Realfill}, which generates $N$ batches of samples and selects the one with the highest reward.
+
+% Despite its simplicity, this approach often requires a large $N$ to achieve high rewards~\cite{}. 
+
+% To address the inefficiency of BoN, paritcle sampling adopts modular correction steps that enable sampling more particles from high-reward samples that scale the effective sample size. 
+% Due to their efficient scaling properties, particle sampling methods have been widely adopted in the diffusion model literature. 
+% Below, we introduce some of the key approaches that leverage particle sampling to enhance inference-time reward alignment in diffusion-based generation. 
+
+% SVDD~\cite{Li2024:SVDD} interleaves the selection step within the intermediate denoising process, choosing the best sample from the $K$ particles at each step. CoDe~\cite{Singh:2025CoDE} extends this idea by applying the selection step only after $M$ denoising steps. Instead of selecting the best sample at each step, Sequential Monte Carlo (SMC)~\cite{Wu:2023TDS,Cardoso2024:MCGDiff,Kim:2025DAS,FPS} takes a probabilistic selection approach, where particles with larger importance weights have a higher likelihood of generating more descendant particles. 
+
+%Inspired by the success of particle sampling in diffusion models, we aim to unlock the potential of particle sampling methods in flow models.
+
+
+
+
+% Inference-time scaling aims to improve the quality of outputs from pretrained models by allocating more computation during the sampling process. 
+% SVDD~\cite{SVDD} utilizes Importance Sampling to approximate the optimal soft policy derived from the entropy-regularized reward maximization objective. Similarly, DAS~\cite{DAS} employs Sequential Monte Carlo (SMC), building on previous works that focused on solving inverse problems and conditional generation~\cite{FPS, TDS, MCGDiff, SMCDiff}.
+
+% Apart from MCMC-based methods, a notable approach in inference-time scaling is Best-of-$N$\cite{Learning to Summarize from Human Feedback, RealFill}, which generates $N$ samples and selects the one with the highest reward.
+% Despite its simplicity, this approach often requires a large $N$ to achieve high rewards.
+% To tackle this inefficiency, Blockwise Best-of-$N$~\cite{Controlled Decoding from Language Models, CoDe: Blockwise Control for Denoising Diffusion Models} generates $N$ samples after completing $M$ blocks of decoding (denoising) and selects the one with the highest score. 
+
+% Inspired by rewind-based diffusion samplers~\cite{Diffusion Rejection Sampling, ReStart, StochSync}, recent works~\cite{Inference-Time Scaling for Diffusion Models, Correcting Diffusion Generation through Resampling} propose adding noise to the current sample to explore the local space along the denoising trajectories. 
+% While applying stochastic noise to the current sample can help navigate its local space, it also risks deviating from the intended trajectory and misguiding the denoising process. 
+% \Jaihoon{In this work, we propose our novel sampler~\Ours{} which aims to tackle this issue by removing the stochasticity in the rewind phase.}
+
+% -------------------------------------------------------------------------------
+
+
+% \subsection{Diffusion Model Fine-Tuning for Alignment}
+
+% % The alignment of pretrained models has been extensively explored in LLMs~\cite{DPO, ConstitutionAI, Training language models to follow instructions with human feedback, Training a Helpful and Harmless Assistant with
+% % Reinforcement Learning from Human Feedback}.
+% In the context of diffusion model reward alignment, previous works have proposed directly fine-tuning~\cite{Prabhudesai2023:AlignProp,Xu2023:ImageReward,Clark2024:DRaFT} the pretrained model parameters to optimize the expected reward. 
+% For non-differentiable reward, the diffusion sampling process is formulated as a Markov Decision Process, enabling the application of Reinforcement Learning approaches to optimize the reward~\cite{Black2024:DDPO,Yang2024:D3PO}. 
+% To mitigate reward over-optimization, previous works~\cite{Fan:2023DPOK,Wallace:2024DiffusionDPO,Uehara:2024Finetuning} have introduced entropy regularized objective function. 
+
+% Despite these efforts, fine-tuning-based approaches still face limitations such as mode collapse~\cite{Gao:2023Scaling,Zhang:2024TDPOR,Kim:2025DAS}. Additionally, these approaches require retraining whenever the reward or the pretrained model changes. This highlights a key advantage of the inference-time scaling approach, which offers a plug-and-play capability that can be applied independently of the reward or pretrained model.  
+
+% % -------------------------------------------------------------------------------
+
+% \subsection{Gradient-Based Guidance}
+
+% Early works on guiding a pretrained diffusion model required the gradient of a time-dependent classifier for each application~\cite{Song:2021SDE,Dhariwal:2021CG}, which limited scalability. 
+% \citeauthor{Chung:2023DPS} addressed this limitation by approximating the gradient with the posterior mean, allowing diffusion models to be applied to a wide range of inverse problems~\cite{Song:2023LGD,Yu:2023FreeDOM,Ye:2024TFG,Bansal:2023UGD}. 
+% % \citeauthor{CFG} introduced CFG, which implicitly models the gradient of the classifier by jointly training conditional and unconditional diffusion models. 
+
+% Another line of work has focused on optimizing the initial noise to maximize the reward by leveraging few-step generative models~\cite{Benhamu:2024DFlow,Eyring2024:ReNO} or employing efficient backpropagation techniques~\cite{Wallace:2023DOODL, Tang:2024DNO,Shaikh:2024DITTO,Guo:2024InitNO,Ahn:2024Noise}. 
+% However, these approaches are limited in providing guidance when the reward is not differentiable. 
+% In this work, we present a versatile approach that can be applied regardless of the differentiability of the reward. 

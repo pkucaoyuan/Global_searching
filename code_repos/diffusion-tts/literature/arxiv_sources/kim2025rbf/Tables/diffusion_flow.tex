@@ -1,0 +1,53 @@
+\begin{table}[!t]
+\setlength{\tabcolsep}{2.9pt}
+\scriptsize
+\centering
+\caption{\textbf{Comparison of diffusion and flow models}.} 
+\label{tab:diff_flow_comp}
+\renewcommand{\arraystretch}{1.4}
+
+\newcolumntype{Z}{>{\centering\arraybackslash}m{0.13\linewidth}}
+\newcolumntype{X}{>{\centering\arraybackslash}m{0.08\linewidth}}
+
+\begin{tabular}{X | Z | Z Z Z Z | X}
+\toprule
+Type & Model & ImageReward~\cite{Xu2023:ImageReward} & HPS~\cite{Wu2023:hps} & PickScore~\cite{Kirstain2023:pickapic} & CLIP Score~\cite{radford2021:CLIP} & Steps \\
+\hline
+\multirow{2}{*}{Diffusion} 
+& SD2~\cite{Rombach:2022LDM}     & 0.429 & 0.280 & 0.218 & 0.269 & 50 \\
+& SANA-1.5~\cite{xie2025sana}    & 0.894 & 0.284 & 0.222 & 0.270 & 20 \\
+\hline
+\multirow{2}{*}{Flow} 
+& SD3~\cite{Esser2403:scaling}   & 1.154 & 0.294 & 0.226 & 0.277 & 28 \\
+& FLUX~\cite{BlackForestLabs:2024Flux} & 1.054 & 0.290 & 0.226 & 0.275 & 5 \\
+\bottomrule
+\end{tabular}
+\label{tab:appendix_diff_flow}
+\end{table}
+
+
+
+
+
+% \begin{table}[!t]
+%     \setlength{\tabcolsep}{2.9pt}
+%     \tiny
+%     \centering
+%     \caption{\cmt{\textbf{Comparison of diffusion and flow models}. \textsuperscript{*} denotes results obtained using more denoising steps than those used for flow models.}}
+%     \label{tab:diff_flow_comp}
+%     % \vspace{-\baselineskip}
+%     \newcolumntype{Z}{>{\centering\arraybackslash}m{0.15\linewidth}}
+%     \newcolumntype{X}{>{\centering\arraybackslash}m{0.22\linewidth}}
+%     \begin{tabular}{ Z | Z | Z Z Z Z}
+%         \toprule
+%         Diffusion  Model & PickScore~\cite{Kirstain2023:pickapic} & Aesthetic Score~\cite{Schuhmann:aesthetics} & HPS~\cite{Wu2023:hps} & ImageReward~\cite{Xu2023:ImageReward} \\
+%         \midrule 
+%         SD2~\cite{Rombach:2022LDM} & - & - & - & - \\
+%         SD2\textsuperscript{*}~\cite{Rombach:2022LDM} & - & - & - & - \\
+%         SD2+SVDD~\cite{Li2024:SVDD} & - & - & - & - \\
+%         SD2+SVDD~\cite{Li2024:SVDD} & - & - & - & - \\
+%         SD2\textsuperscript{*}+SVDD~\cite{Li2024:SVDD} & - & - & - & - \\
+%         SANA-1.5~\cite{} & - & - & - & - \\
+%         \bottomrule
+%     \end{tabular}
+% \end{table}

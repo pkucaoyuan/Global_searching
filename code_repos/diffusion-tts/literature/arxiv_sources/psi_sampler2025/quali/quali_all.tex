@@ -1,0 +1,101 @@
+\newcommand{\imgwidth}{0.137\textwidth} 
+\begin{figure*}[h!]
+{
+\scriptsize
+\setlength{\tabcolsep}{0.2em} 
+\renewcommand{\arraystretch}{0}
+\centering
+
+\begin{tabularx}{\textwidth}{c Y Y Y Y Y Y Y}
+    & \hspace{0.8em}\textbf{FreeDoM}~\cite{yu2023freedom} & \hspace{0.4em}\textbf{TDS}~\cite{wu2023tds} & \hspace{0.2em}\textbf{DAS}~\cite{kim2025DAS}  & \textbf{Top-$K$-of-$N$} & \textbf{ULA} & \textbf{MALA} & \textbf{\methodname{}} \\
+    \midrule
+    \\[0.1em]
+
+    \rotatebox{90}{\hspace{-1.2cm}\rule{0pt}{2ex}\textbf{Layout-to-Image}}
+    & \includegraphics[width=\imgwidth]{figures/spatial/1/free_00019.png} &
+    \includegraphics[width=\imgwidth]{figures/spatial/1/smc_00019.png} &
+    \includegraphics[width=\imgwidth]{figures/spatial/1/das_00019.png} &
+    \includegraphics[width=\imgwidth]{figures/spatial/1/bon_00019.png} &
+    \includegraphics[width=\imgwidth]{figures/spatial/1/ula_00019.png} &
+    \includegraphics[width=\imgwidth]{figures/spatial/1/mala_00019.png} &
+    \includegraphics[width=\imgwidth]{figures/spatial/1/pcnl_00019.png} \\[0.3em]
+    & \multicolumn{7}{c}{\small{\textit{``A \textcolor{blue}{person} is sitting on a \textcolor{red}{chair} and a \textcolor{orange}{bird} is on top of a \textcolor{purple}{horse} while \textcolor{purple}{horse} is on the top of a \textcolor{green}{car}.''}}} \\[0.35em]
+    & \includegraphics[width=\imgwidth]{figures/spatial/2/free_00090.png} &
+    \includegraphics[width=\imgwidth]{figures/spatial/2/smc_00090.png} &
+    \includegraphics[width=\imgwidth]{figures/spatial/2/das_00090.png} &
+    \includegraphics[width=\imgwidth]{figures/spatial/2/bon_00090.png} &
+    \includegraphics[width=\imgwidth]{figures/spatial/2/ula_00090.png} &
+    \includegraphics[width=\imgwidth]{figures/spatial/2/mala_00090.png} &
+    \includegraphics[width=\imgwidth]{figures/spatial/2/pcnl_00090.png} \\[0.3em]
+    & \multicolumn{7}{c}{\small{\textit{``An \textcolor{green}{airplane} and a \textcolor{purple}{balloon} are on the ground with a \textcolor{red}{horse} and a \textcolor{blue}{car} in the sky.''}}} \\
+    % \\[0.2em]
+
+    \midrule
+    \\[0.1em]
+    
+    \rotatebox{90}{\hspace{-3cm}\rule{0pt}{2ex}\textbf{Quantity-Aware}}
+    & \includegraphics[width=\imgwidth]{figures/counting/freedom_5_orig.png} &
+    \includegraphics[width=\imgwidth]{figures/counting/smc_5_orig.png} &
+    \includegraphics[width=\imgwidth]{figures/counting/das_5_orig.png} &
+    \includegraphics[width=\imgwidth]{figures/counting/bon_5_orig.png} &
+    \includegraphics[width=\imgwidth]{figures/counting/ula_5_orig.png} &
+    \includegraphics[width=\imgwidth]{figures/counting/mala_5_orig.png} &
+    \includegraphics[width=\imgwidth]{figures/counting/pcnl_5_orig.png} \\[0.3em]
+    & \multicolumn{7}{c}{\small{\textit{``\textcolor{red}{82} blueberries''}}} \\[0.35em]
+    & \includegraphics[width=\imgwidth]{figures/counting/freedom_5_overlay.png} &
+    \includegraphics[width=\imgwidth]{figures/counting/smc_5_overlay.png} &
+    \includegraphics[width=\imgwidth]{figures/counting/das_5_overlay.png} &
+    \includegraphics[width=\imgwidth]{figures/counting/bon_5_overlay.png} &
+    \includegraphics[width=\imgwidth]{figures/counting/ula_5_overlay.png} &
+    \includegraphics[width=\imgwidth]{figures/counting/mala_5_overlay.png} &
+    \includegraphics[width=\imgwidth]{figures/counting/pcnl_5_overlay.png} \\[0.3em]
+    & \small21 {\tiny ${(\Delta 61)}$} & \small66 {\tiny ${(\Delta 16)}$} & \small62 {\tiny ${(\Delta 20)}$} & \small73 {\tiny ${(\Delta 9)}$} & \small71 {\tiny ${(\Delta 11)}$} & \small63 {\tiny ${(\Delta 19)}$} & \small82 \textcolor{blue}{{\tiny ${(\Delta 0)}$}}\\[0.35em]
+    & \includegraphics[width=\imgwidth]{figures/counting/freedom_28_orig.png} &
+    \includegraphics[width=\imgwidth]{figures/counting/smc_28_orig.png} &
+    \includegraphics[width=\imgwidth]{figures/counting/das_28_orig.png} &
+    \includegraphics[width=\imgwidth]{figures/counting/bon_28_orig.png} &
+    \includegraphics[width=\imgwidth]{figures/counting/ula_28_orig.png} &
+    \includegraphics[width=\imgwidth]{figures/counting/mala_28_orig.png} &
+    \includegraphics[width=\imgwidth]{figures/counting/pcnl_28_orig.png} \\[0.3em]
+    & \multicolumn{7}{c}{\small{\textit{``\textcolor{red}{33} coins''}}} \\[0.35em]
+    & \includegraphics[width=\imgwidth]{figures/counting/freedom_28_overlay.png} &
+    \includegraphics[width=\imgwidth]{figures/counting/smc_28_overlay.png} &
+    \includegraphics[width=\imgwidth]{figures/counting/das_28_overlay.png} &
+    \includegraphics[width=\imgwidth]{figures/counting/bon_28_overlay.png} &
+    \includegraphics[width=\imgwidth]{figures/counting/ula_28_overlay.png} &
+    \includegraphics[width=\imgwidth]{figures/counting/mala_28_overlay.png} &
+    \includegraphics[width=\imgwidth]{figures/counting/pcnl_28_overlay.png} \\[0.3em]
+    & \small16 {\tiny ${(\Delta 17)}$} & \small39 {\tiny ${(\Delta 6)}$} & \small38 {\tiny ${(\Delta 5)}$} & \small30 {\tiny ${(\Delta 3)}$} & \small22 {\tiny ${(\Delta 11)}$} & \small35 {\tiny ${(\Delta 2)}$} & \small33 \textcolor{blue}{{\tiny ${(\Delta 0)}$}} \\
+    \\[0.2em]
+
+    \midrule
+    \\[0.1em]
+
+    \rotatebox{90}{\hspace{-0.7cm}\rule{0pt}{2ex}\textbf{Aesthetic}}
+    & \includegraphics[width=\imgwidth]{figures/aesthetic/1/free_00013.png} &
+    \includegraphics[width=\imgwidth]{figures/aesthetic/1/smc_00013.png} &
+    \includegraphics[width=\imgwidth]{figures/aesthetic/1/das_00013.png} &
+    \includegraphics[width=\imgwidth]{figures/aesthetic/1/bon_00013.png} &
+    \includegraphics[width=\imgwidth]{figures/aesthetic/1/ula_00013.png} &
+    \includegraphics[width=\imgwidth]{figures/aesthetic/1/mala_00013.png} &
+    \includegraphics[width=\imgwidth]{figures/aesthetic/1/pcnl_00013.png} \\[0.3em]
+    & \small{6.351} & \small{7.030} & \small{6.815} & \small{6.925} & 
+                     \small{6.974}      &
+    \small{7.012} & \small{7.423} \\[0.35em]
+    & \includegraphics[width=\imgwidth]{figures/aesthetic/2/free_00004.png} &
+    \includegraphics[width=\imgwidth]{figures/aesthetic/2/smc_00004.png} &
+    \includegraphics[width=\imgwidth]{figures/aesthetic/2/das_00004.png} &
+    \includegraphics[width=\imgwidth]{figures/aesthetic/2/bon_00004.png} &
+    \includegraphics[width=\imgwidth]{figures/aesthetic/2/ula_00004.png} &
+    \includegraphics[width=\imgwidth]{figures/aesthetic/2/mala_00004.png} &
+    \includegraphics[width=\imgwidth]{figures/aesthetic/2/pcnl_00004.png} \\[0.3em]
+    & \small{5.836} & \small{7.093} & \small{7.161} & \small{7.029} & 
+                        \small{7.161}   &
+    \small{7.098} & \small{7.279} \\
+\end{tabularx}
+\caption{Qualitative results for each application demonstrate that \methodname{} consistently generates images aligned with the given conditions. Detailed analysis of each case is provided in Sec.~\ref{sec:experiments:qualitative}.
+}
+\label{fig:quali_all}
+}
+% \vspace{-\baselineskip}
+\end{figure*}

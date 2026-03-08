@@ -1,0 +1,146 @@
+\documentclass{article}
+
+
+% if you need to pass options to natbib, use, e.g.:
+    % \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading neurips_2025
+
+% ready for submission
+% \usepackage{neurips_2025}
+
+
+% to compile a preprint version, e.g., for submission to arXiv, add add the
+% [preprint] option:
+% \usepackage[preprint]{neurips_2025}
+% \usepackage[preprint, nonatbib]{neurips_2025}
+
+
+% to compile a camera-ready version, add the [final] option, e.g.:
+\usepackage[final]{neurips_2025}
+
+
+% to avoid loading the natbib package, add option nonatbib:
+% \usepackage[nonatbib]{neurips_2025}
+
+\input{math_commands}
+\input{shortcut}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+% \usepackage{xcolor}         % colors
+
+
+\title{Inference-Time Scaling for Flow Models via\\Stochastic Generation and Rollover Budget Forcing}
+
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to LaTeX to determine where to break the
+% lines. Using \AND forces a line break at that point. So, if LaTeX puts 3 of 4
+% authors names on the first line, and the last on the second line, try using
+% \AND instead of \And before the third author name.
+
+
+\author{%
+  Jaihoon Kim\textsuperscript{$\ast$} $\quad$ Taehoon Yoon\textsuperscript{$\ast$} $\quad$ Jisung Hwang\textsuperscript{$\ast$} $\quad$ Minhyuk Sung \\
+  KAIST \\
+  {\tt\small \{jh27kim,taehoon,4011hjs,mhsung\}@kaist.ac.kr}
+  % examples of more authors
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \AND
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+}
+
+% \def\thefootnote{*}\footnotetext{Equal contribution.}\def\thefootnote{\arabic{footnote}}
+
+\newif\ifpaper
+\paperfalse
+\newcommand{\cmt}[1]{\textcolor{blue}{#1}}
+\newcommand{\ccmt}[1]{\textcolor{black}{#1}}
+
+\begin{document}
+
+\maketitle
+
+\begin{figure}[h!]
+    \centering
+    \captionsetup{type=figure}
+    \vspace{-25pt}
+    \includegraphics[width=0.86\textwidth]{Figures/teaser/teaser.pdf}
+    \vspace{-2pt}
+    \caption{\textbf{Diverse applications of our inference-time scaling method.} 
+    Pretrained flow models struggle to generate images that align with complex prompts (left side of each case), whereas our inference-time scaling effectively extends their capabilities to achieve precise alignment (red box). 
+    % More computation during inference improves alignment, reducing Residual Sum of Squares (RSS) over time (top row). Our flow-based method outperforms diffusion models, even with five times fewer number of function evaluations (NFEs) (top-right).
+    % For compositional text-to-image generation applications (``logical'', ``comparison'', ``spatial relation''), we use the reward from VQAScore~\cite{Lin:2024CLIPFlanT5} to ensure precise alignment with the input text, where the description is particularly challenging for typical generative models to satisfy (left side of each case). We use the object detection score~\cite{Liu:2024GroundingDINO} for the ``counting'' application and the aesthetic score~\cite{Schuhmann:aesthetics} for the ``aesthetic'' application. 
+    % For ``concept erasure'', the reward is the number of removed concepts computed using VLM~\cite{qwen} queries. The red box denotes the results of our method.
+    }
+    \label{fig:teaser}
+    \vspace{-0.7\baselineskip}
+\end{figure}
+
+\def\thefootnote{*}\footnotetext{Equal contribution.}\def\thefootnote{\arabic{footnote}}
+
+\input{Sections/00_Abstract}
+\input{Sections/01_Introduction}
+\input{Sections/02_Related_Work}
+\input{Sections/03_Problem_Definition}
+\input{Sections/04_Background}
+\input{Sections/05_Method}
+\input{Sections/06_Applications}
+\input{Sections/07_Conclusion}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%% REFERENCES
+{\small
+\bibliographystyle{plain}
+\bibliography{main}
+}
+
+\clearpage
+\newpage
+\input{checklist}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\ifpaper
+\else
+    \clearpage
+    \newpage
+    \onecolumn
+    \appendix
+    \setcounter{section}{0}
+    \def\thesection{\Alph{section}}
+    \section*{Appendix}
+    % WARNING: do not forget to delete the supplementary pages from your submission 
+    \input{Sections/99_Appendix}
+\fi 
+
+
+\end{document}

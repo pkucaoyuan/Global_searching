@@ -1,0 +1,83 @@
+
+\begin{table*}[t!]
+\centering
+\captionsetup{width=\textwidth}
+\renewcommand{\arraystretch}{1.4}
+
+\begin{adjustbox}{max width=\textwidth, center}
+\begin{tabular}{
+  >{\centering\arraybackslash}m{2cm}   % Task
+  >{\centering\arraybackslash}m{3.5cm}    % Metric
+  >{\centering\arraybackslash}m{1.8cm}    % DPS
+  >{\centering\arraybackslash}m{1.8cm}  % FreeDoM
+  >{\centering\arraybackslash}m{1.4cm}
+  >{\centering\arraybackslash}m{1.4cm} 
+  >{\centering\arraybackslash}m{1.9cm}
+  >{\centering\arraybackslash}m{1.4cm}
+  >{\centering\arraybackslash}m{1.4cm}
+  >{\centering\arraybackslash}m{1.9cm}
+}
+\toprule
+\multicolumn{2}{c}{} 
+& \multicolumn{2}{c}{\multirow{2}{*}{\textbf{\large Single Particle}}} 
+& \multicolumn{6}{c}{\textbf{\large SMC-Based Methods}} \\
+
+\cmidrule(lr){5-10}
+
+\textbf{\Large Tasks} & \textbf{\Large Metrics}
+& \multicolumn{2}{c}{} 
+& \multicolumn{2}{c}{\textbf{Sampling from Prior}} 
+& \multicolumn{4}{c}{\textbf{Sampling from Posterior}} \\
+
+\cmidrule(lr){3-4} \cmidrule(lr){5-6} \cmidrule(lr){7-10}
+
+\multicolumn{2}{c}{} 
+& DPS~\cite{chung2023dps} & FreeDoM~\cite{yu2023freedom}
+& TDS~\cite{wu2023tds} & DAS~\cite{kim2025DAS}
+& Top-$K$-of-$N$ & ULA & MALA & \methodname{} \\
+\midrule
+
+\multirow{4}{*}{\shortstack{\textbf{\large Layout}\\\textbf{\large to}\\\textbf{\large Image}}} 
+& ${\text{GroundingDINO}}^\dagger$~\cite{liu2023grounding} $\uparrow$  &   0.166    &   0.177     &    0.417   &   0.363   &  \underline{0.425} &  0.370 &   0.401   &    \textbf{0.467}   \\
+\cline{2-10}
+
+& mIoU~\cite{Hou2024saliencedetr} $\uparrow$    &   0.215    &   0.229     &   0.402    &   0.342   &  \underline{0.427} &  0.374 &   0.401   &   \textbf{0.471}    \\
+
+% & Acc (\%)~\cite{Eslam2023hrs} $\uparrow$     &   52.0    &   52.0   &  \underline{64.0}   &   62.0   &   \underline{64.0} &  \textbf{68.0} &   56.0   &  60.0   \\
+& ImageReward~\cite{xu2023imagereward} $\uparrow$ &  0.705     & 0.713   &   0.962   &   0.938   &  0.957  &  0.838 &   \underline{0.965}   &   \textbf{1.035}   \\
+
+& VQA~\cite{lin2024vqa} $\uparrow$       &    0.684   &  0.650      &   0.794    &   0.784   &  \textbf{0.855}  &  0.783  &   0.789   &   \underline{0.810}    \\
+
+
+% pcnl2 bon2 smc2 mala ula das3
+\midrule
+
+% \multirow{5}{*}{\textbf{\large Counting}}  
+\multirow{5}{*}{\shortstack{\textbf{\large Quantity}\\\textbf{\large Aware}}} 
+& ${\text{T2I-Count}}^\dagger$~\cite{qian2025t2icount} $\downarrow$   & 14.187 & 15.214 & 1.804 & 1.151 & \underline{1.077} & 3.035 & 1.601 & \textbf{0.850} \\
+\cline{2-10}
+& MAE~\cite{AminiNaieni2024countgd} $\downarrow$    & 15.7 & 15.675 & 5.3 & 4.175 & 3.675 & 4.825 & \underline{3.575} & \textbf{2.925} \\
+
+& Acc (\%)~\cite{AminiNaieni2024countgd} $\uparrow$    & 0.0 & 0.0 & \underline{27.5} & 15.0 & 12.5 & 22.5 & 25.0 & \textbf{32.5} \\
+
+% need to revise Image Rewards
+& ImageReward~\cite{xu2023imagereward} $\uparrow$     & 0.746 & 0.665 & 0.656 & 0.507 & \underline{0.752} & 0.743 & 0.742 & \textbf{0.796} \\
+
+& VQA~\cite{lin2024vqa} $\uparrow$    & \underline{0.957} & 0.953 & 0.943 & 0.907 & \textbf{0.960} & 0.943 & 0.941 & 0.951 \\
+
+\midrule
+
+\multirow{3}{*}{\shortstack{\textbf{\large Aesthetic}\\\textbf{\large Preference}}}         
+& ${\text{Aesthetic}}^\dagger$~\cite{schuhmann2022aesthetic} $\uparrow$   &   6.139    &     6.310   &    6.853   &   \underline{6.935}    &  6.879    &  6.869    &   6.909  &    \textbf{7.012}   \\
+\cline{2-10}
+& ImageReward~\cite{xu2023imagereward} $\uparrow$    &   1.116    &   1.132     &  1.135     &     \underline{1.166}  &  1.133    &   1.100   &   1.155  &     \textbf{1.171}    \\
+
+& VQA~\cite{lin2024vqa} $\uparrow$   &  \underline{0.968}     &   0.959     &   \textbf{0.970}    &   \textbf{0.970}    &    0.961  &   0.961   &  0.952  &    0.963   \\
+
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\caption{\footnotesize Quantitative comparison of \methodname{} and baselines across three task domains. \textbf{Bold} indicates the best performance, while \underline{underline} denotes the second-best result for each metric. Metrics marked with $^\dagger$ are used as seen reward during reward-guided sampling, where others are held-out reward. Higher values indicate better performance ($\uparrow$), unless otherwise noted ($\downarrow$).}
+\label{tab:overall_table}
+\vspace{-0.4cm}
+\end{table*}

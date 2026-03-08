@@ -1,0 +1,58 @@
+\vspace{-0.1cm}
+\section{Experiments}
+\label{sec:experiments}
+\vspace{-0.1cm}
+\subsection{Experiment Setup}
+\label{sec:experiments:setup}
+% \vspace{-0.2cm}
+We validate our approach across three applications: layout-to-image generation, quantity-aware generation, and aesthetic-preference image generation. 
+In our experiments, the \emph{held-out} reward refers to an evaluation metric that is not accessible during generation and is used solely to assess the generalization of the method. 
+% Full details on reward models and experimental setups are provided in the Appendix~\ref{sec:appx:exp setup and details}.\\
+Full details for each application are provided in Appendix~\ref{sec:appx:exp setup and details}.\\
+For the layout-to-image generation task, where the goal is to place user-specified objects within designated bounding boxes, we use predicted bounding box information from a detection model~\cite{liu2023grounding} and define the reward as the mean Intersection-over-Union (mIoU) between the predicted and target bounding boxes.
+For the quantity-aware image generation task, which involves generating a user-specified object in a specified quantity, we use the predicted count from a counting model~\cite{qian2025t2icount} and define the reward as the negative smooth L1 loss between the predicted and target counts. 
+In both tasks, we include evaluations using held-out reward models to assess generalization. Specifically, for layout-to-image generation, we report mIoU evaluated with a different detection model~\cite{Hou2024saliencedetr} (held-out reward model); for quantity-aware image generation, we report mean absolute error (MAE) and counting accuracy using an alternative counting model~\cite{AminiNaieni2024countgd} (held-out reward model). 
+For aesthetic-preference image generation task, which aims to produce visually appealing images, we use an aesthetic score prediction model~\cite{schuhmann2022aesthetic} as the reward model and use its predicted score as the reward.
+Across all applications, we further evaluate the generated images using ImageReward~\cite{xu2023imagereward} and VQAScore~\cite{lin2024vqa}, which assess overall image quality and text-image alignment. 
+The baselines and our methods are categorized into three groups:
+\begin{itemize}[leftmargin=15pt]
+    \vspace{-0.2cm}
+    \item \textbf{Single-Particle}: DPS~\cite{chung2023dps} and FreeDoM~\cite{yu2023freedom} are methods not based on SMC but instead use a single particle trajectory and perform gradient ascent. They are limited in scaling up the search space due to the use of a single particle.
+    \item \textbf{SMC \& Initial Particles from Prior}: TDS~\cite{wu2023tds} is the SMC-based method we take as the base for our methods. DAS~\cite{kim2025DAS} is a variant introducing tempering  strategy.
+    \item \textbf{SMC \& Initial Particles from Posterior}: We evaluate four posterior-based initialization strategies: Top-$K$-of-$N$, ULA, MALA, and \methodname{}. ULA and MALA use a small step size (0.05) to ensure non-zero acceptance, while \methodname{} employs a larger step size (0.5) for improved performance (See Sec.~\ref{sec:experiments:ealuation of initial particles}).
+\end{itemize}
+\vspace{-0.2cm}
+% We use 25 denoising steps for SMC-based methods and 50 for single-particle methods to compensate their limited exploration. For SMC-based methods, we match the total number of function evaluations (NFE) across all methods, allocating part of the budget to initial particle sampling for posterior-based cases. Prior-based methods use 40 particles, while posterior-based methods use 20, allocating half of the NFE to initialization. We use 1,000 NFE for layout-to-image generation and quantity-aware image generation, and 500 for the aesthetic-preference image generation. For the aesthetic-preference image generation, we use half the number of particles in both settings to reflect the halved NFE. We used FLUX~\cite{BlackForestLabs:2024Flux} as the pretrained score-based generative model. Full experimental details are provided in the Appendix~\ref{sec:appx:exp setup and details}.
+We use 25 denoising steps for SMC-based methods and 50 for single-particle methods to compensate for their limited exploration. For SMC-based methods, we match the total number of function evaluations (NFE) across all methods, allocating half of the budget to initial particle sampling for posterior-based methods. We use FLUX~\cite{BlackForestLabs:2024Flux} as the pretrained score-based generative model. Full experimental details are provided in Appendix~\ref{sec:appx:exp setup and details}.
+
+\input{quali/quali_all}
+\input{tables/overall}
+% \vspace{-0.1cm}
+\subsection{Quantitative Results}
+\vspace{-0.1cm}
+We present quantitative results in Tab.\ref{tab:overall_table}. Across all tasks, \methodname{} consistently achieves the best performance on the given reward and strong generalization to held-out rewards. For SMC-based methods, sampling particles from the posterior distribution yields significant improvements over those that sample directly from the prior, highlighting the importance of posterior-informed initialization. This improvement is particularly notable in complex tasks where high-reward outputs are rare, such as layout-to-image generation and quantity-aware generation. For example, in quantity-aware generation, negative smooth L1 loss improves from 1.804 with TDS (base SMC) to 1.077 with Top-$K$-of-$N$ and further to 0.850 with our \methodname{}. Similarly, for layout-to-image generation, mIoU increases from 0.417 (TDS) to 0.425 with Top-$K$-of-$N$ and 0.467 with \methodname{}.
+% \clearpage
+% \input{figures/graph}
+In contrast, initializing with ULA or MALA yields only marginal gains or even degraded performance, due to the lack of Metropolis-Hastings correction in ULA and the limited exploration capacity of MALA in high-dimensional spaces. Single-particle methods consistently underperform compared to SMC-based methods.
+\vspace{-0.3cm}
+\paragraph{Ablation Study.} We conduct an ablation study that examines how performance varies under different allocations of a fixed total NFE between the initial particle sampling stage (via Top-$K$-of-$K$ or MCMC) and the subsequent SMC stage; full results and analysis are provided in Appendix~\ref{sec:appx:ablation}.
+\vspace{-0.2cm}
+\paragraph{Additional Results Conducted with Other Score-Based Generative Models.} We additionally provide quantitative and qualitative results on all three applications using another score-based generative model, SANA-Sprint~\cite{chen2025sanasprint} in Appendix~\ref{sec:appx:sana}.
+\clearpage
+\input{figures/graph}
+\vspace{-0.4cm}
+\subsection{Qualitative Results}
+\label{sec:experiments:qualitative}
+\vspace{-0.1cm}
+We additionally present qualitative results for each application in Fig.~\ref{fig:quali_all}. For the layout-to-image generation task, we display the input bounding box locations alongside the corresponding phrases from the text prompt, using matching colors for each phrase and its associated bounding box.
+In the quantity-aware image generation task, we overlay the predicted object centroids—obtained from a held-out counting model~\cite{AminiNaieni2024countgd}—to facilitate visual comparison. Below each image, we display the predicted count along with the absolute difference from the target quantity, formatted as $(\Delta\cdot)$. The best-performing case is highlighted in blue.
+For the aesthetic preference task, we display the generated images alongside their predicted aesthetic scores. The first row corresponds to the prompt \textit{"Tiger"}, and the second to \textit{"Rabbit"}. As shown, \methodname{} produces high-quality results across all applications, matching the trends observed in the quantitative evaluations. \\
+From the first and second rows of Fig.~\ref{fig:quali_all}, we observe that baseline methods often fail to place objects correctly within the specified bounding boxes or generate them in entirely wrong locations. For instance, in the first row, most baselines fail to position the bird accurately, and in the second row, none correctly place the car. For quantity-aware generation, the fourth row shows the counted results corresponding to the third row. While \methodname{} successfully generates the target number of blueberries in an image, the baselines exhibit large errors—Top-$K$-of-$N$ comes closest but still misses some. In rows 5 and 6, only \methodname{} correctly generates the target number of coins. In the aesthetic preference task, although all methods produce realistic images, \methodname{} generates the most visually appealing image with the highest aesthetic score. 
+Additional qualitative examples are provided in the Appendix~\ref{sec:appx:additional qualitative}.
+\vspace{-0.1cm}
+\subsection{Evaluation of Initial Particles}
+\label{sec:experiments:ealuation of initial particles}
+\vspace{-0.1cm}
+In Fig.\ref{fig:mcmc_comparison}, we compare MALA and pCNL on the layout-to-image generation task across varying step sizes using four metrics: acceptance probability, reward (mIoU via GroundingDINO~\cite{liu2023grounding}), held-out reward (Salience DETR~\cite{Hou2024saliencedetr}), and sample diversity (LPIPS MPD~\cite{zhang2018unreasonableLPIPS}). All metrics are directly computed from the Tweedie estimates~\cite{efron2011tweedie} of MCMC samples, before the SMC stage. 
+As the step size increases, MALA's acceptance probability rapidly drops to near-zero, while pCNL maintains stable acceptance probability. Larger step sizes generally improve reward scores, with performance tapering off at excessively large steps. Held-out reward trends mirror this pattern, suggesting that the improvements stem from genuinely higher-quality samples rather than reward overfitting~\cite{uehara2024bridging, uehara2024finetuningcontinuoustimediffusionmodels}. 
+Although LPIPS MPD slightly declines with increasing step size due to reduced acceptance, pCNL at step size 2.0 maintains diversity on par with MALA at 0.05. Additional results for other tasks are included in the Appendix~\ref{sec:appx:variying step size}.

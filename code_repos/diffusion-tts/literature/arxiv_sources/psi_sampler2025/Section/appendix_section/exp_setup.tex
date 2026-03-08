@@ -1,0 +1,38 @@
+\section{Experimental Setup and Details}
+\label{sec:appx:exp setup and details}
+In this section, we provide comprehensive details for each application: layout-to-image generation, quantity-aware image generation, and aesthetic-preference image generation. We also include full experimental details.
+\paragraph{Layout-to-Image Generation.}
+This task involves placing user-specified objects within designated bounding boxes~\cite{li2023gligen, xiao2023rnb, phung2023attnrefocusing, lee2024groundit}. We evaluate performance on 50 randomly sampled cases from the HRS-Spatial~\cite{Eslam2023hrs} dataset. As the reward model, we use GroundingDINO~\cite{liu2023grounding}, and measure the alignment between predicted and target boxes using mean Intersection-over-Union (mIoU). For the held-out reward, we compute mIoU using a different object detector, Salience DETR~\cite{Hou2024saliencedetr}. 
+\vspace{-0.3cm}
+\paragraph{Quantity-Aware Image Generation.}
+This task involves generating a user-specified object in a specified quantity~\cite{kang2025counting,binyamin2024count, zafar2024iterativecountgeneration}. We evaluate methods on a custom dataset constructed via GPT-4o~\cite{openai2024gpt4ocard}, comprising 20 object categories with randomly assigned counts up to 90, totaling 40 evaluation cases.
+As the reward model, we used T2ICount~\cite{qian2025t2icount}, which takes a generated image and the corresponding text prompt as input and returns a density map. Summing over this density map yields a differentiable estimate of the object count $n_{\text{pred}}$. The reward is defined as the negative smooth L1 loss:
+\begin{align}
+    \nonumber r_{\text{count}}=
+    \begin{cases}
+        -0.5(n_{\text{pred}} - n_{\text{gt}})^2 & |n_{\text{pred}}-n_{\text{gt}}| < 1, \\
+        -|n_{\text{pred}} - n_{\text{gt}}| + 0.5 & |n_{\text{pred}}-n_{\text{gt}}| \ge 1.
+    \end{cases}
+\end{align}
+where $n_{\text{gt}}$ denotes the input object quantity. For the held-out reward, we used an alternative counting model, CountGD~\cite{AminiNaieni2024countgd}.
+This model returns integer-valued object counts. We apply a confidence threshold of 0.3 and evaluate using mean absolute error (MAE) and counting accuracy, where a prediction is considered correct if $n_{\text{pred}}=n_{\text{gt}}$. 
+\vspace{-0.3cm}
+\paragraph{Aesthetic-Preference Image Generation}
+This task involves generating visually appealing images. We evaluate performance using 45 prompts consisting of animal names, provided in~\cite{black2024ddpo}. As the reward model, we use the LAION Aesthetic Predictor V2~\cite{schuhmann2022aesthetic}, which estimates the aesthetic quality of an image and is commonly used in reward-alignment literature~\cite{kim2025DAS, tang2024finetuningdiffusionmodelsstochastic, uehara2024bridging, black2024ddpo}. 
+
+\vspace{-0.3cm}
+\paragraph{Common Held-Out Reward Models.}
+For all applications, we additionally evaluate the generated images using widely adopted held-out reward models for image quality and text alignment. Specifically, we use ImageReward~\cite{xu2023imagereward}, fine-tuned on human feedback, and VQAScore~\cite{lin2024vqa}, which leverages a visual question answering (VQA) model. 
+Both are based on vision-language models and assess how well the generated image aligns with the input text prompt.
+
+\paragraph{Experimental Details.}
+\vspace{-0.3cm}
+We use FLUX-Schnell~\cite{BlackForestLabs:2024Flux} as the score-based generative model for our method and all baselines. Although FLUX is a flow-based model, SMC-based inference-time reward alignment can be applied by reformulating the generative ODE as an SDE~\cite{ma2024sitexploringflowdiffusionbased,kim2025inference}, as described in Sec.~\ref{sec:problem definition and background:score based gnerative models}. 
+Further to ensure diversity between samples during SMC, we applied Variance Preserving (VP) interpolant conversion~\cite{kim2025inference, lipman2024flowmatchingguidecode}. 
+Apart from FLUX, we additionally report quantitative and qualitative results using another score-based generative model, SANA-Sprint~\cite{chen2025sanasprint}, in Appendix~\ref{sec:appx:sana}. These results demonstrate that the our claims are not tied to a specific model architecture, and additionally highlighting the robustness of \methodname{}.\\
+
+We use 25 denoising steps for all SMC-based methods and 50 for single-particle methods to compensate for their reduced exploration capacity. To ensure fair comparison, we fix the total number of function evaluations (NFE) across all SMC variants—1,000 for layout-to-image and quantity-aware generation tasks, and 500 for aesthetic-preference image generation. For aesthetic-preference image generation, we used half the NFE compared to other tasks because we found it sufficient for performance convergence.
+For methods that sample from the posterior, half of the NFE is allocated to the initial sampling stage, resulting in 20 particles during SMC, while prior-based methods use all NFE for SMC with 40 particles. 
+For the aesthetic-preference image generation, we use half the number of particles in both settings to reflect the halved NFE.
+The ablation study comparing the performance on varying NFE allocation is provided in Appendix~\ref{sec:appx:ablation}.
+For all experiments, we used NVIDIA A6000 GPUs with 48GB VRAM.

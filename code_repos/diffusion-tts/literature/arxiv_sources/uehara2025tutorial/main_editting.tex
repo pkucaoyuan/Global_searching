@@ -1,0 +1,53 @@
+ \section{Editing and Refinement with Diffusion Models}\label{sec:editing}
+
+Thus far, we have focused on inference-time techniques that generate samples from scratch, progressing from a noise state (at $t=T$) to the final state (at $t=0$). In this section, we aim to address two practical scenarios:
+\begin{itemize}
+\item \emph{Editing:} Particularly in biological sequence design, our task is often to \emph{edit} an existing sequence while preserving its original properties and enhancing its target properties. For instance, in antibody design, the typical number of mutations is limited to $5-10$ \citep{bachas2022antibody}. In such cases, the inference-time techniques discussed so far cannot be directly applied.
+\item \emph{Refinement:} Another closely related motivation is the refinement of generated designs. Even when designs are generated from complete noise using inference-time techniques, we may want to \emph{refine} these designs further. Note that many decoding algorithms for BERT-style models have been developed with this objective in mind.
+such as Gibbs sampling \citep{wang2019bert,miao2019cgmh}.
+\end{itemize}
+ In the following sections, we describe how inference-time techniques introduced so far can be adapted for tasks involving editing or refinement.
+
+\begin{AIbox}{Key Message in \pref{sec:editing}}
+Inference-time techniques can be applied to the editing or refinement of designs by incorporating mutation steps within an evolutionary algorithm.
+\end{AIbox}
+
+\subsection{Iterative Refinement in Diffusion Models} 
+
+\begin{algorithm}[!th]
+\caption{Iterative Refinement for Reward Optimization  in Diffusion Models}\label{alg:decoding4}
+\begin{algorithmic}[1]
+     \STATE {\bf Require}: Estimated soft value function $\{\hat v_t\}_{t=T}^0$ (refer to \pref{sec:method_value}), pre-trained diffusion models $\{p^{\pre}_t\}_{t=T}^0$ and an initial sequence $x^{\langle 0 \rangle }_0$ (the index $\langle \cdot \rangle $ means the number of iteration steps). 
+     \FOR{$s \in [0,\cdots,S-1]$} 
+       \STATE  Sample $x^{\langle s+1 \rangle }_k$ from  $q_k(\cdot \mid x^{\langle s \rangle }_0)$ where $q_k$ is a pre-defined noising policy from $x_0$ to $x_k$. 
+        \STATE Use inference-time techniques introduced so far (methods in \pref{sec:derivative_free}, \pref{sec:derivative}), which combine value function and pre-trained models to obtain $x^{\langle s+1 \rangle }_0$, starting from $x^{\langle s+1 \rangle }_k$
+    \STATE (Optional): Filter designs that meet the specified constraints.
+     \ENDFOR
+  \STATE {\bf Output}: $\{ x^{\langle S \rangle}_0\}$
+\end{algorithmic}
+\end{algorithm}
+
+Here, we present an editing-type algorithm designed for reward optimization with diffusion models, summarized in \pref{alg:decoding4}.
+
+The algorithm iteratively performs the following steps:
+\begin{enumerate}
+    \item Noising: Add noise from $x_0$ to $x_k$ for some $k \in [0,T]$. 
+    \item Inference-time alignment: Use inference-time technique to transition back from $x_k$ to $x_0$. 
+    \item Selection: Retain only the designs that achieve high target rewards and satisfy specific constraints. For example, constraints could include an edit distance threshold relative to predefined seed sequences.
+\end{enumerate}
+
+As a special case, when $k=T+1$, the algorithm reduces to the previously introduced inference-time techniques. However, in this scenario, the algorithm may perform poorly if the constraints are difficult to satisfy. By selecting a moderate $k$ closer to $0$, it is possible to generate samples that better adhere to the given constraints.
+
+{
+\subsection{Connection with Evolutionary Algorithms}
+
+Interestingly, we point out that \pref{alg:decoding4} can be viewed as a variant of evolutionary algorithms \citep{branke2008multiobjective}. Recall that a standard evolutionary algorithm iteratively follows the two steps below:
+\begin{itemize}
+    \item \textbf{Mutation}: Generate candidate sequences based on the current designs (e.g., by introducing noise). 
+    \item \textbf{Selection}:  Retain only those designs that achieve high target rewards and satisfy the given constraints. For example, constraints could include an edit distance threshold relative to predefined seed sequences.
+\end{itemize}
+
+In our context, it is evident that the mutation step corresponds to the first stage of our algorithm. However, \pref{alg:decoding4} adopts a more strategic mutation approach by leveraging inference-time techniques instead of random mutations to generate candidate sequences. This incorporation of inference-time techniques significantly enhances the efficient exploration of natural-like designs. 
+
+
+} 

@@ -1,0 +1,222 @@
+\section{Derivative-Based Guidance in Discrete Diffusion Models} \label{sec:derivative_discrete}
+
+We now focus on inference-time techniques specifically designed for discrete diffusion models. In \pref{sec:soft}, we highlighted that exact sampling from the optimal policy is feasible within discrete diffusion models under certain limited scenarios. Here, 
+we revisit this point by demonstrating that exact sampling from the optimal policy can be achieved through polynomial-time computation of value functions. Building on this point, we explain derivative-based guidance following the approach of \citet{nisonoff2024unlocking}. Finally, we formalize the discussion within a continuous-time framework \citep{wang2024finetuning}.
+
+
+
+
+\begin{AIbox}{Takeaways}
+ In discrete diffusion, while the original action space grows exponentially with respect to token length, the nominal action space is polynomial, allowing optimal policies to be sampled with polynomial computation of value functions. This argument has been formalized using Doob's transform in the continuous-time formulation.
+
+Despite this, polynomial computation remains computationally expensive in many practical scenarios. One approach to mitigate this issue is to employ derivative-based guidance.
+\end{AIbox}
+
+\subsection{Exact Sampling in Discrete Diffusion Models}\label{sec:discrete_first}
+
+Our objective in this subsection is to show that sampling from the optimal policy can be achieved with polynomial-time computation of value functions in discrete diffusion models. 
+As a preliminary step, we demonstrate that the effective action space in the pre-trained policy scales \emph{polynomially} with respect to token length, rather than \emph{exponentially}. We then extend this argument to show that the effective action space in the optimal policy also scales polynomially. This leads to the conclusion that sampling from the optimal policy is computationally feasible using polynomial computation, avoiding the need for exponential computation of value functions.   
+
+
+
+
+\paragraph{Closer look at policies from pre-trained models.} Our first objective here is to demonstrate that the effective action space in discrete diffusion models is $LK$ rather than $K^L$, where $L$ is the token length and $K$ is the vocabulary size.
+
+To begin, recall that the pre-trained policy in diffusion models is expressed as:
+\begin{align}\label{eq:original}
+    \prod_{l=1}^L p^{\pre}_{t-1}(x^{l}_{t-1} | x^{1:L}_{t}),\,\, \textit{where}\,\,  p^{\pre}_{t-1}(x^{l}_{t-1} | x^{1:L}_{t}):=\mathrm{I}(x^l_t=x^l_{t-1}) +     Q^{\pre}_{x^l_{t-1}, x^{1:L}_{t} }(t)   (\delta t),
+\end{align}
+where $(\delta t)$ is a discretization step. For example, in maskd diffusion models mentioned (Example~\ref{exa:discrete}), 
+\begin{align*}
+     Q^{\pre}_{x^l_{t-1}, x^{1:L}_{t} }(t):=  
+     \begin{cases}
+            \frac{\alpha_{t-1} - \alpha_t  }{1-\bar \alpha_t}\hat x_0(x_t;\theta^{\pre})\quad \textit{when}\,\,x^l_{t-1}\neq x^l_t, \, x^l_t=\textbf{Mask} \\
+            -\sum_{z \neq x^{1:L}_{t} }Q^{\pre}_{z, x^{1:L}_{t} }(t) \,\,\textit{when}\,x^l_{t-1}= x^l_t,\,x^l_t=\textbf{Mask}, \\
+            0\quad \textit{when}\,\,x^l_t\neq \textbf{Mask}. 
+     \end{cases}
+\end{align*}
+{ At first glance, evaluating the optimal policy based on the pre-trained policy \eqref{eq:original}, i.e., 
+\begin{align*}
+    \exp(v(x^{1:L}_{t-1}))\prod_{l=1}^L p^{\pre}_{t-1}(x^{l}_{t-1} | x^{1:L}_{t})
+\end{align*}
+might seem computationally prohibitive}, as it appears to require $O(L^K)$ evaluations of the value functions. However, it can actually be computed using only $O(LK)$ operations. The key idea lies in identifying an asymptotically equivalent policy, as described below.
+\begin{itemize}
+    \item \textbf{Case 1: A single Token Change.} Consider the scenario where only a single token (position $c \in {1, \dots, L}$) changes in $x^l_{t-1}$. The transition probability is: 
+\begin{align*}
+     p^{\pre}_{t-1}(x^{1:L}_{t-1} \mid x^{1:L}_t)= Q^{\pre}_{x^c_{t-1}, x^{1:L}_{t} }(t) (\delta t)  \times \prod_{l \neq c} \left\{ 1 +Q^{\pre}_{x^l_{t-1}, x^{1:L}_{t} }(t) (\delta t)  \right \}. 
+\end{align*}
+By some algebra, we can approximate this as:
+\begin{align*}
+         p^{\pre}_{t-1}(x^{1:L}_{t-1} \mid x^{1:L}_t)=\underbrace{ Q^{\pre}_{x^c_{t-1}, x^{1:L}_{t} }(t)(\delta t)}_{O(\delta t)\mathrm{term\,(first\,order)} } + O((\delta t)^2). 
+\end{align*}
+\item \textbf{Case 2: Multiple Token Changes.}  When multiple tokens change in $x^l_{t-1}$, similar calculations yield $p^{\pre}_{t-1}(x^{1:L}_{t-1} \mid x^{1:L}_t)=O((\delta t)^{\mathrm{Ch}(x^{1:L}_{t-1},x^{1:L}_t)})$  where $\mathrm{Ch}$ denotes the number of token changes between  $x^{1:L}_{t-1}$ and $x^{1:L}_t$, defined as $\mathrm{Ch}(x_{t-1},x_t) := \|x_{t-1} - x_t\|_1 / 2$.
+\end{itemize}
+
+Summarizing the above, ignoring second-order terms, the resulting asymptotically equivalent policy becomes:
+\begin{align}\label{eq:pre_trained_discrete}
+    p^{\pre}_{t-1}(x^{1:L}_{t-1} \mid x^{1:L}_t)=\begin{cases}
+       0, \quad  \mathrm{Ch}(x^{1:L}_{t-1},x^{1:L}_t) \geq   2,  \\
+      Q^{\pre}_{x^{1:L}_{t-1},x^{1:L}_t}(t)  (\delta t),\quad  \mathrm{Ch}(x^{1:L}_{t-1},x^{1:L}_t) = 1,  \\ 
+     1 +  Q^{\pre}_{x^{1:L}_{t-1},x^{1:L}_t}(t)(\delta t), \quad  \mathrm{Ch}(x^{1:L}_{t-1},x^{1:L}_t) = 0, 
+    \end{cases}
+\end{align}
+where $ Q^{\pre}_{x^{1:L}_{t-1},x^{1:L}_t}(t)$ in the second line implicitly means $Q^{\pre}_{x^{c}_{t-1},x^{1:L}_t}(t)$ where $c$ is the changed token place, and the generator in the third line is 
+$$ 
+Q^{\pre}_{x^{1:L}_{t},x^{1:L}_t}(t) = -\sum_{\{ x'_{t-1}: x'_{t-1}\neq x^{1:L}_t, \mathrm{Ch}(x'_{t-1},x^{1:L}_t)=1 \} }  Q^{\pre}_{x'_{t-1},x^{1:L}_t}(t). 
+$$
+Crucially, since the effective action space in $x_{t-1}$ is $LK$ (instead of exponential in $L$), the computational cost of the above summation only requires $LK$ operations, ensuring polynomial complexity.
+
+\paragraph{Sampling from the Optimal Policy.} Now, let us revisit the formulation of the optimal policy. For simplicity, we denote  $x^{1:L}_{t-1}$ as $x_{t-1}$. Substituting \eqref{eq:pre_trained_discrete} into the form of the optimal policy \eqref{eq:optimal_policy}, we obtain:
+\begin{align*}
+    p^{\star}_{t-1}(x_{t-1} \mid x_t)=\begin{cases}
+       0, \quad \mathrm{Ch}(x_{t-1}, x_{t}) \geq  2, \\
+      \frac{\exp(v_{t-1}(x_{t-1})) Q^{\pre}_{x_{t-1},x_t}(t)  (\delta t)}{\exp(v_{t-1}(x_{t}))\{1 +  Q^{\pre}_{x_{t},x_t}(t)(\delta t)\}  + \sum_{x'_{t-1}} \exp(v_{t-1}(x'_{t-1})) Q^{\pre}_{x'_{t-1},x_t}(t)  (\delta t)   }, 
+      \quad  \mathrm{Ch}(x_{t-1}, x_{t}) = 1, \\ 
+    \frac{ \exp(v_{t-1}(x_{t}))\{1 +  Q^{\pre}_{x_{t-1},x_t}(t)(\delta t)  \} }{\exp(v_{t-1}(x_{t}))\{1 +  Q^{\pre}_{x_{t},x_t}(t)(\delta t)\}   + \sum_{x'_{t-1}} \exp(v_{t-1}(x'_{t-1})) Q^{\pre}_{x'_{t-1},x_t}(t)  (\delta t)   }, \quad  \mathrm{Ch}(x_{t-1}, x_{t}) = 0.
+    \end{cases}
+\end{align*}
+This formulation may seem complex, so let’s simplify it.
+
+For the case when $\mathrm{Ch}(x_{t-1}, x_{t}) = 1$, the expression simplifies to:
+\begin{align*}
+       \frac{\exp(v_{t-1}(x_{t-1})) Q^{\pre}_{x_{t-1},x_t}(t)  (\delta t)}{\exp(v_{t-1}(x_{t})) } + O((\delta t)^2). 
+\end{align*}
+
+Ignoring higher-order terms $O((\delta t)^2)$, we can further streamline the formulation. The complete algorithm is summarized in  \pref{alg:claasify_dscrete} \citep{nisonoff2024unlocking}.  
+
+
+The key takeaway is that we can again avoid the curse of token length, as the computational cost of evaluating the value function remains $LK$. However, in practical applications, even this computational cost may be prohibitive. To address this, two approximation strategies can be employed:
+\begin{itemize}
+    \item \textbf{SMC-Based Guidance (\pref{sec:SMC}) or Value-Based Sampling (\pref{sec:SVDD}) }: These methods are more feasible in practice. Notably, even the value-based sampling described in \pref{sec:derivative_free} requires only $M$ evaluations of the value function, a significant reduction compared to $LK$.
+\item \textbf{Derivative-Based Approximation \citep{nisonoff2024unlocking,vignac2023digress}}: In the next section, we introduce a further reduction technique by computing derivatives of the value functions, effectively minimizing the $LK$ computation overhead.
+\end{itemize}
+
+
+\begin{remark}[Combination with More Advanced Discretization Methods]
+We have employed the most basic discretization method to define policies. However, many state-of-the-art approaches could potentially be applied for policy distillation \citep{campbell2022continuous,ren2024discrete,zhao2024informed}.
+\end{remark}
+
+
+\begin{algorithm}[!th]
+\caption{Classifier Guidance in Discrete Diffusion Models \citep{nisonoff2024unlocking} }\label{alg:claasify_dscrete}
+\begin{algorithmic}[1]
+     \STATE {\bf Require}: Estimated (\textbf{potentially nondifferentiable}) soft value function $\{\hat v_t\}_{t=T}^0$ (refer to \pref{sec:method_value}), pre-trained diffusion models 
+     \FOR{$t \in [T+1,\cdots,1]$}
+     
+        \STATE Sample from the following: 
+        \begin{align*}
+      p^{\star}_{t-1}(x_{t-1} \mid x_t)=\begin{cases}
+          0, \quad  (\mathrm{Ch}(x_{t-1}, x_{t}) \geq  2), \\
+       \frac{\exp(\hat v_{t-1}(x_{t-1})) Q^{\pre}_{x_{t-1},x_t}(t)  (\delta t)}{\exp(\hat v_{t-1}(x_{t})) }, \quad    (\mathrm{Ch}(x_{t-1}, x_{t}) =1),  \\
+            1-  \sum_{\{ x'_{t-1}: \mathrm{Ch}(x'_{t-1}, x_{t})=1\}  }\frac{\exp(\hat v_{t-1}(x'_{t-1})) Q^{\pre}_{x'_{t-1},x_t}(t)  (\delta t)}{\exp(\hat v_{t-1}(x_{t})) }
+            \quad    (\mathrm{Ch}(x_{t-1}, x_{t}) =0).  
+      \end{cases}
+\end{align*}
+     \ENDFOR
+  \STATE {\bf Output}: $x_0$
+\end{algorithmic}
+\end{algorithm}
+
+
+
+
+\subsection{Derivative-Based Guidance in Discrete Diffusion Models}\label{sec:derivative_discrete2}
+
+
+As we did in \pref{sec:intuition}, we perform a Taylor expansion using a one-hot representation. For the case where $\mathrm{Ch}(x_{t-1}, x_{t})=1$, the expression becomes:
+\begin{align*}
+   \frac{ \{\exp(v_{t}(x_{t})) +  \nabla \exp(v_{t}(x_{t}))\cdot (x_{t-1}-x_t) + O( \|x_{t-1}-x_t\|^2_2 ) \} }{ \exp(v_{t}(x_{t})) }\times Q^{\pre}_{x_{t-1},x_t}(t)  (\delta t), 
+\end{align*}
+where $x_t$ is embedded into a \emph{$L\times K$ dimensional one-hot representation}. 
+By ignoring the higher-order terms $O( \|x_{t-1}-x_t\|^2_2 )$, this simplifies to:
+\begin{align}\label{eq:before_approximation}
+   Q^{\pre}_{x_{t-1},x_t}(t)\{ 1  +   \nabla v_{t}(x_{t}) \cdot (x_{t-1}-x_t) \}   (\delta t). 
+\end{align}
+\citet{nisonoff2024unlocking} proposed this approximation as a practical implementation of classifier guidance in discrete diffusion models. This procedure is summarized in \pref{alg:claasify_dscrete2}. 
+
+\begin{remark} Another asymptotically equivalent formulation of \eqref{eq:before_approximation}  is  $ Q^{\pre}_{x_{t-1},x_t}(t)\exp(\nabla v_{t}(x_{t}) \cdot (x_{t-1}-x_t))  (\delta t)$ noting $\exp(x)\approx 1+x$ when $x$ is small. 
+\end{remark}
+
+\begin{algorithm}[!th]
+\caption{Classifier Guidance with Taylor Approximation in Discrete Diffusion Models \citep{nisonoff2024unlocking}  }\label{alg:claasify_dscrete2}
+\begin{algorithmic}[1]
+     \STATE {\bf Require}: Estimated (\textbf{differentiable}) soft value function $\{\hat v_t\}_{t=T}^0$ (refer to \pref{sec:method_value}), pre-trained diffusion models 
+     \FOR{$t \in [T+1,\cdots,1]$}
+      \STATE { Define the following generator: 
+      \begin{align*}
+       Q^{\mathrm{new}}_{x^l_{t-1}, x^{1:L}_{t} }(t)&:=   Q^{\pre}_{x_{t-1},x_t}(t) \{1   +   [ \nabla  \hat v_{t}( x^{1:L}_{t})]_{l} \cdot ( x^l_{t-1} -x^l_{t}) \} \,(\textit{if}\, x^l_{t-1}\neq  x^l_{t} ) \\ 
+       Q^{\mathrm{new}}_{x^l_{t-1}, x^{1:L}_{t} }(t)   &:= -\sum_{x^l_{t-1} \neq x^l_{t}}  Q^{\mathrm{new}}_{x^l_{t-1}, x^{1:L}_{t} }(t)   \,(\textit{if}\, x^l_{t-1}=  x^l_{t} )
+      \end{align*} } 
+
+        \STATE  Sample from 
+        \begin{align*}
+    \prod_{l=1}^L p^{\mathrm{gui}}_{t-1}(x^{l}_{t-1} | x^{1:L}_{t}),\,\, \textit{where}\,\,\,   p^{\mathrm{gui}}_{t-1}(x^{l}_{t-1} | x^{1:L}_{t}):=\mathrm{I}(x^l_t=x^l_{t-1}) + Q^{\mathrm{new}}_{x^l_{t-1}, x^{1:L}_{t} }(t)   (\delta t). 
+\end{align*}
+     \ENDFOR
+  \STATE {\bf Output}: $x^{1:L}_0$
+\end{algorithmic}
+\end{algorithm}
+
+However, it is important to note that this practical version could have a potential issue. Most notably, in discrete spaces, formal derivatives cannot be done, rendering the Taylor expansion technically invalid. Consequently, unlike in continuous domains, the derivative-based approach lacks formal guarantees in discrete spaces.
+
+{ \subsection{Continuous-Time Formalization via Doob Transform}} 
+
+
+
+We now formalize the classifier guidance method for discrete diffusion models in continuous time formulation, as outlined in \pref{sec:discrete_first}. To do so, we first need to understand how discrete diffusion models are framed within the continuous-time formulation. Finally, we formalize the classifier guidance method for diffusion models using the Doob transform in continuous-time Markov chains (CTMC).
+
+\subsubsection{Preparation}
+
+The training of discrete diffusion models follows the same principles as Euclidean diffusion models. We define the forward noising process and aim to learn the denoising process. However, in discrete diffusion models, we must account for the transition from Brownian motion to continuous-time Markov chains (CTMC). Due to this difference, the ``score'' is replaced with the ``ratio''. This substitution is expected, as ratio matching is a well-established method for estimating unnormalized models with discrete data \citep{hyvarinen2007some}, similar to how score matching is widely used for continuous data \citep{hyvarinen2005estimation}.
+
+\paragraph{Forward and Time-Reversal SDE.}
+
+We consider the following family of distributions $q_t \in \RR^{K}$ (a vector summing to 1),  which evolves from $t=0$ to $t=T$ according to a CTMC:
+\begin{align*} 
+\frac{dq_t}{dt} = Q(t) q_t,\quad p_0\sim p_{\data}, 
+\end{align*} 
+where $Q(t) \in \RR^{K \times K}$ is the generator. Typically, $q_t$ is designed to converge toward a simple limiting distribution as $t \to T$.  A common strategy is to introduce a \textit{mask} into $\Xcal$ and gradually mask a sequence so that the limiting distribution becomes fully masked \citep{shi2024simplified,sahoo2024simple}. Specifically, these works define the forward masking process so that $q_t \sim \mathrm{Cat}(\bar \alpha_t x_t + (1 - \bar \alpha_t) \mathbf{m})$ as we saw in Example~\ref{exa:discrete}.
+
+Now, we consider the time-reversal CTMC \citep{sun2022score}, which preserves the marginal distribution. This can be expressed as follows: 
+\begin{align*}
+    \frac{dq_{T-t}}{dt} = \bar Q(T-t)q_{T-t},\quad \bar Q_{y,x}(t) = \begin{cases}
+     \textstyle    \frac{q_t(y)}{q_t(x)} Q_{x,y}(t)\,(y \neq x), \\ 
+    \textstyle     -\sum_{z\neq x} \bar Q_{z,x}(t)\,(y=x), 
+    \end{cases} 
+\end{align*}
+where $Q_{y,x}(t)$ is a $(y,x)$-entry of a generator $Q(t)$. This formulation implies that if we can learn the marginal density ratio $q_t(y)/q_t(x)$, we can sample from the data distribution at $t=T$ by following the above CTMC governed by $\bar Q(T-t)$. For details on training this ratio, see \citet{lou2023discrete}. In the subsequent discussion, we assume that the pre-training phase is complete and a pre-trained discrete diffusion model is available.
+
+\subsubsection{Doob Transform in CTMC}
+
+We are now prepared to formally derive classifier guidance in discrete diffusion models. Assume we have a pre-trained model characterized by the generator $Q^{\pre}(t)$: 
+\begin{align*} \frac{dz_t}{dt} = Q^{\pre}(t)z_t, \quad z_0 \sim \delta(z^\mathrm{ini}_0). \end{align*}
+The distribution generated by the above CTMC corresponds to $p^{\pre}$, which characterizes the natural-like design space. Note that time $0$ represents the noise and time $T$ represents the terminal here. 
+
+With the above preparation, we present the following key theorem: Doob transform in CTMC. 
+
+\begin{Thmbox}{}
+\begin{theorem}[Doob transform (From Theorem 1, 2 in \citet{wang2024finetuning}) ]\label{thm:doob2}
+Define the soft value functions as $v_t(\cdot):=\log \EE_{Q^{\pre}}[\exp(r(z_T))|z_t=\cdot] $ where the expectation is taken with respect to the distribution induced by the pre-trained model. Then, the distribution induced by the CTMC: 
+\begin{align}\label{eq:doob_CTMC}
+    \frac{dz_t}{dt} = Q^{\star}(t)z_t,\quad  Q^{\star}_{x,y}(t) = Q^{\pre}_{x,y}(t)\exp(\{v_t(y)-v_t(x)\}), 
+\end{align}
+is the target distribution, proportional to the target distribution $\exp(r(x))p^{\pre}(x)$. 
+\end{theorem}
+\end{Thmbox}
+
+This theorem indicates that, using standard Euler-Maruyama discretization, we can derive the classifier guidance algorithm introduced in \pref{alg:claasify_dscrete} such that we can sample from the target distribution. Here, we remark that $v_t(\cdot):=\log \EE_{Q^{\pre}}[\exp(r(z_T))|z_t=\cdot] $ is seen as the continuous-time analog of the value function in \pref{eq:soft}. 
+
+The Doob transform for CTMCs is well-established in the literature on the stochastic process (e.g., \citet[Chapter 17]{levin2017markov}; \citet[Chapter 3]{chetrite2015nonequilibrium}). In the context of guidance for discrete diffusion models, \citet{nisonoff2024unlocking} and \citet{wang2024finetuning} introduce this form. Notably, \citet{wang2024finetuning} also proves that, in the context of RL-based fine-tuning, the above CTMC in \eqref{eq:doob_CTMC} maximizes the entropy-regularized reward objective.
+
+
+
+
+
+
+
+
+
+
+
+
+

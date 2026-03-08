@@ -1,0 +1,106 @@
+{ \section{Comparison with Inference-Time Techniques in Language Models}\label{sec:autoregresstive}
+
+{ This section examines the connections and distinctions between guidance methods in diffusion models and language models. We begin by comparing diffusion models with autoregressive language models, such as GPT \citep{brown2020language}, and then proceed to discuss comparisons with masked language models, such as BERT \citep{kenton2019bert}
+. The key message is as follows. 
+
+\begin{AIbox}{Key Message}
+  \begin{itemize}
+    
+\item Most of the guidance methods discussed so far can be directly applied to autoregressive models. However, in autoregressive models, training-free approaches to approximate value functions cannot be utilized due to the lack of forward policies. Additionally, continuous-time formulations play a minimal role within this context.
+
+\item Recall that masked diffusion models can be viewed as hierarchical versions of masked language models. Compared to standard masked language models, masked diffusion models are less susceptible to distributional shifts between training and inference phases. By leveraging this connection, we can develop guidance methods in masked language models by drawing analogies to diffusion models. 
+  \end{itemize}
+\end{AIbox}
+} 
+
+\subsection{Inference-Time Alignment Technique in Autoregressive Models}
+
+In the context of autoregressive pre-trained models, which are prevalent in language models, approaches analogous to derivative-free guidance (\pref{sec:derivative_free}) and derivative-based guidance (\pref{sec:derivative}) have been explored. These methods are summarized in Table~\ref{tab:tab_correpsponding}. While we acknowledge the significant similarities between autoregressive models and diffusion models, we highlight key properties unique to diffusion models that are not accessible in autoregressive models, as discussed below.
+
+
+
+\begin{table}[!th]
+    \centering
+    \caption{Examples of corresponding methods between diffusion models and autoregressive models}
+    \begin{tabular}{c|c|p{0.45\textwidth}} 
+Algorithm   &   Diffusion models     &     Autoregressive models \\ \midrule 
+    SMC-based guidance &  \pref{sec:SMC}  & \citet{zhao2024probabilistic,lew2023sequential} \\ 
+    Value-based sampling & \pref{sec:beam}  &  \citet{yang2021fudge,deng2023reward,mudgal2023controlled,han2024value,khanov2024args} \\
+    Derivative-based guidance & \pref{sec:derivative},\,\ref{sec:derivative_discrete}  & \citet{dathathri2019plug,qin2022cold} (Plug-in-play approach)    \\ 
+        MCTS   & \pref{sec:MCTS} & \citet{leblond2021machine,feng2023alphazero}  
+    \\ \bottomrule 
+    \end{tabular}
+    \label{tab:tab_correpsponding}
+\end{table}
+
+
+\subsubsection{Properties Leveraged in Diffusion Models}
+
+We highlight three fundamental properties of diffusion models that distinguish them from autoregressive models in the construction of inference-time algorithms.
+
+
+\paragraph{Existence of Forward Noising Processes.}
+
+The training of diffusion models employs a forward process (noising process) from $x_0$ to $x_t$, which proves useful not only during training but also in post-training techniques like policy distillation (as discussed in \pref{sec:policy_distil}) and pure distillation methods \citep{salimans2022progressive}.
+
+\paragraph{Training-Free Value Functions.}
+
+Due to the abovementioned forward noising processes, in diffusion models, a one-step denoising mapping from $x_t$ to $x_0$ (as outlined in Example~\ref{exa:continuous}, \ref{exa:discrete}) simplifies the approximation of value functions due to its training-free nature. In contrast, autoregressive models lack such direct mappings and typically rely on Monte Carlo regression or soft Q-learning (\pref{sec:method_value}) to construct value functions, adding significant complexity \citep{han2024value, mudgal2023controlled}. 
+
+
+
+
+\paragraph{Utility of Continuous-Time Formulation.}
+
+In autoregressive models, plug-and-play methods add gradients of classifiers or rewards at inference time \citep{dathathri2019plug, qin2022cold}. While classifier guidance in diffusion models serves a similar purpose, the continuous-time formulation discussed in \pref{sec:derivative} or \pref{sec:derivative_discrete} provides a more formal framework for diffusion models. This formulation is critical in constructing several algorithms and foundations in derivative-based guidance.  
+
+\subsection{Inference-Time Alignment in Masked Language Models}
+
+{ In masked language models, we create inputs with a certain probability of masking and aim to train neural networks (encoders) to demask, i.e., predict the original inputs from the masked ones. Compared to autoregressive language models, masked models are known for their strengths in representation learning, which has led to their widespread use in biology. While lower masking rates are typically employed to capture good representations by understanding global contexts, modern masked language models in biology, such as ESM3 \citep{hayes2024simulating} or masked autoencoders for images \citep{he2022masked} use more aggressive masking rates to enhance their generative capabilities as well.
+
+As noted in Example~\ref{exa:discrete}, masked language models are closely related to masked diffusion models. We will explore these similarities and differences in detail. Then, we discuss alignment methods in masked language models.
+
+
+\subsubsection{Similarities and Differences Compared to Masked Diffusion Models} 
+
+Both training approaches between masked diffusion models and masked language models are fundamentally similar, although the masking rate in masked language models is typically much lower. The key distinction lies in the decoding approach as follows. 
+
+\paragraph{Masked Diffusion Models.} In masked diffusion models, the decoding process is mathematically structured to ensure that the marginal distributions of the ``noised distributions'' ( induced by $q_t$ from $t=0$ to $t=T$ in Example~\ref{exa:discrete})  and the ``denoised distributions'' (induced by $p_t$ from $t=T$ to $t=0$ in Example~\ref{exa:discrete}) are identical. Hence, since this implies that the training distribution and test distribution at inference time are similar, the learned encoder (neural networks mapping $x_t$ to $x_0$) avoids distributional shifts. Relatedly, the likelihood of a sample, which plays a crucial role in biological applications such as variant effect prediction \citep{livesey2023advancing} or as a key measure to characterize fitness (naturalness) \citep{hie2024efficient}, can be formally computed using the ELBO bound. This bound offers a formal guarantee in the sense that, in the continuous-time limit as $T$ approaches infinity and with an ideal nonparametric neural network, it is tightly achieved. More specifically, when $T\to \infty$, recalling \eqref{eq:loss_discrete}, it is approximated by 
+\begin{align*}
+    \int_{t=0}^{t=1} \EE_{x_t \sim q_t(\cdot\mid x_0)}\left [ \frac{\bar \alpha'_t}{1-\bar \alpha_t}\rI(x_t = \textbf{Mask})\log \langle x_0,\log \hat x_0(x_t)\rangle \right ]dt. 
+\end{align*}
+
+
+\paragraph{Masked Language Models.} In masked language models, specific positions to unmask must be defined, with various decoding approaches available, such as confidence-based decoding, left-to-right decoding, and random decoding. While these decoding methods bear certain similarities to masked diffusion models, in which inputs are progressively masked, no universally prescribed approach exists.
+
+Even when a particular decoding method is selected, distributional shift remains a potential issue, as the learned encoder may not accurately reflect the distribution induced by the chosen decoding strategy (i.e., a mismatch between the training and inference-time distributions). Additionally, ``formally'' calculating the likelihood is challenging, as it is dependent on the decoding method. Given a sequence with $x^{1:L}$, standard approximation techniques include pseudo-likelihood estimation \citep{miao2019cgmh}: 
+\begin{align*}
+\sum_{i=1}^L  \log p(x^{i}| (x^{1:L} \setminus x^{i}) ), 
+\end{align*}
+where $(x^{1:L} \setminus x^{i})$ denotes the sequence $x^{1:L}$ with the $i$-th token replaced by a masked token. Another way is to use Monte Carlo sampling across multiple decoding strategies:
+{\begin{align*}
+  \frac{1}{|\mathcal{G}|}\sum_{\sigma \in \Gcal} \sum_{i=1}^L \log p(x^{\sigma(1)\sigma(2)\cdots\sigma(i)}|x^{\sigma(1)\sigma(2)\cdots\sigma(i-1)}), 
+\end{align*}
+} 
+where $\mathcal{G}$ is a set that consist of permutation among $L$ tokens. 
+However, these methods lack formal guarantees or could easily suffer from distributional shift. 
+
+
+\subsubsection{Adaptation of Alignment Methods}
+
+Various decoding methods have been extensively explored in masked language models \citep{miao2019cgmh,wang2019bert}. However, to the best of the author’s knowledge, inference-time alignment methods have received less attention, partly due to the recent success of autoregressive models over masked language models in generative tasks. Here, we illustrate how the alignment methods discussed for diffusion models can be readily adapted for masked language models.
+
+
+Suppose we aim to decode from $x_T$ (fully masked) to $x_0$ (non-masked), where each 
+$x$ belongs to the space with size $|K|^L$, with $K$ as the vocabulary size and $L$ as the token length. For $x_t\,(t\in[0,T])$, several tokens remain masked. Drawing an analogy from diffusion models, we now explain the formulation of the pre-trained policy and value function in masked language models.
+
+
+\begin{itemize}
+    \item \textbf{Pre-Trained Denoising Policy}: Suppose we are now at $x_{t}$. At this point, we need to decide which position to unmask. We can use any standard method, such as confidence-based selection, random selection, or left-to-right selection (similar to autoregressive models). After selecting the position, we determine the most suitable token using the encoder’s output using top-K-sampling, for example. We refer to this as the pre-trained policy $p^{\pre}_{t-1}(\cdot \mid x_t)$ mapping from $|K|^{L}$ to $\Delta(|K|^{L} ) $ in masked language models.    
+    \item \textbf{Value Function}: 
+Suppose we are now at $x_t$. In masked language models, we can unmask from $x_t$ to $x_0$ in a single step. Denoting this as $\hat x_0(x_t)$, we define $r(\hat x_0(x_t))$ as the value function. This approach is analogous to defining the value function as in the posterior mean approximation, as discussed in \pref{sec:posterior_mean}. 
+\end{itemize} 
+
+We are now prepared to discuss alignment methods. After defining pre-trained policies and value functions, a natural strategy is to approximate the policy $$p^{\star}_{t-1}(x_{t-1} \mid x_t)\propto \exp(r(\hat x_0(x_{t-1}))/\alpha) p^{\pre}_{t-1}(x_{t-1} \mid x_t)$$ to sample from $x_{t-1}$ at the next time step. Any of the previously discussed off-the-shelf strategies, such as SMC-based guidance in \pref{sec:SMC} or value-based sampling in \pref{sec:SVDD}, can be applied here.
+
+} 

@@ -1,0 +1,144 @@
+% \section{Stochastic Interpolant Framework}
+% \label{sec:stochastic_interpolant}
+% Recent generative models~\cite{NeuralODE, Score-based, Flow-based, Stochastic interpolant} seek to transport a sample $\B{x}_1 \sim p_1$\footnote{We use $t=T$ and $t=1$ interchangeably to denote the initial timestep.} from the source distribution to a sample $\B{x}_0 \sim p_0$ from the target distribution using an ODE or SDE. At the core of these approaches is the construction of probability paths $\{ p_t \}_{0 \leq t \leq 1}$, where the stochastic interpolant $\B{x}_t$ serves as a bridge, exactly connecting two arbitrary densities $p_1$ and $p_0$:
+% \begin{align}
+%     \label{eq:stochastic_interpolant}
+%     \B{x}_t=\alpha_t \B{x}_0 + \sigma_t \B{x}_1,
+% \end{align}
+% where $\alpha_t$ and $\sigma_t$ are smooth functions satisfying $\alpha_0 = \sigma_1 = 1$, $\alpha_1 = \sigma_0 = 0$, and $\Dot{\alpha}_t > 0, \Dot{\sigma}_t < 0$. This formulation provides a flexible choice of \textit{scheduler} $(\alpha_t, \sigma_t)$ which determines the sampling trajectory. Here, we focus on the one-sided interpolant, where the $p_1 \sim \mathcal{N}(\B{0}, \textbf{\textit{I}})$. 
+
+% While the stochastic interpolant framework can be generalized to arbitrary distributions, we focus on the one-sided interpolant, where the $p_1 \sim \mathcal{N}(\B{0}, \textbf{\textit{I}})$. 
+
+% \subsection{Search Algorithms}
+% \label{sec:inference_time_scaling}
+% Inference-time scaling~\cite{} aims to enhance the performance of pretrained models by allocating additional computational resources during test time. 
+% Here, we introduce existing inference-time search algorithms along with illustrative figures in Fig.~\ref{fig:search_schematic}. Implementation details and pseudocode are included in Appendix~\ref{sec:}. 
+
+% We define the batch size $(N)$ as the number of initial noise samples and the particle size $(K)$ as the number of samples drawn from the pretrained model at each denoising step. 
+% \\
+% \\
+% \textbf{Best-of-N} (BoN)~\cite{Learning to summarize from human feedback, ReadlFill} is a form of rejection sampling. Given $N$ generated samples $\{ \B{x}^{(i)}_{0} \}_{i=1}^N$, BoN selects the sample with the highest reward. 
+% % Despite its simplicity, BoN usually requires a sufficient number of samples to discover the optimal sample that maximizes the objective function in Eq.~\ref{eq:reward_max_obj}. 
+% \begin{align}
+%     \B{x}_{0} &= \argmax_{\{ \B{x}^{(i)}_{0} \}_{i=1}^N } r_\phi(\B{x}_{0}^{(i)}).
+%     % \nonumber 
+%     % \text{where} \quad \{ \B{x}^{(i)}_{0} \}_{i=1}^N &\sim \int p(\B{x}_T) \prod_{t=1}^{T} p_\text{ref} (\B{x}_{t-1} | \B{x}_t) \mathrm{d} \B{x}_{1:T}. 
+% \end{align}
+% % -----------------------------------------------------------------------------------------
+% \\
+% \\
+% \textbf{Importance Sampling}~\cite{SVDD, FUDGE: Controlled Text Generation With Future Discriminators} approximates the optimal policy in Eq.~\ref{eq:optimal_policy} by leveraging weighted $K$ particles:
+% \begin{align}
+%     p^{*}(\B{x}_{t-1} | \B{x}_{t}) \approx \sum_{i=1}^K \frac{w^{(i)}_{t-1}}{\sum_{j=1}^K w^{(j)}_{t-1}} \delta_{\B{x}^{(i)}_{t-1}} \\
+%     \nonumber
+%     \{ w^{(i)}_{t-1} \}_{i=1}^{K} = \exp( \frac{\hat{r}_\phi (\B{x}_{t-1})}{\beta} ),
+% \end{align}
+% where $\{ \B{x}_{t-1}^{(i)} \}_{i=1}^{K} \sim p_{\text{ref}}(\B{x}_{t-1} | \B{x}_t)$. 
+% After each denoising step, the importance weights are used to filter out the particles except the one with the highest reward, from which $K$ new particles are sampled. 
+% % $\{ w^{(i)}_{t-1} \}_{i=1}^{N} = \exp(\frac{1}{\beta} r_\phi (\B{x}_{0|t-1}))$ 
+% % -----------------------------------------------------------------------------------------
+% \\
+% \\
+% \textbf{Blockwise Best-of-N} (Blockwise BoN)~\cite{Controlled Decoding from Language Models, CoDe} extends BoN and importance sampling approaches by incorporating an interleaved selection step after every $M$ denoising steps. 
+% \begin{align}
+%     \B{x}_{t-M} &= \argmax_{\{ \B{x}^{(i)}_{t-M} \}_{i=1}^{K} } \hat{r}_\phi(\B{x}_{0|t-M}^{(i)}) %, \quad \text{where} \\ 
+%     % \nonumber
+%     % \{ \B{x}^{(i)}_{t-M} \}_{i=1}^K &\sim \int p(\B{x}_T) \prod_{\small{s=t-M+1}}^{T} p_\text{ref} (\B{x}_{s-1} | \B{x}_s) \mathrm{d} \B{x}_{t-M+1:T}.
+% \end{align}
+% % where $\{ \B{x}^{(i)}_{t-M} \}_{i=1}^N &\sim \int p(\B{x}_t) \prod_{s=t-M+1}^{t} p_\text{ref} (\B{x}_{s-1} | \B{x}_s) \mathrm{d} \B{x}_{t-M+1:t}$. 
+% % where $\{ \B{x}_{t-M} \}_{i=1}^K \sim p_{\text{ref}}(\B{x}_{t-M} | \B{x}_t) $. 
+% % 
+% % -----------------------------------------------------------------------------------------
+% \\
+% \\
+% \textbf{Sequential Monte Carlo} (SMC)~\cite{DAS} extends the importance sampling approach and leverages $N$ samples along with their incremental importance weights computed through time axis. 
+% \begin{align}
+%     w_{t-1} = \frac{ \gamma_{t-1} (\B{x}_{t-1:T}) }{ \gamma_t (\B{x}_{t:T}) p_\text{ref}(\B{x}_{t-1} | \B{x}_t) } = \frac{ \exp( \hat{r}_\phi(\B{x}_{0|t-1})) }{ \exp (\hat{r}_\phi(\B{x}_{0|t})) },
+% \end{align}
+% where $\gamma_t$ denotes the unnormalized density of the target joint distribution. 
+% % $p^{*}(\B{x}_t) \prod_{s=t+1}^{T} p(\B{x}_s | \B{x}_{s-1})$. 
+% At each denoising step, SMC draws candidates with replacement from their ancestors to filter out low-weight particles while reinforcing high-weight particles:
+% \begin{align}
+%     \{ \B{x}^{(i)}_{t-1} \}_{i=1}^{N} \sim p_\text{ref}(\B{x}_{t-1} | \{ \B{x}_{t}^{ \{ a_t^{(i)} \} } \}_{i=1}^{N} ),
+% \end{align}
+% where the indices $\{ a_t^{(i)} \}_{i=1}^{N} $ are sampled from a multinomial distribution based on the importance weights computed in the previous timestep. 
+% % -----------------------------------------------------------------------------------------
+% \\
+% \\
+% \textbf{Search over Paths} (SoP)~\cite{Inference Time Scaling for Diffusion Models} begins by sampling $N$ initial noises and running the ODE solver. Then, $K$ particles are drawn by adding noise to each ODE output. After solving the ODE for these perturbed samples, the top $N$ candidates with the highest reward are selected. This back-and-forth process is repeated iteratively until $t = 0$. 
+% % alternates between solving the backward ODE, then adding substantial noise using the forward process. 
+% % Search over Paths (SoP)\cite{Inference Time Scaling for Diffusion Models} 
+% % performs denoising by adding random Gaussian noise to the posterior mean $\B{x}_{0|t}$ that are computed during the sampling process. 
+% % \begin{align}
+% %     \label{eq:sop}
+% %     \B{x}_{t-M} = \argmax_{\{ \B{x}^{(i)}_{t-M} \}_{i=1}^N } r_\phi(\Bar{\B{x}}_{0|t-M}^{(i)}), 
+% % \end{align}
+% % where $\{ \B{x}_{t-M} \}_{i=1}^N \sim \mathcal{N}(\B{x}_{t-M}; \alpha_{t-M} \Bar{\B{x}}_{0|t}, \sigma_{t-M}^2 \textbf{\textit{I}}) $. 
+
+% In Sec.~\ref{sec:method}, we propose a novel plug-and-play approach that enables the use of the presented search algorithms with flow-based models, where a deterministic sampling process is predominantly adopted.  
+
+\mycomment{
+% Stochastic interpolant 
+1. 최근 생성 기법은 ODE/SDE를 활용하여 source 분포의 sample x_1~p_1을 target 분포의 sample x_0~p_0로 transport 시키는 것에 초점이 맞추어져 있다. 
+2. Stochastic interpolant x_t는 임의의 두 분포의 샘플 x_1~p_1와 x_0~p_0를 이어준다. 
+% Stochastic interpolant eq
+3. 이 때 alpha와 sigma는 유연하게 선택이 가능하며 [footnote] 다양한 trajectory를 만들어낸다.  
+% Linear 
+4. 위 framework는 임의의 두 분포에 대해 일반화가 가능하지만 본 연구에서는 p_1가 정규 분포로 설정된 one-sided interpolant을 간주한다. 
+5. 그 중 주목할 만한 stochastic process는 Flow 기반 모델 literature에서 활용되는 Linear이다. 
+% Linear eq
+6. Flow model은 velocity field로 정의된 time-dependent vector field로부터 ODE를 풀어 x_1로부터 x_0를 생성한다. 
+% PF-ODE
+7. 여기서 v()는 conditional Flow Matching objective로 학습된 conditional velocity field이다. 
+% VP 
+8. 반면에 Score-based Diffusion Models는 (SBGM) perturbation kernel로부터 유도된 forward diffusion process를 활용한다. 이 때 Variance Preserving으로 대표되는 stochastic interpolant는 다음과 같이 정의된다. 
+% Forward SDE 
+9. SBGM은 SDE를 따르는 reverse process를 활용하여 x_1으로부터 x_0를 생성한다. 
+% Reverse SDE
+10. 이 때 drift coefficient에 나타나는 score function, nabla log p(x)은 score matching objective를 통해 학습한다. 
+}
+
+
+% Diffusion and flow methods can be unified under the stochastic interpolant framework~\cite{Stochastic Interpolants, Improving and Generalizing Flow-Based Generative Models with Minibatch Optimal Transport, Flow Matching}, which transforms samples from a source distribution $\B{x}_1 \sim p_1$ to samples from the target distribution $\B{X}_0 \sim p_0$. We define random variable $\B{X}_t$ as follows:
+% % \begin{align}
+% %     \psi(\B{x}_t) = \alpha_t \B{x}_0 + \sigma_t \Veps{}, \quad \text{where} \quad \Veps{} \sim \mathcal{N}(\B{0}, \textbf{\textit{I}}).
+% % \end{align}
+% \begin{align}
+%     \label{eq:stochastic_interpolant}
+%     \B{X}_t=\alpha_t \B{X}_0 + \sigma_t \B{x}_1, \quad \text{where} \quad \B{X}_0\sim p_0,  \B{x}_1\sim p_1,
+% \end{align}
+% where $\alpha_t$ and $\sigma_t$ are time-dependent differentiable functions for all $t \in \left[ 0, 1\right]$, satisfying the boundary conditions $\alpha_0=\sigma_1=1$ and $\alpha_1=\sigma_0=0$. 
+% While the interpolant framework can be generalized to arbitrary distributions of $p_0$ and $p_1$, we focus on the generation framework where $p_1$ is set to Gaussian distribution $\mathcal{N}(\B{0}, \textit{\textbf{I}})$. 
+
+% % The transformation is done via introducing flow $\psi_t$ which is a time-dependent mapping $\psi:[0,1]\times \mathbb{R}^d\rightarrow \mathbb{R}^d$, where each $\psi_t(\B{x})$ is a diffeomorphism in $\B{x}$, satisfying $\B{x}_0=\psi_0(\B{x}_1)$. 
+% % Flow $\psi_t$ has its associate velocity field $v:[0,1]\times \mathbb{R}^d\rightarrow\mathbb{R}^d$ where their relationship is defined via ordinary differential equation (ODE):
+% % \begin{align}
+% % \label{eq:pf-ode}
+% %     \frac{d}{dt}\psi_t(\B{x})=v_t(\psi_t(\B{x}))
+% % \end{align}
+
+% \subsection{Variance Preserving Schedule}
+% A notable instantiation of the stochastic framework in Eq.\ref{eq:stochastic_interpolant} is Variance Preserving (VP)\cite{Score-based Yang Song, DDPM}. VP Stochastic Differential Equation (SDE) is derived from the Markovian perturbation kernel, which is designed to approximate a Gaussian distribution at a sufficiently large timestep, $p_1 \approx \mathcal{N}(\B{0}, \textbf{\textit{I}})$:
+% \begin{align}
+%     \label{eq:vp_sde}
+%     d \B{x} = -\frac{1}{2} \beta_t \B{x} \, \mathrm{d}t + \sqrt{\beta_t} \, \mathrm{d} \mathbf{w},
+% \end{align}
+% where $\beta_t$ is a predefined variance schedule. 
+% In the stochastic interpolant framework, the VP is formulated as follows: 
+% \begin{align}
+%     \label{eq:vp_coefficient}
+%     \alpha_t = e^{-\frac{1}{2} \int_0^t \beta_s \, ds} \quad \sigma_t = \sqrt{1 - e^{-\int_0^t \beta_s \, ds}}.
+% \end{align}
+
+% \subsection{Conditional Optimal Transport}
+% Flow Matching~\cite{Flow Matching, Rectified Flow} learns the velocity field using a neural network, $v_\theta(\B{x}, t)$, where a new sample from the target distribution can be generated by solving the Ordinary Differential Equation (ODE):
+% \begin{align}
+%     \label{eq:pf-ode}
+%     d\B{x} = u_{\theta}(\B{x}_t) dt.
+% \end{align}
+
+% In the literature of flow models, Optimal Transport (OT) trajectory is used, defining straight paths between the source and target distributions:
+% \begin{align}
+% \alpha_t = 1-t \quad \sigma_t = t.
+% \end{align}
+% In practice, $\B{X}_t$ in Eq.~\ref{eq:stochastic_interpolant} is defined as a conditional random variable $\B{X}_{t|1} = (1-t) x_0 + t \B{x}_1$ for scalability. Hence, we denote this case as Conditional OT.

@@ -1,0 +1,95 @@
+\vspace{-1.25\baselineskip}
+\section{Introduction}
+% \vspace{-0.25\baselineskip}
+\label{sec:intro}
+% Inference-time scaling is rising
+Over the past years, scaling laws of AI models have mainly focused on increasing model size and training data. However, recent advancements have shifted attention toward \emph{inference-time scaling}~\cite{Stiennon:2020BoN, Touvron:2023llama2}, leveraging computational resources during inference to enhance model performance. 
+OpenAI o1~\cite{openai:o1} and DeepSeek R1~\cite{deekseek:r1} exemplify this approach, demonstrating consistent output improvements with increased inference computation. Recent research in LLMs~\cite{Muennighoff:2025s1} attempting to replicate such improvements has introduced \emph{test-time budget forcing}, achieving high efficiency with limited token sampling during inference. 
+
+% Inference-time scaling for diffusion models. The key is particle sampling.
+For diffusion models~\cite{Sohl-Dickstein:2025Thermo,Song:2021SDE}, which are widely used for generation tasks, research on inference-time scaling has been growing in the context of reward-based sampling~\cite{Kim:2025DAS, Li2024:SVDD, Singh:2025CoDE}. Given a reward function that measures alignment with user preferences~\cite{Kirstain2023:pickapic} or output quality~\cite{Schuhmann:aesthetics, Lin:2024CLIPFlanT5}, the goal is to find the sample from the learned data distribution that best aligns with the reward through repeated sampling. 
+Fig.~\ref{fig:teaser} showcases diverse applications of inference-time scaling using our method, enabling the generation of faithful images that accurately align with complex user descriptions involving objects quantities, logical relationships, and conceptual attributes. Notably, na\"ive generation from text-to-image models~\cite{Rombach:2022LDM, BlackForestLabs:2024Flux} often fails to fully meet user specifications, highlighting the effectiveness of inference-time scaling. 
+
+% Following works~\cite{Yu:2023FreeDOM, Bansal:2023UGD, Ye:2024TFG} have shown that gradient ascent alone is insufficient, leading to the introduction of rewinding the denoising process. 
+% Still, the mode-seeking behavior of gradient-based methods remains limited in discovering low-density data that meet challenging user specifications~\cite{Jena2024:tradeoff}. 
+
+% Apart from inference-time scaling, earlier approaches~\cite{Chung:2023DPS, Song:2023LGD, he2024mpgd, Yu:2023FreeDOM, Bansal:2023UGD, Ye:2024TFG} leveraged the expected clean data point at intermediate denoising steps, performing gradient ascent from the expected future reward to the noisy data point. While effective in practice, these approaches cannot be applied to cases when the reward is \emph{non-differentiable}. To address this limitation, particle sampling approaches~\cite{Li2024:SVDD, Singh:2025CoDE, Kim:2025DAS} have been explored, where denoising branches are spawned or terminated based on the expected future reward.  Unlike previous methods, these approaches are applicable to both differentiable and non-differentiable rewards. Moreover, particle sampling can synergize with gradient ascent methods for differentiable rewards, further enhancing performance. Here, we note that particle sampling has been particularly effective for diffusion models due to their stochastic generation process. 
+
+% The iterative denoising process of diffusion models can be viewed as an iterative refinement based on Tweedie’s formula~\cite{Robbins1992}, which estimates the expected clean data point at each intermediate step. This, in turn, enables the estimation of the expected future reward throughout the denoising process. Leveraging this reward estimation, one can explore high-reward samples via \emph{particle sampling}, which adaptively spawns or terminates denoising branches during the sampling process. Such approaches~\cite{Li2024:SVDD, Singh:2025CoDE, Kim:2025DAS} that exploit the stochastic nature have been shown to be more effective than the Best-of-N method~\cite{Gao:2023Scaling, Stiennon:2020BoN, Tang:2024Realfill}, which selects from multiple candidates generated only at the initial step of denoising.
+%The key difference between inference-time scaling in LLMs and diffusion models lies in their iterative generative processes. While LLMs generate tokens sequentially, diffusion models iteratively denoise an entire data point. Importantly,
+%The iterative denoising process of diffusion models can be interpreted as iterative refinement based on Tweedie’s formula~\cite{}, which estimates the expected clean data point at each intermediate step. This allows for the calculation of the expected future reward at intermediate steps, enabling decisions on whether to spawn additional denoising branches or terminate them, leading to \emph{particle sampling}.
+%Notably, particle-based approaches~\cite{} leveraging the stochastic denoising process have been shown to be more effective than Best-of-N method~\cite{}, which samples multiple candidates only at the initial step of the denoising process.
+
+
+% We want to do inference-time scaling for flow models. flow models are rising.
+Our goal in this work is to extend the inference-time scaling capabilities of diffusion models to flow models. 
+Flow models~\cite{Lipman:2023CFM} power state-of-the-art image~\cite{Esser2403:scaling, BlackForestLabs:2024Flux} and video generation~\cite{chen2025goku, opensora}, achieving high-quality synthesis with few inference steps, enabled by trajectory stratification techniques during training~\cite{Liu:2023RF}. 
+Beyond just speed, recent pretrained flow models, equipped with enhanced text-image embeddings~\cite{Raffel:2020t5} and advanced architectures~\cite{Esser2403:scaling}, significantly outperform previous pretrained diffusion models in both image and video generation quality. 
+% Additionally, recent advancements in flow models, including improved text-image embeddings~\cite{Raffel:2020t5} and advanced model architectures~\cite{Esser2403:scaling}, have accelerated their adoption, increasingly replacing diffusion models in various applications~\cite{Benhamu:2024DFlow, Rout2024:semantic, Yang2025:RFDS}. \Jaihoon{Maybe something more?}
+
+% Additionally, recent advancements in flow models, including improved text-image embeddings~\cite{Raffel:2020t5} and advanced model architectures~\cite{Esser2403:scaling}, have accelerated their adoption, increasingly replacing diffusion models in various applications~\cite{Benhamu:2024DFlow, Rout2024:semantic, Yang2025:RFDS}. \Jaihoon{Maybe something more?}
+% their theoretical similarities to diffusion models and also
+% significantly decrease the number of iterations during generation while maintaining high output quality
+
+% The challenges in inference-time scaling for flow models.  Solution.
+Despite their advantages in generating high-quality results more efficiently than diffusion models, flow models have an inherent limitation in the context of inference-time scaling. Due to their ODE-based deterministic generative process, they cannot directly incorporate particle sampling at intermediate steps, a key mechanism for effective inference-time scaling in diffusion models. Building on the formulation of stochastic interpolant framework~\cite{Albergo:2023Interpolant}, we adopt an SDE-based sampling method for flow models at inference-time, enabling particle sampling for reward alignment. 
+%a class of generative models that unify diffusion and flow models, 
+
+%Notably, this is the \emph{inverse} of the SDE-to-ODE conversion for diffusion models~\cite{}, which is commonly employed for fast generation using diffusion models. While we take the reverse approach, we leverage SDE-based generation while controlling stochasticity to enhance exploration for reward alignment without significantly increasing computational costs.
+%, benefiting from the rectified trajectories of reflow, pretrained flow models.
+
+% VP-SDE
+% Furthermore, we observe that converting an ODE to its corresponding SDE in the generative process of a flow model does not provide sufficient diversity in particle sampling to effectively seek high-reward samples. 
+To further expand the exploration space, we consider not only stochasticity but also the choice of the \emph{interpolant}. While typical flow models use a linear interpolant, diffusion models commonly adopt a Variance-Preserving (VP) interpolant~\cite{Song:2021SDE, Ho:2020DDPM}.
+Inspired by this, for the first time, we incorporate the VP interpolant into the particle sampling of flow models and demonstrate its effectiveness in increasing sample diversity, enhancing the likelihood of discovering high-reward samples. 
+% Consequently, the ODE-to-SDE conversion in a flow model’s generative process does not directly correspond to that of diffusion models. We investigate how the choice of interpolant affects the variance of particle samples at each step, thereby influencing the exploration space and final outcomes. Through this analysis, we find that adopting the VP interpolant for flow models can lead to higher-reward samples in particle sampling.
+
+We emphasize that while we propose converting the generative process of a pretrained flow model to align with that of diffusion models—\ie VP-SDE-based generation—inference-time scaling with flow models offers significant advantages over diffusion models. 
+Flow models, particularly those with rectification fine-tuning~\cite{Liu:2023RF, liu2024instaflow}, produce much clearer expected outputs at intermediate steps, enabling more precise future reward estimation and, in turn, more effective particle sampling. 
+% Second, the fast generation advantage of flow models can be preserved through time interval adaptation, where dense intervals early in the process expand the search space, followed by gradually increasing intervals for accelerated generation. This time interval adaptation is feasible in flow models due to rectification fine-tuning.
+% The straightened trajectories of flow models yield much clearer intermediate images from Tweedie’s formula, enabling more precise future reward estimation and, consequently, more effective particle sampling. Additionally, we retain the advantage of fast generation in flow models by using dense time intervals at the beginning of the process to expand the search space, followed by gradually increasing the intervals for accelerated generation. This is also facilitated by the straightened trajectories of flow models.
+
+% NFE budget rollover strategy
+We additionally explore a strategy for tight budget enforcement in terms of the number of function evaluations (NFEs) of the velocity prediction network. Previous particle-sampling-based inference-time scaling approaches for diffusion models~\cite{Li2024:SVDD, Singh:2025CoDE} allocate the NFEs budget \emph{uniformly} across timesteps in the generative process, which we empirically found to be ineffective in practice. To optimize budget utilization, we propose \emph{Rollover Budget Forcing}, a method that adaptively reallocates NFEs across timesteps. 
+Specifically, we perform a denoising step upon identifying a new particle with a higher expected future reward and allocate the remaining NFEs to subsequent timesteps. 
+%However, our empirical analysis reveals that the NFEs for the first occurrence of an increase in expected future reward vary significantly across timesteps.
+
+%Our results demonstrate that this approach significantly improves reward optimization by maximizing budget utilization.
+%\minhyuk{add more based on results}.
+%The only difference lies in the method used to select the next samples—whether through a Dirac-delta distribution for the maximum expected future reward sample~\cite{} or a smoother distribution~\cite{}.
+
+% Comparison with diffusion models
+%\minhyuk{experiments}
+Experimentally, we demonstrate that our inference-time SDE conversion and VP interpolant conversion enable efficient particle sampling in flow models, leading to consistent improvements in reward alignment across two challenging tasks: compositional text-to-image generation and quantity-aware image generation. 
+Additionally, our Rollover Budget Forcing (\Ours{}) provides further performance gains, outperforming all previous particle sampling approaches. 
+We also demonstrate that for differentiable rewards, such as aesthetic image generation, integrating \Ours{} with a gradient-based method~\cite{Chung:2023DPS} creates a synergistic effect, leading to further performance improvements. 
+
+% We also show that \Ours{} is applicable to tasks with differentiable rewards, such as aesthetic image generation. Here, we show that integrating \Ours{} with gradient-ascent-based methods like DPS~\cite{Chung:2023DPS} produces a synergistic effect, achieving additional performance improvements. 
+
+% For experiments we consider two settings: one where the reward is non-differentiable, including compositional text-to-image generation and quantity-aware image generation, and another where the reward is differentiable, such as aesthetic image generation. 
+
+% In our experiments, we demonstrate that the performance of particle sampling consistently improves with the adoption of SDE conversion and VP-SDE conversion, with additional performance gains by adopting budget forcing. 
+% For experiments we consider two settings: one where the reward is non-differentiable, including compositional text-to-image generation and quantity-aware image generation, and another where the reward is differentiable, such as aesthetic image generation. 
+% Taehoon
+% When the reward is non-differentiable, controlling the generation process during inference is challenging, with particle sampling being the primary effective approach. This is particularly important in scenarios where rewards come from human feedback or API calls, as these are often non-differentiable, making direct gradient-based optimization infeasible. Therefore, it is crucial to account for non-differentiable rewards, and particle sampling provides a viable solution for guiding generation in such cases.
+% Taehoon
+% Building on this, our results consistently show performance improvements across all methods when transitioning the generative process from Linear-ODE to Linear-SDE and finally to VP-SDE. Additionally, \Ours{} significantly outperforms prior approaches under the same compute budget. We further demonstrate that flow models generate high-quality images with substantially better reward alignment than diffusion models, even when the latter are allocated five times more compute budget. Finally, we show that \Ours{} is also applicable regardless of reward differentiability. In particular, for aesthetic score~\cite{Schuhmann:aesthetics}, we demonstrate the synergistic effect of combining our particle sampling method with gradient ascent~\cite{Chung:2023DPS}, achieving additional performance gains. 
+% we verify that SDE conversion and VP interpolant conversion unlock the potential of particle sampling in flow models, enabling an efficient search for high-reward samples across diverse applications, including compositional text-to-image generation and quantity-aware image generation, and aesthetic image generation. Additionally, we show that Rollover Budget Forcing efficiently allocates compute across timesteps, further improving performance of inference-time scaling. 
+
+In summary, we introduce an inference-time scaling for flow models, analyzing three key factors:
+\begin{itemize}[leftmargin=*]
+\item ODE vs. SDE: We introduce an \emph{SDE generative process} for flow models to enable particle sampling. 
+\item Interpolant: We demonstrate that replacing the linear interpolant of flow models with \emph{Variance Preserving interpolant} expands the search space, facilitating the discovery of higher-reward samples.
+\item NFEs Allocation: We propose \emph{Rollover Budget Forcing} that adaptively allocates NFEs across timesteps to ensure efficient utilization of the available compute budget.
+
+\end{itemize}
+
+
+
+
+
+
+
+
+
+

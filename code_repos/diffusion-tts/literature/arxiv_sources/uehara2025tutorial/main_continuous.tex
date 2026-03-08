@@ -1,0 +1,228 @@
+\section{Derivative-Based Guidance in Continuous Diffusion Models}\label{sec:derivative}
+
+We have introduced the derivative-free inference-time technique. In this section, we focus on classifier guidance \citep{dhariwal2021diffusion,song2021score}, a standard derivative-based method in continuous diffusion models. We first provide the intuition underlying the algorithm's derivation, followed by its formalization within a continuous-time framework. Finally, we propose an algorithm designed for Riemannian diffusion models, which are extensively used in protein srtucture generation.
+
+{\newedit \begin{AIbox}{Takeaway}
+Classifier guidance, which adds gradients of value functions at inference time, is derived as an algorithm to approximate the soft optimal policy when discretization errors are negligible. This is formulated within the continuous-time framework using Doob's transform. For Riemannian diffusion models, this algorithm can be seamlessly extended by incorporating Riemannian gradients instead of standard Ecludiain gradients.
+\end{AIbox}
+} 
+
+\subsection{Intuitive Derivation of Classifier Guidance} \label{sec:intuition}
+
+In this subsection, we derive classifier guidance as a Gaussian policy that approximates the soft-optimal policy. 
+
+First, recalling the form of pre-trained policies in diffusion models over Euclidean space, specifically
+\eqref{eq:score_rep} with score parametrization, let us denote the pre-trained model to be $$
+p^{\pre}_{t-1}(\cdot \mid x_t) = \Ncal( \rho^{\pre}(x_t,t)  ;\sigma^2_t \rI),\quad \rho^{\pre}(x_t,t) := x_t + (\delta t) \bar g(x_t,t)
+$$ 
+where
+\begin{align*}
+  \bar g(x_t,t):=  0.5 x_t  + \widehat{\nabla \log p}(x_t;\theta_{\pre}),\quad \sigma^2_t=(\delta t). 
+\end{align*}
+Here, $(\delta t)$ is assumed to be small. { Substituting this expression into the optimal policy form in \eqref{eq:optimal_policy} yields } 
+\begin{align}\label{eq:original_before}
+  \exp\left (\frac{v_{t-1}(x_{t-1})}{\alpha} + \frac{\|x_{t-1}-\rho^{\pre}(x_t,t)\|^2_2}{2\sigma^2_t} \right),      
+\end{align}
+up to normalizing constant. {However, directly sampling from this policy is challenging; therefore, we consider approximating it.  } 
+
+
+A natural approach is to approximate this policy with a Gaussian distribution. To achieve this, we apply a Taylor expansion:
+\begin{align*}
+  \exp\left ( \frac{v_t(x_t) + \nabla v_{t}(x_{t})\cdot (x_{t-1}-x_{t}) + O(\|x_{t-1}-x_t\|^2_2)  }{\alpha} \right)  \times \exp\left (\frac{\|x_{t-1}-x_t- (\delta t) \bar g(x_t,t) \|^2_2}{2\sigma^2_t} \right).        
+\end{align*}
+Since $\sigma^2_t$ is much smaller than $\alpha$ (as $\sigma^2_t$ scales with $(\delta t)$), we can ignore the term $O(\|x_{t-1} - x_t\|^2_2 / \alpha)$. Therefore, the expression simplifies to 
+\begin{align*}
+   \exp\left (\frac{\|x_{t-1}-x_t - \tilde \rho(x_t,t)\|^2_2}{2\sigma^2_t} \right), \quad  \tilde \rho(x_t,t)=\rho^{\pre}(x_t,t)+\frac{\sigma^2_t \nabla v_{t}(x_t) }{\alpha}. 
+\end{align*}
+Thus, the original policy in \eqref{eq:original_before} is approximated as a Gaussian distribution.
+
+Based on this observation, the complete algorithm is summarized in \pref{alg:deri}, where the gradient of the value function is incorporated at inference time.
+
+\begin{algorithm}[!th]
+\caption{Classifier Guidance in Continuous Diffusion Models \citep{dhariwal2021diffusion,song2021score} }\label{alg:deri}
+\begin{algorithmic}[1]
+     \STATE {\bf Require}: Estimated (\textbf{differentiable}) soft value functions $\{\hat v_t\}_{t=T}^0$ (refer to \pref{sec:method_value}), pre-trained diffusion models $\{p^{\pre}_t\}_{t=T}^0$, hyperparameter $\alpha \in \mathbb{R}$
+     \FOR{$t \in [T+1,\cdots,1]$}
+        \STATE $$ x_{t-1} \sim \Ncal\left (\rho^{\pre}(x_t,t)+\frac{\sigma^2_t \nabla \hat v_{t}(x_t) }{\alpha},\sigma^2_t \right) $$
+     \ENDFOR
+  \STATE {\bf Output}: $x_0$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Derivative-Free Guidance Versus Classifier Guidance}
+
+The critical assumption in classifier guidance is that accurate differentiable value function models can be constructed with respect to the inputs. A straightforward scenario for building such models is an inpainting task, where classifier guidance performs effectively. However, in many molecular design tasks, this assumption may not hold, as discussed in the introduction and \pref{sec:derivative_free}. In such cases, derivative-free guidance becomes advantageous, as these methods do not require differentiable rewards or value function models. 
+
+It is also worthwhile to note these two approaches (derivative-free guidance and classifier-guidance) can still be combined by employing classifier guidance as a proposal distribution in derivative-free methods, potentially with different value functions. Specifically, even if the differentiable models used in classifier guidance are not fully accurate, they can serve as proposal distributions while SMC-based guidance or value-based sampling leverages more precise non-differentiable value function models, as we discuss in \pref{sec:choice}. 
+
+
+
+\subsection{Continuous-Time Formalization via Doob transform}\label{sec:formalization_conti}
+
+In this section, we formalize the intuitive derivation of classifier guidance in \pref{sec:intuition}. For this purpose, we explain the continuous-time formulation of diffusion models first. 
+
+
+\subsubsection{Preparation}
+
+We begin by outlining the fundamentals of diffusion models within the continuous-time framework. For further details, refer to \citet[Section 1.1.1]{uehara2024understanding} or many other reviews \citep{tang2024score}. The training process can be summarized as follows: (1) defining the forward SDE and (2) learning the time-reversal SDE by estimating the score functions.
+
+
+\paragraph{Forward and Time-Reversal SDE.}
+
+We first introduce a forward stochastic differential equation (SDE) from $t \in [0,T]$. A widely used example is the variance-preserving (VP) process:
+\begin{align}\label{eq:reference}
+  t \in [0,T];  dx_t = -0.5 x_t dt +  dw_t, x_0 \sim p^{\pre}(x), 
+\end{align} 
+where $dw_t$ denotes standard Brownian motion. Two key observations are:
+\begin{itemize}
+    \item As $T$ approaches $\infty$, the limiting distribution converges to $\Ncal(0,\rI)$. 
+    \item The time-reversal SDE \citep{anderson1982reverse}, which preserves the marginal distribution, is given by: 
+    \begin{align}\label{eq:time_reversal}
+    t \in [0,T];    dz_t = [0.5z_t + \nabla \log q_{T-t}(z_t)]dt + dw_t. 
+    \end{align}
+    Here, $q_t\in \Delta(\RR^d)$ denotes the marginal distribution at time $t$ induced by the forward SDE \eqref{eq:reference}. Notably, the marginal distribution of $z_{T-t}$ is the same as that of $x_t$ induced by the forward SDE.  Note the notation $t$ is reversed relative to the forward SDE in \eqref{eq:reference}.
+    
+\end{itemize}
+
+These observations suggest that with sufficiently large $T$, starting from $\Ncal(0,\rI)$ and following the time-reversal SDE \eqref{eq:time_reversal}
+, we can sample from the data distribution (i.e., $p^\pre$) at terminal time $T$. A key challenge remains in learning the score function $\nabla \log q_{T-t}(z_t)$. In diffusion models, the primary objective is to estimate this score function. For such training methods, refer to Example~\ref{exa:continuous}. Our work assumes the availability of a pre-trained model $ s(z_{t},T-t; \theta_{\pre})$, that predicts $\nabla \log q_{T-t}(z_t)$, fixed after pre-training. 
+
+\subsubsection{Doob Transform}  
+
+We now proceed to derive classifier guidance more rigorously. Consider a pre-trained model represented by
+ \begin{align}\label{eq:pre_trained_SDE}
+    t \in [0,T];    dz_t = [0.5z_t + s(z_{t},T-t; \theta_{\pre}) ]dt + dw_t, \quad z_0\sim \delta_{z^\mathrm{ini}_0}.    
+\end{align}
+We denote the resulting distribution as $p^{\pre}$. The following theorem is instrumental in deriving classifier guidance.
+
+\begin{Thmbox}{}
+\begin{theorem}[Doob Transform]\label{thm:doob}
+For a value function: $v_t(\cdot) = \log \EE_{\theta^{\pre}}[\exp(r(z_T))|z_t=\cdot]$ where the expectation $\EE_{\theta^{\pre}}[\cdot]$ is  induced by the pre-trained model \eqref{eq:pre_trained_SDE}, the distribution induced by the SDE: 
+\begin{align}\label{eq:optimal_SDE}
+ t \in [0,T];    dz_t = [0.5z_t + \{ s(z_{t},T-t; \theta_{\pre})+ \nabla \log v_t(z_t)  \}]dt + dw_t
+\end{align}
+is a target distribution, proportional to $\exp(r(x))p^{\pre}(x)$. 
+\end{theorem}
+\end{Thmbox}
+
+This theorem implies that, with standard Euler-Maruyama discretization, classifier guidance can be formally derived as in \pref{alg:deri} (when $\alpha=1$) such that we can sample from the target distribution $\exp(r(x))p^{\pre}(x)$. Here, we remark that $v_t(\cdot) = \log \EE_{\theta^{\pre}}[\exp(r(z_T))|z_t=\cdot]$ in the theorem serves as the continuous-time analogue of the value function, which we introduce in \pref{eq:soft}.
+
+The Doob transform is a celebrated result in stochastic processes (e.g., \citet[Chapter 3]{chetrite2015nonequilibrium}). The connection between classifier guidance and the Doob transform has been highlighted in works such as \citet{zhao2024adding,denker2024deft}. Furthermore, \citet{uehara2024finetuning,denker2024deft} demonstrated that, in the context of RL-based fine-tuning, the optimal control that maximizes entropy-regularized rewards coincides with the SDE given in \eqref{eq:optimal_SDE}.
+
+
+\begin{remark}
+When the initial distribution $p^\mathrm{ini}$ from pre-trained models is stochastic, we technically need to change the initial distribution. More specifically, we need to set the initial distribution proportional to  $
+    \exp(v_0(x))p^{\mathrm{ini}}(x). $
+For details, refer to \citet{uehara2024finetuning}. 
+\end{remark}
+
+
+
+
+
+
+\subsection{Guidance in Riemannian Diffusion Models}
+
+We now extend the discussion from Euclidean spaces to Riemannian manifolds \citep{de2022riemannian,yim2023se,chen2023riemannian}. To do so, we first provide a concise introduction to Riemannian manifolds, focusing specifically on the special orthogonal group (SO(3)). This is because SE(3) (i.e., $SO(3) \otimes \mathbb{R}^3$) is commonly employed in protein conformation generation to efficiently model the 3D coordinates of the protein backbone \citep{yim2023se,watson2023novo}. Subsequently, we describe the corresponding classifier guidance method. For a more detailed introduction to Riemannian manifolds, we refer readers to \citep{lee2018introduction}. 
+
+\subsubsection{Primer: Riemannian Manifolds}
+
+We denote a $d$-dimensional Riemannian submanifold embedded in $\RR^m$ by $\Mcal$. The manifold is a space that locally resembles Euclidean space, and is formally characterized by a local coordinate chart $\phi: \Mcal \to \RR^d$ and its inverse $\psi$. A key concept in a manifold is the tangent space, which represents the space of possible velocities for a particle moving along the manifold. For each point $x \in \Mcal$, the tangent space $\Tcal_x\Mcal$ is formally defined as the space spanned by the column vectors of the Jacobian $d\psi/d\tilde x |_{\tilde x=\phi(x)}$. A Riemannian manifold is then defined as a manifold equipped with a specific metric $g: \Tcal_x\Mcal \times \Tcal_x\Mcal \to \RR$, often denoted by $\langle\cdot,\cdot\rangle_g$. An important example in protein design is the well-known SO(3) group. 
+
+
+\renewcommand\thmcontinues[1]{Continued}
+
+\begin{Exabox}{}
+\begin{example}[SO(3)]
+Consider the set of $3 \times 3$ orthogonal matrices, denoted by $SO(3)$. While the intrinsic dimension $d$ is 3, this is embedded in $\RR^9$. The associated tangent space at $x$ (i.e., $\Tcal_{x}(SO(3))$) consists of skew-symmetric matrices: $\{xA:  A^{\top} = -A\}$ where the Riemannian metric is defined using the Frobenius inner product:
+$\langle A_1,A_2\rangle_{g}= \mathrm{Tr}(A^{\top}_1 A_2).$ Specifically, the tangent space corresponds to 
+\begin{align*}
+    \left \{x[v_1, v_2, v_3 ]_{\times}: v_1 \in \RR, v_2 \in \RR, v_3 \in \RR \right\}, \quad [v]_{\times}\textstyle :=
+    {\tiny
+    \begin{pmatrix}
+        0 & -v_3 & v_2 \\
+        v_3 & 0 & -v_1 \\
+        -v_2 & v_1 & 0. 
+    \end{pmatrix}.  } 
+\end{align*} 
+This can be derived by introducing a curve $x(t) \in SO(3)$ such that $x(0)=x$, and computing the gradient of $x^{\top}(t)x(t)=I$. The gradient $\nabla x(0)$ satisfies 
+\begin{align*}
+    \nabla x(0)^{\top} \cdot x  +  x^{\top} \cdot \nabla x(0)=0. 
+\end{align*}
+Then, it is clear $\nabla x(0)$ belongs to $\{xA:  A^{\top} = -A\}$. 
+\end{example}
+\end{Exabox}
+
+We now summarize additional key concepts:
+\begin{itemize}
+    \item \textbf{Geodesic}: Given a point $x \in \Mcal$ and a velocity $v \in \Tcal_{x} \Mcal$, the geodesic is defined as a trajectory $\gamma(t):\Rcal \to \Mcal$, determined by the initial point $x$ and velocity $v$: 
+    \begin{align}\label{eq:curve}
+        \gamma(0)=x, \frac{d\gamma(t) }{dt}|_{t=0}=v, 
+    \end{align}
+    along with the geodesic equation. This trajectory is locally uniquely defined. For example, in Euclidean spaces, it simplifies to $x + tv$. Hence, intuitively, geodesic is the locally shortest path on a Riemmanin manifold. 
+    \item \textbf{Exponential map:} Given $x \in \Mcal$, the exponential map is defined as $\Tcal_{x}\Mcal: v \to \gamma(1) \in \Mcal$, where $\gamma(t)$ is the geodesic described above.
+    \item \textbf{Logarithmic Map:} The logarithmic map is the inverse of the exponential map.
+    \item \textbf{Riemannian Gradient}: The Riemannian gradient of a function $f:\Mcal \to \RR$ at $x$ denoted by $\nabla^{g} f(\cdot)\in \Tcal_x(\Mcal)$ is defined as an element satisfying  
+    \begin{align*} 
+    \forall v\in \Tcal_{x}\Mcal;\quad \frac{df(\gamma(t))}{dt}|_{{t=0}} = \langle \nabla^{g} f(x),v\rangle_{g}, 
+    \end{align*} 
+    where $\gamma(t)$ is a curve satisfying \eqref{eq:curve}. This reduces to a standard gradient in a Ecludiain space. 
+\end{itemize}
+
+
+Now, let’s revisit the example of SO(3) to see how these concepts are applied.
+
+
+
+\begin{Exabox}{}
+\addtocounter{example}{-1}
+\begin{example}[continued]
+Given a point $x \in SO(3)$ and velocity $v \in \Tcal_{x}(SO(3))$, the exponential map is defined as $x\exp(v)$. Using Rodrigues' rotation formula \citep{lee2018introduction}, it can be simplified to 
+{ \begin{align*}
+      x\{I + \sin(\alpha)[v/\|v\|_2 ]_{\times} +(1-\cos(\alpha))\{[v/\|v\|_2]_{\times}\}^2  \}, 
+\end{align*}
+} 
+where $\alpha = \|v\|_2$. Then, the Riemannian gradient in $\Tcal_{x}(SO(3))$ is given by :
+\begin{align}\label{eq:gradient}
+    0.5(\nabla^{\mathrm{Ecu}} f(x) - \{\nabla^{\mathrm{Ecu}} f(x)\}^{\top})  
+\end{align}
+where $\nabla^{\mathrm{Ecu}}$  is the Euclidean gradient. 
+\end{example}
+\end{Exabox}
+
+\subsubsection{Classifier Guidance in Riemannian Diffusion Models}
+
+\begin{algorithm}[!th]
+\caption{Classifier Guidance in Riemannian Diffusion Models  }\label{alg:deri_rie}
+\begin{algorithmic}[1]
+     \STATE {\bf Require}: Estimated (\textbf{differentiable}) soft value function $\{\hat v_t\}_{t=T}^0$ (refer to \pref{sec:method_value}), pre-trained diffusion models $\{p^{\pre}_t\}_{t=T}^0$, hyperparameter $\alpha \in \mathbb{R}$ 
+     \FOR{$t \in [T+1,\cdots,1]$}
+     \STATE Calculate the velocity to proceed:
+     \begin{align*}
+ \textstyle  \mathrm{vel}_t=(\delta t)\{ s(x_t, T-t; \theta_{\pre}) + \nabla^{g} \hat v_t(x_t)/\alpha\}  + \sqrt{(\delta t)}\epsilon_t, \quad \epsilon_t\sim {\Ncal(0,I_{d})},         
+     \end{align*}
+     where $\Ncal(0,I_d)$ is Gaussian distribution on a Riemmaninan manifold. 
+        \STATE Move from $x_t$ to $x_{t-1}$ along geodesics: $$  \textstyle    x_{t-1}= \exp_{x_t}[\mathrm{vel}_t] $$
+     \ENDFOR
+  \STATE {\bf Output}: $x_0$
+\end{algorithmic}
+\end{algorithm}
+
+Now, with the above preparation, the pre-trained model is defined as an SDE on a manifold $\Mcal$:
+\begin{align*}
+    t \in [0;T];\quad d x_t = s(x_t, T-t; \theta_{\pre})  dt + dw^{\Mcal}_t, 
+\end{align*}
+where $dw^{\Mcal}_t$ denotes Brownian motion on a Riemannian manifold $\Mcal$. The discretization is given by:
+\begin{align*}
+    x_{t-1}= \exp_{x_t}[\mathrm{vel}_t], \mathrm{vel}_t=(\delta t)s(x_t, T-t; \theta_{\pre}) + \sqrt{(\delta t)}\epsilon_t, \quad \epsilon_t\sim \Ncal(0,I_{d}),
+\end{align*}
+where $\epsilon_t$ is a normal distribution on the manifold $\Mcal$. Each step thus consists of two operations: (1) calculating the tangent (velocity) $\mathrm{vel}_t$ in the tangent space at $x_t$ and (2) moving along the geodesic induced by the velocity $\mathrm{vel}_t$, starting at $x_t$. In the Euclidean case, the second step reduces to $x_t +\mathrm{vel}_t$. 
+
+\paragraph{Classifier Guidance.} Now, we extend classifier guidance to Riemannian manifolds. Similar to the Euclidean case, we calculate a Riemannian gradient at each time step during inference and incorporate it into the velocity. The updated velocity becomes:
+\begin{align*}
+    (\delta t) \{ s(x_t, T-t; \theta_{\pre}) + \underbrace{\nabla^g  v(x_t)/\alpha}_{\textit{Additional\,Riemannian gradient}} \}  + \sqrt{(\delta t)}\epsilon_t. 
+\end{align*}
+For example, in the case of $SO(3)$, the Riemannian gradient is computed using \eqref{eq:gradient}. 
+
+The complete algorithm is summarized in \pref{alg:deri_rie}. Note this approach can be formalized using Doob's theorem for Riemannian manifolds, as discussed in \pref{sec:formalization_conti}. 
+

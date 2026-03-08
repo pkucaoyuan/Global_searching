@@ -1,0 +1,809 @@
+\begin{thebibliography}{}
+
+\bibitem[\protect\citeauthoryear{Abramson, Adler, Dunger, Evans, Green, Pritzel, Ronneberger, Willmore, Ballard, Bambrick, et~al.}{Abramson et~al.}{2024}]{abramson2024accurate}
+Abramson, J., J.~Adler, J.~Dunger, R.~Evans, T.~Green, A.~Pritzel, O.~Ronneberger, L.~Willmore, A.~J. Ballard, J.~Bambrick, et~al. (2024).
+\newblock Accurate structure prediction of biomolecular interactions with alphafold 3.
+\newblock {\em Nature\/}, 1--3.
+
+\bibitem[\protect\citeauthoryear{Ahdritz, Bouatta, Floristean, Kadyan, Xia, Gerecke, O’Donnell, Berenberg, Fisk, Zanichelli, et~al.}{Ahdritz et~al.}{2024}]{ahdritz2024openfold}
+Ahdritz, G., N.~Bouatta, C.~Floristean, S.~Kadyan, Q.~Xia, W.~Gerecke, T.~J. O’Donnell, D.~Berenberg, I.~Fisk, N.~Zanichelli, et~al. (2024).
+\newblock Openfold: Retraining alphafold2 yields new insights into its learning mechanisms and capacity for generalization.
+\newblock {\em Nature Methods\/}, 1--11.
+
+\bibitem[\protect\citeauthoryear{Akiyama and Sakakibara}{Akiyama and Sakakibara}{2022}]{akiyama2022informative}
+Akiyama, M. and Y.~Sakakibara (2022).
+\newblock Informative rna base embedding for rna structural alignment and clustering by deep representation learning.
+\newblock {\em NAR genomics and bioinformatics\/}~{\em 4\/}(1), lqac012.
+
+\bibitem[\protect\citeauthoryear{Alamdari, Thakkar, van~den Berg, Lu, Fusi, Amini, and Yang}{Alamdari et~al.}{2023}]{alamdari2023protein}
+Alamdari, S., N.~Thakkar, R.~van~den Berg, A.~X. Lu, N.~Fusi, A.~P. Amini, and K.~K. Yang (2023).
+\newblock Protein generation with evolutionary diffusion: sequence is all you need.
+\newblock {\em bioRxiv\/}, 2023--09.
+
+\bibitem[\protect\citeauthoryear{Anderson}{Anderson}{1982}]{anderson1982reverse}
+Anderson, B.~D. (1982).
+\newblock Reverse-time diffusion equation models.
+\newblock {\em Stochastic Processes and their Applications\/}~{\em 12\/}(3), 313--326.
+
+\bibitem[\protect\citeauthoryear{Anishchenko, Pellock, Chidyausiku, Ramelot, Ovchinnikov, Hao, Bafna, Norn, Kang, Bera, et~al.}{Anishchenko et~al.}{2021}]{anishchenko2021novo}
+Anishchenko, I., S.~J. Pellock, T.~M. Chidyausiku, T.~A. Ramelot, S.~Ovchinnikov, J.~Hao, K.~Bafna, C.~Norn, A.~Kang, A.~K. Bera, et~al. (2021).
+\newblock De novo protein design by deep network hallucination.
+\newblock {\em Nature\/}~{\em 600\/}(7889), 547--552.
+
+\bibitem[\protect\citeauthoryear{Austin, Johnson, Ho, Tarlow, and Van Den~Berg}{Austin et~al.}{2021}]{austin2021structured}
+Austin, J., D.~D. Johnson, J.~Ho, D.~Tarlow, and R.~Van Den~Berg (2021).
+\newblock Structured denoising diffusion models in discrete state-spaces.
+\newblock {\em Advances in Neural Information Processing Systems\/}~{\em 34}, 17981--17993.
+
+\bibitem[\protect\citeauthoryear{Bachas, Rakocevic, Spencer, Sastry, Haile, Sutton, Kasun, Stachyra, Gutierrez, Yassine, et~al.}{Bachas et~al.}{2022}]{bachas2022antibody}
+Bachas, S., G.~Rakocevic, D.~Spencer, A.~V. Sastry, R.~Haile, J.~M. Sutton, G.~Kasun, A.~Stachyra, J.~M. Gutierrez, E.~Yassine, et~al. (2022).
+\newblock Antibody optimization enabled by artificial intelligence predictions of binding affinity and naturalness.
+\newblock {\em BioRxiv\/}, 2022--08.
+
+\bibitem[\protect\citeauthoryear{Bansal, Chu, Schwarzschild, Sengupta, Goldblum, Geiping, and Goldstein}{Bansal et~al.}{2023}]{bansal2023universal}
+Bansal, A., H.-M. Chu, A.~Schwarzschild, S.~Sengupta, M.~Goldblum, J.~Geiping, and T.~Goldstein (2023).
+\newblock Universal guidance for diffusion models.
+\newblock In {\em Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition}, pp.\  843--852.
+
+\bibitem[\protect\citeauthoryear{Bengio, Lahlou, Deleu, Hu, Tiwari, and Bengio}{Bengio et~al.}{2023}]{bengio2023gflownet}
+Bengio, Y., S.~Lahlou, T.~Deleu, E.~J. Hu, M.~Tiwari, and E.~Bengio (2023).
+\newblock Gflownet foundations.
+\newblock {\em Journal of Machine Learning Research\/}~{\em 24\/}(210), 1--55.
+
+\bibitem[\protect\citeauthoryear{Black, Janner, Du, Kostrikov, and Levine}{Black et~al.}{2023}]{black2023training}
+Black, K., M.~Janner, Y.~Du, I.~Kostrikov, and S.~Levine (2023).
+\newblock Training diffusion models with reinforcement learning.
+\newblock {\em arXiv preprint arXiv:2305.13301\/}.
+
+\bibitem[\protect\citeauthoryear{Branke}{Branke}{2008}]{branke2008multiobjective}
+Branke, J. (2008).
+\newblock {\em Multiobjective optimization: Interactive and evolutionary approaches}, Volume 5252.
+\newblock Springer Science \& Business Media.
+
+\bibitem[\protect\citeauthoryear{Brown}{Brown}{2020}]{brown2020language}
+Brown, T.~B. (2020).
+\newblock Language models are few-shot learners.
+\newblock {\em arXiv preprint arXiv:2005.14165\/}.
+
+\bibitem[\protect\citeauthoryear{Campbell, Benton, De~Bortoli, Rainforth, Deligiannidis, and Doucet}{Campbell et~al.}{2022}]{campbell2022continuous}
+Campbell, A., J.~Benton, V.~De~Bortoli, T.~Rainforth, G.~Deligiannidis, and A.~Doucet (2022).
+\newblock A continuous time framework for discrete denoising models.
+\newblock {\em Advances in Neural Information Processing Systems\/}~{\em 35}, 28266--28279.
+
+\bibitem[\protect\citeauthoryear{Campbell, Yim, Barzilay, Rainforth, and Jaakkola}{Campbell et~al.}{2024}]{campbell2024generative}
+Campbell, A., J.~Yim, R.~Barzilay, T.~Rainforth, and T.~Jaakkola (2024).
+\newblock Generative flows on discrete state-spaces: Enabling multimodal flows with applications to protein co-design.
+\newblock {\em arXiv preprint arXiv:2402.04997\/}.
+
+\bibitem[\protect\citeauthoryear{Cardoso, Idrissi, Corff, and Moulines}{Cardoso et~al.}{2023}]{cardoso2023monte}
+Cardoso, G., Y.~J.~E. Idrissi, S.~L. Corff, and E.~Moulines (2023).
+\newblock Monte carlo guided diffusion for bayesian linear inverse problems.
+\newblock {\em arXiv preprint arXiv:2308.07983\/}.
+
+\bibitem[\protect\citeauthoryear{Chang, Brantley, Ramamurthy, Misra, and Sun}{Chang et~al.}{2023}]{chang2023learning}
+Chang, J.~D., K.~Brantley, R.~Ramamurthy, D.~Misra, and W.~Sun (2023).
+\newblock Learning to generate better than your llm.
+\newblock {\em arXiv preprint arXiv:2306.11816\/}.
+
+\bibitem[\protect\citeauthoryear{Chaudhury, Lyskov, and Gray}{Chaudhury et~al.}{2010}]{chaudhury2010pyrosetta}
+Chaudhury, S., S.~Lyskov, and J.~J. Gray (2010).
+\newblock Pyrosetta: a script-based interface for implementing molecular modeling algorithms using rosetta.
+\newblock {\em Bioinformatics\/}~{\em 26\/}(5), 689--691.
+
+\bibitem[\protect\citeauthoryear{Chen and Lipman}{Chen and Lipman}{2023}]{chen2023riemannian}
+Chen, R.~T. and Y.~Lipman (2023).
+\newblock Riemannian flow matching on general geometries.
+\newblock {\em arXiv preprint arXiv:2302.03660\/}.
+
+\bibitem[\protect\citeauthoryear{Chetrite and Touchette}{Chetrite and Touchette}{2015}]{chetrite2015nonequilibrium}
+Chetrite, R. and H.~Touchette (2015).
+\newblock Nonequilibrium markov processes conditioned on large deviations.
+\newblock In {\em Annales Henri Poincar{\'e}}, Volume~16, pp.\  2005--2057. Springer.
+
+\bibitem[\protect\citeauthoryear{Chu, Kim, Cheng, El~Nesr, Xu, Shuai, and Huang}{Chu et~al.}{2024}]{chu2024all}
+Chu, A.~E., J.~Kim, L.~Cheng, G.~El~Nesr, M.~Xu, R.~W. Shuai, and P.-S. Huang (2024).
+\newblock An all-atom protein generative model.
+\newblock {\em Proceedings of the National Academy of Sciences\/}~{\em 121\/}(27), e2311500121.
+
+\bibitem[\protect\citeauthoryear{Chung, Kim, Mccann, Klasky, and Ye}{Chung et~al.}{2022}]{chung2022diffusion}
+Chung, H., J.~Kim, M.~T. Mccann, M.~L. Klasky, and J.~C. Ye (2022).
+\newblock Diffusion posterior sampling for general noisy inverse problems.
+\newblock {\em arXiv preprint arXiv:2209.14687\/}.
+
+\bibitem[\protect\citeauthoryear{Chung, Sim, Ryu, and Ye}{Chung et~al.}{2022}]{chung2022improving}
+Chung, H., B.~Sim, D.~Ryu, and J.~C. Ye (2022).
+\newblock Improving diffusion models for inverse problems using manifold constraints.
+\newblock {\em Advances in Neural Information Processing Systems\/}~{\em 35}, 25683--25696.
+
+\bibitem[\protect\citeauthoryear{Clark, Vicol, Swersky, and Fleet}{Clark et~al.}{2023}]{clark2023directly}
+Clark, K., P.~Vicol, K.~Swersky, and D.~J. Fleet (2023).
+\newblock Directly fine-tuning diffusion models on differentiable rewards.
+\newblock {\em arXiv preprint arXiv:2309.17400\/}.
+
+\bibitem[\protect\citeauthoryear{Corso, St{\"a}rk, Jing, Barzilay, and Jaakkola}{Corso et~al.}{2022}]{corso2022diffdock}
+Corso, G., H.~St{\"a}rk, B.~Jing, R.~Barzilay, and T.~Jaakkola (2022).
+\newblock Diffdock: Diffusion steps, twists, and turns for molecular docking.
+\newblock {\em arXiv preprint arXiv:2210.01776\/}.
+
+\bibitem[\protect\citeauthoryear{Cretu, Harris, Roy, Bengio, and Li{\`o}}{Cretu et~al.}{2024}]{cretu2024synflownet}
+Cretu, M., C.~Harris, J.~Roy, E.~Bengio, and P.~Li{\`o} (2024).
+\newblock Synflownet: Towards molecule design with guaranteed synthesis pathways.
+\newblock In {\em ICLR 2024 Workshop on Generative and Experimental Perspectives for Biomolecular Design}.
+
+\bibitem[\protect\citeauthoryear{Czarnecki, Pascanu, Osindero, Jayakumar, Swirszcz, and Jaderberg}{Czarnecki et~al.}{2019}]{czarnecki2019distilling}
+Czarnecki, W.~M., R.~Pascanu, S.~Osindero, S.~Jayakumar, G.~Swirszcz, and M.~Jaderberg (2019).
+\newblock Distilling policy distillation.
+\newblock In {\em The 22nd international conference on artificial intelligence and statistics}, pp.\  1331--1340. PMLR.
+
+\bibitem[\protect\citeauthoryear{Dathathri, Madotto, Lan, Hung, Frank, Molino, Yosinski, and Liu}{Dathathri et~al.}{2019}]{dathathri2019plug}
+Dathathri, S., A.~Madotto, J.~Lan, J.~Hung, E.~Frank, P.~Molino, J.~Yosinski, and R.~Liu (2019).
+\newblock Plug and play language models: A simple approach to controlled text generation.
+\newblock {\em arXiv preprint arXiv:1912.02164\/}.
+
+\bibitem[\protect\citeauthoryear{Dauparas, Anishchenko, Bennett, Bai, Ragotte, Milles, Wicky, Courbet, de~Haas, Bethel, et~al.}{Dauparas et~al.}{2022}]{dauparas2022robust}
+Dauparas, J., I.~Anishchenko, N.~Bennett, H.~Bai, R.~J. Ragotte, L.~F. Milles, B.~I. Wicky, A.~Courbet, R.~J. de~Haas, N.~Bethel, et~al. (2022).
+\newblock Robust deep learning--based protein sequence design using proteinmpnn.
+\newblock {\em Science\/}~{\em 378\/}(6615), 49--56.
+
+\bibitem[\protect\citeauthoryear{De~Bortoli, Mathieu, Hutchinson, Thornton, Teh, and Doucet}{De~Bortoli et~al.}{2022}]{de2022riemannian}
+De~Bortoli, V., E.~Mathieu, M.~Hutchinson, J.~Thornton, Y.~W. Teh, and A.~Doucet (2022).
+\newblock Riemannian score-based generative modelling.
+\newblock {\em Advances in Neural Information Processing Systems\/}~{\em 35}, 2406--2422.
+
+\bibitem[\protect\citeauthoryear{Del~Moral, Doucet, and Jasra}{Del~Moral et~al.}{2006}]{del2006sequential}
+Del~Moral, P., A.~Doucet, and A.~Jasra (2006).
+\newblock Sequential monte carlo samplers.
+\newblock {\em Journal of the Royal Statistical Society Series B: Statistical Methodology\/}~{\em 68\/}(3), 411--436.
+
+\bibitem[\protect\citeauthoryear{Deng and Raffel}{Deng and Raffel}{2023}]{deng2023reward}
+Deng, H. and C.~Raffel (2023).
+\newblock Reward-augmented decoding: Efficient controlled text generation with a unidirectional reward model.
+\newblock {\em arXiv preprint arXiv:2310.09520\/}.
+
+\bibitem[\protect\citeauthoryear{Denker, Vargas, Padhy, Didi, Mathis, Barbano, Dutordoir, Mathieu, Komorowska, and Lio}{Denker et~al.}{2024}]{denker2024deft}
+Denker, A., F.~Vargas, S.~Padhy, K.~Didi, S.~V. Mathis, R.~Barbano, V.~Dutordoir, E.~Mathieu, U.~J. Komorowska, and P.~Lio (2024).
+\newblock Deft: Efficient fine-tuning of diffusion models by learning the generalised $ h $-transform.
+\newblock In {\em The Thirty-eighth Annual Conference on Neural Information Processing Systems}.
+
+\bibitem[\protect\citeauthoryear{Devlin}{Devlin}{2018}]{devlin2018bert}
+Devlin, J. (2018).
+\newblock Bert: Pre-training of deep bidirectional transformers for language understanding.
+\newblock {\em arXiv preprint arXiv:1810.04805\/}.
+
+\bibitem[\protect\citeauthoryear{Dhariwal and Nichol}{Dhariwal and Nichol}{2021}]{dhariwal2021diffusion}
+Dhariwal, P. and A.~Nichol (2021).
+\newblock Diffusion models beat gans on image synthesis.
+\newblock {\em Advances in neural information processing systems\/}~{\em 34}, 8780--8794.
+
+\bibitem[\protect\citeauthoryear{Ding and Jin}{Ding and Jin}{2023}]{ding2023consistency}
+Ding, Z. and C.~Jin (2023).
+\newblock Consistency models as a rich and efficient policy class for reinforcement learning.
+\newblock {\em arXiv preprint arXiv:2309.16984\/}.
+
+\bibitem[\protect\citeauthoryear{Dou and Song}{Dou and Song}{2024}]{dou2024diffusion}
+Dou, Z. and Y.~Song (2024).
+\newblock Diffusion posterior sampling for linear inverse problem solving: A filtering perspective.
+\newblock In {\em The Twelfth International Conference on Learning Representations}.
+
+\bibitem[\protect\citeauthoryear{Doucet, Johansen, et~al.}{Doucet et~al.}{2009}]{doucet2009tutorial}
+Doucet, A., A.~M. Johansen, et~al. (2009).
+\newblock A tutorial on particle filtering and smoothing: Fifteen years later.
+\newblock {\em Handbook of nonlinear filtering\/}~{\em 12\/}(656-704), 3.
+
+\bibitem[\protect\citeauthoryear{Ernst, Geurts, and Wehenkel}{Ernst et~al.}{2005}]{ernst2005tree}
+Ernst, D., P.~Geurts, and L.~Wehenkel (2005).
+\newblock Tree-based batch mode reinforcement learning.
+\newblock {\em Journal of Machine Learning Research\/}~{\em 6}.
+
+\bibitem[\protect\citeauthoryear{Fan, Watkins, Du, Liu, Ryu, Boutilier, Abbeel, Ghavamzadeh, Lee, and Lee}{Fan et~al.}{2023}]{fan2023dpok}
+Fan, Y., O.~Watkins, Y.~Du, H.~Liu, M.~Ryu, C.~Boutilier, P.~Abbeel, M.~Ghavamzadeh, K.~Lee, and K.~Lee (2023).
+\newblock {DPOK}: Reinforcement learning for fine-tuning text-to-image diffusion models.
+\newblock {\em arXiv preprint arXiv:2305.16381\/}.
+
+\bibitem[\protect\citeauthoryear{Feng, Wan, Wen, McAleer, Wen, Zhang, and Wang}{Feng et~al.}{2023}]{feng2023alphazero}
+Feng, X., Z.~Wan, M.~Wen, S.~M. McAleer, Y.~Wen, W.~Zhang, and J.~Wang (2023).
+\newblock Alphazero-like tree-search can guide large language model decoding and training.
+\newblock {\em arXiv preprint arXiv:2309.17179\/}.
+
+\bibitem[\protect\citeauthoryear{Frey, Berenberg, Zadorozhny, Kleinhenz, Lafrance-Vanasse, Hotzel, Wu, Ra, Bonneau, Cho, et~al.}{Frey et~al.}{2023}]{frey2023protein}
+Frey, N.~C., D.~Berenberg, K.~Zadorozhny, J.~Kleinhenz, J.~Lafrance-Vanasse, I.~Hotzel, Y.~Wu, S.~Ra, R.~Bonneau, K.~Cho, et~al. (2023).
+\newblock Protein discovery with discrete walk-jump sampling.
+\newblock {\em arXiv preprint arXiv:2306.12360\/}.
+
+\bibitem[\protect\citeauthoryear{Geist, Scherrer, and Pietquin}{Geist et~al.}{2019}]{geist2019theory}
+Geist, M., B.~Scherrer, and O.~Pietquin (2019).
+\newblock A theory of regularized markov decision processes.
+\newblock In {\em International Conference on Machine Learning}, pp.\  2160--2169. PMLR.
+
+\bibitem[\protect\citeauthoryear{Gordon, Salmond, and Smith}{Gordon et~al.}{1993}]{gordon1993novel}
+Gordon, N.~J., D.~J. Salmond, and A.~F. Smith (1993).
+\newblock Novel approach to nonlinear/non-gaussian bayesian state estimation.
+\newblock In {\em IEE proceedings F (radar and signal processing)}, Volume 140, pp.\  107--113. IET.
+
+\bibitem[\protect\citeauthoryear{Goverde, Wolf, Khakzad, Rosset, and Correia}{Goverde et~al.}{2023}]{goverde2023novo}
+Goverde, C.~A., B.~Wolf, H.~Khakzad, S.~Rosset, and B.~E. Correia (2023).
+\newblock De novo protein design by inversion of the alphafold structure prediction network.
+\newblock {\em Protein Science\/}~{\em 32\/}(6), e4653.
+
+\bibitem[\protect\citeauthoryear{Grill, Altch{\'e}, Tang, Hubert, Valko, Antonoglou, and Munos}{Grill et~al.}{2020}]{grill2020monte}
+Grill, J.-B., F.~Altch{\'e}, Y.~Tang, T.~Hubert, M.~Valko, I.~Antonoglou, and R.~Munos (2020).
+\newblock Monte-carlo tree search as regularized policy optimization.
+\newblock In {\em International Conference on Machine Learning}, pp.\  3769--3778. PMLR.
+
+\bibitem[\protect\citeauthoryear{Haarnoja, Tang, Abbeel, and Levine}{Haarnoja et~al.}{2017}]{haarnoja2017reinforcement}
+Haarnoja, T., H.~Tang, P.~Abbeel, and S.~Levine (2017).
+\newblock Reinforcement learning with deep energy-based policies.
+\newblock In {\em International conference on machine learning}, pp.\  1352--1361. PMLR.
+
+\bibitem[\protect\citeauthoryear{Halgren, Murphy, Friesner, Beard, Frye, Pollard, and Banks}{Halgren et~al.}{2004}]{halgren2004glide}
+Halgren, T.~A., R.~B. Murphy, R.~A. Friesner, H.~S. Beard, L.~L. Frye, W.~T. Pollard, and J.~L. Banks (2004).
+\newblock Glide: a new approach for rapid, accurate docking and scoring. 2. enrichment factors in database screening.
+\newblock {\em Journal of medicinal chemistry\/}~{\em 47\/}(7), 1750--1759.
+
+\bibitem[\protect\citeauthoryear{Han, Shenfeld, Srivastava, Kim, and Agrawal}{Han et~al.}{2024}]{han2024value}
+Han, S., I.~Shenfeld, A.~Srivastava, Y.~Kim, and P.~Agrawal (2024).
+\newblock Value augmented sampling for language model alignment and personalization.
+\newblock {\em arXiv preprint arXiv:2405.06639\/}.
+
+\bibitem[\protect\citeauthoryear{Hao, Gu, Ma, Hong, Wang, Wang, and Hu}{Hao et~al.}{2023}]{hao2023reasoning}
+Hao, S., Y.~Gu, H.~Ma, J.~J. Hong, Z.~Wang, D.~Z. Wang, and Z.~Hu (2023).
+\newblock Reasoning with language model is planning with world model.
+\newblock {\em arXiv preprint arXiv:2305.14992\/}.
+
+\bibitem[\protect\citeauthoryear{Hayes, Rao, Akin, Sofroniew, Oktay, Lin, Verkuil, Tran, Deaton, Wiggert, et~al.}{Hayes et~al.}{2024}]{hayes2024simulating}
+Hayes, T., R.~Rao, H.~Akin, N.~J. Sofroniew, D.~Oktay, Z.~Lin, R.~Verkuil, V.~Q. Tran, J.~Deaton, M.~Wiggert, et~al. (2024).
+\newblock Simulating 500 million years of evolution with a language model.
+\newblock {\em bioRxiv\/}, 2024--07.
+
+\bibitem[\protect\citeauthoryear{He, Chen, Xie, Li, Doll{\'a}r, and Girshick}{He et~al.}{2022}]{he2022masked}
+He, K., X.~Chen, S.~Xie, Y.~Li, P.~Doll{\'a}r, and R.~Girshick (2022).
+\newblock Masked autoencoders are scalable vision learners.
+\newblock In {\em Proceedings of the IEEE/CVF conference on computer vision and pattern recognition}, pp.\  16000--16009.
+
+\bibitem[\protect\citeauthoryear{Heng, Bishop, Deligiannidis, and Doucet}{Heng et~al.}{2020}]{heng2020controlled}
+Heng, J., A.~N. Bishop, G.~Deligiannidis, and A.~Doucet (2020).
+\newblock Controlled sequential monte carlo.
+
+\bibitem[\protect\citeauthoryear{Hie, Candido, Lin, Kabeli, Rao, Smetanin, Sercu, and Rives}{Hie et~al.}{2022}]{hie2022high}
+Hie, B., S.~Candido, Z.~Lin, O.~Kabeli, R.~Rao, N.~Smetanin, T.~Sercu, and A.~Rives (2022).
+\newblock A high-level programming language for generative protein design.
+\newblock {\em bioRxiv\/}, 2022--12.
+
+\bibitem[\protect\citeauthoryear{Hie, Shanker, Xu, Bruun, Weidenbacher, Tang, Wu, Pak, and Kim}{Hie et~al.}{2024}]{hie2024efficient}
+Hie, B.~L., V.~R. Shanker, D.~Xu, T.~U. Bruun, P.~A. Weidenbacher, S.~Tang, W.~Wu, J.~E. Pak, and P.~S. Kim (2024).
+\newblock Efficient evolution of human antibodies from general protein language models.
+\newblock {\em Nature Biotechnology\/}~{\em 42\/}(2), 275--283.
+
+\bibitem[\protect\citeauthoryear{Ho, Jain, and Abbeel}{Ho et~al.}{2020}]{ho2020denoising}
+Ho, J., A.~Jain, and P.~Abbeel (2020).
+\newblock Denoising diffusion probabilistic models.
+\newblock {\em Advances in neural information processing systems\/}~{\em 33}, 6840--6851.
+
+\bibitem[\protect\citeauthoryear{Ho and Salimans}{Ho and Salimans}{2022}]{ho2022classifier}
+Ho, J. and T.~Salimans (2022).
+\newblock Classifier-free diffusion guidance.
+\newblock {\em arXiv preprint arXiv:2207.12598\/}.
+
+\bibitem[\protect\citeauthoryear{Ho, Salimans, Gritsenko, Chan, Norouzi, and Fleet}{Ho et~al.}{2022}]{ho2022video}
+Ho, J., T.~Salimans, A.~Gritsenko, W.~Chan, M.~Norouzi, and D.~J. Fleet (2022).
+\newblock Video diffusion models.
+\newblock {\em Advances in Neural Information Processing Systems\/}~{\em 35}, 8633--8646.
+
+\bibitem[\protect\citeauthoryear{Hubert, Schrittwieser, Antonoglou, Barekatain, Schmitt, and Silver}{Hubert et~al.}{2021}]{hubert2021learning}
+Hubert, T., J.~Schrittwieser, I.~Antonoglou, M.~Barekatain, S.~Schmitt, and D.~Silver (2021).
+\newblock Learning and planning in complex action spaces.
+\newblock In {\em International Conference on Machine Learning}, pp.\  4476--4486. PMLR.
+
+\bibitem[\protect\citeauthoryear{Hyv{\"a}rinen}{Hyv{\"a}rinen}{2007}]{hyvarinen2007some}
+Hyv{\"a}rinen, A. (2007).
+\newblock Some extensions of score matching.
+\newblock {\em Computational statistics \& data analysis\/}~{\em 51\/}(5), 2499--2512.
+
+\bibitem[\protect\citeauthoryear{Hyv{\"a}rinen and Dayan}{Hyv{\"a}rinen and Dayan}{2005}]{hyvarinen2005estimation}
+Hyv{\"a}rinen, A. and P.~Dayan (2005).
+\newblock Estimation of non-normalized statistical models by score matching.
+\newblock {\em Journal of Machine Learning Research\/}~{\em 6\/}(4).
+
+\bibitem[\protect\citeauthoryear{Ingraham, Baranov, Costello, Barber, Wang, Ismail, Frappier, Lord, Ng-Thow-Hing, Van~Vlack, et~al.}{Ingraham et~al.}{2023}]{ingraham2023illuminating}
+Ingraham, J.~B., M.~Baranov, Z.~Costello, K.~W. Barber, W.~Wang, A.~Ismail, V.~Frappier, D.~M. Lord, C.~Ng-Thow-Hing, E.~R. Van~Vlack, et~al. (2023).
+\newblock Illuminating protein space with a programmable generative model.
+\newblock {\em Nature\/}~{\em 623\/}(7989), 1070--1078.
+
+\bibitem[\protect\citeauthoryear{Jeliazkov, del Alamo, and Karpiak}{Jeliazkov et~al.}{2023}]{jeliazkov2023esmfold}
+Jeliazkov, J.~R., D.~del Alamo, and J.~D. Karpiak (2023).
+\newblock Esmfold hallucinates native-like protein sequences.
+\newblock {\em bioRxiv\/}, 2023--05.
+
+\bibitem[\protect\citeauthoryear{Jendrusch, Korbel, and Sadiq}{Jendrusch et~al.}{2021}]{jendrusch2021alphadesign}
+Jendrusch, M., J.~O. Korbel, and S.~K. Sadiq (2021).
+\newblock Alphadesign: A de novo protein design framework based on alphafold.
+\newblock {\em Biorxiv\/}, 2021--10.
+
+\bibitem[\protect\citeauthoryear{Ji, Zhou, Liu, and Davuluri}{Ji et~al.}{2021}]{ji2021dnabert}
+Ji, Y., Z.~Zhou, H.~Liu, and R.~V. Davuluri (2021).
+\newblock Dnabert: pre-trained bidirectional encoder representations from transformers model for dna-language in genome.
+\newblock {\em Bioinformatics\/}~{\em 37\/}(15), 2112--2120.
+
+\bibitem[\protect\citeauthoryear{Jing, Corso, Chang, Barzilay, and Jaakkola}{Jing et~al.}{2022}]{jing2022torsional}
+Jing, B., G.~Corso, J.~Chang, R.~Barzilay, and T.~Jaakkola (2022).
+\newblock Torsional diffusion for molecular conformer generation.
+\newblock {\em Advances in Neural Information Processing Systems\/}~{\em 35}, 24240--24253.
+
+\bibitem[\protect\citeauthoryear{Kajita, Kinjo, and Nishi}{Kajita et~al.}{2020}]{kajita2020autonomous}
+Kajita, S., T.~Kinjo, and T.~Nishi (2020).
+\newblock Autonomous molecular design by monte-carlo tree search and rapid evaluations using molecular dynamics simulations.
+\newblock {\em Communications Physics\/}~{\em 3\/}(1), 77.
+
+\bibitem[\protect\citeauthoryear{Kakade and Langford}{Kakade and Langford}{2002}]{kakade2002approximately}
+Kakade, S. and J.~Langford (2002).
+\newblock Approximately optimal approximate reinforcement learning.
+\newblock In {\em Proceedings of the Nineteenth International Conference on Machine Learning}, pp.\  267--274.
+
+\bibitem[\protect\citeauthoryear{Kawar, Elad, Ermon, and Song}{Kawar et~al.}{2022}]{kawar2022denoising}
+Kawar, B., M.~Elad, S.~Ermon, and J.~Song (2022).
+\newblock Denoising diffusion restoration models.
+\newblock {\em Advances in Neural Information Processing Systems\/}~{\em 35}, 23593--23606.
+
+\bibitem[\protect\citeauthoryear{Kenton and Toutanova}{Kenton and Toutanova}{2019}]{kenton2019bert}
+Kenton, J. D. M.-W.~C. and L.~K. Toutanova (2019).
+\newblock Bert: Pre-training of deep bidirectional transformers for language understanding.
+\newblock In {\em Proceedings of naacL-HLT}, Volume~1, pp.\ ~2. Minneapolis, Minnesota.
+
+\bibitem[\protect\citeauthoryear{Khanov, Burapacheep, and Li}{Khanov et~al.}{2024}]{khanov2024args}
+Khanov, M., J.~Burapacheep, and Y.~Li (2024).
+\newblock Args: Alignment as reward-guided search.
+\newblock {\em arXiv preprint arXiv:2402.01694\/}.
+
+\bibitem[\protect\citeauthoryear{Kitagawa}{Kitagawa}{1993}]{kitagawa1993monte}
+Kitagawa, G. (1993).
+\newblock A monte carlo filtering and smoothing method for non-gaussian nonlinear state space models.
+\newblock In {\em Proceedings of the 2nd US-Japan joint seminar on statistical time series analysis}, Volume 110.
+
+\bibitem[\protect\citeauthoryear{Kocsis and Szepesv{\'a}ri}{Kocsis and Szepesv{\'a}ri}{2006}]{kocsis2006bandit}
+Kocsis, L. and C.~Szepesv{\'a}ri (2006).
+\newblock Bandit based monte-carlo planning.
+\newblock In {\em European conference on machine learning}, pp.\  282--293. Springer.
+
+\bibitem[\protect\citeauthoryear{Leblond, Alayrac, Sifre, Pislar, Lespiau, Antonoglou, Simonyan, and Vinyals}{Leblond et~al.}{2021}]{leblond2021machine}
+Leblond, R., J.-B. Alayrac, L.~Sifre, M.~Pislar, J.-B. Lespiau, I.~Antonoglou, K.~Simonyan, and O.~Vinyals (2021).
+\newblock Machine translation decoding beyond beam search.
+\newblock {\em arXiv preprint arXiv:2104.05336\/}.
+
+\bibitem[\protect\citeauthoryear{Lee}{Lee}{2018}]{lee2018introduction}
+Lee, J.~M. (2018).
+\newblock {\em Introduction to Riemannian manifolds}, Volume~2.
+\newblock Springer.
+
+\bibitem[\protect\citeauthoryear{Leviathan, Kalman, and Matias}{Leviathan et~al.}{2023}]{leviathan2023fast}
+Leviathan, Y., M.~Kalman, and Y.~Matias (2023).
+\newblock Fast inference from transformers via speculative decoding.
+\newblock In {\em International Conference on Machine Learning}, pp.\  19274--19286. PMLR.
+
+\bibitem[\protect\citeauthoryear{Levin and Peres}{Levin and Peres}{2017}]{levin2017markov}
+Levin, D.~A. and Y.~Peres (2017).
+\newblock {\em Markov chains and mixing times}, Volume 107.
+\newblock American Mathematical Soc.
+
+\bibitem[\protect\citeauthoryear{Levine}{Levine}{2018}]{levine2018reinforcement}
+Levine, S. (2018).
+\newblock Reinforcement learning and control as probabilistic inference: Tutorial and review.
+\newblock {\em arXiv preprint arXiv:1805.00909\/}.
+
+\bibitem[\protect\citeauthoryear{Lew, Zhi-Xuan, Grand, and Mansinghka}{Lew et~al.}{2023}]{lew2023sequential}
+Lew, A.~K., T.~Zhi-Xuan, G.~Grand, and V.~K. Mansinghka (2023).
+\newblock Sequential monte carlo steering of large language models using probabilistic programs.
+\newblock {\em arXiv preprint arXiv:2306.03081\/}.
+
+\bibitem[\protect\citeauthoryear{Li, Huang, and Wei}{Li et~al.}{2024}]{li2024towards}
+Li, G., Z.~Huang, and Y.~Wei (2024).
+\newblock Towards a mathematical theory for consistency training in diffusion models.
+\newblock {\em arXiv preprint arXiv:2402.07802\/}.
+
+\bibitem[\protect\citeauthoryear{Li, Leung, Wong, and Ballester}{Li et~al.}{2015}]{li2015improving}
+Li, H., K.-S. Leung, M.-H. Wong, and P.~J. Ballester (2015).
+\newblock Improving autodock vina using random forest: the growing accuracy of binding affinity prediction by the effective exploitation of larger data sets.
+\newblock {\em Molecular informatics\/}~{\em 34\/}(2-3), 115--126.
+
+\bibitem[\protect\citeauthoryear{Li, Zhao, Wang, Scalia, Eraslan, Nair, Biancalani, Regev, Levine, and Uehara}{Li et~al.}{2024}]{li2024derivative}
+Li, X., Y.~Zhao, C.~Wang, G.~Scalia, G.~Eraslan, S.~Nair, T.~Biancalani, A.~Regev, S.~Levine, and M.~Uehara (2024).
+\newblock Derivative-free guidance in continuous and discrete diffusion models with soft value-based decoding.
+\newblock {\em arXiv preprint arXiv:2408.08252\/}.
+
+\bibitem[\protect\citeauthoryear{Lisanza, Gershon, Tipps, Arnoldt, Hendel, Sims, Li, and Baker}{Lisanza et~al.}{2023}]{lisanza2023joint}
+Lisanza, S.~L., J.~M. Gershon, S.~Tipps, L.~Arnoldt, S.~Hendel, J.~N. Sims, X.~Li, and D.~Baker (2023).
+\newblock Joint generation of protein sequence and structure with rosettafold sequence space diffusion.
+\newblock {\em bioRxiv\/}, 2023--05.
+
+\bibitem[\protect\citeauthoryear{Livesey and Marsh}{Livesey and Marsh}{2023}]{livesey2023advancing}
+Livesey, B.~J. and J.~A. Marsh (2023).
+\newblock Advancing variant effect prediction using protein language models.
+\newblock {\em Nature Genetics\/}~{\em 55\/}(9), 1426--1427.
+
+\bibitem[\protect\citeauthoryear{Lou, Meng, and Ermon}{Lou et~al.}{2023}]{lou2023discrete}
+Lou, A., C.~Meng, and S.~Ermon (2023).
+\newblock Discrete diffusion language modeling by estimating the ratios of the data distribution.
+\newblock {\em arXiv preprint arXiv:2310.16834\/}.
+
+\bibitem[\protect\citeauthoryear{Luo}{Luo}{2022}]{luo2022understanding}
+Luo, C. (2022).
+\newblock Understanding diffusion models: A unified perspective.
+\newblock {\em arXiv preprint arXiv:2208.11970\/}.
+
+\bibitem[\protect\citeauthoryear{Ma, Tong, Jia, Hu, Su, Zhang, Yang, Li, Jaakkola, Jia, and Xie}{Ma et~al.}{2025}]{ma2025inferencetimescalingdiffusionmodels}
+Ma, N., S.~Tong, H.~Jia, H.~Hu, Y.-C. Su, M.~Zhang, X.~Yang, Y.~Li, T.~Jaakkola, X.~Jia, and S.~Xie (2025).
+\newblock Inference-time scaling for diffusion models beyond scaling denoising steps.
+
+\bibitem[\protect\citeauthoryear{Meng, Rombach, Gao, Kingma, Ermon, Ho, and Salimans}{Meng et~al.}{2023}]{meng2023distillation}
+Meng, C., R.~Rombach, R.~Gao, D.~Kingma, S.~Ermon, J.~Ho, and T.~Salimans (2023).
+\newblock On distillation of guided diffusion models.
+\newblock In {\em Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition}, pp.\  14297--14306.
+
+\bibitem[\protect\citeauthoryear{Miao, Zhou, Mou, Yan, and Li}{Miao et~al.}{2019}]{miao2019cgmh}
+Miao, N., H.~Zhou, L.~Mou, R.~Yan, and L.~Li (2019).
+\newblock Cgmh: Constrained sentence generation by metropolis-hastings sampling.
+\newblock In {\em Proceedings of the AAAI Conference on Artificial Intelligence}, Volume~33, pp.\  6834--6842.
+
+\bibitem[\protect\citeauthoryear{Mnih, Kavukcuoglu, Silver, Rusu, Veness, Bellemare, Graves, Riedmiller, Fidjeland, Ostrovski, et~al.}{Mnih et~al.}{2015}]{mnih2015human}
+Mnih, V., K.~Kavukcuoglu, D.~Silver, A.~A. Rusu, J.~Veness, M.~G. Bellemare, A.~Graves, M.~Riedmiller, A.~K. Fidjeland, G.~Ostrovski, et~al. (2015).
+\newblock Human-level control through deep reinforcement learning.
+\newblock {\em nature\/}~{\em 518\/}(7540), 529--533.
+
+\bibitem[\protect\citeauthoryear{Mudgal, Lee, Ganapathy, Li, Wang, Huang, Chen, Cheng, Collins, Strohman, et~al.}{Mudgal et~al.}{2023}]{mudgal2023controlled}
+Mudgal, S., J.~Lee, H.~Ganapathy, Y.~Li, T.~Wang, Y.~Huang, Z.~Chen, H.-T. Cheng, M.~Collins, T.~Strohman, et~al. (2023).
+\newblock Controlled decoding from language models.
+\newblock {\em arXiv preprint arXiv:2310.17022\/}.
+
+\bibitem[\protect\citeauthoryear{Nachum, Norouzi, Xu, and Schuurmans}{Nachum et~al.}{2017}]{nachum2017bridging}
+Nachum, O., M.~Norouzi, K.~Xu, and D.~Schuurmans (2017).
+\newblock Bridging the gap between value and policy based reinforcement learning.
+\newblock {\em Advances in neural information processing systems\/}~{\em 30}.
+
+\bibitem[\protect\citeauthoryear{Naesseth, Lindsten, Sch{\"o}n, et~al.}{Naesseth et~al.}{2019}]{naesseth2019elements}
+Naesseth, C.~A., F.~Lindsten, T.~B. Sch{\"o}n, et~al. (2019).
+\newblock Elements of sequential monte carlo.
+\newblock {\em Foundations and Trends{\textregistered} in Machine Learning\/}~{\em 12\/}(3), 307--392.
+
+\bibitem[\protect\citeauthoryear{Nakano, Hilton, Balaji, Wu, Ouyang, Kim, Hesse, Jain, Kosaraju, Saunders, et~al.}{Nakano et~al.}{2021}]{nakano2021webgpt}
+Nakano, R., J.~Hilton, S.~Balaji, J.~Wu, L.~Ouyang, C.~Kim, C.~Hesse, S.~Jain, V.~Kosaraju, W.~Saunders, et~al. (2021).
+\newblock Webgpt: Browser-assisted question-answering with human feedback.
+\newblock {\em arXiv preprint arXiv:2112.09332\/}.
+
+\bibitem[\protect\citeauthoryear{Nisonoff, Xiong, Allenspach, and Listgarten}{Nisonoff et~al.}{2024}]{nisonoff2024unlocking}
+Nisonoff, H., J.~Xiong, S.~Allenspach, and J.~Listgarten (2024).
+\newblock Unlocking guidance for discrete state-space diffusion and flow models.
+\newblock {\em arXiv preprint arXiv:2406.01572\/}.
+
+\bibitem[\protect\citeauthoryear{Peng, Kumar, Zhang, and Levine}{Peng et~al.}{2019}]{peng2019advantage}
+Peng, X.~B., A.~Kumar, G.~Zhang, and S.~Levine (2019).
+\newblock Advantage-weighted regression: Simple and scalable off-policy reinforcement learning.
+\newblock {\em arXiv preprint arXiv:1910.00177\/}.
+
+\bibitem[\protect\citeauthoryear{Peters, Mulling, and Altun}{Peters et~al.}{2010}]{peters2010relative}
+Peters, J., K.~Mulling, and Y.~Altun (2010).
+\newblock Relative entropy policy search.
+\newblock In {\em Proceedings of the AAAI Conference on Artificial Intelligence}, Volume~24, pp.\  1607--1612.
+
+\bibitem[\protect\citeauthoryear{Phillips, Dau, Hutchinson, De~Bortoli, Deligiannidis, and Doucet}{Phillips et~al.}{2024}]{phillips2024particle}
+Phillips, A., H.-D. Dau, M.~J. Hutchinson, V.~De~Bortoli, G.~Deligiannidis, and A.~Doucet (2024).
+\newblock Particle denoising diffusion sampler.
+\newblock {\em arXiv preprint arXiv:2402.06320\/}.
+
+\bibitem[\protect\citeauthoryear{Podell, English, Lacey, Blattmann, Dockhorn, M{\"u}ller, Penna, and Rombach}{Podell et~al.}{2023}]{podell2023sdxl}
+Podell, D., Z.~English, K.~Lacey, A.~Blattmann, T.~Dockhorn, J.~M{\"u}ller, J.~Penna, and R.~Rombach (2023).
+\newblock Sdxl: Improving latent diffusion models for high-resolution image synthesis.
+\newblock {\em arXiv preprint arXiv:2307.01952\/}.
+
+\bibitem[\protect\citeauthoryear{Prabhudesai, Goyal, Pathak, and Fragkiadaki}{Prabhudesai et~al.}{2023}]{prabhudesai2023aligning}
+Prabhudesai, M., A.~Goyal, D.~Pathak, and K.~Fragkiadaki (2023).
+\newblock Aligning text-to-image diffusion models with reward backpropagation.
+\newblock {\em arXiv preprint arXiv:2310.03739\/}.
+
+\bibitem[\protect\citeauthoryear{Qin, Welleck, Khashabi, and Choi}{Qin et~al.}{2022}]{qin2022cold}
+Qin, L., S.~Welleck, D.~Khashabi, and Y.~Choi (2022).
+\newblock Cold decoding: Energy-based constrained text generation with langevin dynamics.
+\newblock {\em Advances in Neural Information Processing Systems\/}~{\em 35}, 9538--9551.
+
+\bibitem[\protect\citeauthoryear{Rector-Brooks, Hasan, Peng, Quinn, Liu, Mittal, Dziri, Bronstein, Bengio, Chatterjee, et~al.}{Rector-Brooks et~al.}{2024}]{rector2024steering}
+Rector-Brooks, J., M.~Hasan, Z.~Peng, Z.~Quinn, C.~Liu, S.~Mittal, N.~Dziri, M.~Bronstein, Y.~Bengio, P.~Chatterjee, et~al. (2024).
+\newblock Steering masked discrete diffusion models via discrete denoising posterior prediction.
+\newblock {\em arXiv preprint arXiv:2410.08134\/}.
+
+\bibitem[\protect\citeauthoryear{Ren, Chen, Rotskoff, and Ying}{Ren et~al.}{2024}]{ren2024discrete}
+Ren, Y., H.~Chen, G.~M. Rotskoff, and L.~Ying (2024).
+\newblock How discrete and continuous diffusion meet: Comprehensive analysis of discrete diffusion models via a stochastic integral framework.
+\newblock {\em arXiv preprint arXiv:2410.03601\/}.
+
+\bibitem[\protect\citeauthoryear{Ren, Jiang, Di, Zhang, Gong, Gong, Jiang, Fu, Sun, Zhou, et~al.}{Ren et~al.}{2024}]{ren2024codonbert}
+Ren, Z., L.~Jiang, Y.~Di, D.~Zhang, J.~Gong, J.~Gong, Q.~Jiang, Z.~Fu, P.~Sun, B.~Zhou, et~al. (2024).
+\newblock Codonbert: a bert-based architecture tailored for codon optimization using the cross-attention mechanism.
+\newblock {\em Bioinformatics\/}, btae330.
+
+\bibitem[\protect\citeauthoryear{Rombach, Blattmann, Lorenz, Esser, and Ommer}{Rombach et~al.}{2022}]{rombach2022high}
+Rombach, R., A.~Blattmann, D.~Lorenz, P.~Esser, and B.~Ommer (2022).
+\newblock High-resolution image synthesis with latent diffusion models.
+\newblock In {\em Proceedings of the IEEE/CVF conference on computer vision and pattern recognition}, pp.\  10684--10695.
+
+\bibitem[\protect\citeauthoryear{Ross and Bagnell}{Ross and Bagnell}{2010}]{ross2010efficient}
+Ross, S. and D.~Bagnell (2010).
+\newblock Efficient reductions for imitation learning.
+\newblock In {\em Proceedings of the thirteenth international conference on artificial intelligence and statistics}, pp.\  661--668. JMLR Workshop and Conference Proceedings.
+
+\bibitem[\protect\citeauthoryear{Ross, Gordon, and Bagnell}{Ross et~al.}{2011}]{ross2011reduction}
+Ross, S., G.~Gordon, and D.~Bagnell (2011).
+\newblock A reduction of imitation learning and structured prediction to no-regret online learning.
+\newblock In {\em Proceedings of the fourteenth international conference on artificial intelligence and statistics}, pp.\  627--635. JMLR Workshop and Conference Proceedings.
+
+\bibitem[\protect\citeauthoryear{Rusu, Colmenarejo, Gulcehre, Desjardins, Kirkpatrick, Pascanu, Mnih, Kavukcuoglu, and Hadsell}{Rusu et~al.}{2015}]{rusu2015policy}
+Rusu, A.~A., S.~G. Colmenarejo, C.~Gulcehre, G.~Desjardins, J.~Kirkpatrick, R.~Pascanu, V.~Mnih, K.~Kavukcuoglu, and R.~Hadsell (2015).
+\newblock Policy distillation.
+\newblock {\em arXiv preprint arXiv:1511.06295\/}.
+
+\bibitem[\protect\citeauthoryear{Sahoo, Arriola, Schiff, Gokaslan, Marroquin, Chiu, Rush, and Kuleshov}{Sahoo et~al.}{2024}]{sahoo2024simple}
+Sahoo, S.~S., M.~Arriola, Y.~Schiff, A.~Gokaslan, E.~Marroquin, J.~T. Chiu, A.~Rush, and V.~Kuleshov (2024).
+\newblock Simple and effective masked diffusion language models.
+\newblock {\em arXiv preprint arXiv:2406.07524\/}.
+
+\bibitem[\protect\citeauthoryear{Salimans and Ho}{Salimans and Ho}{2022}]{salimans2022progressive}
+Salimans, T. and J.~Ho (2022).
+\newblock Progressive distillation for fast sampling of diffusion models.
+\newblock {\em arXiv preprint arXiv:2202.00512\/}.
+
+\bibitem[\protect\citeauthoryear{Salomon-Ferrer, Case, and Walker}{Salomon-Ferrer et~al.}{2013}]{salomon2013overview}
+Salomon-Ferrer, R., D.~A. Case, and R.~C. Walker (2013).
+\newblock An overview of the amber biomolecular simulation package.
+\newblock {\em Wiley Interdisciplinary Reviews: Computational Molecular Science\/}~{\em 3\/}(2), 198--210.
+
+\bibitem[\protect\citeauthoryear{Saremi and Hyv{\"a}rinen}{Saremi and Hyv{\"a}rinen}{2019}]{saremi2019neural}
+Saremi, S. and A.~Hyv{\"a}rinen (2019).
+\newblock Neural empirical bayes.
+\newblock {\em Journal of Machine Learning Research\/}~{\em 20\/}(181), 1--23.
+
+\bibitem[\protect\citeauthoryear{Sarkar, Tang, Zhao, and Koo}{Sarkar et~al.}{2024}]{sarkar2024designing}
+Sarkar, A., Z.~Tang, C.~Zhao, and P.~Koo (2024).
+\newblock Designing dna with tunable regulatory activity using discrete diffusion.
+\newblock {\em bioRxiv\/}, 2024--05.
+
+\bibitem[\protect\citeauthoryear{Schuhmann}{Schuhmann}{2022}]{schuhmann2022laion}
+Schuhmann, C. (2022, Aug).
+\newblock {LAION} aesthetics.
+
+\bibitem[\protect\citeauthoryear{Schulman, Levine, Abbeel, Jordan, and Moritz}{Schulman et~al.}{2015}]{schulman2015trust}
+Schulman, J., S.~Levine, P.~Abbeel, M.~Jordan, and P.~Moritz (2015).
+\newblock Trust region policy optimization.
+\newblock In {\em International conference on machine learning}, pp.\  1889--1897. PMLR.
+
+\bibitem[\protect\citeauthoryear{Schulman, Wolski, Dhariwal, Radford, and Klimov}{Schulman et~al.}{2017}]{schulman2017proximal}
+Schulman, J., F.~Wolski, P.~Dhariwal, A.~Radford, and O.~Klimov (2017).
+\newblock Proximal policy optimization algorithms.
+\newblock {\em arXiv preprint arXiv:1707.06347\/}.
+
+\bibitem[\protect\citeauthoryear{Seo, Kim, Shen, Ester, Park, Ahn, and Kim}{Seo et~al.}{2024}]{seo2024generative}
+Seo, S., M.~Kim, T.~Shen, M.~Ester, J.~Park, S.~Ahn, and W.~Y. Kim (2024).
+\newblock Generative flows on synthetic pathway for drug design.
+\newblock {\em arXiv preprint arXiv:2410.04542\/}.
+
+\bibitem[\protect\citeauthoryear{Shi, Han, Wang, Doucet, and Titsias}{Shi et~al.}{2024}]{shi2024simplified}
+Shi, J., K.~Han, Z.~Wang, A.~Doucet, and M.~K. Titsias (2024).
+\newblock Simplified and generalized masked diffusion for discrete data.
+\newblock {\em arXiv preprint arXiv:2406.04329\/}.
+
+\bibitem[\protect\citeauthoryear{Silver, Huang, Maddison, Guez, Sifre, Van Den~Driessche, Schrittwieser, Antonoglou, Panneershelvam, Lanctot, et~al.}{Silver et~al.}{2016}]{silver2016mastering}
+Silver, D., A.~Huang, C.~J. Maddison, A.~Guez, L.~Sifre, G.~Van Den~Driessche, J.~Schrittwieser, I.~Antonoglou, V.~Panneershelvam, M.~Lanctot, et~al. (2016).
+\newblock Mastering the game of go with deep neural networks and tree search.
+\newblock {\em nature\/}~{\em 529\/}(7587), 484--489.
+
+\bibitem[\protect\citeauthoryear{Singhal, Horvitz, Teehan, Ren, Yu, McKeown, and Ranganath}{Singhal et~al.}{2025}]{singhal2025general}
+Singhal, R., Z.~Horvitz, R.~Teehan, M.~Ren, Z.~Yu, K.~McKeown, and R.~Ranganath (2025).
+\newblock A general framework for inference-time scaling and steering of diffusion models.
+\newblock {\em arXiv preprint arXiv:2501.06848\/}.
+
+\bibitem[\protect\citeauthoryear{Sohl-Dickstein, Weiss, Maheswaranathan, and Ganguli}{Sohl-Dickstein et~al.}{2015}]{sohl2015deep}
+Sohl-Dickstein, J., E.~Weiss, N.~Maheswaranathan, and S.~Ganguli (2015).
+\newblock Deep unsupervised learning using nonequilibrium thermodynamics.
+\newblock In {\em International conference on machine learning}, pp.\  2256--2265. PMLR.
+
+\bibitem[\protect\citeauthoryear{Song, Meng, and Ermon}{Song et~al.}{2020}]{song2020denoising}
+Song, J., C.~Meng, and S.~Ermon (2020).
+\newblock Denoising diffusion implicit models.
+\newblock {\em arXiv preprint arXiv:2010.02502\/}.
+
+\bibitem[\protect\citeauthoryear{Song, Vahdat, Mardani, and Kautz}{Song et~al.}{2023}]{song2023pseudoinverse}
+Song, J., A.~Vahdat, M.~Mardani, and J.~Kautz (2023).
+\newblock Pseudoinverse-guided diffusion models for inverse problems.
+\newblock In {\em International Conference on Learning Representations}.
+
+\bibitem[\protect\citeauthoryear{Song, Dhariwal, Chen, and Sutskever}{Song et~al.}{2023}]{song2023consistency}
+Song, Y., P.~Dhariwal, M.~Chen, and I.~Sutskever (2023).
+\newblock Consistency models.
+\newblock {\em arXiv preprint arXiv:2303.01469\/}.
+
+\bibitem[\protect\citeauthoryear{Song and Ermon}{Song and Ermon}{2019}]{song2019generative}
+Song, Y. and S.~Ermon (2019).
+\newblock Generative modeling by estimating gradients of the data distribution.
+\newblock {\em Advances in neural information processing systems\/}~{\em 32}.
+
+\bibitem[\protect\citeauthoryear{Song, Sohl-Dickstein, Kingma, Kumar, Ermon, and Poole}{Song et~al.}{2021}]{song2021score}
+Song, Y., J.~Sohl-Dickstein, D.~P. Kingma, A.~Kumar, S.~Ermon, and B.~Poole (2021).
+\newblock Score-based generative modeling through stochastic differential equations.
+\newblock {\em ICLR\/}.
+
+\bibitem[\protect\citeauthoryear{Stanton and Jurs}{Stanton and Jurs}{1990}]{stanton1990development}
+Stanton, D.~T. and P.~C. Jurs (1990).
+\newblock Development and use of charged partial surface area structural descriptors in computer-assisted quantitative structure-property relationship studies.
+\newblock {\em Analytical Chemistry\/}~{\em 62\/}(21), 2323--2329.
+
+\bibitem[\protect\citeauthoryear{Sun, Yu, Dai, Schuurmans, and Dai}{Sun et~al.}{2022}]{sun2022score}
+Sun, H., L.~Yu, B.~Dai, D.~Schuurmans, and H.~Dai (2022).
+\newblock Score-based continuous-time discrete diffusion models.
+\newblock {\em arXiv preprint arXiv:2211.16750\/}.
+
+\bibitem[\protect\citeauthoryear{Sun, Chen, Wang, Ye, Feng, and Chen}{Sun et~al.}{2023}]{sun2023accelerating}
+Sun, W., D.~Chen, C.~Wang, D.~Ye, Y.~Feng, and C.~Chen (2023).
+\newblock Accelerating diffusion sampling with classifier-based feature distillation.
+\newblock In {\em 2023 IEEE International Conference on Multimedia and Expo (ICME)}, pp.\  810--815. IEEE.
+
+\bibitem[\protect\citeauthoryear{Sun, Venkatraman, Gordon, Boots, and Bagnell}{Sun et~al.}{2017}]{sun2017deeply}
+Sun, W., A.~Venkatraman, G.~J. Gordon, B.~Boots, and J.~A. Bagnell (2017).
+\newblock Deeply aggrevated: Differentiable imitation learning for sequential prediction.
+\newblock In {\em International conference on machine learning}, pp.\  3309--3318. PMLR.
+
+\bibitem[\protect\citeauthoryear{Swanson, Liu, Catacutan, Arnold, Zou, and Stokes}{Swanson et~al.}{2024}]{swanson2024generative}
+Swanson, K., G.~Liu, D.~B. Catacutan, A.~Arnold, J.~Zou, and J.~M. Stokes (2024).
+\newblock Generative ai for designing and validating easily synthesizable and structurally novel antibiotics.
+\newblock {\em Nature Machine Intelligence\/}~{\em 6\/}(3), 338--353.
+
+\bibitem[\protect\citeauthoryear{Tang and Zhao}{Tang and Zhao}{2024}]{tang2024score}
+Tang, W. and H.~Zhao (2024).
+\newblock Score-based diffusion models via stochastic differential equations--a technical tutorial.
+\newblock {\em arXiv preprint arXiv:2402.07487\/}.
+
+\bibitem[\protect\citeauthoryear{Trippe, Yim, Tischer, Baker, Broderick, Barzilay, and Jaakkola}{Trippe et~al.}{2022}]{trippe2022diffusion}
+Trippe, B.~L., J.~Yim, D.~Tischer, D.~Baker, T.~Broderick, R.~Barzilay, and T.~Jaakkola (2022).
+\newblock Diffusion probabilistic modeling of protein backbones in 3d for the motif-scaffolding problem.
+\newblock {\em arXiv preprint arXiv:2206.04119\/}.
+
+\bibitem[\protect\citeauthoryear{Trott and Olson}{Trott and Olson}{2010}]{trott2010autodock}
+Trott, O. and A.~J. Olson (2010).
+\newblock Autodock vina: improving the speed and accuracy of docking with a new scoring function, efficient optimization, and multithreading.
+\newblock {\em Journal of computational chemistry\/}~{\em 31\/}(2), 455--461.
+
+\bibitem[\protect\citeauthoryear{Uehara, Zhao, Biancalani, and Levine}{Uehara et~al.}{2024}]{uehara2024understanding}
+Uehara, M., Y.~Zhao, T.~Biancalani, and S.~Levine (2024).
+\newblock Understanding reinforcement learning-based fine-tuning of diffusion models: A tutorial and review.
+\newblock {\em arXiv preprint arXiv:2407.13734\/}.
+
+\bibitem[\protect\citeauthoryear{Uehara, Zhao, Black, Hajiramezanali, Scalia, Diamant, Tseng, Biancalani, and Levine}{Uehara et~al.}{2024}]{uehara2024finetuning}
+Uehara, M., Y.~Zhao, K.~Black, E.~Hajiramezanali, G.~Scalia, N.~L. Diamant, A.~M. Tseng, T.~Biancalani, and S.~Levine (2024).
+\newblock Fine-tuning of continuous-time diffusion models as entropy-regularized control.
+\newblock {\em arXiv preprint arXiv:2402.15194\/}.
+
+\bibitem[\protect\citeauthoryear{Uehara, Zhao, Black, Hajiramezanali, Scalia, Diamant, Tseng, Levine, and Biancalani}{Uehara et~al.}{2024}]{uehara2024feedback}
+Uehara, M., Y.~Zhao, K.~Black, E.~Hajiramezanali, G.~Scalia, N.~L. Diamant, A.~M. Tseng, S.~Levine, and T.~Biancalani (2024, 21--27 Jul).
+\newblock Feedback efficient online fine-tuning of diffusion models.
+\newblock In R.~Salakhutdinov, Z.~Kolter, K.~Heller, A.~Weller, N.~Oliver, J.~Scarlett, and F.~Berkenkamp (Eds.), {\em Proceedings of the 41st International Conference on Machine Learning}, Volume 235 of {\em Proceedings of Machine Learning Research}, pp.\  48892--48918. PMLR.
+
+\bibitem[\protect\citeauthoryear{Uehara, Zhao, Hajiramezanali, Scalia, Eraslan, Lal, Levine, and Biancalani}{Uehara et~al.}{2024}]{uehara2024bridging}
+Uehara, M., Y.~Zhao, E.~Hajiramezanali, G.~Scalia, G.~Eraslan, A.~Lal, S.~Levine, and T.~Biancalani (2024).
+\newblock Bridging model-based optimization and generative modeling via conservative fine-tuning of diffusion models.
+\newblock In {\em The Thirty-eighth Annual Conference on Neural Information Processing Systems}.
+
+\bibitem[\protect\citeauthoryear{Venkatraman, Jain, Scimeca, Kim, Sendera, Hasan, Rowe, Mittal, Lemos, Bengio, et~al.}{Venkatraman et~al.}{2024}]{venkatraman2024amortizing}
+Venkatraman, S., M.~Jain, L.~Scimeca, M.~Kim, M.~Sendera, M.~Hasan, L.~Rowe, S.~Mittal, P.~Lemos, E.~Bengio, et~al. (2024).
+\newblock Amortizing intractable inference in diffusion models for vision, language, and control.
+\newblock {\em arXiv preprint arXiv:2405.20971\/}.
+
+\bibitem[\protect\citeauthoryear{Vignac, Krawczuk, Siraudin, Wang, Cevher, and Frossard}{Vignac et~al.}{2023}]{vignac2023digress}
+Vignac, C., I.~Krawczuk, A.~Siraudin, B.~Wang, V.~Cevher, and P.~Frossard (2023).
+\newblock Digress: Discrete denoising diffusion for graph generation.
+\newblock In {\em The Eleventh International Conference on Learning Representations}.
+
+\bibitem[\protect\citeauthoryear{Vincent}{Vincent}{2011}]{vincent2011connection}
+Vincent, P. (2011).
+\newblock A connection between score matching and denoising autoencoders.
+\newblock {\em Neural computation\/}~{\em 23\/}(7), 1661--1674.
+
+\bibitem[\protect\citeauthoryear{Wang and Cho}{Wang and Cho}{2019}]{wang2019bert}
+Wang, A. and K.~Cho (2019).
+\newblock Bert has a mouth, and it must speak: Bert as a markov random field language model.
+\newblock {\em arXiv preprint arXiv:1902.04094\/}.
+
+\bibitem[\protect\citeauthoryear{Wang, Uehara, He, Wang, Biancalani, Lal, Jaakkola, Levine, Wang, and Regev}{Wang et~al.}{2024}]{wang2024finetuning}
+Wang, C., M.~Uehara, Y.~He, A.~Wang, T.~Biancalani, A.~Lal, T.~Jaakkola, S.~Levine, H.~Wang, and A.~Regev (2024).
+\newblock Fine-tuning discrete diffusion models via reward optimization with applications to dna and protein design.
+\newblock {\em arXiv preprint arXiv:2410.13643\/}.
+
+\bibitem[\protect\citeauthoryear{Wang, Zheng, Ye, Xue, Huang, and Gu}{Wang et~al.}{2024}]{wang2024dplm}
+Wang, X., Z.~Zheng, F.~Ye, D.~Xue, S.~Huang, and Q.~Gu (2024).
+\newblock Dplm-2: A multimodal diffusion protein language model.
+\newblock {\em arXiv preprint arXiv:2410.13782\/}.
+
+\bibitem[\protect\citeauthoryear{Watson, Juergens, Bennett, Trippe, Yim, Eisenach, Ahern, Borst, Ragotte, Milles, et~al.}{Watson et~al.}{2023}]{watson2023novo}
+Watson, J.~L., D.~Juergens, N.~R. Bennett, B.~L. Trippe, J.~Yim, H.~E. Eisenach, W.~Ahern, A.~J. Borst, R.~J. Ragotte, L.~F. Milles, et~al. (2023).
+\newblock De novo design of protein structure and function with rfdiffusion.
+\newblock {\em Nature\/}~{\em 620\/}(7976), 1089--1100.
+
+\bibitem[\protect\citeauthoryear{Widatalla, Rafailov, and Hie}{Widatalla et~al.}{2024}]{widatalla2024aligning}
+Widatalla, T., R.~Rafailov, and B.~Hie (2024).
+\newblock Aligning protein generative models with experimental fitness via direct preference optimization.
+\newblock {\em bioRxiv\/}, 2024--05.
+
+\bibitem[\protect\citeauthoryear{Winnifrith, Outeiral, and Hie}{Winnifrith et~al.}{2024}]{winnifrith2024generative}
+Winnifrith, A., C.~Outeiral, and B.~L. Hie (2024).
+\newblock Generative artificial intelligence for de novo protein design.
+\newblock {\em Current Opinion in Structural Biology\/}~{\em 86}, 102794.
+
+\bibitem[\protect\citeauthoryear{Wu, Trippe, Naesseth, Blei, and Cunningham}{Wu et~al.}{2024}]{wu2024practical}
+Wu, L., B.~Trippe, C.~Naesseth, D.~Blei, and J.~P. Cunningham (2024).
+\newblock Practical and asymptotically exact conditional sampling in diffusion models.
+\newblock {\em Advances in Neural Information Processing Systems\/}~{\em 36}.
+
+\bibitem[\protect\citeauthoryear{Xiao, Huang, Mei, Schuurmans, and M{\"u}ller}{Xiao et~al.}{2019}]{xiao2019maximum}
+Xiao, C., R.~Huang, J.~Mei, D.~Schuurmans, and M.~M{\"u}ller (2019).
+\newblock Maximum entropy monte-carlo planning.
+\newblock {\em Advances in Neural Information Processing Systems\/}~{\em 32}.
+
+\bibitem[\protect\citeauthoryear{Xu, Yu, Song, Shi, Ermon, and Tang}{Xu et~al.}{2022}]{xu2022geodiff}
+Xu, M., L.~Yu, Y.~Song, C.~Shi, S.~Ermon, and J.~Tang (2022).
+\newblock Geodiff: A geometric diffusion model for molecular conformation generation.
+\newblock {\em arXiv preprint arXiv:2203.02923\/}.
+
+\bibitem[\protect\citeauthoryear{Yang and Klein}{Yang and Klein}{2021}]{yang2021fudge}
+Yang, K. and D.~Klein (2021).
+\newblock Fudge: Controlled text generation with future discriminators.
+\newblock {\em arXiv preprint arXiv:2104.05218\/}.
+
+\bibitem[\protect\citeauthoryear{Yang, Aasawat, and Yoshizoe}{Yang et~al.}{2020}]{yang2020practical}
+Yang, X., T.~K. Aasawat, and K.~Yoshizoe (2020).
+\newblock Practical massively parallel monte-carlo tree search applied to molecular design.
+\newblock {\em arXiv preprint arXiv:2006.10504\/}.
+
+\bibitem[\protect\citeauthoryear{Yang, Zhang, Yoshizoe, Terayama, and Tsuda}{Yang et~al.}{2017}]{yang2017chemts}
+Yang, X., J.~Zhang, K.~Yoshizoe, K.~Terayama, and K.~Tsuda (2017).
+\newblock Chemts: an efficient python library for de novo molecular generation.
+\newblock {\em Science and technology of advanced materials\/}~{\em 18\/}(1), 972--976.
+
+\bibitem[\protect\citeauthoryear{Yap}{Yap}{2011}]{yap2011padel}
+Yap, C.~W. (2011).
+\newblock Padel-descriptor: An open source software to calculate molecular descriptors and fingerprints.
+\newblock {\em Journal of computational chemistry\/}~{\em 32\/}(7), 1466--1474.
+
+\bibitem[\protect\citeauthoryear{Ye, Zheng, Xue, Shen, Wang, Ma, Wang, Wang, Zhou, and Gu}{Ye et~al.}{2024}]{ye2024proteinbench}
+Ye, F., Z.~Zheng, D.~Xue, Y.~Shen, L.~Wang, Y.~Ma, Y.~Wang, X.~Wang, X.~Zhou, and Q.~Gu (2024).
+\newblock Proteinbench: A holistic evaluation of protein foundation models.
+\newblock {\em arXiv preprint arXiv:2409.06744\/}.
+
+\bibitem[\protect\citeauthoryear{Yim, Trippe, De~Bortoli, Mathieu, Doucet, Barzilay, and Jaakkola}{Yim et~al.}{2023}]{yim2023se}
+Yim, J., B.~L. Trippe, V.~De~Bortoli, E.~Mathieu, A.~Doucet, R.~Barzilay, and T.~Jaakkola (2023).
+\newblock Se (3) diffusion model with application to protein backbone generation.
+\newblock {\em arXiv preprint arXiv:2302.02277\/}.
+
+\bibitem[\protect\citeauthoryear{Yuan, Huang, Ni, Chen, and Wang}{Yuan et~al.}{2024}]{yuan2024reward}
+Yuan, H., K.~Huang, C.~Ni, M.~Chen, and M.~Wang (2024).
+\newblock Reward-directed conditional diffusion: Provable distribution estimation and reward improvement.
+\newblock {\em Advances in Neural Information Processing Systems\/}~{\em 36}.
+
+\bibitem[\protect\citeauthoryear{Zhang, Rao, and Agrawala}{Zhang et~al.}{2023}]{zhang2023adding}
+Zhang, L., A.~Rao, and M.~Agrawala (2023).
+\newblock Adding conditional control to text-to-image diffusion models.
+\newblock In {\em Proceedings of the IEEE/CVF International Conference on Computer Vision}, pp.\  3836--3847.
+
+\bibitem[\protect\citeauthoryear{Zhang, Haider, Yin, Qiu, Wang, Bartlett, and Zanette}{Zhang et~al.}{2024}]{zhang2024accelerating}
+Zhang, R., M.~Haider, M.~Yin, J.~Qiu, M.~Wang, P.~Bartlett, and A.~Zanette (2024).
+\newblock Accelerating best-of-n via speculative rejection.
+
+\bibitem[\protect\citeauthoryear{Zhao, Brekelmans, Makhzani, and Grosse}{Zhao et~al.}{2024}]{zhao2024probabilistic}
+Zhao, S., R.~Brekelmans, A.~Makhzani, and R.~Grosse (2024).
+\newblock Probabilistic inference in language models via twisted sequential monte carlo.
+\newblock {\em arXiv preprint arXiv:2404.17546\/}.
+
+\bibitem[\protect\citeauthoryear{Zhao, Shi, Mackey, and Linderman}{Zhao et~al.}{2024}]{zhao2024informed}
+Zhao, Y., J.~Shi, L.~Mackey, and S.~Linderman (2024).
+\newblock Informed correctors for discrete diffusion models.
+\newblock {\em arXiv preprint arXiv:2407.21243\/}.
+
+\bibitem[\protect\citeauthoryear{Zhao, Uehara, Scalia, Biancalani, Levine, and Hajiramezanali}{Zhao et~al.}{2024}]{zhao2024adding}
+Zhao, Y., M.~Uehara, G.~Scalia, T.~Biancalani, S.~Levine, and E.~Hajiramezanali (2024).
+\newblock Adding conditional control to diffusion models with reinforcement learning.
+\newblock {\em arXiv preprint arXiv:2406.12120\/}.
+
+\end{thebibliography}

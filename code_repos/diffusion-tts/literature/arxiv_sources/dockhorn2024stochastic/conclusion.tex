@@ -1,0 +1,8 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We introduced a general method to identify a family of SDEs that have the same marginal distribution as a particular SDE, including the special case where the diffusion coefficient of the given SDE is zero.
+This special case corresponds to flow models which naively only support deterministic sampling.
+Our method enables flexible construction of stochastic samplers for such deterministic models where the diffusion coefficient can be chosen at sampling time from an infinitely large set of possibilities in an application and evaluation metric dependent way.
+Our method requires explicit access to the score function, in absence of which it is limited to a subset of flow models where the score function can be derived from the given flow model.
+However, this set includes currently popular rectified flow and diffusion models where one of the distributions is Gaussian.

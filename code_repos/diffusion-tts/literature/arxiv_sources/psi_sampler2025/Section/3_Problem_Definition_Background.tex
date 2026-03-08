@@ -1,0 +1,95 @@
+\section{Problem Definition \& Background}
+\label{sec:problem definition and related_work}
+\subsection{Background: Score-Based Generative Models}
+\label{sec:problem definition and background:score based gnerative models}
+Given a standard Gaussian distribution $p_1=\mathcal{N}(\mathbf{0}, \mathbf{I})$ and data distribution $p_0$, score-based generative models are trained to estimate the score function, which is the gradient of log-density, at intermediate distributions $p_t$ along a probability path connecting $p_1$ to $p_0$.\\
+In score-based generative models~\cite{sohldickstein2015deep, song2020sde, ho2020ddpm, albergo2023stochasticinterpolantsunifyingframework, ma2024sitexploringflowdiffusionbased}, the data generation process is typically described by a reverse-time stochastic differential equation (SDE)~\cite{song2020sde}:
+\begin{align}
+    \label{eq:preliminaries:pretrained model SDE}
+    \mathrm{d}\mathbf{x}_t = \mathbf{f}(\mathbf{x}_t, t)\mathrm{d}t + g(t)\mathrm{d}\mathbf{W},\quad \mathbf{f}(\mathbf{x}_t, t) = \mathbf{u}(\mathbf{x}_t, t) - \frac{g(t)^2}{2} \nabla \log p_t(\mathbf{x}_t),\quad \mathbf{x}_1\sim p_1
+\end{align}
+where $\mathbf{f}(\mathbf{x}_t, t)$ and $g(t)$ denote the drift and diffusion coefficients, respectively, and $\mathbf{W}$ is a $d$-dimensional standard Brownian motion. 
+The term $\mathbf{u}(\mathbf{x_t, t})$ corresponds to the velocity field in flow-based model~\cite{lipman2023flow, liu2023flow, lipman2024flowmatchingguidecode} and also corresponds to the drift term of the probability flow ODE (PF-ODE) in diffusion models~\cite{song2020sde}. We assume that the generation process proceeds in decreasing time, $i.e.$, from $t=1$ to $t=0$, following the convention commonly adopted in the score-based generative modeling literature~\cite{song2020sde, ho2020ddpm}. \\
+The deterministic flow-based generative model can be recovered by setting the diffusion coefficient $g(t) = 0$, thereby reducing the SDE to an ODE.
+Note that flow-based models~\cite{lipman2023flow, liu2023flow}, originally formulated as an ODE, can be extended to an SDE formulation that shares the same intermediate distributions $p_t$, thereby allowing stochasticity to be introduced during generation~\cite{ma2024sitexploringflowdiffusionbased, albergo2023stochasticinterpolantsunifyingframework, kim2025inference}. Moreover, the velocity field $\mathbf{u}(\mathbf{x}_t, t)$ can be readily transformed into a score function~\cite{ma2024sitexploringflowdiffusionbased, lipman2024flowmatchingguidecode}. For these reasons, we categorize both diffusion and flow-based models as the score-based generative models.
+
+\subsection{Inference-Time Reward Alignment Using Score-Based Generative Models}
+\label{sec:problem definition and related work:inference-time reward alignment}
+Inference-time reward alignment~\cite{uehara2025inference, kim2025DAS, kim2025inference, wu2023tds, dou2024fps, singh2025code, li2024svdd} aims to generate high-reward samples $\mathbf{x}_0\in \mathbb{R}^{d}$ without fine-tuning the pretrained score-based generative model. 
+The reward associated with each sample is evaluated using a task-specific reward function $r:\mathbb{R}^d \rightarrow \mathbb{R}$, which may quantify aspects such as aesthetic quality or the degree to which a generated image satisfies user-specified conditions.\\
+But to avoid over-optimization~\cite{fan2023reinforcement,uehara2024finetuningcontinuoustimediffusionmodels, kim2025DAS} with respect to the reward function, which may lead to severe distributional drift or adversarial artifacts, a regularization term is introduced to encourage the generated samples to remain close to the prior of the pre-trained generative model. This trade-off is captured by defining a target distribution $p_0^*$ that balances reward maximization with prior adherence, formally expressed as:
+\begin{align}
+    \label{eq:problem definition and related work:optimization object at t=0}
+    p_0^* = \argmax_{q} \underbrace{\mathbb{E}_{\mathbf{x}_0\sim q}[r(\mathbf{x}_0)]}_{(a)}-\alpha \underbrace{\mathcal{D}_{\text{KL}}[q\|p_0]}_{(b)}.
+\end{align}
+Here, term $(a)$ in Eq.~\ref{eq:problem definition and related work:optimization object at t=0} encourages the generation of high-reward samples, while term $(b)$, the KL-divergence, enforces proximity to the pre-trained model’s prior distribution $p_0$. The parameter $\alpha\in \mathbb{R}_{+}$ controls the strength of this regularization: larger values of $\alpha$ lead to stronger adherence to the prior, typically resulting in lower reward but higher proximity to the support of the generative model.\\
+The target distribution $p_0^*$ has a closed-form expression, given by:
+\begin{align}
+    \label{eq:problem definition and related work:target distribution at t=0}
+    p_0^*(\mathbf{x}_0)=\frac{1}{Z_0}p_0(\mathbf{x}_0)\exp\left( \frac{r(\mathbf{x}_0)}{\alpha} \right)
+\end{align}
+where $Z_0$ is normalizing constant. Detailed derivation using calculus of variations can be found in Kim \textit{et al.}~\cite{kim2025inference}.
+This reward-aware target distribution has been widely studied in the reinforcement learning literature~\cite{haarnoja2017reinforcement, geist2019theory, schulman2017equivalence, neu2017unified, levine1805reinforcement}. Analogous ideas have also been adopted to fine-tuning score-based generative models~\cite{uehara2024bridging, tang2024finetuningdiffusionmodelsstochastic, domingo-enrich2025adjoint, black2024ddpo, yang2-24D3po,clark2024draft, prabhudesai2024alignprop, fan2023reinforcement, lee2023aligning, uehara2024finetuningcontinuoustimediffusionmodels}. As in our case, this target distribution also serves as the objective from which one aims to sample in inference-time reward alignment task~\cite{uehara2025inference, kim2025DAS, kim2025inference}.
+
+Since sample generation in score-based models proceeds progressively through a sequence of timesteps, it becomes important to maintain proximity with the pretrained model not just at the endpoint, but throughout the entire generative trajectory. To account for this, the original objective in Eq.~\ref{eq:problem definition and related work:optimization object at t=0} is extended to a trajectory-level formulation.
+Although there are some works~\cite{prabhudesai2024alignprop, fan2023reinforcement, black2024ddpo} that frame this problem as entropy-regularized Markov Decision Process (MDPs), where each denoising step of score-based generative model corresponds to a policy in RL, 
+% we adopt a stochastic optimal control (SOC) perspective~\cite{uehara2024finetuningcontinuoustimediffusionmodels, tang2024finetuningdiffusionmodelsstochastic, domingo-enrich2025adjoint}. SOC seeks to find a control strategy that optimally steers a stochastic system toward desired outcomes, typically by maximizing expected rewards while accounting for randomness in dynamics. This viewpoint is better aligned with the continuous-time nature of score-based generative models and leads to principled derivations of both the optimal drift and the optimal initial distribution.
+we adopt a stochastic optimal control (SOC) perspective~\cite{uehara2024finetuningcontinuoustimediffusionmodels, tang2024finetuningdiffusionmodelsstochastic, domingo-enrich2025adjoint}, which naturally aligns with the continuous-time structure of score-based generative models and yields principled expressions for both the optimal drift and the optimal initial distribution.
+
+Building on this, the entropy-regularized SOC framework proposed by Uehara\textit{ et al.}~\cite{uehara2024finetuningcontinuoustimediffusionmodels} provides closed-form approximations for the optimal initial distribution, optimal control function, and optimal transition kernel that together enable sampling from the reward-aligned target distribution defined in Eq.~\ref{eq:problem definition and related work:target distribution at t=0} using score-based generative models.\\
+The optimal initial distribution can be derived using the Feynman–Kac formula and approximated via Tweedie’s formula~\cite{efron2011tweedie} as:
+\begingroup
+\setlength{\abovedisplayskip}{4pt}
+\setlength{\belowdisplayskip}{4pt}
+\begin{align}
+    \label{eq:problem definition and related work:approx optimal inital distribution}
+    \tilde{p}_1^*(\mathbf{x}_1)&:=\frac{1}{Z_1}p_1(\mathbf{x}_1)\exp\left(\frac{r(\mathbf{x}_{0|1})}{\alpha} \right)
+\end{align}
+\endgroup
+where $\mathbf{x}_{0|t}:=\mathbb{E}_{\mathbf{x}_0\sim p_{0|t}}[\mathbf{x}_0]$ denotes Tweedie's formula~\cite{efron2011tweedie}, representing the conditional expectation under $p_{0|t} := p(\mathbf{x}_0 | \mathbf{x}_t)$.
+Under the same approximation, the transition kernel satisfying the optimality condition is approximated by:
+\begingroup
+\setlength{\abovedisplayskip}{4pt}
+\setlength{\belowdisplayskip}{4pt}
+\begin{align}
+    \label{eq:problem definition and related work:approx reverse kernel}
+    \tilde{p}_{\theta}^*(\mathbf{x}_{t-\Delta t}|\mathbf{x}_{t})=\frac{\exp (r(\mathbf{x}_{0|t-\Delta t})/\alpha)}{\exp (r(\mathbf{x}_{0|t})/\alpha)}p_\theta(\mathbf{x}_{t-\Delta t}|\mathbf{x}_{t}).
+\end{align}
+\endgroup
+where $p_\theta(\mathbf{x}_{t-\Delta t}|\mathbf{x}_{t})$ is a transition kernel of the pretrained score-based generative model.\\
+Further details on the SOC framework and its theoretical foundations in the context of reward alignment are provided in the Appendix~\ref{sec:appx:SOC}.
+
+\subsection{Sequential Monte Carlo (SMC) with Denoising Process}
+\label{sec:problem definition and related work:smc}
+For reward-alignment tasks, recent works~\cite{kim2025DAS, dou2024fps, wu2023tds, trippe2023smcdiff, cardoso2024mcgdiff} have demonstrated that Sequential Monte Carlo (SMC) can efficiently generate samples from the target distribution in Eq.~\ref{eq:problem definition and related work:target distribution at t=0}. When applied to score-based generative models, the denoising process is coupled with the sequential structure of SMC. Specifically, several prior works~\cite{uehara2025inference, kim2025DAS, wu2023tds} adopt Eq.~\ref{eq:problem definition and related work:approx reverse kernel} as the intermediate target transition kernel for sampling from Eq.~\ref{eq:problem definition and related work:target distribution at t=0}.\\
+In general, SMC methods~\cite{doucet2001sequential, del2006sequential, chopin2020introduction} are a class of algorithms for sampling from sequences of probability distributions. 
+Starting from $K$ particles sampled $i.i.d.$ from the initial distribution, SMC approximates a target distribution by maintaining a population of $K$ weighted particles, which are repeatedly updated through a sequence of propagation, reweighting, and resampling steps. 
+The weights are updated over time according to the following rule:
+\begin{align}
+    \label{eq:problem definition and related work:weight for SMC}
+    w_{t-\Delta t}^{(i)}=\frac{p_{\text{tar}}(\mathbf{x}_{t-\Delta t}|\mathbf{x}_{t})}{q(\mathbf{x}_{t-\Delta t}|\mathbf{x}_{t})}w_t^{(i)}
+\end{align}
+where $p_{\text{tar}}$ is an intermediate target kernel we want to sample from, and $q(\mathbf{x}_{t-\Delta t}|\mathbf{x}_{t})$ is a proposal kernel used during propagation.  
+As the number of particles $K$ increases, the approximation improves due to the asymptotic consistency of the SMC framework~\cite{Chopin_2004, moral2004feynman}. 
+
+Following~\cite{uehara2025inference, kim2025DAS, wu2023tds}, which derives both the intermediate target transition kernel and the associated proposal for reward-guided SMC, we compute the weight at each time step as:
+\begin{align}
+    \label{eq:problem definition:SMC weight}
+    w_{t-\Delta t}^{(i)}= \frac{\exp (r(\mathbf{x}_{0|t-\Delta t})/\alpha)p_\theta(\mathbf{x}_{t-\Delta t}|\mathbf{x}_{t})}{\exp (r(\mathbf{x}_{0|t})/\alpha)q(\mathbf{x}_{t-\Delta t}|\mathbf{x}_{t})}w_t^{(i)},
+\end{align}
+where $p_\text{tar}$ is set as Eq.~\ref{eq:problem definition and related work:approx reverse kernel}.
+The proposal distribution $q(\mathbf{x}_{t-\Delta t}|\mathbf{x}_{t})$ is obtained by discretizing the reverse-time SDE with an optimal control. This yields the following proposal with the Tweedie's formula~\cite{efron2011tweedie}:
+\begin{align}
+    \label{eq:problem definition and related work:SMC proposal}
+    q(\mathbf{x}_{t-\Delta t}|\mathbf{x}_{t})=\mathcal{N}(\mathbf{x}_t-\mathbf{f}(\mathbf{x}_t,t)\Delta t+g^2(t)\nabla \frac{r(\mathbf{x}_{0|t})}{\alpha}\Delta t,\;g(t)^2\Delta t \mathbf{I}).
+\end{align}
+Details on SMC and its connection to reward-guided sampling are provided in the Appendix~\ref{sec:appx:smc}.
+
+\subsection{Limitations of Previous SMC-Based Reward Alignment Methods}
+While prior work~\cite{kim2025DAS, dou2024fps, wu2023tds, trippe2023smcdiff, cardoso2024mcgdiff} has demonstrated the effectiveness of SMC in inference-time reward alignment, these approaches typically rely on sampling initial particles from the standard Gaussian prior. 
+We argue that sampling particles directly from the posterior in Eq.~\ref{eq:problem definition and related work:approx optimal inital distribution}, rather than the prior, is essential for better high-reward region coverage and efficiency in SMC.
+First, the effectiveness of the SMC proposal distribution Eq.~\ref{eq:problem definition and related work:SMC proposal} diminishes over time making it increasingly difficult to guide particles toward high-reward regions in later steps. As the diffusion coefficient $g(t)^2 \to 0$ as $t \to 0$, it weakens the influence of the reward signal $\nabla r(\mathbf{x}_{0|t})$, since it is scaled by $g^2(t)$ in the proposal.
+Second, the initial position of particles becomes particularly critical when the reward function is highly non-convex and multi-modal. 
+While the denoising process may, in principle, help particles escape local modes and explore better regions, this becomes increasingly difficult over time, not only due to the vanishing diffusion coefficient, but also because the intermediate distribution becomes less perturbed and more sharply concentrated, reducing connectivity between modes~\cite{kim2022dmcmc}. In contrast, at early time steps ($e.g.$, $t=1$), the posterior distribution is more diffuse and better connected across modes, enabling more effective exploration.
+Furthermore, recent score-based generative models distilled for trajectory straightening have made the approximation of the optimal initial distribution in Eq.~\ref{eq:problem definition and related work:approx optimal inital distribution} sufficiently precise.
+These observations jointly motivate allocating computational effort to obtaining high-quality initial particles that are better aligned with the reward signal.

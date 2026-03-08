@@ -1,0 +1,40 @@
+\section{Tree Search Algorithms for Alignment}\label{sec:MCTS}
+
+A promising approach for more accurate inference alignment involves leveraging search-based algorithms. As outlined in \pref{sec:beam}, SVDD in \citet{li2024derivative} performs beam search using a value function. More sophisticated algorithms, such as Monte Carlo Tree Search (MCTS) \citep{kocsis2006bandit,silver2016mastering,hubert2021learning,xiao2019maximum}, can also be applied to diffusion models by appropriately defining the search tree. Key aspects to address include determining the depth and width of the search tree, followed by the evaluation of leaf nodes.
+
+Before delving into these aspects in detail, we observe that, unlike in language models \citep{feng2023alphazero,hao2023reasoning}, relatively few studies (e.g., \citet{li2024derivative}) have explored this direction within the context of diffusion models. Given the success of MCTS in molecular generation \citep{yang2017chemts,kajita2020autonomous,yang2020practical,swanson2024generative} in general, we believe that this approach offers considerable potential for molecular design even when using diffusion models. We encourage further research in this area.
+
+\begin{AIbox}{Key Message in Section~\ref{sec:MCTS}} 
+Pre-trained diffusion models inherently induce a tree structure that characterizes natural-like designs. Search algorithms, such as Monte Carlo Tree Search (MCTS), can be applied to maximize rewards while effectively utilizing value functions.
+\end{AIbox}
+
+
+\subsection{Defining the Search Tree}
+
+We now discuss how to properly define the search tree.
+
+\paragraph{Original Tree Depth/Width.}
+In diffusion models, a natural approach is to set the original tree depth according to the discretization level, typically ranging from $50$ to $1000$. However, the original tree width in diffusion models is considerably larger. For example, in continuous diffusion, the action space lies in a high-dimensional Euclidean space, making exhaustive search computationally prohibitive. Even in masked discrete diffusion models, the tree width is $LK$ (as we mention in \pref{sec:discrete_first}), where $L$ denotes the token length and $K$ the vocabulary size. 
+
+
+
+\paragraph{Search Tree Depth/Width.} The primary challenge lies in managing the large tree width and depth discussed above. To address this, we must adopt search algorithms capable of strategically limiting node expansion and constraining both the width and depth of the tree. Specifically, starting from the root node (the current state during inference), we limit the tree width and depth by sampling nodes from pre-trained models during expansion, preventing further growth beyond a specified limit. This subsampling strategy, which leverages pre-trained models, has been effectively used in RL like AlphaZero and its variants \citep{hubert2021learning,grill2020monte}, as well as in language models \citep{feng2023alphazero,hao2023reasoning}.
+
+\begin{wrapfigure}{r}{0.5\textwidth}
+    \centering
+    \vspace{-0.5cm}
+\includegraphics[width=0.5\textwidth]{images/Lookahead.png}
+    \caption{Evaluation of leaf nodes with estimated value functions at $t-k$ rather than $t-1$ by further rolling out pre-trained policies. }
+    \label{fig:MCTS}
+    \vspace{-0.5cm}
+\end{wrapfigure}
+
+
+
+\subsection{How to Run Simulations from Leaf Nodes}
+
+While any off-the-shelf search algorithm can be applied to the tree described above, a key decision is how to evaluate the leaf node in the search tree (i.e., the simulation phase in MCTS). To explain it, in the following, let us assume the leaf node is $x_{t-1}$.
+
+The simplest way to evaluate the leaf node is by using a value function approximation, such as the posterior mean approximation in \pref{sec:method_value}, and setting it as $r(\hat{x}_0(x_{t-1}))$. However, as $t$ increases, this approximation generally becomes less accurate. A potentially more effective strategy is to evaluate $r(\hat{x}_0(x_{t-k}))$ after running the pre-trained model for an additional $k$ steps. This approach can yield a more precise estimate, as $t - k$ is closer to 0. The algorithm, combined with beam search, is illustrated in \pref{fig:MCTS}.
+
+However, it is important to note that this $k$-step look-ahead incurs additional computational costs. In the extreme case, running the model for $t$ steps would provide the most accurate evaluation of $r(x_0)$ at time 0 but would be computationally prohibitive. We leave the exploration of this trade-off between accuracy and computational efficiency for future work.

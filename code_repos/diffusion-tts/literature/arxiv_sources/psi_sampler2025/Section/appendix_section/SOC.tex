@@ -1,0 +1,86 @@
+\section{Reward Alignment with Stochastic Optimal Control}
+\label{sec:appx:SOC}
+In the reward alignment task for continuous-time generative models~\cite{uehara2024finetuningcontinuoustimediffusionmodels, domingo-enrich2025adjoint}, which our method builds upon, Uehara \textit{et al.}~\cite{uehara2024finetuningcontinuoustimediffusionmodels} introduce both an additional drift term $\psi$ (often referred to as a control vector field) and a modified initial distribution $\bar{p}_1$. 
+Then the goal is to find $\psi$ and $\bar{p}_1$ such that the resulting final distribution at time $t=0$ matches the target distribution $p_0^*$ defined in Eq.~\ref{eq:problem definition and related work:target distribution at t=0}. Accordingly, the original reverse-time SDE used for generation (Eq.~\ref{eq:preliminaries:pretrained model SDE}) is replaced by a controlled SDE:
+\begin{align}
+    \label{eq:SOC:target SDE}
+    \mathrm{d}\mathbf{x}_t &= \left(\mathbf{f}(\mathbf{x}_t, t)-\psi(\mathbf{x}_t, t) \right)\mathrm{d}t + g(t)\mathrm{d}\mathbf{W}, \qquad \mathbf{x}_1\sim \bar{p}_1.
+\end{align}
+
+This entropy-regularized stochastic optimal control framework adopts a pathwise optimization that integrates KL divergence penalties over trajectories and thus optimization formulation of Eq.~\ref{eq:problem definition and related work:optimization object at t=0} changes accordingly:
+\begin{align}
+    \label{eq:SOC:objective for controlled sde}
+    \psi^*, p^*_1 = \argmax_{\psi, \bar{p}_1} \mathbb{E}_{\mathbb{P}^{\psi, \bar{p}_1}}\left[ r(\mathbf{x}_0) \right]-\alpha \mathcal{D}_{\text{KL}}\left[ \mathbb{P}^{\psi, \bar{p}_1} \|\mathbb{P}^{\text{data}} \right],
+\end{align}
+where $\mathbb{P}^{\psi, \bar{p}_1}$ is a measure over trajectories induced by the controlled SDE in Eq.~\ref{eq:SOC:target SDE} and $\mathbb{P}^{\text{data}}$ is a measure over trajectories induced by the pre-trained SDE in Eq.~\ref{eq:preliminaries:pretrained model SDE}.\\
+KL-divergence term in Eq.~\ref{eq:SOC:objective for controlled sde} can be expressed as the sum of affine control cost $ \frac{\| \psi(\mathbf{x}_t, t) \|^2}{g^2(t)}$ and log Radon–Nikodym derivative at $t=1$, $i.e.$, $\log \frac{\bar{p}_1(\mathbf{x}_1)}{p_1(\mathbf{x}_1)}$:
+\begin{align}
+    \label{eq:SOC:objective for controlled sde girsanov}
+    \psi^*, p^*_1 = \argmax_{\psi, \bar{p}_1} \mathbb{E}_{\mathbb{P}^{\psi, \bar{p}_1}}\left[ r(\mathbf{x}_0) \right]-\alpha\mathbb{E}_{\mathbb{P}^{\psi, \bar{p}_1}}\left[ \frac{1}{2} \int_{t=0}^1 \frac{\| \psi(\mathbf{x}_t, t) \|^2}{g^2(t)}\mathrm{d}t+\log \frac{\bar{p}_1(\mathbf{x}_1)}{p_1(\mathbf{x}_1)} \right],
+\end{align}
+which can be proved~\cite{uehara2024finetuningcontinuoustimediffusionmodels, domingo-enrich2025adjoint} using Girsanov theorem and martingale property of It$\hat{\text{o}}$ integral.\\
+The optimal control $\psi^*$ and the optimal initial distribution $p_1^*$ can be derived by introducing the optimal value function, defined as:
+\begin{align}
+    \label{eq:SOC:optimal value funtion}
+    V_t^*(\mathbf{x}_t)&=  \max_{\psi} \mathbb{E}_{\mathbb{P}^{\psi}}\left[ r(\mathbf{x}_0)- \frac{\alpha}{2}\int_{s=0}^t \frac{\| \psi(\mathbf{x}_s, s) \|^2}{g^2(s)}\mathrm{d}s \middle| \mathbf{x}_t \right].
+    % &=\mathbb{E}_{\mathbb{P}^{*}}\left[r(\mathbf{x}_0)- \frac{\alpha}{2}\int_{s=0}^t \frac{\| \psi(\mathbf{x}_s, s) \|^2}{g^2(s)}\mathrm{d}s \middle| \mathbf{x}_t\right],
+\end{align}
+where the expectation is taken over trajectories induced by the controlled SDE in Eq.~\ref{eq:SOC:target SDE} with current $\mathbf{x}_t$ is given.
+
+From the optimal value function at $t=1$, we can derive explicit formulation of the optimal initial distribution $p_1^*$ in terms of $V_1^*(\mathbf{x}_t)$ by plugging the definition of optimal value function at $t=1$ (Eq.~\ref{eq:SOC:optimal value funtion}) into Eq.~\ref{eq:SOC:objective for controlled sde girsanov}:
+\begin{align}
+    p_1^*=\argmax_{\bar{p}_1} \mathbb{E}_{\bar{p}_1}\left[ V_1^*(\mathbf{x}_1) \right]-\alpha \mathcal{D}_{\text{KL}}\left[ 
+\bar{p}_1 \| p_1 \right].
+\end{align}
+Solving this yields the following closed-form expression for the optimal initial distribution (derivable via calculus of variations~\cite{kim2025inference}), similarly to Eq.~\ref{eq:problem definition and related work:target distribution at t=0}:
+\begin{align}
+    \label{eq:SOC:optimal initial distribution}
+    p_1^*(\mathbf{x}_1)=\frac{1}{Z_1}p_1(\mathbf{x}_1)\exp\left( \frac{V_1^*(\mathbf{x}_1)}{\alpha} \right).
+\end{align}
+
+The optimal control $\psi^*$ can be obtained from the Hamilton–Jacobi–Bellman (HJB) equation and is expressed in terms of the gradient of the optimal value function:
+\begin{align}
+    \label{eq:SOC:optimal control}
+    \psi^*(\mathbf{x}_t,t)=g^2(t)\nabla \frac{V_t^*(\mathbf{x}_t)}{\alpha}.
+\end{align}
+Moreover, the optimal value function itself admits an interpretable closed-form expression via the Feynman–Kac formula:
+\begin{align}
+    \label{eq:SOC:feynman-kac}
+    V_t^*(\mathbf{x}_t)=\alpha \log \mathbb{E}_{\mathbb{P}^{\text{data}}}\left[ \exp \left( \frac{r(\mathbf{x}_0)}{\alpha} 
+   \right) \middle| \mathbf{x}_t \right].
+\end{align}\\
+Importantly, Uehara \textit{et al.}~\cite{uehara2024finetuningcontinuoustimediffusionmodels} further proved that the marginal distribution $p_t^*(\mathbf{x}_t)$ induced by the controlled SDE (with optimal control $\psi^*$ and optimal initial distribution $p_1^*$) is given by:
+\begin{align}
+    \label{eq:SOC:optimal intermediate distribution}
+    p_t^*(\mathbf{x}_t)=\frac{1}{Z_t}p_t(\mathbf{x}_t)\exp \left( \frac{V_t^*(\mathbf{x}_t)}{\alpha} \right),
+\end{align}
+where $p_t(\mathbf{x}_t)$ is the marginal distribution of the pretrained score-based generative model at time $t$.
+Similarly, the optimal transition kernel under the controlled dynamics is:
+\begin{align}
+    \label{eq:SOC:optimal transition kernel}
+    p_\theta^*(\mathbf{x}_{t-\Delta t}|\mathbf{x}_t)=\frac{\exp (V_{t-\Delta t}^*(\mathbf{x}_{t-\Delta t})/\alpha)}{\exp (V_t^*(\mathbf{x}_t)/\alpha)}p_\theta (\mathbf{x}_{t-\Delta t}|\mathbf{x}_t),
+\end{align}
+where $p_\theta (\mathbf{x}_{t-\Delta t}|\mathbf{x}_t)$ denotes the transition kernel of the pretrained model, $i.e.$, corresponding to the discretization of the reverse-time SDE defined in Eq.~\ref{eq:preliminaries:pretrained model SDE}.
+For detail derivation, see Theorem 1 and Lemma 3 in Uehara \textit{et al.}~\cite{uehara2024finetuningcontinuoustimediffusionmodels}.
+Notably, Eq.~\ref{eq:SOC:optimal intermediate distribution} implies that by following the controlled dynamics defined by Eq.~\ref{eq:SOC:target SDE}, initialized with the optimal distribution $p_1^*$ and guided by the optimal control $\psi^*$, the resulting distribution at time $t=0$ will match the target distribution $p_0^*$ defined in Eq.~\ref{eq:problem definition and related work:target distribution at t=0}.\\
+
+Note that the optimal control, optimal initial distribution, and optimal transition kernel are all expressed in terms of the optimal value function. 
+However, despite their interpretable forms, these expressions are not directly computable in practice due to the intractability of the posterior $p(\mathbf{x}_0|\mathbf{x}_t)$.
+This motivates the use of approximation techniques, most notably Tweedie’s formula~\cite{efron2011tweedie}, which is widely adopted in the literature~\cite{chung2023dps, ye2024tfg, wu2023tds, kim2025DAS} to make such expressions tractable. 
+Under this approximation, the posterior is approximated by a Dirac-delta distribution centered at the posterior mean denoted by $\mathbf{x}_{0|t}:=\mathbb{E}_{\mathbf{x}_0\sim p_{0|t}}[\mathbf{x}_0]$, representing the conditional expectation under $p_{0|t}:=p(\mathbf{x}_0|\mathbf{x}_t)$. 
+Consequently, the optimal value function simplifies to:
+\begin{align}
+     V_t^*(\mathbf{x}_t)=\alpha \log \int \exp \left( \frac{r(\mathbf{x}_0)}{\alpha}\right)p(\mathbf{x}_0|\mathbf{x}_t)\mathrm{d}\mathbf{x}_0 \simeq \alpha \log \int \exp \left( \frac{r(\mathbf{x}_0)}{\alpha}\right)\delta(\mathbf{x}_0-\mathbf{x}_{0|t}) \mathrm{d}\mathbf{x}_0=r(\mathbf{x}_{0|t}),
+\end{align}
+where $\mathbf{x}_{0|t}$ is a deterministic function of $\mathbf{x}_t$. 
+Using this approximation, we have following approximations for the optimal initial distribution $\tilde{p}_1^*$, the optimal control $\tilde{\psi}^*$, and the optimal transition kernel $\tilde{p_\theta}^*$, which are used throughout the paper:
+\begin{align}
+    \label{eq:SOC:approx optimal initial distribution}
+    \tilde{p}_1^*(\mathbf{x}_1)&:=\frac{1}{Z_1}p_1(\mathbf{x}_1)\exp\left(\frac{r(\mathbf{x}_{0|1})}{\alpha} \right)\\
+    \label{eq:SOC:approx optimal control}
+    \tilde{\psi}^*(\mathbf{x}_t)&=g^2(t)\nabla \frac{r(\mathbf{x}_{0|t})}{\alpha}\\
+    \label{eq:SOC:approx optimal transition kernel}
+    \tilde{p}_{\theta}^*(\mathbf{x}_{t-\Delta t}|\mathbf{x}_{t})&=\frac{\exp (r(\mathbf{x}_{0|t-\Delta t})/\alpha)}{\exp (r(\mathbf{x}_{0|t})/\alpha)}p_\theta(\mathbf{x}_{t-\Delta t}|\mathbf{x}_{t}).
+\end{align}\\
+It is worth noting that sampling from the optimal initial distribution is essential to theoretically guarantee convergence to the target distribution Eq.~\ref{eq:problem definition and related work:target distribution at t=0}. Simply following the optimal control alone does not suffice and can in fact bias away from the target, a phenomenon known as the \textit{value function bias} problem~\cite{domingo-enrich2025adjoint}. 
+To the best of our knowledge, this is the first work to explicitly address this problem in the context of inference-time reward-alignment with score-based generative models.

@@ -1,0 +1,9 @@
+\begin{abstract}
+  % The abstract paragraph should be indented \nicefrac{1}{2}~inch (3~picas) on
+  % both the left- and right-hand margins. Use 10~point type, with a vertical
+  % spacing (leading) of 11~points.  The word \textbf{Abstract} must be centered,
+  % bold, and in point size 12. Two line spaces precede the abstract. The abstract
+  % must be limited to one paragraph.
+  We introduce \methodname{}, an SMC-based framework incorporating pCNL-based initial particle sampling for effective inference-time reward alignment with a score-based generative model. Inference-time reward alignment with score-based generative models has recently gained significant traction, following a broader paradigm shift from pre-training to post-training optimization. At the core of this trend is the application of Sequential Monte Carlo (SMC) to the denoising process. However, existing methods typically initialize particles from the Gaussian prior, which inadequately captures reward-relevant regions and results in reduced sampling efficiency. We demonstrate that initializing from the reward-aware posterior significantly improves alignment performance. To enable posterior sampling in high-dimensional latent spaces, we introduce the preconditioned Crank–Nicolson Langevin (pCNL) algorithm, which combines dimension-robust proposals with gradient-informed dynamics. This approach enables efficient and scalable posterior sampling and consistently improves performance across various reward alignment tasks, including layout-to-image generation, quantity-aware generation, and aesthetic-preference generation, as demonstrated in our experiments. \\
+  Project Webpage: \textcolor{magenta}{\href{https://psi-sampler.github.io/}{https://psi-sampler.github.io/}}
+\end{abstract}

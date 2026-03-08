@@ -1,0 +1,78 @@
+\begin{figure}[ht!]
+\centering
+{\scriptsize
+\setlength{\tabcolsep}{0pt}
+\renewcommand{\arraystretch}{0.0}
+\newcolumntype{Y}{>{\centering\arraybackslash}m{0.025\textwidth}}
+\newcolumntype{Z}{>{\centering\arraybackslash}m{0.155\textwidth}}
+\newcolumntype{X}{>{\centering\arraybackslash}m{0.0002\textwidth}}
+
+\begin{tabularx}{\textwidth}{Y Z Z Z X Y Z Z Z}
+\toprule
+& Linear-ODE & Linear-SDE & VP-SDE & & & Linear-ODE & Linear-SDE & VP-SDE \\
+\midrule
+& \multicolumn{3}{c}{\textit{``Three small, non-blue boxes on a large blue box.''}} & & 
+& \multicolumn{3}{c}{\makecell{\textit{``Five origami cranes hang from the ceiling,}\\ \textit{only one of which is red, and the others are all white.''}}} \\
+\rotatebox{90}{\makecell{\scriptsize{SMC}~\cite{Kim:2025DAS}}} &
+\includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/SMC_ODE_0.jpg} &
+\includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/SMC_SDE_0.jpg} &
+\includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/SMC_VP-SDE_0.jpg} & & 
+\rotatebox{90}{\makecell{\scriptsize{CoDe}~\cite{Singh:2025CoDE}}} &
+\includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/CoDe_ODE_2.jpg} &
+\includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/CoDe_SDE_2.jpg} &
+\includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/CoDe_VP-SDE_2.jpg} \\
+\midrule
+& \multicolumn{3}{c}{\makecell{\textit{``A mouse pad has two pencils on it,}\\ \textit{the shorter pencil is green and the longer one is not.''}}} & & 
+& \multicolumn{3}{c}{\makecell{\textit{``Five ants are carrying biscuits, and an ant that}\\\textit{is not carrying biscuits is standing on a green leaf directing them.''}}} \\
+\rotatebox{90}{\makecell{\scriptsize{SVDD}~\cite{Li2024:SVDD}}} &
+\includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/SVDD_ODE_0.jpg} &
+\includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/SVDD_SDE_0.jpg} &
+\includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/SVDD_VP-SDE_0.jpg} & & 
+\rotatebox{90}{\makecell{\scriptsize{\Oursbf{}}}} &
+\includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/Ours_ODE_2.jpg} &
+\includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/Ours_SDE_2.jpg} &
+\includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/Ours_VP-SDE_2.jpg} \\
+\bottomrule
+\end{tabularx}
+}
+\caption{\textbf{Qualitative results of compositional text-to-image generation.} 
+    We use VQAScore~\cite{Lin:2024CLIPFlanT5}, which measures text-image alignment, as the given reward for inference-time scaling. 
+    SDE and interpolant conversion enable more effective exploration during inference, enhancing the performance of all particle sampling methods~\cite{Kim:2025DAS, Singh:2025CoDE, Li2024:SVDD}, including~\Ours{}.
+}
+\label{fig:composition_methods_vp}
+\vspace{-1.25\baselineskip}
+\end{figure}
+
+
+
+
+% \begin{figure}[ht!]
+% {\tiny
+% \setlength{\tabcolsep}{0.0em}
+% \def\arraystretch{0.0}
+% \newcolumntype{X}{>{\centering\arraybackslash}m{0.005\textwidth}}
+% \newcolumntype{Y}{>{\centering\arraybackslash}m{0.05\textwidth}}
+% \newcolumntype{Z}{>{\centering\arraybackslash}m{0.15\textwidth}}
+%     \begin{tabularx}{\textwidth}{Y | Z Z Z | Y | Z Z Z}
+%         \toprule
+%         & Linear-ODE & Linear-SDE & VP-SDE & & & Linear-ODE & Linear-SDE & VP-SDE \\
+%         % & \small{Linear-ODE} & \small{Linear-SDE} & \small{VP-SDE} & & & \small{Linear-ODE} & \small{Linear-SDE} & 
+%         % \small{VP-SDE} \\
+%         % & \normalsize{L.O.} & \normalsize{L.S.} & \normalsize{V.S.} & & & \normalsize{L.O.} & \normalsize{L.S.} & \normalsize{V.S.} \\
+%         % & L.O. & L.S. & V.S. & & & L.O. & L.S. & V.S. \\
+%         \midrule
+%         & \multicolumn{3}{c}{\textit{``Four balloons, one cup, four desks, two dogs and four microwaves.''}} & \multicolumn{3}{c}{\textit{``Seven desks.''}} \\
+%         \rotatebox{90}{\makecell{\normalsize{SMC}~\cite{Kim:2025DAS}}} & \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/SMC_ODE_0.jpg} &
+%         \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/SMC_SDE_0.jpg} &
+%         \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/SMC_VP-SDE_0.jpg} & 
+%         \rotatebox{90}{\makecell{\normalsize{SMC}~\cite{Kim:2025DAS}}} &
+%         \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/CoDe_ODE_3.jpg} &
+%         \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/CoDe_SDE_3.jpg} &
+%         \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/CoDe_VP-SDE_3.jpg} \\
+%         \midrule
+%         \bottomrule
+%     \end{tabularx}
+%   \caption{\textbf{Qualitative comparisons of inference-time SDE conversion and interpolant conversion.} SDE and interpolant conversion expand the search space enabling efficient particle sampling.}
+%   \label{fig:ode-sde-vpsde-appendix1}
+% }
+% \end{figure}

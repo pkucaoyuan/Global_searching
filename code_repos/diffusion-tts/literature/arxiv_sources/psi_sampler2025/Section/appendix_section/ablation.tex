@@ -1,0 +1,11 @@
+\section{Ablation Study: Varying NFE Allocation for Initial Particle Sampling Stage}
+\label{sec:appx:ablation}
+
+In this section, we present an ablation study examining how performance varies with different allocations of the total number of function evaluations (NFE) between the initial particle sampling stage (via Top-$K$-of-$N$ or MCMC) and the subsequent SMC stage. In our main experiments, we adopt a balanced allocation, with 50\% of the NFE budget used for initial particle sampling and the remaining 50\% for SMC (denoted as 50\%/50\%).
+
+To assess the effect of this design choice, we evaluate two alternative NFE splits: 25\% for initial particle sampling and 75\% for SMC (denoted as 25\%/75\%), and 75\% for initial particle sampling with only 25\% for SMC (denoted as 75\%/25\%). We conduct this analysis on both Top-$K$-of-$N$ and \methodname{}. For consistency, we fix the number of SMC steps to 25, adjusting the number of particles accordingly: 30 particles for the 25\%/75\% setting and 10 particles for the 75\%/25\% setting. For the aesthetic-preference image generation, we use half the number of particles in both settings to reflect the halved NFE. Tab.~\ref{tab:overall_table_ablation} summarizes the results.
+
+The 75\%/25\% split overinvests compute to initial particle sampling, resulting in inefficiency due to the significantly reduced number of particles used during the SMC phase. As a result, it consistently showed the worst performance across all reward metrics. Conversely, the 25\%/75\% split dedicates too little budget to initial particle sampling, limiting exploration despite using 1.5 times more particles than the 50\%/50\% split. This leads to weaker performance, particularly under held-out reward evaluations. In contrast, the balanced 50\%/50\% split consistently yields the most robust performance across both seen and held-out rewards across all tasks.
+\vspace{0.75cm}
+
+\input{tables_appendix/ablation}

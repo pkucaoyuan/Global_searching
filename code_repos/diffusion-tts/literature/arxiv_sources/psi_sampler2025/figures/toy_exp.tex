@@ -1,0 +1,16 @@
+\begin{figure}[t!]
+    \scriptsize
+    \centering
+    \setlength{\tabcolsep}{0.0em} 
+    \renewcommand{\arraystretch}{0}
+    \begin{tabularx}{\linewidth}{*{5}{Y}} 
+        (A) Original & (B) Ground Truth & (C) SMC & (D) MALA+SMC & (E) \methodname{} \\
+        \multicolumn{5}{c}{\includegraphics[width=1\linewidth]{figures/graph/psi_exp_v2.png}}
+        \\
+    \end{tabularx}
+    \vspace{-0.5\baselineskip}
+    % \caption{\textbf{Toy experiment results.} The top row shows the noise space samples (red), while the bottom row shows the corresponding clean data space samples (blue). From left to right, each column represents: (1) the original distribution; (2) the ground truth target distribution; (3) results of SMC; (4) results of MALA+SMC; and (5) results of \methodname{}.} 
+    \caption{\footnotesize \textbf{Toy sampling–method comparison.} Each panel visualizes both the initial samples (blue) and their corresponding clean data samples (red). From left to right: (A) samples from the original score-based generative model; (B) the target distribution defined by Eq.~\ref{eq:problem definition and related work:target distribution at t=0}; (C) results from SMC; (D) results from MALA+SMC; and (E) results from our proposed $\Psi$-Sampler.}
+    \label{fig:toy_exp}
+    \vspace{-0.3cm}
+\end{figure}

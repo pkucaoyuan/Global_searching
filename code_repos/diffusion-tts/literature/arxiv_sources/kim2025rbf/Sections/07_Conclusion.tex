@@ -1,0 +1,15 @@
+\vspace{-0.7\baselineskip}
+\section{Conclusion and Limitation}
+\vspace{-0.9\baselineskip}
+\label{sec:conclusion}
+We introduced a novel inference-time scaling method for flow models with three key contributions: (1) ODE-to-SDE conversion for particle sampling in flow models, (2) Linear-to-VP interpolant conversion for enhanced diversity and search efficiency, and (3) Rollover Budget Forcing (RBF) for adaptive compute allocation. We demonstrated the effectiveness of VP-SDE-based generation in applying off-the-shelf particle sampling to flow models and showed that our \Ours{} combined with VP-SDE generation outperforms previous methods. 
+However, our method introduces additional inference-time overhead, which could become a bottleneck when the base model prediction is computationally intensive. Also, since the pretrained model may have been trained on uncurated datasets, our approach may produce undesirable outputs upon malicious attempts. 
+
+% \vspace{-0.4\baselineskip}
+% \paragraph{Limitations and Societal Impacts.} \cmt{
+%     While our method enables efficient particle sampling in flow models, it introduces additional inference-time overhead, which could become a bottleneck when the base model prediction is computationally intensive. Since the pretrained model may have been trained on uncurated datasets, our approach may produce undesirable outputs upon malicious attempts. 
+% }
+
+
+\section*{Acknowledgments}
+This work was supported by the NRF of Korea (RS-2023-00209723); IITP grants (RS-2022-II220594, RS-2023-00227592, RS-2024-00399817, RS-2025-25441313, RS-2025-25443318, RS-2025-02653113); and the Technology Innovation Program (RS-2025-02317326), all funded by the Korean government (MSIT and MOTIE), as well as by the DRB-KAIST SketchTheFuture Research Center.

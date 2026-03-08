@@ -1,0 +1,49 @@
+\section{More Related Works} \label{sec:related_works}
+
+
+We have covered various aspects of inference-time techniques in diffusion models. In this section, we finally outline additional related topics that were not the primary focus of our discussion.
+
+
+\subsection{Walk-Jump Sampling for Protein Design}\label{sec:refinement}
+
+Walk-Jump Sampling \citep{frey2023protein,saremi2019neural} is an algorithm designed to achieve high reward values while preserving the naturalness of the generated designs, making it particularly effective for antibody design. 
+
+The intuition behind walk-jump sampling can be summarized as follows. Similar to our objective in \pref{sec:goal},  the goal is to sample from the distribution $\exp(r(x))/\alpha )p^{\pre}(x)$. One approach to achieve this is through Langevin Monte Carlo (LMC), also known as the Metropolis-adjusted Langevin algorithm (MALA): sampling using the following update: 
+{ \begin{align}\label{eq:MALA}
+    y_{k} \leftarrow  y_{k-1} +  \beta\{\nabla r(y_{k-1})/\alpha  + \nabla_{x} \log p^{\pre}(x)|_{y_{k-1}} \} + \sqrt{2\beta}\epsilon_k,\quad \epsilon_k\sim \Ncal(0,1).
+\end{align}
+} 
+ However, the score function $\nabla_{x} \log p^{\pre}(x)$ is unknown. A common method for estimating the score is through denoising score matching \citep{vincent2011connection}: 
+\begin{align*}
+   \hat \theta= \argmin_{\theta} \EE_{x\sim p^{\pre},\tilde x \sim \Ncal(x,\sigma^2 I)}\left[ \left \|\frac{x-\tilde x}{\sigma^2} - s(\tilde x;\theta) \right \|^2 \right ]. 
+\end{align*}
+By plugging this into \eqref{eq:MALA}, the LMC algorithm is an iterative algorithm using the following update: 
+\begin{align}\label{eq:MALA2}
+    y_{k} \leftarrow y_{k-1}  + \beta \{ \underbrace{ \nabla r(y_{k-1})/\alpha}_{\textbf{Walk}} +  \underbrace{s(y_{k-1};\hat \theta)}_{\textbf{Jump} } \} + \sqrt{2\beta}\epsilon_k. 
+\end{align}
+{ Building on this intuition, walk-in jump sampling is defined as an algorithm that iteratively performs a ``walk'' (adding the gradient of the reward) followed by a ``jump'' (adding a score) as described above.} 
+
+
+Importantly, walk-in jump sampling can be viewed as a variant of classifier guidance, where a single noise level is employed, as follows. For this purpose, recall that while the diffusion model can be framed in terms of variational inference \citep{ho2020denoising} or time-reversal SDEs \citep{song2021score}, another popular derivation involves running MALA with score function estimation at multiple noise levels, known as score-based models (SBMs) \citep{song2019generative}. Thus, walk-jump sampling is similar to to classifier guidance explained in \pref{sec:derivative} where only a single noise level is used.  However, the key difference is that the score and gradient are iteratively updated in an MCMC framework, rather than progressing sequentially from $t = T$ to $t = 0$, as in classifier guidance. For further details, please refer to the original papers.
+
+
+\subsection{Hallucination Approaches for Protein Design} 
+
+{ The term ``hallucination'' (or its variants) frequently refers to sequential refinement methods in silico protein design. Specifically, this algorithm iteratively refines a sequence based on predefined reward functions. Standard methods for sequence refinement include MCMC \citep{anishchenko2021novo}, evolutionary algorithms \citep{jendrusch2021alphadesign}, and gradient-based algorithms \citep{goverde2023novo,jeliazkov2023esmfold}. In our context, \pref{sec:editing} is closely related. 
+Common reward functions include the loss between the predicted structure (using structural prediction models such as AlphaFold or ESMFold \citep{ahdritz2024openfold}) and the target structure, as well as metrics like stability, binding activity, and geometric constraints. 
+
+
+\subsection{Inference-Time Techniques for Inpainting and Linear Inverse Problems.}
+Inpainting tasks involve reconstructing or filling in missing or corrupted regions of an image in a manner that appears natural and consistent with the surrounding content. In the context of protein design, a similar challenge is known as motif scaffolding, as mentioned in the introduction. For inpainting tasks, replacement methods (e.g., \citet{song2021score}) are commonly employed. These approaches map the conditioned region (known location) through the forward process and replace it with generated samples at each step of the inference process. While this method is somewhat heuristic, a more refined version incorporating SMC was later proposed by \citet{trippe2022diffusion}, demonstrating success in motif scaffolding.
+
+Additionally, for related tasks like linear inverse problems, more specialized algorithms have recently been introduced \citep{song2023pseudoinverse,chung2022improving,kawar2022denoising}. Although these methods may not be as broadly applicable as those discussed here, they offer superior performance in specific, constrained scenarios.
+
+
+
+\subsection{Speculative Decoding.} Speculative decoding is an inference-time technique used in NLP to accelerate the generation process \citep{leviathan2023fast}. The key idea is to generate multiple candidate tokens simultaneously using a smaller, faster model and validate them with a larger, more powerful model. As models grow larger in protein design, adopting similar techniques could offer substantial benefits in accelerating inference in this field as well.
+
+
+
+\section*{Acknowledgement}
+
+The authors would like to thank Amy Wang, Francisco Vargas, Christian A. Naesseth for valuable discussions and feedback. 

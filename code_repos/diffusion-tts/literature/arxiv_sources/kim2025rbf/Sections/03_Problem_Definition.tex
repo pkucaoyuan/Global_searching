@@ -1,0 +1,214 @@
+\vspace{-0.5\baselineskip}
+\section{Problem Definition and Background}
+\vspace{-0.6\baselineskip}
+
+\subsection{Inference-Time Reward Alignment}
+\vspace{-0.4\baselineskip}
+\label{sec:problem_definition}
+Given a pretrained flow model that maps the source distribution, a standard Gaussian distribution $p_1$, into the data distribution $p_0$, our objective is to generate high-reward samples $\B{x}_0 \in \mathbb{R}^d$ from the pretrained flow model without additional training--a task known as inference-time reward alignment. We denote the given reward function as $r: \mathbb{R}^{d} \rightarrow \mathbb{R}$, 
+which measures text alignment or user preference for a generated sample. 
+% which is designed to measure text alignment or user preferences for the generated output.
+% This function can capture various criteria, such as text alignment or user preferences, depending on the specific task. 
+Following previous works~\cite{Korbak:2022RLDM,Uehara:2024Finetuning,Uehara:2024Bridging}, our objective can be formulated as finding the following target distribution:
+{\small
+    \begin{align}
+        \label{eq:reward_max_obj}
+        p^{*}_0 &= \argmax_{q} \  \mathbb{E}_{\B{x}_0 \sim q} \underbrace{\left[ r(\B{x}_0) \right]}_{\text{Reward}} -\beta \underbrace{\mathcal{D}_{\text{KL}} \left[ q \| p_0 \right]}_{\text{KL Regularization}},
+    \end{align}
+}%
+% which covers samples with high reward while not deviating too much from the original data distribution $p(\B{x}_0)$, with its strength controlled by the hyperparameter $\beta$. 
+which maximizes the expected reward while the KL divergence term prevents $p^{*}_0(\B{x}_0)$ from deviating too far from $p_0(\B{x}_0)$, with its strength controlled by the hyperparameter $\beta$. 
+As shown in previous work~\cite{Rafailov2023:DPO}, the target distribution $p^{*}_0$ can be computed as:
+{\small
+\begin{align}
+    \label{eq:target_distribution}
+    p^{*}_0(\B{x}_0) &= \frac{1}{Z} p_0(\B{x}_0) \exp \left( \frac{r(\B{x}_0)}{\beta} \right),
+\end{align}
+}%
+where $Z$ is a normalization constant. We present details in Appendix~\ref{sec:appendix_optimal_marginal_target}. However, sampling from the target distribution is non-trivial. 
+
+% A notable approach for sampling from the target distribution is \emph{particle sampling}, which iteratively draws new particles from high-reward samples, focusing computation on promising regions. 
+A notable approach for sampling from the target distribution is \emph{particle sampling}, which maintains a set of candidate samples—referred to as particles—and iteratively propagates high-reward samples while discarding lower-reward ones. 
+% iteratively refines them by shifting toward higher-reward regions.
+When combined with the denoising process of diffusion models, particle sampling can improve the efficiency of limited computational resources in inference-time scaling. 
+In the next section, we review particle sampling methods used in diffusion models and, \emph{for the first time,} we explore insights for adapting them to flow models. 
+% This improves efficiency by reducing unnecessary evaluations, driving its widespread use in inference-time scaling.
+
+
+\mycomment{
+1. 우리의 목적은 pretrained된 flow model로부터 high reward를 가진 샘플을 추가 학습 없이 생성해내는 것이며, 이는 reward alignment task라고도 불린다. 
+2. 이 때 우리는 pretrained 된 flow 모델의 샘플 분포를 p_\theta, 주어진 reward model은 r(\cdot)이라고 한다. 
+% 
+3. Formally, 우리의 이러한 방식은 다음의 목적 함수로 정리된다: 
+4. 여기서 KL divergence term은 주어진 reward model에 샘플들이 overfit 되는 것을 방지하며, beta는 그 세기를 결정하는 hyperparameter이다. 
+5. 위 목적 함수를 최대화하는 target distribution은 다음과 같이 정리된다. 
+% 
+6. 하지만 target distribution에서 직접 샘플링을 하는 것은 분모의 normalization constant로 인해 불가능하다. 
+7. 다음 섹션에서는 기존 diffusion model을 활용한 이전 연구들이 particle sampler을 활용해서 target distribution로부터 샘플을 생성한 방식에 대해 살펴보겠다. 
+% 
+% 
+}
+
+
+% We consider a task that aims to generate a sample from a pretrained flow model that maximizes the reward. 
+% We denote 
+
+% Inference-time scaling~\cite{} aims to improve the performance of pretrained models by allocating additional computation during inference. 
+% In this work, we focus on aligning a flow model to a given reward model, such as one that measures text alignment~\cite{} or aesthetic quality~\cite{}. 
+
+% Formally, our objective is to generate samples $\B{x}_0 \in \mathbb{R}^d$ from a pretrained flow model while maximizing a given reward model $r(\cdot): \mathbb{R}^{d} \rightarrow \mathbb{R}$, without deviating significantly from $p_\theta$, the original distribution of the pretrained model. Following previous works on reward alignment~\cite{On Reinforcement Learning and Distribution Matching for Fine-Tuning Language Models with No Catastrophic Forgetting, Fine-tuning Continuous, Bridging Model-Based Optimization and Generative Modeling via Conservative Fine-Tuning of Diffusion Models}, this objective can be formulated as follows:
+% \begin{align}
+%     \label{eq:reward_max_obj}
+%     \nonumber
+%     p^{*}(\B{x}) &= \argmax_{p} \  \mathbb{E}_{\B{x} \sim p} \underbrace{\left[ r(\B{x}) \right]}_{\text{Reward}} -\beta \underbrace{\mathcal{D}_{\text{KL}} \left[ p(\B{x}) | p_{\text{ref}}(\B{x}) \right]}_{\text{KL Regularization}} \\
+%     \label{eq:target_distribution}
+%     &= \frac{1}{Z} p_\theta(\B{x}) \exp \left( \frac{r(\B{x})}{\beta} \right),
+% \end{align}
+% where $Z$ is a normalization constant, and $\beta$ is a regularization hyperparameter (proof in Appendix~\ref{sec:appendix_optimal_marginal_target}). 
+
+% To sample from the target distribution in Eq.~\ref{eq:target_distribution}, previous works utilizing diffusion models employed particle sampling, which will be discussed in the next section. 
+
+\vspace{-0.4\baselineskip}
+\subsection{Particle Sampling Using Diffusion Model}
+\vspace{-0.5\baselineskip}
+\label{sec:motivation}
+
+A pretrained diffusion model generates data by drawing an initial sample from the standard Gaussian distribution and iteratively sampling from the learned conditional distribution $p_{\theta}(\B{x}_{t-\Delta t} | \B{x}_{t})$. 
+Building on this, previous works~\cite{Levine:2018RL, Uehara:2024Bridging} have shown that data from the target distribution in Eq.~\ref{eq:target_distribution} can be generated by performing the same denoising process while replacing the conditional distribution $p_{\theta}(\B{x}_{t-\Delta t} | \B{x}_{t})$ with the \emph{optimal policy}:
+
+{\small
+    \begin{align}
+    \label{eq:optimal_policy}
+        p^{*}_\theta(\B{x}_{t-\Delta t} | \B{x}_{t}) = \frac{ p_\theta(\B{x}_{t-\Delta t} | \B{x}_{t}) \exp \left(\frac{v(\B{x}_{t-\Delta t})}{\beta}  \right)}{\int p_\theta(\B{x}_{t-\Delta t} | \B{x}_{t}) \exp \Bigl(\frac{v(\B{x}_{t-\Delta t})}{\beta} \Bigr) \mathrm{d}\B{x}_{t-\Delta t}},
+    \end{align}
+}%
+where the details are presented in Appendix~\ref{sec:appendix_optimal_soft_policy}. 
+We denote $v(\cdot): \mathbb{R}^d \rightarrow \mathbb{R}$ as the optimal value function that estimates the expected future reward of the generated samples at current timestep. 
+Following previous works~\cite{Chung:2023DPS,Kim:2025DAS, Li2024:SVDD,Bansal:2023UGD}, we approximate the value function using the posterior mean computed via Tweedie’s formula~\cite{Robbins1992}, given by $v(\B{x}_t) \approx r(\B{x}_{0|t})$, where $\B{x}_{0|t} \coloneq \mathbb{E}_{\B{x}_0 \sim p_{\theta}(\B{x}_0 | \B{x}_t)} \left[ \B{x}_0 \right]$. 
+
+\mycomment{
+1. Diffusion model은 조건부 확률 $p_{\text{ref}}(\B{x}_{t-\Delta t} | \B{x}_{t})$로부터 샘플을 반복적으로 추출하여 데이터를 생성한다. 
+2. 이러한 점에서 착안하여 이전 연구들은 optimal policy에서 샘플을 반복적으로 추출함으로써 target distribution의 데이터를 생성해내는 것을 보였다. 
+
+}
+
+% Previous works~\cite{} have shown that one can generate a sample from the target distribution in Eq.~\ref{eq:target_distribution} by iteratively sampling from the \textit{optimal policy}, which is formulated as:
+% \begin{align}
+% \label{eq:optimal_policy}
+%     p^{*}(\B{x}_{t-\Delta t} | \B{x}_{t}) &= \frac{p_{\text{ref}}(\B{x}_{t-\Delta t} | \B{x}_{t}) \exp \left(\frac{\hat{r}(\B{x}_{t-\Delta t})}{\beta}  \right)}{\int p_{\text{ref}}(\B{x}_{t-\Delta t} | \B{x}_{t}) \exp \Bigl(\frac{\hat{r}(\B{x}_{t-\Delta t})}{\beta} \Bigr) \mathrb{d}\B{x}_{t-\Delta t}},
+% \end{align}
+% where $p_{\text{ref}}(\B{x}_{t-\Delta t} | \B{x}_{t})$ is the reverse process of a pretrained diffusion model, and $\hat{r}(\cdot): \mathbb{R}^d \rightarrow \mathbb{R}$ is a soft value function that estimates the expected future reward of the generated samples. 
+% Following previous works~\cite{DPS, DAS, SVDD, Universal guidance}, the value function is approximated through the posterior mean $\B{x}_{0|t}$. 
+% We present detailed derivations in Appendix.~\ref{sec:appendix_optimal_soft_policy}. 
+
+
+
+% Previous works on diffusion models seek to sample $\B{x}_0$ from the target distribution by iteratively drawing samples from the \textit{optimal policy}~\cite{}:
+% \begin{align}
+% \label{eq:optimal_policy}
+%     p^{*}(\B{x}_{t-\Delta t} | \B{x}_{t}) &= \frac{p_{\text{ref}}(\B{x}_{t-\Delta t} | \B{x}_{t}) \exp \left(\frac{\hat{r}(\B{x}_{t-\Delta t})}{\beta}  \right)}{\int p_{\text{ref}}(\B{x}_{t-\Delta t} | \B{x}_{t}) \exp \Bigl(\frac{\hat{r}(\B{x}_{t-\Delta t})}{\beta} \Bigr) \mathrb{d}\B{x}_{t-\Delta t}},
+% \end{align}
+% where $\hat{r}(\cdot): \mathbb{R}^d \rightarrow \mathbb{R}$ is a soft value function that estimates the expected future reward of the generated samples. 
+% Following previous works~\cite{DPS, DAS, SVDD, Universal guidance}, the value function is approximated through the posterior mean $\B{x}_{0|t}$. We present detailed proof in Appendix~\ref{sec:appendix_optimal_soft_policy}. 
+
+Since directly sampling from the optimal policy distribution in Eq.~\ref{eq:optimal_policy} is nontrivial, one can first approximate the distribution using importance sampling while taking $p_{\theta}(\B{x}_{t-\Delta t} | \B{x}_{t})$ as the \emph{proposal distribution}:
+%previous works have relied on \textit{particle sampling}~\cite{}. 
+% In the context of particle sampling, we consider $p_{\theta}(\B{x}_{t-\Delta t} | \B{x}_{t})$ as the proposal distribution, which is stochastic by design in diffusion models, allowing multiple different particles $\B{x}_{t-\Delta t}$ to be sampled conditioned on $\B{x}_t$. 
+% Each step of particle sampling for diffusion models involves importance sampling: 
+{\small
+\begin{align}
+    \label{eq:importance_sampling}
+    p^{*}_\theta(\B{x}_{t-\Delta t} | \B{x}_{t}) \approx \sum_{i=1}^K \frac{w^{(i)}_{t-\Delta t}}{\sum_{j=1}^K w^{(j)}_{t-\Delta t}} \delta_{\B{x}^{(i)}_{t-\Delta t}}, \quad
+    % \nonumber
+    \{ \B{x}^{(i)}_{t-\Delta t} \}_{i=1}^{K} \sim p_\theta(\B{x}_{t-\Delta t} | \B{x}_{t}), 
+    % & \quad w^{(i)}_{t-\Delta t} = \exp( \frac{r ( \B{x}^{(i)}_{0|t-\Delta t} )}{\beta} ),
+\end{align}
+}%
+where $K$ is the number of particles, $w^{(i)}_{t-\Delta t} = \exp( v ( \B{x}^{(i)}_{t-\Delta t} ) / \beta )$ is the weight, and $\delta_{\B{x}^{(i)}_{t-\Delta t}}$ is a Dirac distribution. 
+SVDD~\cite{Li2024:SVDD} proposed an approximate sampling method for the optimal policy by selecting the sample with the largest weight from Eq.~\ref{eq:importance_sampling}. 
+% On the other hand, \citet{Kim:2025DAS} employ a different probabilistic approach, drawing particles from a multinomial distribution. 
+% denotes the empirical distribution over the sampled particles. 
+%At each denoising step, the sample with the largest importance weight is selected from the fixed set of particles and propagated through the denoising process~\cite{}.
+
+% Notably, a key factor in sampling high-reward $\B{x}_{t-\Delta t}$ using importance sampling is designing the proposal distribution to sufficiently cover the distribution of high-reward samples. 
+Notably, a key factor in seeking high-reward samples using particle sampling is defining the proposal distribution to sufficiently cover the distribution of high-reward samples.
+% Consider a scenario where high-reward samples reside in a low density region of the original data distribution. 
+Consider a scenario where high-reward samples reside in a low density region of the original data distribution, which is common when generating complex or highly specific samples that deviate from the mode of the pretrained model distribution. 
+In this case, the proposal distribution must have a sufficiently large variance to effectively explore these low density regions.
+This highlights the importance of the \textit{stochasticity} of the proposal distribution, which has been instrumental in the successful adoption of particle sampling in diffusion models. 
+In contrast, flow models~\cite{Lipman:2023CFM} employ a \textit{deterministic} sampling process, where all particles $\B{x}_{t-\Delta t}$ drawn from $\B{x}_{t}$ are identical. 
+This restricts the applicability of particle sampling methods in flow models. 
+One of the main contributions is the investigation of how these particle sampling methods can be efficiently applied to flow models.
+
+%Inspired by the success of particle sampling in diffusion models, we propose inference-time approaches to expand the exploration space and facilitate the use of particle sampling methods in flow models. 
+To this end, we propose an inference-time approach that introduces stochasticity into the generative process of flow models to enable particle sampling. 
+We first transform the deterministic sampling process of flow models into a stochastic process (Sec.~\ref{sec:ode_sde_conversion}). 
+We further identify a sampling trajectory that expands the search space of the flow models (Sec.~\ref{sec:scheduler_conversion}). 
+Note that while stochastic sampling and trajectory conversion have been studied in prior works, their primary goals have been to improve sample quality~\cite{xu2023restart, yeo2025stochsync, salimans2022progressive, kingma2021variational, Ma2024:sit} or to accelerate inference~\cite{holderrieth2024generator, shaul2023bespoke, shaul2023kinetic, Karras2022:EDM}. To the best of our knowledge, we are the first to investigate sampling stochasticity and trajectory conversion for efficient particle-based sampling in flow models.
+
+% Additionally, previous particle sampling methods in diffusion models employed fixed compute (number of particles) across all denoising timesteps, potentially limiting exploration. 
+Additionally, previous particle sampling methods in diffusion models allocated a fixed computational budget (i.e., a uniform number of particles) across all denoising timesteps, potentially limiting exploration.
+We explore sampling with the rollover strategy, which adaptively allocates compute across timesteps during the sampling process (Sec.~\ref{sec:roll_over}). 
+
+% Additionally, we introduce a scheduler conversion that converts the sample trajectory of flow models into that of diffusion models, further expanding the exploration space (Sec.\ref{sec:scheduler_conversion}). 
+% Lastly, we explore adaptive scheduling of particle size along the temporal axis to efficiently assign the computing resources (Sec.~\ref{sec:temporal_axis_scaling}).
+
+% To overcome this limitation, we propose an inference-time approach that transforms the deterministic sampling process of flow models into a stochastic process (Sec.\ref{sec:ode_sde_conversion}). 
+% Additionally, we introduce a scheduler conversion that converts the sample trajectory of flow models into that of diffusion models, further expanding the exploration space (Sec.\ref{sec:scheduler_conversion}). 
+% Lastly, we adopt adaptive particle-size sampling, which dynamically allocates computational resources across denoising steps to enhance efficiency (Sec.~\ref{sec:temporal_axis_scaling}).
+
+
+% \Jaihoon{TODO} However, applying particle sampling to flow models, which utilize a \textit{deterministic} sampling approach, presents inherent limitations. 
+% \begin{remark}[Degeneracy in Dirac delta proposals]
+%     \label{remark:deterministic_proposal}
+%     When the proposal distribution $p_\theta(\B{x}_{t-\Delta t} | \B{x}_t)$ is a Dirac delta distribution, the effective sample size of the drawn particles collapses to 1, thereby restricting exploration of low-density regions where potential optimal samples may reside. 
+% \end{remark}
+
+% In Sec.~\ref{sec:method}, we propose a novel inference-time, approach that enables the application of efficient search algorithms~\cite{} originally developed for diffusion models to flow models. 
+
+% To overcome this, we introduce post-training SDE conversion, which converts ODE sampling process into an SDE, allowing the application of search algorithms that have demonstrated strong performance in diffusion model inference-time scaling to flow models. 
+% While SDE conversion expands the search space, we further propose post-training scheduler conversion to enhance exploration. Lastly, inspired by existing search algorithms that scale with a fixed number of particles at each denoising step, we introduce our method, which adapts the scaling behavior along the temporal axis.
+
+\mycomment{
+1. LLM과 Diffusion literature에서는 inference-time의 computation을 늘림으로써 사용자의 preference에 보다 더 align된 샘플을 생성할 수 있는 inference-time reward alignment가 많은 주목을 받았고, 다양한 방법론들이 소개되었다. 
+2. 하지만 최근 빠른 생성 시간과 high-fidelity로 각광을 받고있는 flow 모델에 대해서는 이러한 연구가 상대적으로 큰 관심을 받지 못하였다. 
+3. 본 연구에서는 기존 LLM과 Diffusion 모델에서 큰 주목을 받고 있는 inference-time scaling을 flow 모델에 대해서 적용시키고자 한다. 
+% 
+4. 이전 연구에서 제시하였듯이(On Reinforcement Learning and Distribution Matching for Fine-Tuning Language Models with no Catastrophic For- getting, Fine-tuning continuous), 우리는 i) 주어진 reward를 최대화시키면서 ii) 기존의 분포에서 크게 벗어나지 않는 sample을 생성하는 것이 목표이다. 이러한 objective는 다음과 같이 표기된다: 
+5. 다음 section에서는 diffusion 모델의 literature에서 위 분포를 만족시키는 샘플을 inference-time에 추출하는 particle sampling에 대하여 소개하겠다. 
+% 
+% 
+% 
+6. 기존 Diffusion 모델을 활용한 연구에서는 위 분포에서 샘플링을 하기 위해 여러 개의 particle을 기반으로 한 Monte Carlo 기반의 방식들이 소개되었다. 
+7. (MC 샘플링 예시). 이러한 방식을 활용한 Diffusion 모델들이 성공적인 alignemnt를 수행할 수 있었던 이유에는 proposal 분포 p(x_{t-\Delta t}|x_{t})의 stochasticity가 더 넓은 exploration space를 제공해주었기 때문이다. 
+8. 하지만 deterministic한 샘플링 방식을 사용하는 flow 모델에 대해서는 이러한 particle 샘플링 방식을 적용하는데 한계가 존재한다. (증명)
+9. 따라서 우리는 Diffusion 모델의 inference-time scaling에 좋은 성능을 보인 search algorithm들을 flow 모델에서도 마찬가지로 적용시키기 위해 기존 ODE를 SDE로 변환하는 post-training SDE conversion을 소개한다. 비록 SDE conversion이 더 넓은 search space 가져오는데 도움을 주지만 더 넓은 exploration을 하기 위해 우리는 post-training scheduler conversion을 제안한다. 마지막으로 우리는 기존의 search algorithm들은 매 denoising step에서 같은 수의 particle에 대해서만 scaling을 하는데 inspire하여 temporal axis의 scaling을 adaptive하게 바꾼 our method를 소개한다. 
+}
+
+
+
+
+
+% -----------------------------------------------------------
+
+% \section{Problem Definition}
+% \label{sec:objective}
+% In this section, we define our objective of generating samples $\B{x}_0 \in \mathbb{R}^d$ that maximize a given reward model $r(\cdot): \mathbb{R}^{d} \rightarrow \mathbb{R}$. Our goal is to produce high-reward samples without deviating too far from the original distribution of the pretrained model $p_\theta$. Following~\cite{Fine-Tuning of Continuous-Time Diffusion Models as Entropy-Regularized Control, DPO}, this problem can be formulated as an entropy-regularized reward maximization objective:
+% \begin{align}
+%     \label{eq:reward_max_obj}
+%     p^{*}(\B{x}) &= \argmax_{p} \  \mathbb{E}_{\B{x} \sim p} \underbrace{\left[ r(\B{x}) \right]}_{\text{Reward}} -\beta \underbrace{\mathcal{D}_{\text{KL}} \left[ p(\B{x}) | p_{\text{ref}}(\B{x}) \right]}_{\text{Regularization}} \\
+%     \label{eq:target_distribution}
+%     &= \frac{1}{Z} p_\theta(\B{x}) \exp \left( \frac{r(\B{x})}{\beta} \right),
+% \end{align}
+% where $Z$ is a normalization constant, and $\beta$ is a regularization hyperparameter (proof in Appendix~\ref{sec:appendix_optimal_marginal_target}). 
+
+% To sample $\B{x}_0$ from the target distribution $p^{*}$, we leverage the optimal policy $p^{*}(\B{x}_{t-\Delta t} | \B{x}_{t})$~\cite{Fine-Tuning of Continuous-Time Diffusion Models as Entropy-Regularized Control, Bridging Model-Based Optimization and Generative Modeling via Conservative Fine-Tuning of Diffusion Models
+% }:
+% \begin{align}
+% \label{eq:optimal_policy}
+%     p^{*}(\B{x}_{t-\Delta t} | \B{x}_{t}) &= \frac{p_{\text{ref}}(\B{x}_{t-\Delta t} | \B{x}_{t}) \exp \left(\frac{\hat{r}(\B{x}_{t-\Delta t})}{\beta}  \right)}{\int p_{\text{ref}}(\B{x}_{t-\Delta t} | \B{x}_{t}) \exp \Bigl(\frac{\hat{r}(\B{x}_{t-\Delta t})}{\beta} \Bigr) \mathrb{d}\B{x}_{t-\Delta t}},
+% \end{align}
+% where $\hat{r}(\cdot): \mathbb{R}^d \rightarrow \mathbb{R}$ is a soft value function that estimates the expected future reward at $t=0$. Following previous works~\cite{DPS, DAS, SVDD, Universal guidance}, the value function is approximated through the posterior mean $\B{x}_{0|t}$. A detailed proof is provided in Appendix~\ref{sec:appendix_optimal_soft_policy}.
+
+% However, sampling from the optimal policy in Eq.~\ref{eq:optimal_policy} is not tractable due to the normalization constant. 
+% In the next section, we introduce training-free, search approaches designed to address this challenge. 

@@ -1,0 +1,17 @@
+\section{\textsc{$\Psi$-Sampler} with Other Score-Based Generative Model}
+\label{sec:appx:sana}
+To evaluate the generality of \methodname{} and further support our claims, we additionally conduct experiments using SANA-Sprint~\cite{chen2025sanasprint}, which is a few-step flow-based generative models.
+
+Despite architectural differences, SANA-Sprint integrates seamlessly with our \methodname{}. As shown in Tab.~\ref{tab:overall_table_sana}, it demonstrates reward and quality improvements consistent with those observed using FLUX~\cite{BlackForestLabs:2024Flux} in Tab.~\ref{tab:overall_table}, indicating that our method generalizes beyond a specific backbone. Notably, \methodname{} delivers the highest performance across all seen reward models and maintains strong generalization to held-out metrics. Moreover, among SMC-based methods, those that initialize particles from the posterior consistently outperform prior-based variants (except for few case), highlighting the benefit of posterior-informed initialization.
+
+These results further highlight the robustness of \methodname{} and its applicability to a various few-step score-based generative models.
+
+We further provide qualitative results for each applications, conducted with SANA-Sprint, in Fig.~\ref{fig:quali_all_sana}. 
+For the layout-to-image generation task, each example shows the input layout with color-coded phrases and corresponding bounding boxes for clarity.
+In the quantity-aware image generation task, we overlay the predicted object centroids from a held-out counting model~\cite{AminiNaieni2024countgd} on each image to facilitate comparison. The predicted count along with its absolute difference from the target quantity are shown beneath each image in the format $(\Delta\cdot)$, with the best-performing result highlighted in blue.
+Note that for the aesthetic-preference generation task, the first row corresponds to the prompt “Dog” and the second to “Turkey”. We display the generated images alongside their predicted aesthetic scores~\cite{schuhmann2022aesthetic}. 
+\vspace{0.75cm}
+
+\input{tables_appendix/sana_table}
+
+\input{quali_appendix/sana}

@@ -1,0 +1,164 @@
+\newcommand{\red}[1]{{\color{red}#1}}
+\newcommand{\todo}[1]{{\color{red}#1}}
+\newcommand{\TODO}[1]{\textbf{\color{red}[TODO: #1]}}
+
+\usepackage[linesnumbered,ruled,vlined]{algorithm2e}
+\usepackage{setspace}
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{booktabs}       % professional-quality tables
+%\usepackage[font=small]{caption}
+\usepackage{enumitem}
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+% \usepackage{hyperref}       % hyperlinks
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage{makecell}
+\usepackage{microtype}      % microtypography
+\usepackage{multirow}
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{tabularx}
+\usepackage{url}            % simple URL typesetting
+% \usepackage{xcolor}         % colors
+
+\usepackage{longtable}
+\usepackage{filecontents,catchfile,pgffor}
+
+\usepackage{environ}
+\usepackage[percent]{overpic}
+\usepackage[dvipsnames]{xcolor}
+
+% ==============================
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{dsfont}
+\usepackage{graphicx}
+\usepackage{makecell}
+\usepackage{multirow}
+\usepackage{pifont}% http://ctan.org/pkg/pifont
+\usepackage[group-separator={,}]{siunitx}
+\usepackage{tabularx}
+\usepackage{caption}
+\usepackage{soul}
+\usepackage{changepage,threeparttable}
+\usepackage{colortbl}
+\usepackage[accsupp]{axessibility}  % Improves PDF readability for those with disabilities.
+\usepackage{mathtools}
+\usepackage{xfrac}
+\usepackage{enumitem}
+%%%%
+\usepackage{catchfile}
+\usepackage{wrapfig}
+
+\usepackage{longtable}
+\usepackage{tabu}
+\usepackage{tcolorbox}
+\usepackage{supertabular}
+% \usepackage{cleveref}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{pifont}
+\usepackage{adjustbox}
+\usepackage{titletoc}
+% \usepackage{etoc}
+\usepackage{multicol}
+%%%%
+\newcolumntype{Y}{>{\centering\arraybackslash}X}
+\usepackage{physics}
+
+
+% ==============================
+
+% custom defines
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+\newcommand{\dummyfig}[3]{
+  \centering
+  \fbox{
+    \begin{minipage}[c][#2][c]{#1}
+      \centering{#3}
+    \end{minipage}
+  }
+}
+
+% Theorems
+\usepackage{amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+\newtheorem{definition}{Definition}
+\newtheorem{example}{Example}
+\newtheorem{remark}{Remark}
+
+% Abbreviations
+\newcommand{\Veps}{\boldsymbol{\epsilon}}
+\newcommand{\Vdelta}{\boldsymbol{\delta}}
+\newcommand{\Vmu}{\boldsymbol{\mu}}
+\newcommand{\B}{\mathbf}
+
+
+% shortcut for equation, figure, table indicators
+\newcommand{\eqn}[0]{Eqn.}
+\newcommand{\fig}[0]{Fig.}
+\newcommand{\tab}[0]{Tab.}
+\newcommand{\alg}[0]{Alg.}
+\newcommand{\shortsec}[0]{Sec.}
+
+\newcommand{\Ours}[0]{\texttt{RBF}}
+\newcommand{\Oursbf}[0]{\fontfamily{lmtt}\fontseries{b}\selectfont \Ours{}}
+
+\newcommand{\ie}{i.e.,}
+\newcommand{\eg}{e.g.,}
+\newcommand{\etal}{\emph{et al.\ }}
+
+% \DeclareMathOperator*{\argminA}{arg\,min}
+
+\definecolor{color_1}{RGB}{255,0,128}
+\definecolor{color_2}{RGB}{128,128,0}
+\definecolor{color_3}{RGB}{0,128,0}
+\definecolor{color_4}{RGB}{128,0,0}
+\definecolor{color_5}{RGB}{128,0,128}
+
+% \usepackage[dvipsnames]{xcolor}
+% Defining Goldenrod color manually
+\definecolor{Goldenrod}{RGB}{218, 165, 32}
+\definecolor{ForestGreen}{RGB}{34, 139, 34}
+
+
+\newcommand\Minhyuk[1] {\emph{\textcolor{color_1}{Minhyuk: #1}}}
+\newcommand\Jaihoon[1] {\emph{\textcolor{color_2}{Jaihoon: #1}}}
+\newcommand\Jisung[1] {\emph{\textcolor{color_3}{Jisung: #1}}}
+\newcommand\Taehoon[1] {\emph{\textcolor{color_4}{Taehoon: #1}}}
+
+\definecolor{highlight_color}{RGB}{255,0,128}
+\definecolor{blue_highlight_color}{RGB}{0,128,255}
+\definecolor{green_highlight_color}{RGB}{51,145,40}
+\definecolor{orange_highlight_color}{RGB}{255,160,0}
+\definecolor{purple_highlight_color}{RGB}{128,0,128}
+\newcommand\Highlight[1]{\textcolor{highlight_color}{#1}}
+\newcommand\BlueHighlight[1]{\textcolor{blue_highlight_color}{#1}}
+\newcommand\GreenHighlight[1]{\textcolor{green_highlight_color}{#1}}
+\newcommand\OrangeHighlight[1]{\textcolor{orange_highlight_color}{#1}}
+\newcommand\PurpleHighlight[1]{\textcolor{purple_highlight_color}{#1}}
+
+
+\newcommand\OursHighlight[1]{\colorbox{orange}{#1}}
+\newcommand{\mycomment}[1]{}
+
+% Abbreviation
+% \newcommand{\refofpaper}[1]{of the main paper}
+% \newcommand{\refinpaper}[1]{in the main paper}
+
+% Method pieces
+% \newcommand{\MaxSto}{Max $\sigma_t$}
+% \newcommand{\ImprTwe}{Impr. $\B{x}_{0|t}$}
+% \newcommand{\NonOver}{N.O. Views}
+
+\sisetup{group-separator={,}}
+
+\setlength{\fboxsep}{0pt}%
+\setlength{\fboxrule}{1.5pt}%
+
+\newcommand{\Mod}[1]{\ (\mathrm{mod}\ #1)}

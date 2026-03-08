@@ -1,0 +1,13 @@
+\section{Additional Evaluation Results of MALA and pCNL Initializations under Varying Step Size}
+\label{sec:appx:variying step size}
+\vspace{-0.1cm}
+We presented a comparison between MALA and pCNL under varying MCMC step sizes for the layout-to-image generation task in the Sec.~\ref{sec:experiments:ealuation of initial particles}. Here, we extend this analysis to the remaining two tasks. In Fig.~\ref{fig:mcmc_comparison}, we report results for quantity-aware generation (top row) and aesthetic-preference generation (bottom row), comparing MALA and pCNL across a range of step sizes.\\
+For the quantity-aware image generation task, we report acceptance probability, reward (negative smooth L1 loss via T2I-Count\cite{qian2025t2icount}), held-out reward (mean absolute error (MAE) via CountGD~\cite{AminiNaieni2024countgd}), and LPIPS Mean Pairwise Distance (MPD)~\cite{zhang2018unreasonableLPIPS} (which measures the sample diversity).
+For the aesthetic-preference task, we report acceptance probability, reward (aesthetic score~\cite{schuhmann2022aesthetic}), and LPIPS MPD~\cite{zhang2018unreasonableLPIPS}. All metrics are directly computed from the Tweedie estimates~\cite{efron2011tweedie} of MCMC samples, before the SMC stage.
+
+As the step size increases, MALA's acceptance probability quickly falls to near zero, whereas pCNL retains a stable acceptance rate across a wider range.
+In quantity-aware image generation, pCNL achieves its best T2I-Count reward and lowest MAE at moderate step sizes (approximately 0.5–1.0), while MALA’s performance deteriorates sharply beyond 0.05. Although pCNL’s LPIPS MPD decreases at larger step sizes, it consistently outperforms MALA in diversity across the same settings. In aesthetic-preference generation, pCNL generally achieves higher aesthetic scores, with only a slight drop at the smallest step size, and maintains higher LPIPS MPD across all settings. In contrast, MALA’s aesthetic scores decline rapidly once its acceptance rate vanishes.
+
+These results demonstrate that pCNL can effectively leverage larger step sizes to improve sample quality, with only minimal trade-offs in diversity.
+\vspace{0.2cm}
+\input{figures_appendix/graph}

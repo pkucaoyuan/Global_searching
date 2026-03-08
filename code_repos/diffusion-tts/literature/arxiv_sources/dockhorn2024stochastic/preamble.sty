@@ -1,0 +1,82 @@
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{xcolor}         % colors
+\usepackage{amsmath}        % Math
+\usepackage{amssymb}        % Math
+\usepackage{amsthm,thmtools}
+\usepackage[capitalize,noabbrev]{cleveref}
+% \usepackage{cleveref}
+\usepackage[final]{graphicx}
+\usepackage{enumitem}
+\usepackage{array}   % for \newcolumntype macro
+\usepackage{caption}        % Needed for Subcaptions
+\usepackage{subcaption}     % Subcaptions
+\usepackage{listings}
+
+% Theorem
+% \declaretheorem[name=Theorem]{thm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}{Corollary}[theorem]
+
+
+% Symbols
+\newcommand{\R}{\mathbb{R}}   % Real numbers
+\newcommand{\T}{\mathbb{\intercal}}   % Transpose
+\newcommand{\E}{\mathbb{E}}   % Expectation
+
+% Operators
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\var}{Var}
+
+% Table
+\newcolumntype{L}{>{$}l<{$}} % math-mode version of "l" column type
+\newcommand\AddLabel[1]{\refstepcounter{equation}(\theequation)\label{#1}}
+\newcolumntype{M}{>{\collectcell\AddLabel}r<{\endcollectcell}}% labeled
+
+% Names
+% \newcommand{\zeroend}{ZeroEnds}   % Transpose
+% \newcommand{\nonsingular}{NonSingular}   % Transpose
+% \newcommand{\singular}{Singular}   % Transpose
+% \newcommand{\constant}{Constant}   % Transpose
+% \newcommand{\deterministic}{Deterministic}   % Transpose
+
+\newcommand{\GT}{\tilde G}
+\newcommand{\GH}{\hat G}
+\newcommand{\GB}{\bar G}
+\newcommand{\FT}{\tilde f}
+\newcommand{\FH}{\hat f}
+\newcommand{\FB}{\bar f}
+
+% Listing
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle}

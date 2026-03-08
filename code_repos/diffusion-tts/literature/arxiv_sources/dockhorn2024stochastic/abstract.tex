@@ -1,0 +1,9 @@
+\begin{abstract}
+Deterministic flow models, such as rectified flows, offer a general framework for learning a deterministic transport map between two distributions, realized as the vector field for an ordinary differential equation (ODE).
+However, they are sensitive to model estimation and discretization errors and do not permit different samples conditioned on an intermediate state, limiting their application.
+We present a general method to turn the underlying ODE of such flow models into a family of stochastic differential equations (SDEs) that have the same marginal distributions.
+This method permits us to derive families of \emph{stochastic samplers}, for fixed (e.g., previously trained) \emph{deterministic} flow models, that continuously span the spectrum of deterministic and stochastic sampling, given access to the flow field and the score function.
+Our method provides additional degrees of freedom that help alleviate the issues with the deterministic samplers and empirically outperforms them.
+We empirically demonstrate advantages of our method on a toy Gaussian setup and on the large scale ImageNet generation task.
+Further, our family of stochastic samplers provide an additional knob for controlling the diversity of generation, which we qualitatively demonstrate in our experiments.
+\end{abstract}

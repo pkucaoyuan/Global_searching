@@ -1,0 +1,164 @@
+\section{Derivative-Free Guidance}\label{sec:derivative_free}
+
+We begin by outlining two primary derivative-free approaches that do not rely on differentiable models. As discussed in the introduction, constructing differentiable models in molecular design can be challenging due to the non-differentiable nature of reward feedback for the following reasons. 
+
+\begin{AIbox}{
+Scenarios where Non-Differentiable Reward Feedback is Beneficial}
+\begin{itemize}
+    \item Reward feedback is often provided through black-box physics-based simulations (e.g., docking simulations). 
+    \item Non-differentiable features (e.g., molecular descriptors) may be required to build reward models.
+    \item Reward models may involve non-differentiable architectures, such as specified graph neural networks or XGBoost.
+\end{itemize}    
+\end{AIbox}
+
+Therefore, these derivative-free methods are particularly useful in such scenarios. In this section, we first introduce sequential Monte Carlo (SMC)-based guidance, followed by value-based importance sampling approach.
+
+\subsection{SMC-Based Guidance}\label{sec:SMC}
+
+We first provide an intuitive explanation of SMC-based guidance proposed in \citet{wu2024practical,dou2024diffusion,cardoso2023monte,phillips2024particle}, which combine SMC (a.k.a. particle filter) \citep{gordon1993novel,kitagawa1993monte,del2006sequential} with diffusion models. While there are several variants, we focus here on the simplest version. Since SMC-based guidance is an iterative method,  let us consider the process at $t$.  At this stage, we assume there are $N$ samples (particles), $\{x^{[i]}_{t}\}_{i=1}^N$, each with uniform weights: $
+1/N\sum_{i=1}^N \delta_{x^{[i]}_{t}}. $
+Given this distribution, our goal is to sample from the optimal policy $p^{\star}_{t-1}(\cdot \mid \cdot)$. 
+
+
+For this purpose, using a proposal distribution $q_{t-1}(\cdot | x^{[i]}_{t}):\Xcal \to \Delta(\Xcal)$, such as policies from pre-trained models (we will discuss this choice further in \pref{sec:choice}), we generate new samples $\{\bar x^{[i]}_{t-1}\}$. Ideally, we aim to sample from the optimal policy in \eqref{eq:soft}. To approximate this, based on importance sampling, we consider the following weighted empirical distribution:
+\begin{align*}
+     \sum_{i=1}^N \frac{w^{[i]}_{t-1}  }{\sum_{j=1}^N w^{[j]}_{t-1}}\delta_{ \bar x^{[i]}_{t-1}}, \quad w^{[i]}_{t-1} = \frac{p^{\star}_{t-1}(\bar x^{[i]}_{t-1}|x^{[i]}_{t} )  }{q_{t-1}( \bar x^{[i]}_{t-1}|x^{[i]}_{t} ) } = \frac{ p^{\pre}_{t-1}(\bar x^{[i]}_{t-1}|x^{[i]}_{t} )\exp(v(\bar x^{[i]}_{t-1})/\alpha) }{q_{t-1}(\bar x^{[i]}_{t-1}|x^{[i]}_{t} ) \exp(v(x^{[i]}_{t})/\alpha )   }. 
+\end{align*}
+However, as the weights become increasingly non-uniform, the approximation quality deteriorates. To mitigate this, SMC performs resampling with replacement, generating an equally weighted Dirac delta distribution: 
+\begin{align}\label{eq:resampling}
+    \frac{1}{N} \sum_{i=1}^N \delta_{x^{[i]}_{t-1}}, x^{[i]}_{t-1}:= \bar x^{[\zeta_i]}_{t-1}, \zeta_i \sim \mathrm{Cat}\left [\left\{   \frac{w^{[i]}_{t-1}  }{\sum_{j=1}^N w^{[j]}_{t-1}} \right\}_{i=1}^N \right ]. 
+\end{align}
+
+The complete algorithm is summarized in \pref{alg:SMC}. Note that to maintain computational efficiency, the resampling step \eqref{eq:resampling} is executed when the effective sample size, which indicates the degree of weight uniformity, falls below a predefined threshold.
+
+
+\begin{algorithm}[!th]
+\caption{SMC-Based Guidance (e.g.,  \citet{wu2024practical,dou2024diffusion,cardoso2023monte,phillips2024particle})}\label{alg:SMC}
+\begin{algorithmic}[1]
+     \STATE {\bf Require}: Estimated (potentially \textbf{non-differentiable}) value functions $\{\hat v_t(x)\}_{t=T}^0$ (\pref{sec:method_value}), pre-trained diffusion models $\{p^{\pre}_t\}_{t=T}^0$, proposal polices $\{q_t\}_{t=T}^0$, hyperparameter $\alpha \in \RR$, Batch size $N$
+     \FOR{$t\in [T+1,\cdots, 1]$}
+       \STATE \textbf{Importance sampling step:}  \label{line:IS} 
+Generate $i \in [1,\cdots, N]; x^{[i]}_{t-1} \sim q_{t-1}(\cdot| x^{[i]}_{t})$
+       \STATE Update weights:
+       \begin{align*}
+          w^{[i]} \leftarrow  \frac{ p^{\pre}_{t-1}(x^{[i]}_{t-1}|x^{[i]}_{t} )\exp(\hat v_{t-1}(x^{[i]}_{t-1})/\alpha) }{q_{t-1}(x^{[i]}_{t-1}|x^{[i]}_{t} )\exp(\hat v_t(x^{[i]}_{t})/\alpha)  }w^{[i]}.  
+       \end{align*} 
+        \STATE \textbf{Resampling step:} Calculate the effective sample size $
+            \frac{\{\sum_i w^{[i]} \} ^2  }{\sum \{ w^{[i]}\}^2}.$
+        If it falls below a certain threshold, resample by selecting new indices with replacement:  \\ 
+       $$\{x^{[i]}_{t-1}\}_{i=1}^N  \leftarrow \{x^{\zeta^{[i]}_{t-1}}_{t-1}\}_{i=1}^N,\quad \{\zeta^{[i]}_{t-1}\}_{i=1}^N \sim \mathrm{Cat}\left ( \left \{\frac{w^{[i]}_{t-1}}{\sum_{j=1}^N w^{[j]}_{t-1} } \right \}_{i=1}^N\right).$$\label{line:selection}
+     \ENDFOR
+  \STATE {\bf Output}: $\{ x^{[i]}_0\}_{i=1}^N$
+\end{algorithmic}
+\end{algorithm} 
+
+
+Finally, we highlight several additional considerations:
+\begin{itemize} 
+\item \textbf{Potential Lack of Diversity:} In practice, SMC-generated samples may suffer from sample collapse (i.e., generating the same sample in one batch) for the purpose of reward maximization. This occurs because, as $\alpha \to 0$, the effective sample size approaches $1$. Another challenge with SMC-based methods for reward maximization is that the effective sample size does not necessarily guarantee true diversity among the samples. As a result, even when the effective sample size is controlled, the generated samples may still lack sufficient diversity.
+\item \textbf{Eliminating Inferior Samples via Global Interaction:} This algorithm involves interactions between batches, allowing the removal of low-quality particles to concentrate resources on more promising ones. A variant of this strategy has also proven effective in autoregressive language models \citep{zhang2024accelerating}. 
+\end{itemize}
+
+
+
+
+\subsection{Value-Based Importance Sampling}\label{sec:SVDD}
+
+Next, we explain a simple value-based importance sampling approach called SVDD, proposed by \citet{li2024derivative}. For this purpose, we first provide an intuitive overview. This method is iterative in nature. Hence, suppose we are at time $t$ and we have $N$ samples, $\{x^{[i]}_{t}\}_{i=1}^N$, with uniform weights: $1/N\sum_{i=1}^N \delta_{x^{[i]}_{t}}. $
+Following a proposal distribution $q_{t-1}(\cdot | x^{[i]}_{t})$ (e.g., pre-trained models), we generate $M$ samples $\{ x^{[i,j]}_{t-1}\}_{j=1}^M$ for each $x^{[i]}_{t}$. Ideally, we want to sample from the optimal policy \eqref{eq:soft}. To approximate this, based on importance sampling, we consider the following weighted empirical distribution: 
+\begin{align*}
+     \frac{1}{N}\sum_{i=1}^N \sum_{j=1}^M \frac{w^{[i,j]}_{t-1}  }{\sum_{j=1}^M w^{[i,j]}_{t-1}}\delta_{ x^{[i,j]}_{t-1}}, \quad w^{[i,j]}_{t-1} = \frac{p^{\star}_{t-1}(x^{[i,j]}_{t-1}|x^{[i]}_{t} ) }{q_{t-1}(x^{[i,j]}_{t-1}|x^{[i]}_{t} )} =  \frac{ p^{\pre}_{t-1}(x^{[i,j]}_{t-1}|x^{[i]}_{t} )\exp(v_{t-1}(x^{[i,j]}_{t-1})/\alpha) }{q_{t-1}(x^{[i,j]}_{t-1}|x^{[i]}_{t} ) \exp(v_{t-1}(x^{[i]}_{t})/\alpha )   }. 
+\end{align*}
+Since $\exp(v_{t-1}(x^{[i]}_{t})/\alpha )$ in the above remains constant for all $j \in [1,\cdots,M]$, the weight simplifies to
+\begin{align}\label{eq:correct_weight}
+    w^{[i,j]}_{t-1} = \frac{ p^{\pre}_{t-1}(x^{[i,j]}_{t-1}|x^{[i]}_{t} )\exp(v_{t-1}(x^{[i,j]}_{t-1})/\alpha) }{q_{t-1}(x^{[i,j]}_{t-1}|x^{[i]}_{t} ) }. 
+\end{align}
+However, repeatedly using this empirical distribution increases the particle size to $O(N^M)$, making it computationally prohibitive. Therefore, we sample to maintain a fixed batch size:
+\begin{align*}
+    \frac{1}{N} \sum_{i=1}^N \delta_{x^{[i]}_{t-1}}, x^{[i]}_{t-1}:=  x^{[\zeta_i]}_{t-1}, \zeta_i \sim \mathrm{Cat}\left [\left\{   \frac{w^{[i,j]}_{t-1}  }{\sum_{k=1}^M w^{[i,k]}_{t-1}} \right\}_{j=1}^M \right ]. 
+\end{align*}
+Finally, the complete algorithm is summarized in \pref{alg:decoding2}. 
+
+
+\begin{algorithm}[!th]
+\caption{Value-Based Importance Sampling (SVDD)~\citep{li2024derivative}}\label{alg:decoding2}
+\begin{algorithmic}[1]
+     \STATE {\bf Require}: Estimated (potentially \textbf{non-differentiable}) soft value function $\{\hat v_t\}_{t=T}^0$ (\pref{sec:method_value}), pre-trained diffusion models $\{p^{\pre}_t\}_{t=T}^0$, hyperparameter $\alpha \in \mathbb{R}$, proposal distribution $\{q_t\}_{t=T}^0$, batch size $N$, duplication size $M$
+     \FOR{$t \in [T+1,\cdots,1]$}
+      \STATE \textbf{Importance sampling step:} For $i\in [1,\cdots,N]$, get $M$ samples from pre-trained polices $\{x^{[i,j]}_{t-1}\}_{j=1}^{M} \sim q_{t-1}(\cdot| x^{[i]}_{t}) $. For each $j\in [1,\cdots,M]$, calculate  $$ w^{[i,j]}_{t-1}:=  \exp(\hat v_{t-1}(x^{[i,j]}_{t-1})/\alpha)\times \frac{p^{\pre}_{t-1}(x^{[i,j]}_{t-1}| x^{[i]}_{t}) }{q_{t-1}(x^{[i,j]}_{t-1}| x^{[i]}_{t})}.$$ \label{line:select3}
+        \STATE \textbf{Local resampling step:} $$ \forall i\in [1,\cdots,N];\quad x^{[i]}_{t-1}    \leftarrow  x^{[i, \zeta^{[i]}_{t-1} ]}_{t-1},\quad \zeta^{[i]}_{t-1}  \sim \mathrm{Cat}\left ( \left \{\frac{w^{[i,j]}_{t-1}}{\sum_{k=1}^{M} w^{[i,k]}_{t-1} } \right \}_{j=1}^{M} \right).$$ \label{line:select}
+     \ENDFOR
+  \STATE {\bf Output}: $\{x^{[i]}_0\}_{i=1}^N$
+\end{algorithmic}
+\end{algorithm}
+
+
+\paragraph{Differences Between SMC-Based Methods and Value-Based Importance Sampling (SVDD).}
+
+While SVDD and SMC share similarities, there are two key differences. First, while the sampling in SMC is performed among the whole batch (i.e., global interaction happens), sampling in SVDD is performed for each sample within a batch independently, with no interaction between samples. Second, the weight definition differs: in SMC, the weight includes $\exp(v_t(\cdot))$  in the denominator, while in SVDD, it does not, as normalization occurs independently for each sample, as mentioned in \pref{eq:correct_weight}. 
+
+{ Readers may wonder which approach to use. When the goal is alignment (i.e., reward maximization) in \pref{sec:alignment} (with small $\alpha$), SVDD is more suitable since SMC may suffer from mode collapse. For conditioning tasks in \pref{sec:conditioning} (with moderate $\alpha$), the comparison becomes more nuanced.} As noted in \pref{sec:SMC}, SMC benefits from eliminating inferior samples through global interaction, making it advantageous in certain cases. 
+
+\subsection{Nested-SMC-Based Guidance}
+
+\begin{figure}[!th]
+    \centering
+    \includegraphics[width=0.8\linewidth]{images/nested_SMC.png}
+    \caption{Intuition Behind Nested-SMC-Based Guidance. The algorithm comprises two components: local sampling, which parallels value-based IS sampling, and global resampling, which mirrors SMC-based guidance. }
+    \label{fig:nested-SMC}
+\end{figure}
+
+
+As discussed above, the SMC-based approach and the value-based importance sampling approach each have distinct advantages. A hybrid method, referred to as nested-SMC (or nested-IS) in computational statistics \citep[Algorithm 5]{naesseth2019elements}, may combine the strengths of both approaches. This method is outlined in \pref{alg:nested_IS}, and the intuition is outlined in \pref{fig:nested-SMC}. Each step involves two processes: the first is local sampling, resembling value-based importance sampling, and the second is global resampling, characteristic of SMC-based guidance. By incorporating these two elements, nested-IS-based guidance can be more effectively tailored for optimization, allowing the elimination of suboptimal samples through global resampling.
+
+
+\begin{algorithm}[!th]
+\caption{Nested-IS-Based Guidance}\label{alg:nested_IS}
+\begin{algorithmic}[1]
+     \STATE {\bf Require}: Estimated (potentially \textbf{non-differentiable}) soft value function $\{\hat v_t\}_{t=T}^0$ (\pref{sec:method_value}), pre-trained diffusion models $\{p^{\pre}_t\}_{t=T}^0$, hyperparameter $\alpha \in \mathbb{R}$, proposal distribution $\{q_t\}_{t=T}^0$,  batch size $N$, duplication size $M$
+     \FOR{$t \in [T+1,\cdots,1]$}
+       \STATE \textbf{Importance sampling step:}  For $i \in [1,\cdots,N]$, get $M$ samples from pre-trained polices $\{x^{[i,j]}_{t-1}\}_{j=1}^{M} \sim q_{t-1}(\cdot| x^{[i]}_{t}) $. And for each $j\in [1,\cdots,M]$, and calculate  $$  w^{[i,j]}_{t-1}:=  \exp(\hat v_{t-1}(x^{[i,j]}_{t-1})/\alpha)\times \frac{p^{\pre}_{t-1}(x^{[i,j]}_{t-1}| x^{[i]}_{t}) }{q_{t-1}(x^{[i,j]}_{t-1}| x^{[i]}_{t})}.$$ \label{line:select3}
+        \STATE \textbf{Local resampling step:} $ \{ x^{[i]}_{t-1} \}_{i=1}^N   \leftarrow  x^{[i, \zeta^{[i]}_{t-1} ]}_{t-1} $ where $ \zeta^{[i]}_{t-1}  \sim \mathrm{Cat}\left ( \left \{\frac{w^{[i,j]}_{t-1}}{\sum_{k=1}^{M} w^{[i,k ]}_{t-1} } \right \}_{j=1}^{M} \right),\,$ \label{line:select4}
+    \STATE \textbf{Calculate global weight (normalizing constant):}  
+$ w^{[i]}_{t-1}=1/M \sum_{j=1}^M  w^{[i,j]}_{t-1}$
+    \STATE \textbf{Global resampling step:} Resample by selecting new indices with replacement:  \\ 
+       $$\{x^{[i]}_{t-1}\}_{i=1}^N  \leftarrow \{x^{\zeta^{[i]}_{t-1}}_{t-1}\}_{i=1}^N,\quad \{\zeta^{[i]}_{t-1}\}_{i=1}^N \sim \mathrm{Cat}\left ( \left \{\frac{w^{[i]}_{t-1}}{\sum_{k=1}^N w^{[k]}_{t-1} } \right \}_{i=1}^N\right).$$
+     \ENDFOR
+  \STATE {\bf Output}: $\{ x^{[i]}_0\}_{i=1}^N$
+\end{algorithmic}
+\end{algorithm}
+
+
+\subsection{Beam Search for Reward Maximization}\label{sec:beam}
+
+
+Now, consider a special case of reward maximization where it is natural to set $\alpha = 0$. In this scenario, the SVDD algorithm (\pref{alg:decoding2}) simplifies to \pref{alg:decoding3}, where the selected index corresponds to the one that maximizes the soft value functions.
+
+This algorithm can also be viewed as a beam search guided by soft value functions. Specifically, multiple nodes are expanded according to the proposal distributions, and the best node is selected based on its value function. While this process may seem greedy, it is not, as soft value functions theoretically serve as look-ahead mechanisms, predicting future rewards from intermediate states.
+
+However, the theoretical foundation of this approach relies on the assumption of perfect soft value function access. In practice, approximation errors may arise, and in certain cases, a deeper search might yield additional benefits. We will later explore deeper search algorithms, such as Monte Carlo Tree Search (MCTS), in \pref{sec:MCTS}.
+
+\begin{algorithm}[!th]
+\caption{Beam Search with Soft Value Functions \citep{li2024derivative}}\label{alg:decoding3}
+\begin{algorithmic}[1]
+     \STATE {\bf Require}: Estimated (potentially \textbf{non-differentiable}) soft value function $\{\hat v_t\}_{t=T}^0$ (refer to \pref{sec:method_value}), pre-trained diffusion models $\{p^{\pre}_t\}_{t=T}^0$, proposal distribution $\{q_t\}_{t=T}^0$, batch size $N$, duplication size $M$
+     \FOR{$t \in [T+1,\cdots,1]$} 
+       \STATE  Get $M$ samples from pre-trained polices $\{x^{[i,j]}_{t-1}\}_{j=1}^{M} \sim p^{\pre}_{t-1}(\cdot| x^{[i]}_{t}) $ 
+        \STATE Update $ x^{[i]}_{t-1}   \leftarrow  x^{[i, \zeta^{[i]}_{t-1}] }_{t-1} $ where  $ \textstyle \zeta^{[i]}_{t-1} :=  \argmax_{j \in [1,\cdots,M]} \hat v_{t-1}(x^{[i,j]}_{t-1}).$  \label{line:select}
+     \ENDFOR
+  \STATE {\bf Output}: $\{ x^{[i]}_0\}$
+\end{algorithmic}
+\end{algorithm}
+
+
+\subsection{Selecting Proposal Distributions} \label{sec:choice}
+
+Selecting the appropriate proposal distributions is an important decision for the methods introduced so far from \pref{alg:SMC} to \pref{alg:decoding3}. We outline three fundamental options below.
+
+\paragraph{Pre-Trained Diffusion Polices.} The simplest option is to use the policy from the pre-trained diffusion model.
+
+\paragraph{Derivative-Based Guidance.} Alternatively, derivative-based guidance from \pref{sec:derivative} can be employed, as demonstrated in \citet{wu2024practical,phillips2024particle} with differentiable value function models. Even if the original feedback is non-differentiable and constructing differentiable models is non-trivial, this approach may still outperform pre-trained diffusion models, as the differentiable models can still retain meaningful reward signals.
+
+
+{\paragraph{Fine-Tuned Policies.}  As we will discuss in \pref{sec:fine_tuning}, when we apply distillation or repeat distillation and inference-time techniques, we can use policies from fine-tuned models as enhanced proposal distributions. } 
+

@@ -1,0 +1,93 @@
+\documentclass{article}
+
+
+% if you need to pass options to natbib, use, e.g.:
+     \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading neurips_2025
+
+
+% ready for submission
+% \usepackage{neurips_2025}
+\usepackage{float}
+
+% to compile a preprint version, e.g., for submission to arXiv, add add the
+% [preprint] option:
+% \usepackage[preprint]{neurips_2025}
+
+
+% to compile a camera-ready version, add the [final] option, e.g.:
+    \usepackage[final]{neurips_2025}
+
+
+% to avoid loading the natbib package, add option nonatbib:
+%    \usepackage[nonatbib]{neurips_2025}
+
+
+\input{header}
+\input{math_commands}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{proposition}{Proposition}
+\newtheorem{remark}{Remark}
+\usepackage{booktabs}
+\usepackage{array}
+
+\title{$\Psi$-Sampler: Initial Particle Sampling for SMC-Based Inference-Time Reward Alignment in Score Models}
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to LaTeX to determine where to break the
+% lines. Using \AND forces a line break at that point. So, if LaTeX puts 3 of 4
+% authors names on the first line, and the last on the second line, try using
+% \AND instead of \And before the third author name.
+
+
+% \author{%
+%   David S.~Hippocampus\thanks{Use footnote for providing further information
+%     about author (webpage, alternative address)---\emph{not} for acknowledging
+%     funding agencies.} \\
+%   Department of Computer Science\\
+%   Cranberry-Lemon University\\
+%   Pittsburgh, PA 15213 \\
+%   \texttt{hippo@cs.cranberry-lemon.edu} \\
+% }
+\author{Taehoon Yoon$^{*}$ $\quad$
+Yunhong Min$^{*}$ $\quad$
+Kyeongmin Yeo$^{*}$ $\quad$
+Minhyuk Sung \\[0.2em]
+KAIST \\
+{\tt\small \{taehoon,dbsghd363,aaaaa,mhsung\}@kaist.ac.kr}
+}
+
+\begin{document}
+
+
+\maketitle
+\def\thefootnote{*}\footnotetext{Equal contribution.}
+
+\input{Section/0_Abstract.tex}
+\input{Section/1_Introduction}
+\input{Section/2_Related_Work}
+\input{Section/3_Problem_Definition_Background}
+\input{Section/4_Methods}
+\input{Section/5_Experiments}
+\input{Section/6_Conclusion}
+\input{Section/8_Acknowledgements}
+
+{\small
+\bibliographystyle{unsrt}
+% \bibliographystyle{plain}
+\bibliography{main}
+}
+
+
+% \clearpage
+% \input{misc/temp}
+
+
+\clearpage
+\newpage
+\appendix
+\section*{Appendix}
+\input{Section/9_Appendix}
+
+\end{document}

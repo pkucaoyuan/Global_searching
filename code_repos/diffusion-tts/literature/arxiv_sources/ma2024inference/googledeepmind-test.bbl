@@ -1,0 +1,511 @@
+\begin{thebibliography}{99}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Achiam et~al.(2023)Achiam, Adler, Agarwal, Ahmad, Akkaya, Aleman, Almeida, Altenschmidt, Altman, Anadkat, et~al.]{achiam2023gpt}
+J.~Achiam, S.~Adler, S.~Agarwal, L.~Ahmad, I.~Akkaya, F.~L. Aleman, D.~Almeida, J.~Altenschmidt, S.~Altman, S.~Anadkat, et~al.
+\newblock Gpt-4 technical report.
+\newblock \emph{arXiv preprint arXiv:2303.08774}, 2023.
+
+\bibitem[Ahn et~al.(2024)Ahn, Kang, Lee, Min, Kim, Jang, Cho, Paul, Kim, Cha, Jin, and Kim]{ahn2024noiseworthdiffusionguidance}
+D.~Ahn, J.~Kang, S.~Lee, J.~Min, M.~Kim, W.~Jang, H.~Cho, S.~Paul, S.~Kim, E.~Cha, K.~H. Jin, and S.~Kim.
+\newblock A noise is worth diffusion guidance.
+\newblock \emph{arXiv preprint arXiv:2412.03895}, 2024.
+
+\bibitem[Albergo and Vanden-Eijnden(2023)]{albergo2023building}
+M.~S. Albergo and E.~Vanden-Eijnden.
+\newblock Building normalizing flows with stochastic interpolants.
+\newblock In \emph{The Eleventh International Conference on Learning Representations}, 2023.
+\newblock URL \url{https://openreview.net/forum?id=li7qeBbCR1t}.
+
+\bibitem[Anderson(1982)]{anderson1982reverse}
+B.~D. Anderson.
+\newblock Reverse-time diffusion equation models.
+\newblock \emph{Stochastic Processes and their Applications}, 12\penalty0 (3):\penalty0 313--326, 1982.
+
+\bibitem[Ben-Hamu et~al.(2024)Ben-Hamu, Puny, Gat, Karrer, Singer, and Lipman]{ben2024d}
+H.~Ben-Hamu, O.~Puny, I.~Gat, B.~Karrer, U.~Singer, and Y.~Lipman.
+\newblock D-flow: Differentiating through flows for controlled generation.
+\newblock \emph{arXiv preprint arXiv:2402.14017}, 2024.
+
+\bibitem[Black et~al.(2023)Black, Janner, Du, Kostrikov, and Levine]{black2023training}
+K.~Black, M.~Janner, Y.~Du, I.~Kostrikov, and S.~Levine.
+\newblock Training diffusion models with reinforcement learning.
+\newblock \emph{arXiv preprint arXiv:2305.13301}, 2023.
+
+\bibitem[Brown et~al.(2024)Brown, Juravsky, Ehrlich, Clark, Le, R{\'e}, and Mirhoseini]{brown2024large}
+B.~Brown, J.~Juravsky, R.~Ehrlich, R.~Clark, Q.~V. Le, C.~R{\'e}, and A.~Mirhoseini.
+\newblock Large language monkeys: Scaling inference compute with repeated sampling.
+\newblock \emph{arXiv preprint arXiv:2407.21787}, 2024.
+
+\bibitem[Chen et~al.(2024{\natexlab{a}})Chen, Ge, Xie, Wu, Yao, Ren, Wang, Luo, Lu, and Li]{chen2024pixart}
+J.~Chen, C.~Ge, E.~Xie, Y.~Wu, L.~Yao, X.~Ren, Z.~Wang, P.~Luo, H.~Lu, and Z.~Li.
+\newblock Pixart-$\backslash$sigma: Weak-to-strong training of diffusion transformer for 4k text-to-image generation.
+\newblock \emph{arXiv preprint arXiv:2403.04692}, 2024{\natexlab{a}}.
+
+\bibitem[Chen et~al.(2016)Chen, Xu, Zhang, and Guestrin]{chen2016training}
+T.~Chen, B.~Xu, C.~Zhang, and C.~Guestrin.
+\newblock Training deep nets with sublinear memory cost.
+\newblock \emph{arXiv preprint arXiv:1604.06174}, 2016.
+
+\bibitem[Chen et~al.(2024{\natexlab{b}})Chen, Du, Wen, Zhou, Cui, Weng, Tu, Wang, Tong, Huang, et~al.]{chen2024mj}
+Z.~Chen, Y.~Du, Z.~Wen, Y.~Zhou, C.~Cui, Z.~Weng, H.~Tu, C.~Wang, Z.~Tong, Q.~Huang, et~al.
+\newblock Mj-bench: Is your multimodal reward model really a good judge for text-to-image generation?
+\newblock \emph{arXiv preprint arXiv:2407.04842}, 2024{\natexlab{b}}.
+
+\bibitem[Clark et~al.(2024)Clark, Vicol, Swersky, and Fleet]{clark2024directly}
+K.~Clark, P.~Vicol, K.~Swersky, and D.~J. Fleet.
+\newblock Directly fine-tuning diffusion models on differentiable rewards.
+\newblock In \emph{The Twelfth International Conference on Learning Representations}, 2024.
+\newblock URL \url{https://openreview.net/forum?id=1vmSEVL19f}.
+
+\bibitem[Cobbe et~al.(2021)Cobbe, Kosaraju, Bavarian, Chen, Jun, Kaiser, Plappert, Tworek, Hilton, Nakano, et~al.]{cobbe2021training}
+K.~Cobbe, V.~Kosaraju, M.~Bavarian, M.~Chen, H.~Jun, L.~Kaiser, M.~Plappert, J.~Tworek, J.~Hilton, R.~Nakano, et~al.
+\newblock Training verifiers to solve math word problems.
+\newblock \emph{arXiv preprint arXiv:2110.14168}, 2021.
+
+\bibitem[Deng et~al.(2009)Deng, Dong, Socher, Li, Li, and Fei-Fei]{deng2009imagenet}
+J.~Deng, W.~Dong, R.~Socher, L.-J. Li, K.~Li, and L.~Fei-Fei.
+\newblock Imagenet: A large-scale hierarchical image database.
+\newblock In \emph{2009 IEEE conference on computer vision and pattern recognition}, pages 248--255. Ieee, 2009.
+
+\bibitem[Domingo{-}Enrich et~al.(2024)Domingo{-}Enrich, Drozdzal, Karrer, and Chen]{carles2024adjoint}
+C.~Domingo{-}Enrich, M.~Drozdzal, B.~Karrer, and R.~T.~Q. Chen.
+\newblock Adjoint matching: Fine-tuning flow and diffusion generative models with memoryless stochastic optimal control.
+\newblock \emph{arXiv preprint arXiv:2409.08861}, 2024.
+
+\bibitem[Esser et~al.(2024)Esser, Kulal, Blattmann, Entezari, M{\"u}ller, Saini, Levi, Lorenz, Sauer, Boesel, et~al.]{esser2024scaling}
+P.~Esser, S.~Kulal, A.~Blattmann, R.~Entezari, J.~M{\"u}ller, H.~Saini, Y.~Levi, D.~Lorenz, A.~Sauer, F.~Boesel, et~al.
+\newblock Scaling rectified flow transformers for high-resolution image synthesis.
+\newblock In \emph{Forty-first International Conference on Machine Learning}, 2024.
+
+\bibitem[Eyring et~al.(2024)Eyring, Karthik, Roth, Dosovitskiy, and Akata]{eyring2024reno}
+L.~Eyring, S.~Karthik, K.~Roth, A.~Dosovitskiy, and Z.~Akata.
+\newblock Reno: Enhancing one-step text-to-image models through reward-based noise optimization.
+\newblock \emph{arXiv preprint arXiv:2406.04312}, 2024.
+
+\bibitem[Fan and Lee(2023)]{fan023sft}
+Y.~Fan and K.~Lee.
+\newblock Optimizing {DDPM} sampling with shortcut fine-tuning.
+\newblock In \emph{{ICML}}, volume 202 of \emph{Proceedings of Machine Learning Research}, pages 9623--9639. {PMLR}, 2023.
+
+\bibitem[Fan et~al.(2024)Fan, Watkins, Du, Liu, Ryu, Boutilier, Abbeel, Ghavamzadeh, Lee, and Lee]{fan2024reinforcement}
+Y.~Fan, O.~Watkins, Y.~Du, H.~Liu, M.~Ryu, C.~Boutilier, P.~Abbeel, M.~Ghavamzadeh, K.~Lee, and K.~Lee.
+\newblock Reinforcement learning for fine-tuning text-to-image diffusion models.
+\newblock \emph{Advances in Neural Information Processing Systems}, 36, 2024.
+
+\bibitem[Flaxman et~al.(2004)Flaxman, Kalai, and McMahan]{flaxman2004online}
+A.~D. Flaxman, A.~T. Kalai, and H.~B. McMahan.
+\newblock Online convex optimization in the bandit setting: gradient descent without a gradient.
+\newblock \emph{arXiv preprint cs/0408007}, 2004.
+
+\bibitem[Gandhi et~al.(2024)Gandhi, Lee, Grand, Liu, Cheng, Sharma, and Goodman]{gandhi2024stream}
+K.~Gandhi, D.~Lee, G.~Grand, M.~Liu, W.~Cheng, A.~Sharma, and N.~D. Goodman.
+\newblock Stream of search (sos): Learning to search in language.
+\newblock \emph{arXiv preprint arXiv:2404.03683}, 2024.
+
+\bibitem[Gao et~al.(2023)Gao, Schulman, and Hilton]{gao2023scaling}
+L.~Gao, J.~Schulman, and J.~Hilton.
+\newblock Scaling laws for reward model overoptimization.
+\newblock In \emph{International Conference on Machine Learning}, pages 10835--10866. PMLR, 2023.
+
+\bibitem[Goodfellow et~al.(2014)Goodfellow, Pouget-Abadie, Mirza, Xu, Warde-Farley, Ozair, Courville, and Bengio]{goodfellow2014generative}
+I.~Goodfellow, J.~Pouget-Abadie, M.~Mirza, B.~Xu, D.~Warde-Farley, S.~Ozair, A.~Courville, and Y.~Bengio.
+\newblock Generative adversarial nets.
+\newblock \emph{Advances in neural information processing systems}, 27, 2014.
+
+\bibitem[Hessel et~al.(2021)Hessel, Holtzman, Forbes, Bras, and Choi]{hessel2021clipscore}
+J.~Hessel, A.~Holtzman, M.~Forbes, R.~L. Bras, and Y.~Choi.
+\newblock Clipscore: A reference-free evaluation metric for image captioning.
+\newblock \emph{arXiv preprint arXiv:2104.08718}, 2021.
+
+\bibitem[Heusel et~al.(2017)Heusel, Ramsauer, Unterthiner, Nessler, and Hochreiter]{heusel2017gans}
+M.~Heusel, H.~Ramsauer, T.~Unterthiner, B.~Nessler, and S.~Hochreiter.
+\newblock Gans trained by a two time-scale update rule converge to a local nash equilibrium.
+\newblock \emph{Advances in neural information processing systems}, 30, 2017.
+
+\bibitem[Ho and Salimans(2022)]{ho2022classifier}
+J.~Ho and T.~Salimans.
+\newblock Classifier-free diffusion guidance.
+\newblock \emph{arXiv preprint arXiv:2207.12598}, 2022.
+
+\bibitem[Ho et~al.(2020)Ho, Jain, and Abbeel]{ho2020denoising}
+J.~Ho, A.~Jain, and P.~Abbeel.
+\newblock Denoising diffusion probabilistic models.
+\newblock \emph{Advances in Neural Information Processing Systems}, 33:\penalty0 6840--6851, 2020.
+
+\bibitem[Hoffmann et~al.(2022)Hoffmann, Borgeaud, Mensch, Buchatskaya, Cai, Rutherford, Casas, Hendricks, Welbl, Clark, et~al.]{hoffmann2022training}
+J.~Hoffmann, S.~Borgeaud, A.~Mensch, E.~Buchatskaya, T.~Cai, E.~Rutherford, D.~d.~L. Casas, L.~A. Hendricks, J.~Welbl, A.~Clark, et~al.
+\newblock Training compute-optimal large language models.
+\newblock \emph{arXiv preprint arXiv:2203.15556}, 2022.
+
+\bibitem[Hu et~al.(2024)Hu, He, and Wipf]{hu2024new}
+X.~Hu, T.~He, and D.~Wipf.
+\newblock New desiderata for direct preference optimization.
+\newblock \emph{arXiv preprint arXiv:2407.09072}, 2024.
+
+\bibitem[Hu et~al.(2023)Hu, Liu, Kasai, Wang, Ostendorf, Krishna, and Smith]{hu2023tifa}
+Y.~Hu, B.~Liu, J.~Kasai, Y.~Wang, M.~Ostendorf, R.~Krishna, and N.~A. Smith.
+\newblock Tifa: Accurate and interpretable text-to-image faithfulness evaluation with question answering.
+\newblock In \emph{Proceedings of the IEEE/CVF International Conference on Computer Vision}, pages 20406--20417, 2023.
+
+\bibitem[Huang et~al.(2023)Huang, Sun, Xie, Li, and Liu]{huang2023t2i}
+K.~Huang, K.~Sun, E.~Xie, Z.~Li, and X.~Liu.
+\newblock T2i-compbench: A comprehensive benchmark for open-world compositional text-to-image generation.
+\newblock \emph{Advances in Neural Information Processing Systems}, 36:\penalty0 78723--78747, 2023.
+
+\bibitem[Kaplan et~al.(2020)Kaplan, McCandlish, Henighan, Brown, Chess, Child, Gray, Radford, Wu, and Amodei]{kaplan2020scaling}
+J.~Kaplan, S.~McCandlish, T.~Henighan, T.~B. Brown, B.~Chess, R.~Child, S.~Gray, A.~Radford, J.~Wu, and D.~Amodei.
+\newblock Scaling laws for neural language models.
+\newblock \emph{arXiv preprint arXiv:2001.08361}, 2020.
+
+\bibitem[Karras et~al.(2022)Karras, Aittala, Aila, and Laine]{karras2022elucidating}
+T.~Karras, M.~Aittala, T.~Aila, and S.~Laine.
+\newblock Elucidating the design space of diffusion-based generative models.
+\newblock In A.~H. Oh, A.~Agarwal, D.~Belgrave, and K.~Cho, editors, \emph{Advances in Neural Information Processing Systems}, 2022.
+\newblock URL \url{https://openreview.net/forum?id=k7FuTOWMOc7}.
+
+\bibitem[Karras et~al.(2024)Karras, Aittala, Lehtinen, Hellsten, Aila, and Laine]{karras2024analyzing}
+T.~Karras, M.~Aittala, J.~Lehtinen, J.~Hellsten, T.~Aila, and S.~Laine.
+\newblock Analyzing and improving the training dynamics of diffusion models.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition}, pages 24174--24184, 2024.
+
+\bibitem[Karthik et~al.(2023)Karthik, Roth, Mancini, and Akata]{karthik2023if}
+S.~Karthik, K.~Roth, M.~Mancini, and Z.~Akata.
+\newblock If at first you don't succeed, try, try again: Faithful diffusion-based text-to-image generation by selection.
+\newblock \emph{arXiv preprint arXiv:2305.13308}, 2023.
+
+\bibitem[Karunratanakul et~al.(2024)Karunratanakul, Preechakul, Aksan, Beeler, Suwajanakorn, and Tang]{karunratanakul2024optimizing}
+K.~Karunratanakul, K.~Preechakul, E.~Aksan, T.~Beeler, S.~Suwajanakorn, and S.~Tang.
+\newblock Optimizing diffusion noise can serve as universal motion priors.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition}, pages 1334--1345, 2024.
+
+\bibitem[Khader et~al.(2022)Khader, Mueller-Franzes, Arasteh, Han, Haarburger, Schulze-Hagen, Schad, Engelhardt, Baessler, Foersch, et~al.]{khader2022medical}
+F.~Khader, G.~Mueller-Franzes, S.~T. Arasteh, T.~Han, C.~Haarburger, M.~Schulze-Hagen, P.~Schad, S.~Engelhardt, B.~Baessler, S.~Foersch, et~al.
+\newblock Medical diffusion: denoising diffusion probabilistic models for 3d medical image generation.
+\newblock \emph{arXiv preprint arXiv:2211.03364}, 2022.
+
+\bibitem[Kim et~al.(2024)Kim, Jeong, An, Ghavamzadeh, Dvijotham, Shin, and Lee]{kim2024confidence}
+K.~Kim, J.~Jeong, M.~An, M.~Ghavamzadeh, K.~Dvijotham, J.~Shin, and K.~Lee.
+\newblock Confidence-aware reward optimization for fine-tuning text-to-image models.
+\newblock \emph{arXiv preprint arXiv:2404.01863}, 2024.
+
+\bibitem[Kingma(2013)]{kingma2013auto}
+D.~P. Kingma.
+\newblock Auto-encoding variational bayes.
+\newblock \emph{arXiv preprint arXiv:1312.6114}, 2013.
+
+\bibitem[Kirstain et~al.(2023)Kirstain, Polyak, Singer, Matiana, Penna, and Levy]{kirstain2023pick}
+Y.~Kirstain, A.~Polyak, U.~Singer, S.~Matiana, J.~Penna, and O.~Levy.
+\newblock Pick-a-pic: An open dataset of user preferences for text-to-image generation.
+\newblock \emph{Advances in Neural Information Processing Systems}, 36:\penalty0 36652--36663, 2023.
+
+\bibitem[Kynk{\"a}{\"a}nniemi et~al.(2019)Kynk{\"a}{\"a}nniemi, Karras, Laine, Lehtinen, and Aila]{kynkaanniemi2019improved}
+T.~Kynk{\"a}{\"a}nniemi, T.~Karras, S.~Laine, J.~Lehtinen, and T.~Aila.
+\newblock Improved precision and recall metric for assessing generative models.
+\newblock \emph{Advances in neural information processing systems}, 32, 2019.
+
+\bibitem[Labs()]{flux1dev}
+B.~F. Labs.
+\newblock Flux.1 [dev].
+\newblock \url{https://blackforestlabs.ai/}.
+
+\bibitem[Lee et~al.(2024)Lee, Yasunaga, Meng, Mai, Park, Gupta, Zhang, Narayanan, Teufel, Bellagente, et~al.]{lee2024holistic}
+T.~Lee, M.~Yasunaga, C.~Meng, Y.~Mai, J.~S. Park, A.~Gupta, Y.~Zhang, D.~Narayanan, H.~Teufel, M.~Bellagente, et~al.
+\newblock Holistic evaluation of text-to-image models.
+\newblock \emph{Advances in Neural Information Processing Systems}, 36, 2024.
+
+\bibitem[Li et~al.(2022)Li, Li, Xiong, and Hoi]{li2022blip}
+J.~Li, D.~Li, C.~Xiong, and S.~Hoi.
+\newblock Blip: Bootstrapping language-image pre-training for unified vision-language understanding and generation.
+\newblock In \emph{International conference on machine learning}, pages 12888--12900. PMLR, 2022.
+
+\bibitem[Li and Li(2024)]{li2024process}
+W.~Li and Y.~Li.
+\newblock Process reward model with q-value rankings.
+\newblock \emph{arXiv preprint arXiv:2410.11287}, 2024.
+
+\bibitem[Lightman et~al.(2023)Lightman, Kosaraju, Burda, Edwards, Baker, Lee, Leike, Schulman, Sutskever, and Cobbe]{lightman2023let}
+H.~Lightman, V.~Kosaraju, Y.~Burda, H.~Edwards, B.~Baker, T.~Lee, J.~Leike, J.~Schulman, I.~Sutskever, and K.~Cobbe.
+\newblock Let's verify step by step.
+\newblock \emph{arXiv preprint arXiv:2305.20050}, 2023.
+
+\bibitem[Lipman et~al.(2023)Lipman, Chen, Ben-Hamu, Nickel, and Le]{lipman2023flow}
+Y.~Lipman, R.~T.~Q. Chen, H.~Ben-Hamu, M.~Nickel, and M.~Le.
+\newblock Flow matching for generative modeling.
+\newblock In \emph{The Eleventh International Conference on Learning Representations}, 2023.
+\newblock URL \url{https://openreview.net/forum?id=PqvMRDCJT9t}.
+
+\bibitem[Liu et~al.(2023)Liu, Gong, and qiang liu]{liu2023flow}
+X.~Liu, C.~Gong, and qiang liu.
+\newblock Flow straight and fast: Learning to generate and transfer data with rectified flow.
+\newblock In \emph{The Eleventh International Conference on Learning Representations}, 2023.
+\newblock URL \url{https://openreview.net/forum?id=XVjTT1nw5z}.
+
+\bibitem[Liu et~al.(2024)Liu, Zhang, Jaakkola, and Chang]{liu2024correcting}
+Y.~Liu, Y.~Zhang, T.~Jaakkola, and S.~Chang.
+\newblock Correcting diffusion generation through resampling.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition}, pages 8713--8723, 2024.
+
+\bibitem[Lu et~al.(2024)Lu, Yang, Li, Wang, and Wang]{lu2024llmscore}
+Y.~Lu, X.~Yang, X.~Li, X.~E. Wang, and W.~Y. Wang.
+\newblock Llmscore: Unveiling the power of large language models in text-to-image synthesis evaluation.
+\newblock \emph{Advances in Neural Information Processing Systems}, 36, 2024.
+
+\bibitem[Ma et~al.(2024)Ma, Goldstein, Albergo, Boffi, Vanden-Eijnden, and Xie]{ma2024sit}
+N.~Ma, M.~Goldstein, M.~S. Albergo, N.~M. Boffi, E.~Vanden-Eijnden, and S.~Xie.
+\newblock Sit: Exploring flow and diffusion-based generative models with scalable interpolant transformers.
+\newblock \emph{arXiv preprint arXiv:2401.08740}, 2024.
+
+\bibitem[Na et~al.(2024)Na, Kim, Park, Shin, Kang, and Moon]{na2024diffusion}
+B.~Na, Y.~Kim, M.~Park, D.~Shin, W.~Kang, and I.-C. Moon.
+\newblock Diffusion rejection sampling.
+\newblock \emph{arXiv preprint arXiv:2405.17880}, 2024.
+
+\bibitem[Novack et~al.(2024)Novack, McAuley, Berg-Kirkpatrick, and Bryan]{novack2024ditto}
+Z.~Novack, J.~McAuley, T.~Berg-Kirkpatrick, and N.~J. Bryan.
+\newblock Ditto: Diffusion inference-time t-optimization for music generation.
+\newblock \emph{arXiv preprint arXiv:2401.12179}, 2024.
+
+\bibitem[Oquab et~al.(2023)Oquab, Darcet, Moutakanni, Vo, Szafraniec, Khalidov, Fernandez, Haziza, Massa, El-Nouby, et~al.]{oquab2023dinov2}
+M.~Oquab, T.~Darcet, T.~Moutakanni, H.~Vo, M.~Szafraniec, V.~Khalidov, P.~Fernandez, D.~Haziza, F.~Massa, A.~El-Nouby, et~al.
+\newblock Dinov2: Learning robust visual features without supervision.
+\newblock \emph{arXiv preprint arXiv:2304.07193}, 2023.
+
+\bibitem[Ouyang et~al.(2022)Ouyang, Wu, Jiang, Almeida, Wainwright, Mishkin, Zhang, Agarwal, Slama, Ray, et~al.]{ouyang2022training}
+L.~Ouyang, J.~Wu, X.~Jiang, D.~Almeida, C.~Wainwright, P.~Mishkin, C.~Zhang, S.~Agarwal, K.~Slama, A.~Ray, et~al.
+\newblock Training language models to follow instructions with human feedback.
+\newblock \emph{Advances in neural information processing systems}, 35:\penalty0 27730--27744, 2022.
+
+\bibitem[Pan et~al.(2022)Pan, Bhatia, and Steinhardt]{pan2022effects}
+A.~Pan, K.~Bhatia, and J.~Steinhardt.
+\newblock The effects of reward misspecification: Mapping and mitigating misaligned models.
+\newblock \emph{arXiv preprint arXiv:2201.03544}, 2022.
+
+\bibitem[Polyak et~al.(2024)Polyak, Zohar, Brown, Tjandra, Sinha, Lee, Vyas, Shi, Ma, Chuang, et~al.]{polyak2024movie}
+A.~Polyak, A.~Zohar, A.~Brown, A.~Tjandra, A.~Sinha, A.~Lee, A.~Vyas, B.~Shi, C.-Y. Ma, C.-Y. Chuang, et~al.
+\newblock Movie gen: A cast of media foundation models.
+\newblock \emph{arXiv preprint arXiv:2410.13720}, 2024.
+
+\bibitem[Qi et~al.(2024)Qi, Bai, Xiong, et~al.]{qi2024not}
+Z.~Qi, L.~Bai, H.~Xiong, et~al.
+\newblock Not all noises are created equally: Diffusion noise selection and optimization.
+\newblock \emph{arXiv preprint arXiv:2407.14041}, 2024.
+
+\bibitem[Radford et~al.(2021)Radford, Kim, Hallacy, Ramesh, Goh, Agarwal, Sastry, Askell, Mishkin, Clark, et~al.]{radford2021learning}
+A.~Radford, J.~W. Kim, C.~Hallacy, A.~Ramesh, G.~Goh, S.~Agarwal, G.~Sastry, A.~Askell, P.~Mishkin, J.~Clark, et~al.
+\newblock Learning transferable visual models from natural language supervision.
+\newblock In \emph{International conference on machine learning}, pages 8748--8763. PMLR, 2021.
+
+\bibitem[Rafailov et~al.(2023)Rafailov, Sharma, Mitchell, Manning, Ermon, and Finn]{rafailov2023dpo}
+R.~Rafailov, A.~Sharma, E.~Mitchell, C.~D. Manning, S.~Ermon, and C.~Finn.
+\newblock Direct preference optimization: Your language model is secretly a reward model.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2023.
+
+\bibitem[Ramesh et~al.(2021)Ramesh, Pavlov, Goh, Gray, Voss, Radford, Chen, and Sutskever]{ramesh2021zero}
+A.~Ramesh, M.~Pavlov, G.~Goh, S.~Gray, C.~Voss, A.~Radford, M.~Chen, and I.~Sutskever.
+\newblock Zero-shot text-to-image generation.
+\newblock In \emph{International conference on machine learning}, pages 8821--8831. Pmlr, 2021.
+
+\bibitem[Rombach et~al.(2022)Rombach, Blattmann, Lorenz, Esser, and Ommer]{rombach2022high}
+R.~Rombach, A.~Blattmann, D.~Lorenz, P.~Esser, and B.~Ommer.
+\newblock High-resolution image synthesis with latent diffusion models.
+\newblock In \emph{Proceedings of the IEEE/CVF conference on computer vision and pattern recognition}, pages 10684--10695, 2022.
+
+\bibitem[Ruder(2016)]{ruder2016overview}
+S.~Ruder.
+\newblock An overview of gradient descent optimization algorithms.
+\newblock \emph{arXiv preprint arXiv:1609.04747}, 2016.
+
+\bibitem[Saharia et~al.(2022)Saharia, Chan, Saxena, Li, Whang, Denton, Ghasemipour, Gontijo~Lopes, Karagol~Ayan, Salimans, et~al.]{saharia2022photorealistic}
+C.~Saharia, W.~Chan, S.~Saxena, L.~Li, J.~Whang, E.~L. Denton, K.~Ghasemipour, R.~Gontijo~Lopes, B.~Karagol~Ayan, T.~Salimans, et~al.
+\newblock Photorealistic text-to-image diffusion models with deep language understanding.
+\newblock \emph{Advances in neural information processing systems}, 35:\penalty0 36479--36494, 2022.
+
+\bibitem[Salimans and Ho(2022)]{salimans2022progressive}
+T.~Salimans and J.~Ho.
+\newblock Progressive distillation for fast sampling of diffusion models.
+\newblock In \emph{International Conference on Learning Representations}, 2022.
+\newblock URL \url{https://openreview.net/forum?id=TIdIXIpzhoI}.
+
+\bibitem[Salimans et~al.(2016)Salimans, Goodfellow, Zaremba, Cheung, Radford, and Chen]{salimans2016improved}
+T.~Salimans, I.~Goodfellow, W.~Zaremba, V.~Cheung, A.~Radford, and X.~Chen.
+\newblock Improved techniques for training gans.
+\newblock \emph{Advances in neural information processing systems}, 29, 2016.
+
+\bibitem[Samuel et~al.(2024)Samuel, Ben-Ari, Raviv, Darshan, and Chechik]{samuel2024generating}
+D.~Samuel, R.~Ben-Ari, S.~Raviv, N.~Darshan, and G.~Chechik.
+\newblock Generating images of rare concepts using pre-trained diffusion models.
+\newblock In \emph{Proceedings of the AAAI Conference on Artificial Intelligence}, volume~38, pages 4695--4703, 2024.
+
+\bibitem[Schneider(2023)]{schneider2023archisound}
+F.~Schneider.
+\newblock Archisound: Audio generation with diffusion.
+\newblock \emph{arXiv preprint arXiv:2301.13267}, 2023.
+
+\bibitem[Schuhmann et~al.(2022)Schuhmann, Beaumont, Vencu, Gordon, Wightman, Cherti, Coombes, Katta, Mullis, Wortsman, et~al.]{schuhmann2022laion}
+C.~Schuhmann, R.~Beaumont, R.~Vencu, C.~Gordon, R.~Wightman, M.~Cherti, T.~Coombes, A.~Katta, C.~Mullis, M.~Wortsman, et~al.
+\newblock Laion-5b: An open large-scale dataset for training next generation image-text models.
+\newblock \emph{Advances in Neural Information Processing Systems}, 35:\penalty0 25278--25294, 2022.
+
+\bibitem[Snell et~al.(2024)Snell, Lee, Xu, and Kumar]{snell2024scaling}
+C.~Snell, J.~Lee, K.~Xu, and A.~Kumar.
+\newblock Scaling llm test-time compute optimally can be more effective than scaling model parameters.
+\newblock \emph{arXiv preprint arXiv:2408.03314}, 2024.
+
+\bibitem[Sohl-Dickstein et~al.(2015)Sohl-Dickstein, Weiss, Maheswaranathan, and Ganguli]{sohl2015deep}
+J.~Sohl-Dickstein, E.~Weiss, N.~Maheswaranathan, and S.~Ganguli.
+\newblock Deep unsupervised learning using nonequilibrium thermodynamics.
+\newblock In \emph{International Conference on Machine Learning}, pages 2256--2265. PMLR, 2015.
+
+\bibitem[Song et~al.(2021{\natexlab{a}})Song, Meng, and Ermon]{song2021denoising}
+J.~Song, C.~Meng, and S.~Ermon.
+\newblock Denoising diffusion implicit models.
+\newblock In \emph{International Conference on Learning Representations}, 2021{\natexlab{a}}.
+\newblock URL \url{https://openreview.net/forum?id=St1giarCHLP}.
+
+\bibitem[Song et~al.(2021{\natexlab{b}})Song, Sohl-Dickstein, Kingma, Kumar, Ermon, and Poole]{song2021scorebased}
+Y.~Song, J.~Sohl-Dickstein, D.~P. Kingma, A.~Kumar, S.~Ermon, and B.~Poole.
+\newblock Score-based generative modeling through stochastic differential equations.
+\newblock In \emph{International Conference on Learning Representations}, 2021{\natexlab{b}}.
+\newblock URL \url{https://openreview.net/forum?id=PxTIG12RRHS}.
+
+\bibitem[Song et~al.(2023)Song, Dhariwal, Chen, and Sutskever]{song2023consistency}
+Y.~Song, P.~Dhariwal, M.~Chen, and I.~Sutskever.
+\newblock Consistency models.
+\newblock \emph{arXiv preprint arXiv:2303.01469}, 2023.
+
+\bibitem[Su et~al.(2024)Su, Sukhbaatar, Rabbat, Tian, and Zheng]{su2024dualformer}
+D.~Su, S.~Sukhbaatar, M.~Rabbat, Y.~Tian, and Q.~Zheng.
+\newblock Dualformer: Controllable fast and slow thinking by learning with randomized reasoning traces.
+\newblock \emph{arXiv preprint arXiv:2410.09918}, 2024.
+
+\bibitem[Szegedy et~al.(2016)Szegedy, Vanhoucke, Ioffe, Shlens, and Wojna]{szegedy2016rethinking}
+C.~Szegedy, V.~Vanhoucke, S.~Ioffe, J.~Shlens, and Z.~Wojna.
+\newblock Rethinking the inception architecture for computer vision.
+\newblock In \emph{Proceedings of the IEEE conference on computer vision and pattern recognition}, pages 2818--2826, 2016.
+
+\bibitem[Tan et~al.(2024)Tan, Yang, Qin, Yang, Zhang, and Li]{tan2024evalalign}
+Z.~Tan, X.~Yang, L.~Qin, M.~Yang, C.~Zhang, and H.~Li.
+\newblock Evalalign: Supervised fine-tuning multimodal llms with human-aligned data for evaluating text-to-image models.
+\newblock \emph{arXiv preprint arXiv:2406.16562}, 2024.
+
+\bibitem[Tang et~al.(2024)Tang, Ruiz, Chu, Li, Holynski, Jacobs, Hariharan, Pritch, Wadhwa, Aberman, et~al.]{tang2024realfill}
+L.~Tang, N.~Ruiz, Q.~Chu, Y.~Li, A.~Holynski, D.~E. Jacobs, B.~Hariharan, Y.~Pritch, N.~Wadhwa, K.~Aberman, et~al.
+\newblock Realfill: Reference-driven generation for authentic image completion.
+\newblock \emph{ACM Transactions on Graphics (TOG)}, 43\penalty0 (4):\penalty0 1--12, 2024.
+
+\bibitem[Team et~al.(2023)Team, Anil, Borgeaud, Alayrac, Yu, Soricut, Schalkwyk, Dai, Hauth, Millican, et~al.]{team2023gemini}
+G.~Team, R.~Anil, S.~Borgeaud, J.-B. Alayrac, J.~Yu, R.~Soricut, J.~Schalkwyk, A.~M. Dai, A.~Hauth, K.~Millican, et~al.
+\newblock Gemini: a family of highly capable multimodal models.
+\newblock \emph{arXiv preprint arXiv:2312.11805}, 2023.
+
+\bibitem[Tian et~al.(2024)Tian, Jiang, Yuan, Peng, and Wang]{tian2024var}
+K.~Tian, Y.~Jiang, Z.~Yuan, B.~Peng, and L.~Wang.
+\newblock Visual autoregressive modeling: Scalable image generation via next-scale prediction.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2024.
+
+\bibitem[Touvron et~al.(2023)Touvron, Lavril, Izacard, Martinet, Lachaux, Lacroix, Rozi{\`e}re, Goyal, Hambro, Azhar, et~al.]{touvron2023llama}
+H.~Touvron, T.~Lavril, G.~Izacard, X.~Martinet, M.-A. Lachaux, T.~Lacroix, B.~Rozi{\`e}re, N.~Goyal, E.~Hambro, F.~Azhar, et~al.
+\newblock Llama: Open and efficient foundation language models.
+\newblock \emph{arXiv preprint arXiv:2302.13971}, 2023.
+
+\bibitem[von Platen et~al.(2022)von Platen, Patil, Lozhkov, Cuenca, Lambert, Rasul, Davaadorj, Nair, Paul, Berman, Xu, Liu, and Wolf]{von-platen-etal-2022-diffusers}
+P.~von Platen, S.~Patil, A.~Lozhkov, P.~Cuenca, N.~Lambert, K.~Rasul, M.~Davaadorj, D.~Nair, S.~Paul, W.~Berman, Y.~Xu, S.~Liu, and T.~Wolf.
+\newblock Diffusers: State-of-the-art diffusion models.
+\newblock \url{https://github.com/huggingface/diffusers}, 2022.
+
+\bibitem[Wallace et~al.(2023)Wallace, Gokul, Ermon, and Naik]{wallace2023end}
+B.~Wallace, A.~Gokul, S.~Ermon, and N.~Naik.
+\newblock End-to-end diffusion latent optimization improves classifier guidance.
+\newblock In \emph{Proceedings of the IEEE/CVF International Conference on Computer Vision}, pages 7280--7290, 2023.
+
+\bibitem[Wallace et~al.(2024)Wallace, Dang, Rafailov, Zhou, Lou, Purushwalkam, Ermon, Xiong, Joty, and Naik]{wallace2024diffusion}
+B.~Wallace, M.~Dang, R.~Rafailov, L.~Zhou, A.~Lou, S.~Purushwalkam, S.~Ermon, C.~Xiong, S.~Joty, and N.~Naik.
+\newblock Diffusion model alignment using direct preference optimization.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition}, pages 8228--8238, 2024.
+
+\bibitem[Wang et~al.(2023)Wang, Li, Shao, Xu, Dai, Li, Chen, Wu, and Sui]{wang2023math}
+P.~Wang, L.~Li, Z.~Shao, R.~Xu, D.~Dai, Y.~Li, D.~Chen, Y.~Wu, and Z.~Sui.
+\newblock Math-shepherd: A label-free step-by-step verifier for llms in mathematical reasoning.
+\newblock \emph{arXiv preprint arXiv:2312.08935}, 2023.
+
+\bibitem[Wang et~al.(2022)Wang, Wei, Schuurmans, Le, Chi, Narang, Chowdhery, and Zhou]{wang2022self}
+X.~Wang, J.~Wei, D.~Schuurmans, Q.~Le, E.~Chi, S.~Narang, A.~Chowdhery, and D.~Zhou.
+\newblock Self-consistency improves chain of thought reasoning in language models.
+\newblock \emph{arXiv preprint arXiv:2203.11171}, 2022.
+
+\bibitem[Watson et~al.(2023)Watson, Juergens, Bennett, Trippe, Yim, Eisenach, Ahern, Borst, Ragotte, Milles, et~al.]{watson2023novo}
+J.~L. Watson, D.~Juergens, N.~R. Bennett, B.~L. Trippe, J.~Yim, H.~E. Eisenach, W.~Ahern, A.~J. Borst, R.~J. Ragotte, L.~F. Milles, et~al.
+\newblock De novo design of protein structure and function with rfdiffusion.
+\newblock \emph{Nature}, 620\penalty0 (7976):\penalty0 1089--1100, 2023.
+
+\bibitem[Wei et~al.(2022)Wei, Wang, Schuurmans, Bosma, Xia, Chi, Le, Zhou, et~al.]{wei2022chain}
+J.~Wei, X.~Wang, D.~Schuurmans, M.~Bosma, F.~Xia, E.~Chi, Q.~V. Le, D.~Zhou, et~al.
+\newblock Chain-of-thought prompting elicits reasoning in large language models.
+\newblock \emph{Advances in neural information processing systems}, 35:\penalty0 24824--24837, 2022.
+
+\bibitem[Wiles et~al.(2024)Wiles, Zhang, Albuquerque, Kaji{\'c}, Wang, Bugliarello, Onoe, Knutsen, Rashtchian, Pont-Tuset, et~al.]{wiles2024revisiting}
+O.~Wiles, C.~Zhang, I.~Albuquerque, I.~Kaji{\'c}, S.~Wang, E.~Bugliarello, Y.~Onoe, C.~Knutsen, C.~Rashtchian, J.~Pont-Tuset, et~al.
+\newblock Revisiting text-to-image evaluation with gecko: On metrics, prompts, and human ratings.
+\newblock \emph{arXiv preprint arXiv:2404.16820}, 2024.
+
+\bibitem[Wu et~al.(2024{\natexlab{a}})Wu, Huang, and Wei]{wu2024multimodal}
+X.~Wu, S.~Huang, and F.~Wei.
+\newblock Multimodal large language model is a human-aligned annotator for text-to-image generation.
+\newblock \emph{arXiv preprint arXiv:2404.15100}, 2024{\natexlab{a}}.
+
+\bibitem[Wu et~al.(2024{\natexlab{b}})Wu, Sun, Li, Welleck, and Yang]{wu2024empirical}
+Y.~Wu, Z.~Sun, S.~Li, S.~Welleck, and Y.~Yang.
+\newblock An empirical analysis of compute-optimal inference for problem-solving with language models.
+\newblock \emph{arXiv preprint arXiv:2408.00724}, 2024{\natexlab{b}}.
+
+\bibitem[Xie et~al.(2024)Xie, Goyal, Zheng, Kan, Lillicrap, Kawaguchi, and Shieh]{xie2024monte}
+Y.~Xie, A.~Goyal, W.~Zheng, M.-Y. Kan, T.~P. Lillicrap, K.~Kawaguchi, and M.~Shieh.
+\newblock Monte carlo tree search boosts reasoning via iterative preference learning.
+\newblock \emph{arXiv preprint arXiv:2405.00451}, 2024.
+
+\bibitem[Xu et~al.(2024)Xu, Liu, Wu, Tong, Li, Ding, Tang, and Dong]{xu2024imagereward}
+J.~Xu, X.~Liu, Y.~Wu, Y.~Tong, Q.~Li, M.~Ding, J.~Tang, and Y.~Dong.
+\newblock Imagereward: Learning and evaluating human preferences for text-to-image generation.
+\newblock \emph{Advances in Neural Information Processing Systems}, 36, 2024.
+
+\bibitem[Xu et~al.(2023)Xu, Deng, Cheng, Tian, Liu, and Jaakkola]{xu2023restart}
+Y.~Xu, M.~Deng, X.~Cheng, Y.~Tian, Z.~Liu, and T.~Jaakkola.
+\newblock Restart sampling for improving generative processes.
+\newblock \emph{Advances in Neural Information Processing Systems}, 36:\penalty0 76806--76838, 2023.
+
+\bibitem[Yang et~al.(2024)Yang, Tao, Lyu, Ge, Chen, Shen, Zhu, and Li]{yang2024using}
+K.~Yang, J.~Tao, J.~Lyu, C.~Ge, J.~Chen, W.~Shen, X.~Zhu, and X.~Li.
+\newblock Using human feedback to fine-tune diffusion models without any reward model.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition}, pages 8941--8951, 2024.
+
+\bibitem[Yao et~al.(2024)Yao, Yu, Zhao, Shafran, Griffiths, Cao, and Narasimhan]{yao2024tree}
+S.~Yao, D.~Yu, J.~Zhao, I.~Shafran, T.~Griffiths, Y.~Cao, and K.~Narasimhan.
+\newblock Tree of thoughts: Deliberate problem solving with large language models.
+\newblock \emph{Advances in Neural Information Processing Systems}, 36, 2024.
+
+\bibitem[Yu et~al.(2024)Yu, Lezama, Gundavarapu, Versari, Sohn, Minnen, Cheng, Birodkar, Gupta, Gu, Hauptmann, Gong, Yang, Essa, Ross, and Jiang]{yu2024magvit}
+L.~Yu, J.~Lezama, N.~B. Gundavarapu, L.~Versari, K.~Sohn, D.~Minnen, Y.~Cheng, V.~Birodkar, A.~Gupta, X.~Gu, A.~G. Hauptmann, B.~Gong, M.-H. Yang, I.~Essa, D.~A. Ross, and L.~Jiang.
+\newblock Language model beats diffusion -- tokenizer is key to visual generation.
+\newblock In \emph{The Twelfth International Conference on Learning Representations}, 2024.
+
+\bibitem[Zhai et~al.(2023)Zhai, Mustafa, Kolesnikov, and Beyer]{zhai2023sigmoid}
+X.~Zhai, B.~Mustafa, A.~Kolesnikov, and L.~Beyer.
+\newblock Sigmoid loss for language image pre-training.
+\newblock In \emph{Proceedings of the IEEE/CVF International Conference on Computer Vision}, pages 11975--11986, 2023.
+
+\bibitem[Zhou et~al.(2022)Zhou, Koltun, and Kr{\"a}henb{\"u}hl]{zhou2022simple}
+X.~Zhou, V.~Koltun, and P.~Kr{\"a}henb{\"u}hl.
+\newblock Simple multi-dataset detection.
+\newblock In \emph{Proceedings of the IEEE/CVF conference on computer vision and pattern recognition}, pages 7571--7580, 2022.
+
+\bibitem[Zhou et~al.(2024)Zhou, Shao, Bai, Xu, Han, and Xie]{zhou2024goldennoisediffusionmodels}
+Z.~Zhou, S.~Shao, L.~Bai, Z.~Xu, B.~Han, and Z.~Xie.
+\newblock Golden noise for diffusion models: A learning framework.
+\newblock \emph{arXiv preprint arXiv:2411.09502}, 2024.
+
+\end{thebibliography}

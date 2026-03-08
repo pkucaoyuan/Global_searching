@@ -1,0 +1,518 @@
+\begin{thebibliography}{73}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Ackley et~al.(1985)Ackley, Hinton, and Sejnowski]{temperature}
+David Ackley, Geoffrey Hinton, and Terrence Sejnowski.
+\newblock A learning algorithm for boltzmann machines.
+\newblock \emph{Cognitive science, 9(1):147-169}, 1985.
+
+\bibitem[Adverb(2021)]{bigsleep}
+Adverb.
+\newblock The big sleep.
+\newblock \url{https://twitter.com/advadnoun/status/1351038053033406468}, 2021.
+
+\bibitem[Barratt and Sharma(2018)]{noteoninceptionscore}
+Shane Barratt and Rishi Sharma.
+\newblock A note on the inception score.
+\newblock \emph{\href{https://arxiv.org/abs/1801.01973}{arXiv:1801.01973}},
+  2018.
+
+\bibitem[Brock et~al.(2016)Brock, Lim, Ritchie, and Weston]{orthoreg}
+Andrew Brock, Theodore Lim, J.~M. Ritchie, and Nick Weston.
+\newblock Neural photo editing with introspective adversarial networks.
+\newblock \emph{\href{https://arxiv.org/abs/1609.07093}{arXiv:1609.07093}},
+  2016.
+
+\bibitem[Brock et~al.(2018)Brock, Donahue, and Simonyan]{biggan}
+Andrew Brock, Jeff Donahue, and Karen Simonyan.
+\newblock Large scale gan training for high fidelity natural image synthesis.
+\newblock \emph{\href{https://arxiv.org/abs/1809.11096}{arXiv:1809.11096}},
+  2018.
+
+\bibitem[Brown et~al.(2020)Brown, Mann, Ryder, Subbiah, Kaplan, Dhariwal,
+  Neelakantan, Shyam, Sastry, Askell, Agarwal, Herbert-Voss, Krueger, Henighan,
+  Child, Ramesh, Ziegler, Wu, Winter, Hesse, Chen, Sigler, Litwin, Gray, Chess,
+  Clark, Berner, McCandlish, Radford, Sutskever, and Amodei]{gpt3}
+Tom~B. Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared Kaplan,
+  Prafulla Dhariwal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda
+  Askell, Sandhini Agarwal, Ariel Herbert-Voss, Gretchen Krueger, Tom Henighan,
+  Rewon Child, Aditya Ramesh, Daniel~M. Ziegler, Jeffrey Wu, Clemens Winter,
+  Christopher Hesse, Mark Chen, Eric Sigler, Mateusz Litwin, Scott Gray,
+  Benjamin Chess, Jack Clark, Christopher Berner, Sam McCandlish, Alec Radford,
+  Ilya Sutskever, and Dario Amodei.
+\newblock Language models are few-shot learners.
+\newblock \emph{\href{https://arxiv.org/abs/2005.14165}{arXiv:2005.14165}},
+  2020.
+
+\bibitem[Chen et~al.(2020{\natexlab{a}})Chen, Radford, Child, Wu, Jun, Luan,
+  and Sutskever]{igpt}
+Mark Chen, Alec Radford, Rewon Child, Jeffrey Wu, Heewoo Jun, David Luan, and
+  Ilya Sutskever.
+\newblock Generative pretraining from pixels.
+\newblock In \emph{International Conference on Machine Learning}, pages
+  1691--1703. PMLR, 2020{\natexlab{a}}.
+
+\bibitem[Chen et~al.(2020{\natexlab{b}})Chen, Zhang, Zen, Weiss, Norouzi, and
+  Chan]{wavegrad}
+Nanxin Chen, Yu~Zhang, Heiga Zen, Ron~J. Weiss, Mohammad Norouzi, and William
+  Chan.
+\newblock Wavegrad: Estimating gradients for waveform generation.
+\newblock \emph{\href{https://arxiv.org/abs/2009.00713}{arXiv:2009.00713}},
+  2020{\natexlab{b}}.
+
+\bibitem[Child(2021)]{vdvae}
+Rewon Child.
+\newblock Very deep vaes generalize autoregressive models and can outperform
+  them on images.
+\newblock \emph{\href{https://arxiv.org/abs/2011.10650}{arXiv:2011.10650}},
+  2021.
+
+\bibitem[Dayan et~al.(1995)Dayan, Hinton, Neal, and Zemel]{helmholtz}
+Peter Dayan, Geoffrey~E Hinton, Radford~M Neal, and Richard~S Zemel.
+\newblock The helmholtz machine.
+\newblock \emph{Neural computation}, 7\penalty0 (5):\penalty0 889--904, 1995.
+
+\bibitem[de~Vries et~al.(2017)de~Vries, Strub, Mary, Larochelle, Pietquin, and
+  Courville]{cganmodulat}
+Harm de~Vries, Florian Strub, Jérémie Mary, Hugo Larochelle, Olivier
+  Pietquin, and Aaron Courville.
+\newblock Modulating early visual processing by language.
+\newblock \emph{\href{https://arxiv.org/abs/1707.00683}{arXiv:1707.00683}},
+  2017.
+
+\bibitem[DeepMind(2018)]{tfhubbiggan}
+DeepMind.
+\newblock Biggan-deep 128x128 on tensorflow hub.
+\newblock \url{https://tfhub.dev/deepmind/biggan-deep-128/1}, 2018.
+
+\bibitem[Dhariwal et~al.(2020)Dhariwal, Jun, Payne, Kim, Radford, and
+  Sutskever]{jukebox}
+Prafulla Dhariwal, Heewoo Jun, Christine Payne, Jong~Wook Kim, Alec Radford,
+  and Ilya Sutskever.
+\newblock Jukebox: A generative model for music.
+\newblock \emph{\href{https://arxiv.org/abs/2005.00341}{arXiv:2005.00341}},
+  2020.
+
+\bibitem[Donahue and Simonyan(2019)]{bigbigan}
+Jeff Donahue and Karen Simonyan.
+\newblock Large scale adversarial representation learning.
+\newblock \emph{\href{https://arxiv.org/abs/1907.02544}{arXiv:1907.02544}},
+  2019.
+
+\bibitem[Du and Mordatch(2019)]{yilunenergy}
+Yilun Du and Igor Mordatch.
+\newblock Implicit generation and generalization in energy-based models.
+\newblock \emph{\href{https://arxiv.org/abs/1903.08689}{arXiv:1903.08689}},
+  2019.
+
+\bibitem[Dumoulin et~al.(2017)Dumoulin, Shlens, and Kudlur]{cganbn}
+Vincent Dumoulin, Jonathon Shlens, and Manjunath Kudlur.
+\newblock A learned representation for artistic style.
+\newblock \emph{\href{https://arxiv.org/abs/1610.07629}{arXiv:1610.07629}},
+  2017.
+
+\bibitem[Galatolo et~al.(2021)Galatolo, Cimino, and Vaglini]{clipglass}
+Federico~A. Galatolo, Mario G. C.~A. Cimino, and Gigliola Vaglini.
+\newblock Generating images from caption and vice versa via clip-guided
+  generative latent space search.
+\newblock \emph{\href{https://arxiv.org/abs/2102.01645}{arXiv:2102.01645}},
+  2021.
+
+\bibitem[Gao et~al.(2020)Gao, Song, Poole, Wu, and Kingma]{diffusionebm}
+Ruiqi Gao, Yang Song, Ben Poole, Ying~Nian Wu, and Diederik~P. Kingma.
+\newblock Learning energy-based models by diffusion recovery likelihood.
+\newblock \emph{\href{https://arxiv.org/abs/2012.08125}{arXiv:2012.08125}},
+  2020.
+
+\bibitem[Goodfellow et~al.(2014)Goodfellow, Pouget-Abadie, Mirza, Xu,
+  Warde-Farley, Ozair, Courville, and Bengio]{gan}
+Ian~J. Goodfellow, Jean Pouget-Abadie, Mehdi Mirza, Bing Xu, David
+  Warde-Farley, Sherjil Ozair, Aaron Courville, and Yoshua Bengio.
+\newblock Generative adversarial networks.
+\newblock \emph{\href{https://arxiv.org/abs/1406.2661}{arXiv:1406.2661}}, 2014.
+
+\bibitem[Google(2018)]{tpu}
+Google.
+\newblock Cloud tpus.
+\newblock \url{https://cloud.google.com/tpu/}, 2018.
+
+\bibitem[Goyal et~al.(2017)Goyal, Ke, Ganguli, and Bengio]{variationalwalkback}
+Anirudh Goyal, Nan~Rosemary Ke, Surya Ganguli, and Yoshua Bengio.
+\newblock Variational walkback: Learning a transition operator as a stochastic
+  recurrent net.
+\newblock \emph{\href{https://arxiv.org/abs/1711.02282}{arXiv:1711.02282}},
+  2017.
+
+\bibitem[Grathwohl et~al.(2019)Grathwohl, Wang, Jacobsen, Duvenaud, Norouzi,
+  and Swersky]{jem}
+Will Grathwohl, Kuan-Chieh Wang, Jörn-Henrik Jacobsen, David Duvenaud,
+  Mohammad Norouzi, and Kevin Swersky.
+\newblock Your classifier is secretly an energy based model and you should
+  treat it like one.
+\newblock \emph{\href{https://arxiv.org/abs/1912.03263}{arXiv:1912.03263}},
+  2019.
+
+\bibitem[Heusel et~al.(2017)Heusel, Ramsauer, Unterthiner, Nessler, and
+  Hochreiter]{fid}
+Martin Heusel, Hubert Ramsauer, Thomas Unterthiner, Bernhard Nessler, and Sepp
+  Hochreiter.
+\newblock Gans trained by a two time-scale update rule converge to a local nash
+  equilibrium.
+\newblock \emph{Advances in Neural Information Processing Systems 30 (NIPS
+  2017)}, 2017.
+
+\bibitem[Hinton(2002)]{contrastive}
+Geoffrey~E Hinton.
+\newblock Training products of experts by minimizing contrastive divergence.
+\newblock \emph{Neural computation}, 14\penalty0 (8):\penalty0 1771--1800,
+  2002.
+
+\bibitem[Ho et~al.(2020)Ho, Jain, and Abbeel]{ddpm}
+Jonathan Ho, Ajay Jain, and Pieter Abbeel.
+\newblock Denoising diffusion probabilistic models.
+\newblock \emph{\href{https://arxiv.org/abs/2006.11239}{arXiv:2006.11239}},
+  2020.
+
+\bibitem[Jolicoeur-Martineau et~al.(2020)Jolicoeur-Martineau, Piché-Taillefer,
+  des Combes, and Mitliagkas]{adversarial}
+Alexia Jolicoeur-Martineau, Rémi Piché-Taillefer, Rémi~Tachet des Combes,
+  and Ioannis Mitliagkas.
+\newblock Adversarial score matching and improved sampling for image
+  generation.
+\newblock \emph{\href{https://arxiv.org/abs/2009.05475}{arXiv:2009.05475}},
+  2020.
+
+\bibitem[Karras et~al.(2019{\natexlab{a}})Karras, Laine, and Aila]{stylegan}
+Tero Karras, Samuli Laine, and Timo Aila.
+\newblock A style-based generator architecture for generative adversarial
+  networks.
+\newblock
+  \emph{\href{https://arxiv.org/abs/arXiv:1812.04948}{arXiv:arXiv:1812.04948}},
+  2019{\natexlab{a}}.
+
+\bibitem[Karras et~al.(2019{\natexlab{b}})Karras, Laine, Aittala, Hellsten,
+  Lehtinen, and Aila]{stylegan2}
+Tero Karras, Samuli Laine, Miika Aittala, Janne Hellsten, Jaakko Lehtinen, and
+  Timo Aila.
+\newblock Analyzing and improving the image quality of stylegan.
+\newblock \emph{\href{https://arxiv.org/abs/1912.04958}{arXiv:1912.04958}},
+  2019{\natexlab{b}}.
+
+\bibitem[Kingma and Ba(2014)]{adam}
+Diederik~P. Kingma and Jimmy Ba.
+\newblock Adam: A method for stochastic optimization.
+\newblock \emph{\href{https://arxiv.org/abs/1412.6980}{arXiv:1412.6980}}, 2014.
+
+\bibitem[Kong et~al.(2020)Kong, Ping, Huang, Zhao, and Catanzaro]{diffwave}
+Zhifeng Kong, Wei Ping, Jiaji Huang, Kexin Zhao, and Bryan Catanzaro.
+\newblock Diffwave: A versatile diffusion model for audio synthesis.
+\newblock \emph{\href{https://arxiv.org/abs/2009.09761}{arXiv:2009.09761}},
+  2020.
+
+\bibitem[Krizhevsky et~al.(2009)Krizhevsky, Nair, and Hinton]{cifar10}
+Alex Krizhevsky, Vinod Nair, and Geoffrey Hinton.
+\newblock {CIFAR-10 (Canadian Institute for Advanced Research)}, 2009.
+\newblock URL \url{http://www.cs.toronto.edu/~kriz/cifar.html}.
+
+\bibitem[Kynkäänniemi et~al.(2019)Kynkäänniemi, Karras, Laine, Lehtinen,
+  and Aila]{precrecall}
+Tuomas Kynkäänniemi, Tero Karras, Samuli Laine, Jaakko Lehtinen, and Timo
+  Aila.
+\newblock Improved precision and recall metric for assessing generative models.
+\newblock \emph{\href{https://arxiv.org/abs/1904.06991}{arXiv:1904.06991}},
+  2019.
+
+\bibitem[Lin et~al.(2016)Lin, Milan, Shen, and Reid]{refinenet}
+Guosheng Lin, Anton Milan, Chunhua Shen, and Ian Reid.
+\newblock Refinenet: Multi-path refinement networks for high-resolution
+  semantic segmentation.
+\newblock \emph{\href{https://arxiv.org/abs/1611.06612}{arXiv:1611.06612}},
+  2016.
+
+\bibitem[Liu et~al.(2015)Liu, Luo, Wang, and Tang]{celeba}
+Ziwei Liu, Ping Luo, Xiaogang Wang, and Xiaoou Tang.
+\newblock Deep learning face attributes in the wild.
+\newblock In \emph{Proceedings of International Conference on Computer Vision
+  (ICCV)}, December 2015.
+
+\bibitem[Loshchilov and Hutter(2017)]{adamw}
+Ilya Loshchilov and Frank Hutter.
+\newblock Decoupled weight decay regularization.
+\newblock \emph{\href{https://arxiv.org/abs/1711.05101}{arXiv:1711.05101}},
+  2017.
+
+\bibitem[Lucic et~al.(2019)Lucic, Tschannen, Ritter, Zhai, Bachem, and
+  Gelly]{unlabeledgan}
+Mario Lucic, Michael Tschannen, Marvin Ritter, Xiaohua Zhai, Olivier Bachem,
+  and Sylvain Gelly.
+\newblock High-fidelity image generation with fewer labels.
+\newblock \emph{\href{https://arxiv.org/abs/1903.02271}{arXiv:1903.02271}},
+  2019.
+
+\bibitem[Luhman and Luhman(2021)]{ddimdistill}
+Eric Luhman and Troy Luhman.
+\newblock Knowledge distillation in iterative generative models for improved
+  sampling speed.
+\newblock \emph{\href{https://arxiv.org/abs/2101.02388}{arXiv:2101.02388}},
+  2021.
+
+\bibitem[Micikevicius et~al.(2017)Micikevicius, Narang, Alben, Diamos, Elsen,
+  Garcia, Ginsburg, Houston, Kuchaiev, Venkatesh, and Wu]{lossscaling}
+Paulius Micikevicius, Sharan Narang, Jonah Alben, Gregory Diamos, Erich Elsen,
+  David Garcia, Boris Ginsburg, Michael Houston, Oleksii Kuchaiev, Ganesh
+  Venkatesh, and Hao Wu.
+\newblock Mixed precision training.
+\newblock \emph{\href{https://arxiv.org/abs/1710.03740}{arXiv:1710.03740}},
+  2017.
+
+\bibitem[Mirza and Osindero(2014)]{cgan}
+Mehdi Mirza and Simon Osindero.
+\newblock Conditional generative adversarial nets.
+\newblock \emph{\href{https://arxiv.org/abs/1411.1784}{arXiv:1411.1784}}, 2014.
+
+\bibitem[Miyato and Koyama(2018)]{cganproj}
+Takeru Miyato and Masanori Koyama.
+\newblock cgans with projection discriminator.
+\newblock \emph{\href{https://arxiv.org/abs/1802.05637}{arXiv:1802.05637}},
+  2018.
+
+\bibitem[Miyato et~al.(2018)Miyato, Kataoka, Koyama, and Yoshida]{sngan}
+Takeru Miyato, Toshiki Kataoka, Masanori Koyama, and Yuichi Yoshida.
+\newblock Spectral normalization for generative adversarial networks.
+\newblock \emph{\href{https://arxiv.org/abs/1802.05957}{arXiv:1802.05957}},
+  2018.
+
+\bibitem[Nash et~al.(2021)Nash, Menick, Dieleman, and Battaglia]{dctransformer}
+Charlie Nash, Jacob Menick, Sander Dieleman, and Peter~W. Battaglia.
+\newblock Generating images with sparse representations.
+\newblock \emph{\href{https://arxiv.org/abs/2103.03841}{arXiv:2103.03841}},
+  2021.
+
+\bibitem[Nichol and Dhariwal(2021)]{improved}
+Alex Nichol and Prafulla Dhariwal.
+\newblock Improved denoising diffusion probabilistic models.
+\newblock \emph{\href{https://arxiv.org/abs/2102.09672}{arXiv:2102.09672}},
+  2021.
+
+\bibitem[NVIDIA(2019)]{stylegan2repo}
+NVIDIA.
+\newblock Stylegan2.
+\newblock \url{https://github.com/NVlabs/stylegan2}, 2019.
+
+\bibitem[Parmar et~al.(2021)Parmar, Zhang, and Zhu]{cleanfid}
+Gaurav Parmar, Richard Zhang, and Jun-Yan Zhu.
+\newblock On buggy resizing libraries and surprising subtleties in fid
+  calculation.
+\newblock \emph{\href{https://arxiv.org/abs/2104.11222}{arXiv:2104.11222}},
+  2021.
+
+\bibitem[Paszke et~al.(2019)Paszke, Gross, Massa, Lerer, Bradbury, Chanan,
+  Killeen, Lin, Gimelshein, Antiga, et~al.]{pytorch}
+Adam Paszke, Sam Gross, Francisco Massa, Adam Lerer, James Bradbury, Gregory
+  Chanan, Trevor Killeen, Zeming Lin, Natalia Gimelshein, Luca Antiga, et~al.
+\newblock Pytorch: An imperative style, high-performance deep learning library.
+\newblock \emph{\href{https://arxiv.org/abs/1912.01703}{arXiv:1912.01703}},
+  2019.
+
+\bibitem[Patashnik et~al.(2021)Patashnik, Wu, Shechtman, Cohen-Or, and
+  Lischinski]{styleclip}
+Or~Patashnik, Zongze Wu, Eli Shechtman, Daniel Cohen-Or, and Dani Lischinski.
+\newblock Styleclip: Text-driven manipulation of stylegan imagery.
+\newblock \emph{\href{https://arxiv.org/abs/2103.17249}{arXiv:2103.17249}},
+  2021.
+
+\bibitem[Perez et~al.(2017)Perez, Strub, de~Vries, Dumoulin, and
+  Courville]{film}
+Ethan Perez, Florian Strub, Harm de~Vries, Vincent Dumoulin, and Aaron
+  Courville.
+\newblock Film: Visual reasoning with a general conditioning layer.
+\newblock \emph{\href{https://arxiv.org/abs/1709.07871}{arXiv:1709.07871}},
+  2017.
+
+\bibitem[Radford et~al.(2021)Radford, Kim, Hallacy, Ramesh, Goh, Agarwal,
+  Sastry, Askell, Mishkin, Clark, Krueger, and Sutskever]{clip}
+Alec Radford, Jong~Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh,
+  Sandhini Agarwal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark,
+  Gretchen Krueger, and Ilya Sutskever.
+\newblock Learning transferable visual models from natural language
+  supervision.
+\newblock \emph{\href{https://arxiv.org/abs/2103.00020}{arXiv:2103.00020}},
+  2021.
+
+\bibitem[Ramesh et~al.(2021)Ramesh, Pavlov, Goh, Gray, Voss, Radford, Chen, and
+  Sutskever]{dalle}
+Aditya Ramesh, Mikhail Pavlov, Gabriel Goh, Scott Gray, Chelsea Voss, Alec
+  Radford, Mark Chen, and Ilya Sutskever.
+\newblock Zero-shot text-to-image generation.
+\newblock \emph{\href{https://arxiv.org/abs/2102.12092}{arXiv:2102.12092}},
+  2021.
+
+\bibitem[Razavi et~al.(2019)Razavi, van~den Oord, and Vinyals]{vqvae2}
+Ali Razavi, Aaron van~den Oord, and Oriol Vinyals.
+\newblock Generating diverse high-fidelity images with {VQ-VAE-2}.
+\newblock \emph{\href{https://arxiv.org/abs/1906.00446}{arXiv:1906.00446}},
+  2019.
+
+\bibitem[Russakovsky et~al.(2014)Russakovsky, Deng, Su, Krause, Satheesh, Ma,
+  Huang, Karpathy, Khosla, Bernstein, Berg, and Fei-Fei]{imagenet}
+Olga Russakovsky, Jia Deng, Hao Su, Jonathan Krause, Sanjeev Satheesh, Sean Ma,
+  Zhiheng Huang, Andrej Karpathy, Aditya Khosla, Michael Bernstein,
+  Alexander~C. Berg, and Li~Fei-Fei.
+\newblock Imagenet large scale visual recognition challenge.
+\newblock \emph{\href{https://arxiv.org/abs/1409.0575}{arXiv:1409.0575}}, 2014.
+
+\bibitem[Saharia et~al.(2021)Saharia, Ho, Chan, Salimans, Fleet, and
+  Norouzi]{sr3}
+Chitwan Saharia, Jonathan Ho, William Chan, Tim Salimans, David~J. Fleet, and
+  Mohammad Norouzi.
+\newblock Image super-resolution via iterative refinement.
+\newblock
+  \emph{\href{https://arxiv.org/abs/arXiv:2104.07636}{arXiv:arXiv:2104.07636}},
+  2021.
+
+\bibitem[Salimans et~al.(2016)Salimans, Goodfellow, Zaremba, Cheung, Radford,
+  and Chen]{inceptionscore}
+Tim Salimans, Ian Goodfellow, Wojciech Zaremba, Vicki Cheung, Alec Radford, and
+  Xi~Chen.
+\newblock Improved techniques for training gans.
+\newblock \emph{\href{https://arxiv.org/abs/1606.03498}{arXiv:1606.03498}},
+  2016.
+
+\bibitem[Santurkar et~al.(2019)Santurkar, Tsipras, Tran, Ilyas, Engstrom, and
+  Madry]{robustgeneration}
+Shibani Santurkar, Dimitris Tsipras, Brandon Tran, Andrew Ilyas, Logan
+  Engstrom, and Aleksander Madry.
+\newblock Image synthesis with a single (robust) classifier.
+\newblock \emph{\href{https://arxiv.org/abs/1906.09453}{arXiv:1906.09453}},
+  2019.
+
+\bibitem[Sohl-Dickstein et~al.(2015)Sohl-Dickstein, Weiss, Maheswaranathan, and
+  Ganguli]{dickstein}
+Jascha Sohl-Dickstein, Eric~A. Weiss, Niru Maheswaranathan, and Surya Ganguli.
+\newblock Deep unsupervised learning using nonequilibrium thermodynamics.
+\newblock \emph{\href{https://arxiv.org/abs/1503.03585}{arXiv:1503.03585}},
+  2015.
+
+\bibitem[Song et~al.(2020{\natexlab{a}})Song, Meng, and Ermon]{ddim}
+Jiaming Song, Chenlin Meng, and Stefano Ermon.
+\newblock Denoising diffusion implicit models.
+\newblock \emph{\href{https://arxiv.org/abs/2010.02502}{arXiv:2010.02502}},
+  2020{\natexlab{a}}.
+
+\bibitem[Song and Ermon(2020{\natexlab{a}})]{improvedscore}
+Yang Song and Stefano Ermon.
+\newblock Improved techniques for training score-based generative models.
+\newblock \emph{\href{https://arxiv.org/abs/2006.09011}{arXiv:2006.09011}},
+  2020{\natexlab{a}}.
+
+\bibitem[Song and Ermon(2020{\natexlab{b}})]{scorematching}
+Yang Song and Stefano Ermon.
+\newblock Generative modeling by estimating gradients of the data distribution.
+\newblock
+  \emph{\href{https://arxiv.org/abs/arXiv:1907.05600}{arXiv:arXiv:1907.05600}},
+  2020{\natexlab{b}}.
+
+\bibitem[Song et~al.(2020{\natexlab{b}})Song, Sohl-Dickstein, Kingma, Kumar,
+  Ermon, and Poole]{sde}
+Yang Song, Jascha Sohl-Dickstein, Diederik~P. Kingma, Abhishek Kumar, Stefano
+  Ermon, and Ben Poole.
+\newblock Score-based generative modeling through stochastic differential
+  equations.
+\newblock \emph{\href{https://arxiv.org/abs/2011.13456}{arXiv:2011.13456}},
+  2020{\natexlab{b}}.
+
+\bibitem[Szegedy et~al.(2013)Szegedy, Zaremba, Sutskever, Bruna, Erhan,
+  Goodfellow, and Fergus]{adversarialexamples}
+Christian Szegedy, Wojciech Zaremba, Ilya Sutskever, Joan Bruna, Dumitru Erhan,
+  Ian Goodfellow, and Rob Fergus.
+\newblock Intriguing properties of neural networks.
+\newblock \emph{\href{https://arxiv.org/abs/1312.6199}{arXiv:1312.6199}}, 2013.
+
+\bibitem[Szegedy et~al.(2015)Szegedy, Vanhoucke, Ioffe, Shlens, and
+  Wojna]{inceptionv3}
+Christian Szegedy, Vincent Vanhoucke, Sergey Ioffe, Jonathon Shlens, and
+  Zbigniew Wojna.
+\newblock Rethinking the inception architecture for computer vision.
+\newblock \emph{\href{https://arxiv.org/abs/1512.00567}{arXiv:1512.00567}},
+  2015.
+
+\bibitem[Vahdat and Kautz(2020)]{nvae}
+Arash Vahdat and Jan Kautz.
+\newblock Nvae: A deep hierarchical variational autoencoder.
+\newblock \emph{\href{https://arxiv.org/abs/2007.03898}{arXiv:2007.03898}},
+  2020.
+
+\bibitem[van~den Oord et~al.(2016)van~den Oord, Dieleman, Zen, Simonyan,
+  Vinyals, Graves, Kalchbrenner, Senior, and Kavukcuoglu]{wavenet}
+Aaron van~den Oord, Sander Dieleman, Heiga Zen, Karen Simonyan, Oriol Vinyals,
+  Alex Graves, Nal Kalchbrenner, Andrew Senior, and Koray Kavukcuoglu.
+\newblock Wavenet: A generative model for raw audio.
+\newblock \emph{\href{https://arxiv.org/abs/1609.03499}{arXiv:1609.03499}},
+  2016.
+
+\bibitem[van~den Oord et~al.(2017)van~den Oord, Vinyals, and
+  Kavukcuoglu]{vqvae}
+Aaron van~den Oord, Oriol Vinyals, and Koray Kavukcuoglu.
+\newblock Neural discrete representation learning.
+\newblock \emph{\href{https://arxiv.org/abs/1711.00937}{arXiv:1711.00937}},
+  2017.
+
+\bibitem[Vaswani et~al.(2017)Vaswani, Shazeer, Parmar, Uszkoreit, Jones, Gomez,
+  Kaiser, and Polosukhin]{transformer}
+Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones,
+  Aidan~N. Gomez, Lukasz Kaiser, and Illia Polosukhin.
+\newblock Attention is all you need.
+\newblock \emph{\href{https://arxiv.org/abs/1706.03762}{arXiv:1706.03762}},
+  2017.
+
+\bibitem[Welling and Teh(2011)]{langevin}
+Max Welling and Yee~W Teh.
+\newblock Bayesian learning via stochastic gradient langevin dynamics.
+\newblock In \emph{Proceedings of the 28th international conference on machine
+  learning (ICML-11)}, pages 681--688. Citeseer, 2011.
+
+\bibitem[Wu et~al.(2019)Wu, Donahue, Balduzzi, Simonyan, and Lillicrap]{logan}
+Yan Wu, Jeff Donahue, David Balduzzi, Karen Simonyan, and Timothy Lillicrap.
+\newblock Logan: Latent optimisation for generative adversarial networks.
+\newblock \emph{\href{https://arxiv.org/abs/1912.00953}{arXiv:1912.00953}},
+  2019.
+
+\bibitem[Wu and He(2018)]{groupnorm}
+Yuxin Wu and Kaiming He.
+\newblock Group normalization.
+\newblock \emph{\href{https://arxiv.org/abs/1803.08494}{arXiv:1803.08494}},
+  2018.
+
+\bibitem[Xie et~al.(2016)Xie, Lu, Zhu, and Wu]{genconv}
+Jianwen Xie, Yang Lu, Song-Chun Zhu, and Ying~Nian Wu.
+\newblock A theory of generative convnet.
+\newblock \emph{\href{https://arxiv.org/abs/1602.03264}{arXiv:1602.03264}},
+  2016.
+
+\bibitem[Yu et~al.(2015)Yu, Seff, Zhang, Song, Funkhouser, and Xiao]{lsun}
+Fisher Yu, Ari Seff, Yinda Zhang, Shuran Song, Thomas Funkhouser, and Jianxiong
+  Xiao.
+\newblock Lsun: Construction of a large-scale image dataset using deep learning
+  with humans in the loop.
+\newblock \emph{\href{https://arxiv.org/abs/1506.03365}{arXiv:1506.03365}},
+  2015.
+
+\bibitem[Zhang et~al.(2016)Zhang, Xu, Li, Zhang, Wang, Huang, and
+  Metaxas]{stackgan}
+Han Zhang, Tao Xu, Hongsheng Li, Shaoting Zhang, Xiaogang Wang, Xiaolei Huang,
+  and Dimitris Metaxas.
+\newblock Stackgan: Text to photo-realistic image synthesis with stacked
+  generative adversarial networks.
+\newblock \emph{\href{https://arxiv.org/abs/1612.03242}{arXiv:1612.03242}},
+  2016.
+
+\bibitem[Zhu(2018)]{thoprepo}
+Ligeng Zhu.
+\newblock Thop.
+\newblock \url{https://github.com/Lyken17/pytorch-OpCounter}, 2018.
+
+\end{thebibliography}

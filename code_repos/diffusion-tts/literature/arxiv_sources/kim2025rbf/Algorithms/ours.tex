@@ -1,0 +1,186 @@
+\SetAlCapHSkip{0pt}
+\setlength{\algomargin}{0em}
+\SetKwInput{KwInput}{Inputs}
+\SetKwInput{KwOutput}{Outputs}
+\SetCommentSty{mycommfont}
+
+\newcommand\mycommfont[1]{\normalsize\rmfamily\textcolor{gray}{#1}}
+\SetCommentSty{mycommfont}
+
+% \begin{algorithm}[t!]
+%     \setstretch{1.25}
+%     \SetAlgoLined
+%     \DontPrintSemicolon
+%     \caption{\Ours{}}
+%     \label{alg:ours}
+%     {
+%     \KwInput{
+%         Number of steps $N$, initial reward $r^{*}$, original scheduler $(\alpha_t, \sigma_t)$, new scheduler $(\Bar{\alpha}_s, \Bar{\sigma}_s)$, timesteps $\{ S^{(i)} \}_{i=0}^{N-1} $, NFE quota $ \{ Q^{(i)} \}_{i=0}^{N-1}$
+%     }
+%     \KwOutput{
+%         Aligned sample $\B{x}_0$
+%     }
+%     $ \Bar{\B{x}}_1 \sim \mathcal{N}(\B{0}, \textbf{\textit{I}})$ \\
+%     % $ \B{x}_s \leftarrow \B{x}_1 $ \\
+%     % \For{$s \in \{ s^{(0)},\dots, s^{(N-1)} \}$} {
+%     \For{$i \in \{ 0,\dots, N-1 \}$} {
+%         $s \leftarrow S^{(i)} \quad q \leftarrow Q^{(i)}$ \\
+%         $t_{s} \leftarrow \rho^{-1} (\Bar{\rho}(s)) \quad c_{s} \leftarrow \Bar{\sigma}_{s} / \sigma_{t_{s}}$ \\
+%         % $\Bar{\B{x}}_s = c_s \B{x}_{t_s}$ \\
+%         \For{ $j \in \{ 1, \dots, q \}$ } {
+%             $ \B{u}_s \leftarrow \frac{\dot{c}_s}{c_s} \Bar{\B{x}}_s + c_s \dot{t}_s u_\theta \left(\frac{\Bar{\B{x}}_{t_s}}{c_s} \right) $ \tcp*{Eq.~\ref{eq:velocity_transform}}
+%             $ \B{s}_s \leftarrow \frac{1}{\sigma_s} \frac{\alpha_s \B{u}_s - \dot{\alpha}_s \Bar{\B{x}}_s}
+%             {\dot{\alpha}_s \sigma_s - \alpha_s \dot{\sigma}_s}$ \tcp*{Eq.~\ref{eq:score_velocity}}
+%             $\B{z} \sim \mathcal{N}(\B{0}, \textbf{\textit{I}})$ \\
+%             $ \Bar{\B{x}}_{s-\Delta s}^{(j)} \leftarrow \Bar{\B{x}}_s + \left[ \B{u}_s - \frac{g(t)^2}{2} \B{s}_s \right] + g(t) \B{z}$ \tcp*{Eq.~\ref{eq:reverse_sde}}
+%             \If{$r^{*} < r(\Bar{\B{x}}^{(j)}_{0|s-\Delta s})$} {
+%                 $ r^{*} \leftarrow r(\Bar{\B{x}}^{(j)}_{0|s-\Delta s}) $ \\
+%                 $ Q^{(i+1)} \leftarrow Q^{(i)} - j$ \tcp*{Sec.~\ref{sec:roll_over}}
+%                 $ \Bar{\B{x}}_{s-\Delta s} \leftarrow \Bar{\B{x}}_{s-\Delta s}^{(j)} $ \\
+%                 \textbf{break} \\
+%             }
+%             \If {$j = q$} {
+%                 $j^{*} \leftarrow \argmax_{j} (\{ \Bar{\B{x}}_{s-\Delta s}^{(j)} \})$ \\
+%                 $\Bar{\B{x}}_{s-\Delta s} \leftarrow \Bar{\B{x}}_{s-\Delta s}^{(j^{*})}$ \\ 
+%             }
+%         }
+%     }
+% }
+% \end{algorithm}
+
+
+
+
+% \begin{algorithm}[ht!]
+%     \setstretch{1.25}
+%     \SetAlgoLined
+%     \DontPrintSemicolon
+%     \caption{\texttt{\footnotesize{stoch\_denoise}}{\small{: 1-step stochastic denoising}}}
+%     \label{alg:one-step_stochastic_denoising}
+%     {
+%     \KwInput{
+%         original velocity field $u$, original scheduler $(\alpha, \sigma)$, new scheduler $(\Bar{\alpha}, \Bar{\sigma})$, diffusion coefficient $g$, current sample $\Bar{\B{x}}_s$, current timestep $s$, denoising step size $\Delta s$
+%     }
+%     \KwOutput{
+%         Stochastically denoised sample $\Bar{\B{x}}_{s - \Delta s}$
+%     }
+%     $t_{s} \leftarrow \rho^{-1} (\Bar{\rho}(s)) \quad c_{s} \leftarrow \Bar{\sigma}_{s} / \sigma_{t_{s}}$
+    
+%     $ \B{u}_s \leftarrow \frac{\dot{c}_s}{c_s} \Bar{\B{x}}_s + c_s \dot{t}_s u_{t_s} \left(\frac{\Bar{\B{x}}_{s}}{c_s} \right) $ \tcp*{Eq.~\ref{eq:velocity_transform}}
+
+%     $ \B{s}_s \leftarrow \frac{1}{\sigma_s} \frac{\alpha_s \B{u}_s - \dot{\alpha}_s \Bar{\B{x}}_s}
+%             {\dot{\alpha}_s \sigma_s - \alpha_s \dot{\sigma}_s}$ \tcp*{Eq.~\ref{eq:score_velocity}}
+
+%     $ \B{f}_s = \B{u}_s - \frac{g_s^2}{2}\B{s}_s $ \tcp*{Eq.~\ref{eq:drift_term}}
+
+%     $\B{z} \sim \mathcal{N}(\B{0}, \textbf{\textit{I}})$
+
+%     $ \Bar{\B{x}}_{s-\Delta s} \leftarrow \Bar{\B{x}}_s + \B{f}_s \Delta s + g_s\sqrt{\Delta s} \ \B{z} $ \tcp*{Eq.~\ref{eq:proposal_dist_sde}}
+% }
+% \end{algorithm}
+
+% \begin{algorithm}[ht!]
+%     \SetAlgoNoEnd
+%     \setstretch{1.25}
+%     \SetAlgoLined
+%     \DontPrintSemicolon
+%     \caption{Rollover Budget Forcing (RBF)}
+%     \label{alg:ours}
+%     {
+%     \KwInput{
+%         Number of steps $N$, timesteps $\{ S^{(i)} \}_{i=0}^{N-1} $, NFE quota $ \{ Q^{(i)} \}_{i=0}^{N-1}$
+%     }
+%     \KwOutput{
+%         Aligned sample $\Bar{\B{x}}_0$
+%     }
+%     \For{$i \in \{ 0,\dots, N-1 \}$} {
+%         $s \leftarrow S^{(i)} \quad \Delta s \leftarrow S^{(i)} - S^{(i + 1)} \quad q \leftarrow Q^{(i)}$ \\
+%         \For{ $j \in \{ 1, \dots, q \}$ } {
+%             $ \Bar{\B{x}}_{s-\Delta s}^{(j)} \leftarrow \texttt{\footnotesize{stoch\_denoise}}\left(\Bar{\B{x}}_{s}, s, \Delta s \right)$ \tcp*{Alg.~\ref{alg:one-step_stochastic_denoising}}
+%             \If{$r^{*} < r(\Bar{\B{x}}^{(j)}_{0|s-\Delta s})$} {
+%                 $ Q^{(i+1)} \leftarrow Q^{(i+1)} + Q^{(i)} - j$ \tcp*{Sec.~\ref{sec:roll_over}}
+%                 $ r^{*} \leftarrow r(\Bar{\B{x}}^{(j)}_{0|s-\Delta s}) \quad \Bar{\B{x}}_{s-\Delta s} \leftarrow \Bar{\B{x}}_{s-\Delta s}^{(j)} $ \\
+%                 \textbf{break} \\
+%             }
+%             \If {$j = q$} {
+%                 $k^{*} \leftarrow \argmax_{k} r(\Bar{\B{x}}^{(k)}_{0|s-\Delta s}) $ \\
+%                 $\Bar{\B{x}}_{s-\Delta s} \leftarrow \Bar{\B{x}}_{s-\Delta s}^{(k^{*})}$ \\ 
+%             }
+%         }
+%     }
+% }
+% \end{algorithm}
+
+
+
+\begin{figure*}[ht!]
+    \centering
+    \begin{minipage}{0.43\linewidth}
+        \centering
+        \begin{algorithm}[H]
+            \setstretch{1.67}
+            \SetAlgoLined
+            \DontPrintSemicolon
+            \caption{\texttt{\footnotesize{stoch\_denoise}}{\small{: 1-step stochastic denoising}}}
+            \label{alg:one-step_stochastic_denoising}
+            {
+            \KwInput{
+                original velocity field $u$, original interpolant $(\alpha, \sigma)$, new interpolant $(\Bar{\alpha}, \Bar{\sigma})$, diffusion coefficient $g$, current sample $\Bar{\B{x}}_s$, current timestep $s$, denoising step size $\Delta s$
+            }
+            \KwOutput{
+                Stochastically denoised sample $\Bar{\B{x}}_{s - \Delta s}$
+            }
+            $t_{s} \leftarrow \rho^{-1} (\Bar{\rho}(s)) \quad c_{s} \leftarrow \Bar{\sigma}_{s} / \sigma_{t_{s}}$
+            
+            $ \Bar{\B{u}}_s \leftarrow \frac{\dot{c}_s}{c_s} \Bar{\B{x}}_s + c_s \dot{t}_s u_{t_s} \left(\frac{\Bar{\B{x}}_{s}}{c_s} \right) $ \tcp*{Eq.~\ref{eq:velocity_transform}}
+        
+            $ \B{s}_s \leftarrow \frac{1}{\Bar{\sigma}_s} \frac{\Bar{\alpha}_s \Bar{\B{u}}_s - \dot{\Bar{\alpha}}_s \Bar{\B{x}}_s}
+            {\dot{\Bar{\alpha}}_s \Bar{\sigma}_s - \Bar{\alpha}_s \dot{\Bar{\sigma}}_s}$ \tcp*{Eq.~\ref{eq:score_velocity}}
+        
+            $ \B{f}_s = \Bar{\B{u}}_s - \frac{g_s^2}{2}\B{s}_s $ \tcp*{Eq.~\ref{eq:reverse_sde}}
+        
+            $\B{z} \sim \mathcal{N}(\B{0}, \textbf{\textit{I}})$
+        
+            $ \Bar{\B{x}}_{s-\Delta s} \leftarrow \Bar{\B{x}}_s - \B{f}_s \Delta s + g_s\sqrt{\Delta s} \ \B{z} $ 
+            }
+        \end{algorithm}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.53\linewidth}
+        \centering
+        \begin{algorithm}[H]
+            \SetAlgoNoEnd
+            \setstretch{1.25}
+            \SetAlgoLined
+            \DontPrintSemicolon
+            \caption{Rollover Budget Forcing (RBF)}
+            \label{alg:ours}
+            {
+            \KwInput{
+                Number of denoising steps $M$, 
+                timesteps $\{ S^{(i)} \}_{i=1}^{M} $,
+                NFE quota $ \{ Q^{(i)} \}_{i=1}^{M}$
+            }
+            \KwOutput{
+                Aligned sample $\Bar{\B{x}}_0$
+            }
+            $\Bar{\B{x}}_1\sim \mathcal{N}(0, \textbf{\textit{I}})\quad  r^* \leftarrow r(\Bar{\B{x}}_{0|1})$\\
+            \For{$i \in \{ 1,\dots, M \}$} {
+                $s \leftarrow S^{(i)} \quad \Delta s \leftarrow S^{(i)} - S^{(i + 1)} \quad q \leftarrow Q^{(i)}$ \\
+                \For{ $j \in \{ 1, \dots, q \}$ } {
+                    $ \Bar{\B{x}}_{s-\Delta s}^{(j)} \leftarrow \texttt{\footnotesize{stoch\_denoise}}\left(\Bar{\B{x}}_{s}, s, \Delta s \right)$ \tcp*{Alg.~\ref{alg:one-step_stochastic_denoising}}
+                    \If{$r^{*} < r(\Bar{\B{x}}^{(j)}_{0|s-\Delta s})$} {
+                        $ Q^{(i+1)} \leftarrow Q^{(i+1)} + Q^{(i)} - j$ \tcp*{Sec.~\ref{sec:roll_over}}
+                        $ r^{*} \leftarrow r(\Bar{\B{x}}^{(j)}_{0|s-\Delta s}) \quad \Bar{\B{x}}_{s-\Delta s} \leftarrow \Bar{\B{x}}_{s-\Delta s}^{(j)} $ \\
+                        \textbf{break} \\
+                    }
+                    \If {$j = q$} {
+                        $k^{*} \leftarrow \argmax_{k\in \{1,\dots,q\}} r(\Bar{\B{x}}^{(k)}_{0|s-\Delta s}) $ \\
+                        $\Bar{\B{x}}_{s-\Delta s} \leftarrow \Bar{\B{x}}_{s-\Delta s}^{(k^{*})}$ \\ 
+                    }
+                }
+            }
+            }
+        \end{algorithm}
+    \end{minipage}
+\end{figure*}

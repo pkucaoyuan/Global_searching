@@ -1,0 +1,729 @@
+%%%%%%%%%%%%%%%%
+% \ifpaper
+%   \newcommand{\refofpaper}[1]{\unskip}
+%   \newcommand{\refinpaper}[1]{\unskip}  
+% \else
+%   \makeatletter
+%   \newcommand{\manuallabel}[2]{\def\@currentlabel{#2}\label{#1}}
+%   \makeatother
+%   \manuallabel{sec:intro}{1}
+%   \manuallabel{sec:related}{2}
+%   \manuallabel{sec:problem_definition}{3.1}
+%   \manuallabel{sec:motivation}{3.2}
+%   \manuallabel{sec:method}{4}
+%   \manuallabel{sec:stochastic_interpolant}{4.1}
+%   \manuallabel{sec:ode_sde_conversion}{4.2}
+%   \manuallabel{sec:scheduler_conversion}{4.3}
+%   \manuallabel{sec:roll_over}{5}
+%   \manuallabel{sec:applications}{6}
+
+%   \manuallabel{sec:counting_generation}{6.3}
+  
+%   \manuallabel{eq:reward_max_obj}{1}
+%   \manuallabel{eq:target_distribution}{2}
+%   \manuallabel{eq:optimal_policy}{3}
+%   \manuallabel{eq:reverse_sde}{7}
+%   \manuallabel{eq:drift_term}{8}
+%   \manuallabel{eq:score_velocity}{9}
+%   \manuallabel{eq:velocity_transform}{12}
+
+%   \newcommand{\refofpaper}[1]{of the main paper}
+%   \newcommand{\refinpaper}[1]{in the main paper}
+% \fi
+
+%%%%%%%%%%%%%%%%
+
+\ifpaper
+\else
+
+% \tcp*{Eq.~\ref{eq:proposal_dist_sde}}
+% \tcp*{Eq.~\ref{eq:drift_term}}
+        
+
+\section{Proofs}
+\label{sec:appendix_policy_derivations}
+\subsection{Derivation of the Target Distribution}
+\label{sec:appendix_optimal_marginal_target}
+From Eq.~\ref{eq:reward_max_obj}, we obtain the target distribution $p^{*}_0$, which maximizes the reward while maintaining proximity to the distribution of the pretrained model $p_0$:
+\begin{align}
+    \nonumber
+    p^{*}_0(\B{x}_0) &= \argmax_{q} \  \mathbb{E}_{\B{x}_0 \sim q} \left[ r(\B{x}_0) \right] -\beta \mathcal{D}_{\text{KL}} \left[ q \| p_0 \right], \\
+    \nonumber
+    &= \argmax_{q} \mathbb{E}_{\B{x}_0 \sim q} \left[r(\B{x}_0) - \beta \log \frac{q(\B{x}_0)}{p_0(\B{x}_0)} \right] \\
+    \nonumber
+    &= \argmin_{q} \mathbb{E}_{\B{x}_0 \sim q} \left[\log \frac{q (\B{x}_0)}{p_0(\B{x}_0)} - \frac{1}{\beta} r(\B{x}_0) \right] \\
+    \nonumber
+    &= \argmin_{q} \int q(\B{x}_0) \log \frac{q(\B{x}_0)}{p_0 (\B{x}_0)} \mathrm{d} \B{x}_0 -\frac{1}{\beta} \int q(\B{x}_0) r(\B{x}_0) \mathrm{d} \B{x}_0.
+\end{align}
+
+This can be solved via calculus of variation where the functional $\mathcal{J}$ is given as follows:
+\begin{align}
+    \nonumber
+    \mathcal{J} \left[ q(\B{x}_0) \right] \coloneqq \int q(\B{x}_0) \left( \log \frac{q(\B{x}_0)}{p_0 (\B{x}_0)}-\frac{1}{\beta}r(\B{x}_0) \right)\mathrm{d} \B{x}_0.
+\end{align}
+
+Substituting $\tilde{q}(\B{x}_0, \epsilon) \coloneqq q(\B{x}_0) + \epsilon \eta(\B{x}_0)$ gives:
+\begin{align}
+    \nonumber
+    \mathcal{J} \left[ \tilde{q}(\B{x}_0, \epsilon) \right] = \int \tilde{q}(\B{x}_0, \epsilon) \left( \log \frac{\tilde{q}(\B{x}_0, \epsilon)}{p_0 (\B{x}_0)}-\frac{1}{\beta} r(\B{x}_0) \right)\mathrm{d} \B{x}_0, 
+\end{align}
+where $\eta(\B{x}_0)$ is an arbitrary smooth function, and $\epsilon$ is a scalar parameter. 
+
+% Then the function $q(\B{x}_0)$ is to be varied until an extreme value of $\mathcal{J}$ is found. Thus we make it as a parametric representation
+% \begin{align}
+%     \tilde{q}(\B{x}_0, \alpha):=q(\B{x}_0)+\alpha \eta(\B{x}_0).
+% \end{align}
+% where $\eta(\B{x}_0)$ is some arbitrary function that has a continuous first derivative and vanishes at the endpoint.
+% Then the $\mathcal{J}$ becomes a functional of the parameter $\alpha$:
+% \begin{align}
+%     \mathcal{J}(\alpha)=\int \tilde{q}(\B{x}_0, \alpha) \left( \log \frac{\tilde{q}(\B{x}_0, \alpha)}{p_0 (\B{x}_0)}-\frac{1}{\beta} r(\B{x}_0) \right)\mathrm{d} \B{x}_0.
+% \end{align}
+
+Introducing a Lagrange multiplier $\lambda$ to constraint $\int q(\B{x}_0) \mathrm{d} \B{x}_0 = 1$ gives:
+\begin{align}
+    \nonumber
+    \mathcal{J} \left[ \tilde{q}(\B{x}_0, \epsilon) \right] &= \int \tilde{q}(\B{x}_0, \epsilon) \left( \log \frac{\tilde{q}(\B{x}_0, \epsilon)}{p_0 (\B{x}_0)}-\frac{1}{\beta}r(\B{x}_0) \right) +\lambda \tilde{q}(\B{x}_0, \epsilon) \mathrm{d} \B{x}_0\\
+    \nonumber
+    & :=\int f\{ \tilde{q};\B{x}_0\} \mathrm{d} \B{x}_0
+\end{align}
+Then the problem boils down to finding a function $\tilde{q}(\B{x}_0, \epsilon)$ satisfying:
+\begin{align}
+    \nonumber
+    \left. \frac{\partial \mathcal{J}}{\partial \epsilon} \right|_{\epsilon=0} = 0
+\end{align}
+
+This can be solved using the Euler-Lagrange equation:
+\begin{align}
+    \nonumber
+    \frac{\partial f}{\partial q}-\frac{\mathrm{d}}{\mathrm{d} \B{x}_0} \frac{\partial f}{\partial q'}=0,
+\end{align}
+where $q'$ is a derivative of $q$ with respect to $\B{x}_0$ and tilde notation is dropped since the condition is to be satisfied at $\epsilon=0$.
+
+% But since we do not have $q'$ in Eq.~\ref{eq:appx_functional}, the problem simplifies to finding $q$, which will be the extremum $p^{*}_0(\B{x}_0)$, that satisfies following:
+Note that $q'$ does not appear in $f$, so the Euler-Lagrange equation simplifies to:
+\begin{align}
+    \nonumber 
+    \frac{\partial f}{\partial q}&=\frac{\partial}{\partial q}\left( q(\B{x}_0) \left( \log \frac{q(\B{x}_0)}{p_0 (\B{x}_0)}-\frac{1}{\beta} r(\B{x}_0) \right) +\lambda q(\B{x}_0) \right)=0\\
+    \label{eq:euler_lagrange}
+    &=\log \frac{q(\B{x}_0)}{p_0 (\B{x}_0)}-\frac{1}{\beta} r(\B{x}_0)+1+\lambda=0.
+\end{align}
+
+Solving Eq.~\ref{eq:euler_lagrange} gives the target distribution $p_0^{*}$, which minimizes the objective function in Eq.~\ref{eq:reward_max_obj}:
+\begin{align}
+    \label{eq:target_dist_unnormalized}
+    p^{*}_0(\B{x}_0)=p_0 (\B{x}_0) \exp  \left(\frac{r(\B{x}_0)}{\beta}-1-\lambda \right)
+\end{align}
+
+% While we have constraint such that $\int p^{*}_0(\B{x}_0) \mathrm{d} \B{x}_0 = 1$.
+% From this constraint we can easily see that $\exp^{\lambda}=\int p_0 (\B{x}_0) \exp^{\left(\frac{r(\B{x}_0)}{\beta}-1\right)}\mathrm{d} \B{x}_0$. Plugging this, we finally have the target distribution $p^{*}_0(\B{x}_0)$ which is expressed as:
+Lastly, the Lagrangian multiplier $\lambda$ is obtained from the normalization constraint, $\exp (\lambda)=\int p_0 (\B{x}_0) \exp \left(\frac{r(\B{x}_0)}{\beta}-1\right) \mathrm{d} \B{x}_0$. Plugging this into Eq.~\ref{eq:target_dist_unnormalized} gives the target distribution presented in Eq.~\ref{eq:target_distribution}:
+\begin{align}
+    \label{eq:appendix_target_distribution}
+    p^{*}_0(\B{x}_0) = \frac{p_0(\B{x}_0) \exp \left( \frac{r(\B{x}_0)}{\beta} \right)}{\int p_0 (\B{x}_0) \exp \left( \frac{r(\B{x}_0)}{\beta} \right) \mathrm{d} \B{x}_0 },
+\end{align}
+
+% -------------------------------------------------------------------------------
+
+% This can be solved via Calculus of Variations where we want to find $q$ that is an extremum ($\ie$, either a maximum or a minimum). 
+% The integral inside the $\argmin$, is the functional $\mathcal{J}$:
+% \begin{align}
+%     \nonumber
+%     \mathcal{J} \coloneqq \int q(\B{x}_0) \left( \log \frac{q(\B{x}_0)}{p_0 (\B{x}_0)}-\frac{1}{\beta}r(\B{x}_0) \right)\mathrm{d} \B{x}_0.
+% \end{align}
+
+% Then the function $q(\B{x}_0)$ is to be varied until an extreme value of $\mathcal{J}$ is found. Thus we make it as a parametric representation
+% \begin{align}
+%     \tilde{q}(\B{x}_0, \alpha):=q(\B{x}_0)+\alpha \eta(\B{x}_0).
+% \end{align}
+% where $\eta(\B{x}_0)$ is some arbitrary function that has a continuous first derivative and vanishes at the endpoint.
+% Then the $\mathcal{J}$ becomes a functional of the parameter $\alpha$:
+% \begin{align}
+%     \mathcal{J}(\alpha)=\int \tilde{q}(\B{x}_0, \alpha) \left( \log \frac{\tilde{q}(\B{x}_0, \alpha)}{p_0 (\B{x}_0)}-\frac{1}{\beta} r(\B{x}_0) \right)\mathrm{d} \B{x}_0.
+% \end{align}
+
+% We additionally introduce a Lagrange multiplier $\lambda$ to address the constraint that the integral of the probability density function equals to one, $\ie$, 
+% $\int q(\B{x}_0) \mathrm{d} \B{x}_0 = 1$. 
+% Then we have  
+% \begin{align}
+%     \label{eq:appx_functional}
+%     \mathcal{J}(\alpha) &= \int \tilde{q}(\B{x}_0, \alpha) \left( \log \frac{\tilde{q}(\B{x}_0, \alpha)}{p_0 (\B{x}_0)}-\frac{1}{\beta}r(\B{x}_0) \right) +\lambda \tilde{q}(\B{x}_0, \alpha) \mathrm{d} \B{x}_0\\
+%     & :=\int f\{ \tilde{q};\B{x}_0\} \mathrm{d} \B{x}_0
+% \end{align}
+% Then the problem boils down to finding a function $\tilde{q}(\B{x}_0, \alpha)$ satisfing:
+% \begin{align}
+%     % \frac{\partial \mathcal{J}}{\partial \alpha}
+%     \left. \frac{\partial \mathcal{J}}{\partial \alpha} \right|_{\alpha=0} = 0
+% \end{align}
+
+% This can be solved using Euler's Equation:
+% \begin{align}
+%     \frac{\partial f}{\partial q}-\frac{\mathrm{d}}{\mathrm{d} \B{x}_0} \frac{\partial f}{\partial q'}=0
+% \end{align}
+% where $q'$ is a derivate of $q$ with respect to $\B{x}_0$ and tilde notation is dropped since the condition is to be satisfied at $\alpha=0$.
+
+% But since we do not have $q'$ in Eq.~\ref{eq:appx_functional}, the problem simplifies to finding $q$, which will be the extremum $p^{*}_0(\B{x}_0)$, that satisfies following:
+% \begin{align}
+%     \frac{\partial f}{\partial q}&=\frac{\partial}{\partial q}\left( q(\B{x}_0) \left( \log \frac{q(\B{x}_0)}{p_0 (\B{x}_0)}-\frac{1}{\beta} r(\B{x}_0) \right) +\lambda q(\B{x}_0) \right)=0\\
+%     &=\log \frac{q(\B{x}_0)}{p_0 (\B{x}_0)}-\frac{1}{\beta} r(\B{x}_0)+1+\lambda=0
+% \end{align}
+% % \begin{align}
+% %     \nonumber 
+% %     \frac{\partial \mathcal{L}(q)}{\partial q} = \log \left( \frac{q(\B{x}_0)}{p_0(\B{x}_0)} \right) + 1 - \frac{1}{\beta} r(\B{x}_0) - \alpha.
+% % \end{align}
+% Which leads to:
+% \begin{align}
+%     p^{*}_0(\B{x}_0)=p_0 (\B{x}_0) \exp^{\left(\frac{r(\B{x}_0)}{\beta}-1-\lambda\right)}
+% \end{align}
+% While we have constraint such that $\int p^{*}_0(\B{x}_0) \mathrm{d} \B{x}_0 = 1$.
+% From this constraint we can easily see that $\exp^{\lambda}=\int p_0 (\B{x}_0) \exp^{\left(\frac{r(\B{x}_0)}{\beta}-1\right)}\mathrm{d} \B{x}_0$. Plugging this, we finally have the target distribution $p^{*}_0(\B{x}_0)$ which is expressed as:
+% \begin{align}
+%     \label{eq:appendix_target_distribution}
+%     p^{*}_0(\B{x}_0) = \frac{p_0(\B{x}_0) \exp \left( \frac{r(\B{x}_0)}{\beta} \right)}{\int p_0 (\B{x}_0) \exp \left( \frac{r(\B{x}_0)}{\beta} \right) \mathrm{d} \B{x}_0 }.
+% \end{align}
+% % Solving with respect to $q$ gives the target distribution $p^{*}_0(\B{x}_0)$:
+% % \begin{align}
+% %     \label{eq:appendix_target_distribution}
+% %     p^{*}_0(\B{x}_0) = \frac{p_0(\B{x}_0) \exp \left( \frac{r(\B{x}_0)}{\beta} \right)}{\int p_0 (\B{x}_0) \exp \left( \frac{r(\B{x}_0)}{\beta} \right) \mathrm{d} \B{x}_0 }.
+% % \end{align}
+
+% =====================================================================
+
+\subsection{Derivation of the Optimal Policy}
+\label{sec:appendix_optimal_soft_policy}
+Here, we provide the derivations of the optimal policy given in Eq.~\ref{eq:optimal_policy} for completeness, which is proposed in previous works~\cite{Uehara:2024Finetuning, Uehara:2024Bridging}. 
+
+To sample from the target distribution defined in Eq.~\ref{eq:appendix_target_distribution}, previous studies utilize an optimal policy $p^{*}_\theta(\B{x}_{t - \Delta t} | \B{x}_{t})$. 
+The optimal value function $v(\B{x}_{t})$ is defined as the expected future reward at current timestep $t$:
+\begin{align}
+    % v(\B{x}_{t}) &= \mathbb{E}_{\{p\}} \Bigl[ r(\B{x}_0) -\beta \sum_{s=1}^{t} \mathcal{D}_{\text{KL}} (p(\B{x}_{s-1} | \B{x}_{s}) \| p_{\theta}(\B{x}_{s-1} | \B{x}_{s})) \Bigr]
+    \label{eq:appendix_value_func}
+    % v(\B{x}_t) = \beta \log \mathbb{E}_{\{p\}} \left[ \exp \left(  \frac{r(\B{x}_0)}{\beta} \right) \mid \B{x}_t \right]
+    v(\B{x}_t) = \beta \log \mathbb{E}_{\B{x}_0 \sim p_{\theta} (\B{x}_0 | \B{x}_t)} \left[ \exp \left(  \frac{r(\B{x}_0)}{\beta} \right) \right]
+\end{align}
+
+The optimal policy is the policy that maximizes the objective function:
+\begin{align}
+    \nonumber
+    p_{\theta}^{*}(\B{x}_{t-\Delta t} | \B{x}_{t}) &= \argmax_{q(\cdot|\B{x}_t)} \mathbb{E}_{\B{x}_{t-\Delta t}\sim q(\cdot|\B{x}_t)} \left[ v(\B{x}_{t-\Delta t}) \right] -\beta \mathcal{D}_{\text{KL}} \left[ q(\cdot | \B{x}_{t}) \| p_\theta(\cdot | \B{x}_{t}) \right] \\
+    \label{eq:soft_optimal_policy}
+    &= \frac{p_\theta(\B{x}_{t-\Delta t} | \B{x}_{t}) \exp \left( \frac{1}{\beta} v(\B{x}_{t-\Delta t}) \right)}{\int p_\theta (\B{x}_{t-\Delta t} | \B{x}_t) \exp \left( \frac{1}{\beta} v(\B{x}_{t-\Delta t}) \right) d\B{x}_{t-\Delta t} }\\
+    \label{eq:a.2.optmal_policy}
+    &=\frac{p_\theta(\B{x}_{t-\Delta t} | \B{x}_{t}) \exp \left( \frac{1}{\beta} v(\B{x}_{t-\Delta t}) \right)}{\exp \left( \frac{1}{\beta} v(\B{x}_{t}) \right)}
+\end{align}
+where the last equality follows from the soft-Bellman equations~\cite{Uehara:2024Bridging}.  
+For completeness, we present the theorem. 
+\begin{theorem}
+    \textnormal{(Theorem 1 of Uehara~\etal~\cite{Uehara:2024Bridging})}. The induced distribution of the optimal policy in Eq.~\ref{eq:soft_optimal_policy} is the target distribution in Eq.~\ref{eq:appendix_target_distribution}.
+    \begin{align}
+        % \label{eq:marginal_distribution}
+        \nonumber
+        p^{*}_0(\B{x}_0) &= \int \left\{ p_1(\B{x}_1) \prod_{s=T}^{1} p_{\theta}^{*}(\B{x}_{\frac{s}{T} - \frac{1}{T}} | \B{x}_{\frac{s}{T}}) \right \} d\B{x}_{\frac{1}{T}:1}.
+    \end{align}
+\end{theorem}
+
+However, computing the optimal value function in Eq.~\ref{eq:appendix_value_func} is non-trivial. 
+Hence, we follow the previous works~\cite{Kim:2025DAS,Li2024:SVDD} and approximate it using the posterior mean 
+% $\mathbb{E}\left[ \B{x}_0 | \B{x}_t \right] = \B{x}_{0|t}$:
+$\B{x}_{0|t} := \mathbb{E}_{\B{x}_0\sim p_\theta (\B{x}_0|\B{x}_t)}\left[ \B{x}_0\right]$:
+\begin{align}
+    \nonumber
+    v(\B{x}_t) &= \beta \log \left( \int \exp (\frac{r(\B{x}_0)}{\beta}) p_\theta(\B{x}_0 | \B{x}_t) \mathrm{d} \B{x}_0 \right) \\
+    \label{eq:appendix_soft_value_func}
+    &\approx \beta \log (\exp (\frac{r(\B{x}_{0|t})}{\beta})) = r(\B{x}_{0|t}). 
+\end{align}
+
+% Lastly, plugging Eq.~\ref{eq:appendix_soft_value_func} to Eq.~\ref{eq:soft_optimal_policy} computes:
+% \begin{align}
+%     \nonumber
+%     p_\text{tar}(\B{x}_{t-1} | \B{x}_{t}) &= \frac{p_{\text{ref}}(\B{x}_{t-1} | \B{x}_{t}) \exp \left(\frac{1}{\beta} r_\phi(\B{x}_{0|t-1}) \right)}{\int p_{\text{ref}}(\B{x}_{t-1} | \B{x}_{t}) \exp \Bigl(\frac{1}{\beta} r_\phi(\B{x}_{0|t-1}) \Bigr) d\B{x}_{t-1}}.
+% \end{align}
+% Note that this equals to the soft optimal policy presented in Eq.~\ref{eq:optimal_denoise} of the main paper.
+
+
+\section{Choice of Diffusion Coefficient}
+\label{sec:appendix_diffusion_coefficient_choice}
+Ma~\etal~\cite{Ma2024:sit} have shown that the diffusion coefficient can be chosen freely within the stochastic interpolant framework~\cite{Albergo:2023Interpolant}. 
+Here, we present a more comprehensive proof. 
+We use $\B{w}$ interchangeably to denote the standard Wiener process for both forward and reverse time flows. 
+
+\begin{proposition}
+% For linear stochastic process $\B{X}_t=\alpha_t \B{X}_0+\sigma_t\B{X}_1$ and its corresponding ODE $d\B{x}_t=u_t(\B{x}_t)dt$, where velocity field $u_t$ generates probability path $p_t$, following forward and reverse SDE have same marginal density $p_t$ at each $t\in [0,1]$ with a diffusion coefficient $g_t$.
+
+% For the linear stochastic process $ \B{x}_t = \alpha_t \B{x}_0 + \sigma_t \B{x}_1 $ and its corresponding ODE $ \mathrm{d} \B{x}_t = u_t(\B{x}_t) \mathrm{d} t $, where the velocity field $ u_t $ generates the probability path $ p_t $, the forward and reverse SDEs share the same marginal density $ p_t $ at each $ t \in [0,1] $, given a diffusion coefficient $ g_t $.
+
+For a linear stochastic process $ \B{x}_t = \alpha_t \B{x}_0 + \sigma_t \B{x}_1 $ and the Probability-Flow ODE $ \mathrm{d} \B{x}_t = u_t(\B{x}_t) \mathrm{d} t $ that yields the marginal density $p_t(\B{x}_t)$, the following forward and reverse SDEs with an arbitrary diffusion coefficient $g_t \geq 0$ share the same marginal density:
+\begin{align}
+    \label{eq:appx_forward_sde}
+    \text{Forward SDE: }\mathrm{d} \B{x}_t&=\left[u_t(\B{x}_t) + \frac{g_t^2}{2}\nabla\log p_t(\B{x}_t)\right] \mathrm{d} t+g_t \mathrm{d} \B{w}\\
+    \label{eq:appx_reverse_sde}
+    \text{Reverse SDE: }\mathrm{d} \B{x}_t&=\left[u_t(\B{x}_t) - \frac{g_t^2}{2}\nabla\log p_t(\B{x}_t)\right] \mathrm{d} t+g_t \mathrm{d} \B{w}.
+\end{align}
+
+\end{proposition}
+
+\begin{proof}
+\label{proof:prop1}
+When velocity field $u_t$ generates a probability density path $p_t$, it satisfies the continuity equation:
+\begin{align}
+\label{eq:continuity equation}
+    \frac{\partial}{\partial t}p_t(\B{x}_t)=-\nabla\cdot\left(p_t(\B{x}_t)u_t(\B{x}_t)\right).
+\end{align}
+Similarly, for the SDE $\mathrm{d} \B{x}_t=\mathbf{f}_t(\B{x}_t) \mathrm{d} t + g_t \mathrm{d} \B{w}$, the Fokker-Planck equation describes the time evolution of $\tilde{p}_t$:
+\begin{align}
+\label{eq:fokker planck}
+    \frac{\partial}{\partial t}\tilde{p}_t(\B{x}_t)=-\nabla\cdot (\tilde{p}_t(\B{x}_t)\mathbf{f}_t(\B{x}_t))+\frac{1}{2}g_t^2\nabla^2\tilde{p}_t(\B{x}_t)
+\end{align}
+where $\nabla^2$ denotes the Laplace operator. 
+
+To find an SDE that yields the same marginal probability density as the ODE, we equate the probability density functions in Eq.~\ref{eq:fokker planck} and Eq.~\ref{eq:continuity equation}, resulting in the following equation:
+\begin{align}
+    \nonumber -&\nabla\cdot (p_t(\B{x}_t)\mathbf{f}_t(\B{x}_t))+\frac{1}{2}g_t^2\nabla^2p_t(\B{x}_t)=-\nabla\cdot(p_t(\B{x}_t)u_t(\B{x}_t))\\
+    \label{eq:continuity_equals_fokker_planck}
+    &\nabla\cdot (p_t(\B{x}_t)(\mathbf{f}_t(\B{x}_t)-u_t(\B{x}_t)))=\frac{1}{2}g_t^2\nabla^2p_t(\B{x}_t)
+\end{align}
+This implies that any SDE with drift coefficient $\mathbf{f}_t(\B{x}_t)$ and diffusion coefficient $g_t$ that satisfies Eq.~\ref{eq:continuity_equals_fokker_planck} will generate $p_t$.
+% Then any drift coefficient $\mathbf{f}_t(\B{x}_t)$ and diffusion coefficient $g_t$ satisfying this equation has $p_t$ as its solution density. 
+One particular choice is to set $p_t(\B{x}_t)(\mathbf{f}_t(\B{x}_t)-u_t(\B{x}_t))$ proportional to $\nabla p_t(\B{x}_t)$, \ie $p_t(\B{x}_t)(\mathbf{f}_t(\B{x}_t)-u_t(\B{x}_t))=A_t \nabla p_t(\B{x}_t)$. 
+Then Eq.~\ref{eq:continuity_equals_fokker_planck} can be rewritten as:
+\begin{align}
+    \nonumber
+    A_t \nabla^2 p_t(\B{x}_t)=\frac{1}{2}g_t^2\nabla^2p_t(\B{x}_t),
+\end{align}
+which leads to the relation $A_t=\frac{1}{2}g_t^2$. 
+Similarly, the drift coefficient is given by:
+\begin{align}
+    \nonumber
+    \mathbf{f}_t(\B{x}_t)&=u_t(\B{x}_t)+\frac{1}{2}g_t^2\frac{\nabla p_t(\B{x}_t)}{p_t(\B{x}_t)} \\
+    \nonumber
+    &=u_t(\B{x}_t)+\frac{1}{2}g^2_t \nabla\log p_t(\B{x}_t)
+\end{align}
+Thus, a family of SDEs that generate $p_t$ takes the following form:
+\begin{align}
+    % \label{eq:appendix_forward_sde}
+    \nonumber
+    \mathrm{d} \B{x}_t = \left[u_t(\B{x}_t) + \frac{1}{2}g^2_t\nabla\log p_t(\B{x}_t) \right] \mathrm{d}t + g_t \mathrm{d} \B{w},
+\end{align}
+which is the forward SDE presented in Eq.~\ref{eq:appx_forward_sde}. 
+Similarly, the reverse SDE in Eq.~\ref{eq:appx_reverse_sde} can be derived by applying the time reversal formula, following Anderson~\etal~\cite{Anderson:1982SDE}. 
+\end{proof}
+% For all SDEs, we use $g_t = t^2$, with its norm scaled by a factor of $3$. 
+% In the experiment, for all SDEs, we use $g_t = t^2$, with its norm scaled by a factor of 3, which we found to work well for all inference-time search algorithms.
+
+\begin{corollary}
+If diffusion coefficient is chosen as $g_t=\sqrt{2\left( \sigma_t \dot{\sigma}_t-\sigma_t^2\frac{\dot{\alpha}_t} {\alpha_t} \right)}$ then the score function $\nabla\log p_t(\B{x}_t)$ inside the forward SDE vanish and it can be written as:
+\begin{align}
+    \label{eq:appx corollary eq}
+    \mathrm{d} \B{x}_t=\frac{\dot{\alpha}_t} {\alpha_t}\B{x}_t \mathrm{d} t + \sqrt{2\left( \sigma_t \dot{\sigma}_t-\sigma_t^2\frac{\dot{\alpha}_t} {\alpha_t} \right)} \mathrm{d} \B{w}
+\end{align}
+\end{corollary}
+\begin{proof}
+    Velocity field $u_t(\B{x}_t)$ for linear stochastic process $\B{X}_t=\alpha_t \B{X}_0+\sigma_t\B{X}_1$ is given as:
+    \begin{align}
+        u_t(\B{x}_t)=\frac{\dot{\alpha}_t} {\alpha_t}\B{x}_t-\left( \sigma_t \dot{\sigma}_t-\sigma_t^2\frac{\dot{\alpha}_t} {\alpha_t} \right)\nabla\log p_t(\B{x}_t)
+    \end{align}
+    Plugging this equation into forward SDE Eq.~\ref{eq:appx_forward_sde}, we can immediately see that when $g_t=\sqrt{2\left( \sigma_t \dot{\sigma}_t-\sigma_t^2\frac{\dot{\alpha}_t} {\alpha_t} \right)}$ the score function term vanishes and the remaining terms constitute Eq.~\ref{eq:appx corollary eq}.
+\end{proof} 
+
+% \input{Figures/interpolant_analysis}
+% \section{Analysis of the Inference-Time Interpolant Conversion}
+% \vspace{-0.5\baselineskip}
+% \label{sec:interpolant_diversity_analysis}
+% In this section, we analyze how interpolant conversion introduces additional sample diversity into the proposal distribution defined in Eq.~\ref{eq:vp_sde_proposal}. 
+% As discussed in Sec.~\ref{sec:scheduler_conversion}, a scale-time transformation can be applied to an interpolant (e.g., Linear with $\alpha_t, \sigma_t$) to convert it into an alternative sampling trajectory (e.g., VP with $\Bar{\alpha}_s, \Bar{\sigma}_s$). 
+
+% Specifically, let us consider initializing the timesteps of Linear-SDE to ${t_s}$ such that the log-SNR of the corresponding latents $\B{x}_{t_s}$ matches that of the VP-SDE latents $\Bar{\B{x}}_s$ at each step (see the horizontal dashed line in Fig.~\ref{fig:interpolant_analysis}). 
+% Under this condition, the proposal distributions of the two processes are expressed as follows:
+% \begin{alignat}{2}
+%     \nonumber
+%     \text{Linear-SDE ($t_s$):} \quad 
+%     & p_\theta(\B{x}_{t_s - \Delta t_s} \mid \B{x}_{t_s}) 
+%     &&= \mathcal{N} \left( \B{x}_{t_s} - \B{f}_{t_s}(\B{x}_{t_s}) \Delta t_s,\ g_{t_s}^2 \Delta t_s\ \mathbf{I} \right) \\
+%     \nonumber
+%     \text{VP-SDE:} \quad 
+%     & \Bar{p}_\theta(\Bar{\B{x}}_{s - \Delta s} \mid \Bar{\B{x}}_s) 
+%     &&= \mathcal{N} \left( \Bar{\B{x}}_s - \Bar{\B{f}}_{s}(\Bar{\B{x}}_{s}) \Delta s,\ 
+%     g_s^2 \Delta s\ \mathbf{I} \right) \\
+%     & 
+%     &&\approx \Bar{p}_\theta(c_s \B{x}_{t_s - \Delta t_s} \mid c_s \B{x}_{t_s}) 
+%     \nonumber,
+% \end{alignat}
+% where the last approximation arises from discretization error. 
+% To match the variance of Linear-SDE $(t_s)$ to that of VP-SDE, one can rescale the diffusion coefficient $g_{t_s}$ to $g'_{t_s}$ as follows:
+% \begin{align}
+%     g'_{t_s} = \frac{g_s}{c_s} \cdot \sqrt{\frac{\Delta s}{\Delta t_s}}.
+% \end{align}
+% Hence, this analysis reveals that the sample diversity of Linear-SDE can be controlled through a combination of timestep scheduling and diffusion coefficient scaling. 
+% While we focus on the effects of interpolant choice under fixed timestep and diffusion coefficient settings, exploring alternative configurations by varying these factors presents an interesting direction for future work. 
+
+% \paragraph{Analysis of VP-SDE and Linear-SDE Diversity.} 
+% As we have shown in Fig.~\ref{fig:variance_test} of the main paper, for a fixed timestep and diffusion coefficient, VP-SDE yields greater sample diversity than Linear-SDE. 
+% Notably, Fig.~\ref{fig:interpolant_analysis} shows that the VP interpolant exhibits a lower log-SNR than Linear-SDE for $t \in (0, 1)$, indicating a higher noise component in the latent. 
+% Hence, for a given timestep, VP-SDE samples from a noisier latent (see the vertical dashed line) which leads to greater sample diversity, which is also observed in prior work such as SDEdit~\cite{meng2021sdedit}. 
+
+
+
+\section{Adaptive Time Scheduling and Rollover Strategy}
+\label{sec:appendix_adaptive_time_and_rollover}
+In this section, we provide details of adaptive time scheduling and NFE analysis result which inspired rollover strategy. 
+\paragraph{Adaptive Time Scheduling.}
+As discussed in Sec.~\ref{sec:scheduler_conversion}, to maximize the exploration space in VP-SDE sampling, we design the time scheduler to take smaller steps during the initial phase—when variance is high—and gradually increase the step size in later stages. Specifically, we define the time scheduler as $t_\text{new} = \sqrt{1-(1-t)^2}$. 
+While this approach can be problematic when the number of steps is too low—resulting in excessively large discretization steps in later iterations—we find that using a reasonable number of steps (\eg $10$) works well in practice, benefiting from the few-step generation capability of flow models. This setup effectively balances a broad exploration space with fast inference time, highlighting one of the key advantages of flow models over diffusion models. 
+
+\paragraph{NFE Analysis.}
+As discussed in Sec.~\ref{sec:roll_over}, we analyze the number of function evaluations (NFEs) required to obtain a sample with a higher reward than the current one. In Fig.~\ref{fig:temporal_axis_scaling}, we visualize the variance band of the required NFEs across timesteps, with the blue-dotted line representing the uniform allocation used in previous particle sampling methods~\cite{Li2024:SVDD, Singh:2025CoDE}. Notably, uniform compute allocation may constrain exploration and fail to identify high-reward samples, as evidenced by crossings within the variance band. This observation motivates the use of a rollover strategy to optimize compute utilization efficiently. As demonstrated in Sec.~\ref{sec:applications}, our experiments confirm that \Ours{} provides additional improvements over previous particle sampling methods~\cite{Li2024:SVDD, Singh:2025CoDE}.
+
+\input{Figures/temporal_axis_scaling/temporal_axis_scaling}
+
+
+% -----------------------------------------------------
+
+
+\input{Figures/search_schematic/search_schematic}
+
+\section{Search Algorithms}
+\label{sec:appendix_inference_time_scaling}
+In this section, we introduce the inference-time search algorithms discussed in Sec.~\ref{sec:related} along with their implementation details. An illustrative figure of the algorithms is provided in Fig.~\ref{fig:search_schematic}. 
+Here, we define the batch size $(N)$ as the number of initial latent samples and the particle size $(K)$ as the number of samples drawn from the proposal distribution $p_\theta(\B{x}_{t-\Delta t} | \B{x}_t)$ at each denoising step. 
+\\
+\\
+\textbf{Best-of-N} (BoN)~\cite{Stiennon:2020BoN,Tang:2024Realfill} is a form of rejection sampling. Given $N$ generated samples $\{ \B{x}^{(i)}_{0} \}_{i=1}^N$, BoN selects the sample with the highest reward. 
+% Despite its simplicity, BoN usually requires a sufficient number of samples to discover the optimal sample that maximizes the objective function in Eq.~\ref{eq:reward_max_obj}. 
+\begin{align}
+    \nonumber
+    \B{x}_{0} &= \argmax_{\{ \B{x}^{(i)}_{0} \}_{i=1}^N } r(\B{x}_{0}^{(i)}).
+    % \nonumber 
+    % \text{where} \quad \{ \B{x}^{(i)}_{0} \}_{i=1}^N &\sim \int p(\B{x}_T) \prod_{t=1}^{T} p_\text{ref} (\B{x}_{t-1} | \B{x}_t) \mathrm{d} \B{x}_{1:T}. 
+\end{align}
+As presented in Sec.~\ref{sec:applications}, we fixed the total compute budget to $500$ NFEs and the number of denoising steps to $10$, which sets the batch size of BoN to $N=50$.
+\\
+\\
+% \textbf{Search over Paths} (SoP)~\cite{Ma2025:SoP} begins by sampling $N$ initial noises and running the ODE solver. 
+% Then, $K$ particles are drawn by applying the forward kernel to each ODE output. 
+% After solving the ODE for the sampled particles, the top $N$ candidates with the highest rewards are selected. 
+% This iterative back-and-forth process continues until $t = 0$. 
+\textbf{Search over Paths} (SoP)~\cite{Ma2025:SoP} begins by sampling $N$ initial noises and running the ODE solver up to a predefined timestep $t_0$. Then the following two operations iterate until reaching $t=0$:
+
+\begin{enumerate}[leftmargin=*]
+    \item Applying the forward kernel: For each sample in the batch at time $t$, $K$ particles are sampled using the forward kernel, which propagates them from $t$ to $t + \Delta_f$.
+    \item Solving the ODE: The resulting $N \cdot K$ particles are then evolved from $t + \Delta_f$ to $t + \Delta_f - \Delta_b$ by solving the ODE. The top $N$ candidates with the highest rewards are selected.
+\end{enumerate}
+% First, $K$ particles are drawn by applying the forward kernel, which moves particles from time $t$ to $t+\Delta_f$, to each ODE output.
+% Next, these particles moves from time $t+\Delta_f$ to $t+\Delta_f -\Delta_b$ by running ODE solver and the top $N$ candidates with the highest rewards are selected. 
+We followed the original implementations~\cite{Ma2025:SoP} for $\Delta_f$ and $\Delta_b$. We used $N=2$ and $K=5$.
+\\
+\vspace{0.5\baselineskip}
+\\
+% alternates between solving the backward ODE, then adding substantial noise using the forward process. 
+% Search over Paths (SoP)\cite{Inference Time Scaling for Diffusion Models} 
+% performs denoising by adding random Gaussian noise to the posterior mean $\B{x}_{0|t}$ that are computed during the sampling process. 
+% \begin{align}
+%     \label{eq:sop}
+%     \B{x}_{t-M} = \argmax_{\{ \B{x}^{(i)}_{t-M} \}_{i=1}^N } r_\phi(\Bar{\B{x}}_{0|t-M}^{(i)}), 
+% \end{align}
+% where $\{ \B{x}_{t-M} \}_{i=1}^N \sim \mathcal{N}(\B{x}_{t-M}; \alpha_{t-M} \Bar{\B{x}}_{0|t}, \sigma_{t-M}^2 \textbf{\textit{I}}) $. 
+% 
+% -----------------------------------------------------------------------------------------
+% 
+% Following the original implementation~\cite{Ma2025:SoP}, we used $N=2$ and $K=5$ for all applications. We begin by denoising for 0.88 timesteps. In the back-and-forth process, we first move 0.78 timesteps forward using the forward kernel, then step 0.81 timesteps backward, solving the ODE 10 steps.
+\textbf{Sequential Monte Carlo} (SMC)~\cite{Kim:2025DAS, Doucet2001:SMC} 
+% extends the importance sampling approach and leverages $N$ samples along with their incremental importance weights computed through time axis: 
+extends the idea of importance sampling to a time-sequential setting by maintaining $N$ samples and updating their importance weights over time:
+\begin{align}
+    \nonumber
+    w_{t-\Delta t}^{(i)} =\frac{p^*_\theta(\B{x}_{t-\Delta t}|\B{x}_t)}{q(\B{x}_{t-\Delta t}|\B{x}_t)}w_t^{(i)} =\frac{p_\theta(\B{x}_{t-\Delta t}|\B{x}_t) \exp( v(\B{x}^{(i)}_{t-\Delta t})/\beta)}{q(\B{x}_{t-\Delta t}|\B{x}_t) \exp (v(\B{x}^{(i)}_{t})/\beta)}w_t^{(i)},
+\end{align}
+where $q(\B{x}_{t-\Delta t}|\B{x}_t)$ is a proposal distribution and the last equality follows from the optimal policy Eq.~\ref{eq:a.2.optmal_policy}. We used the reverse process of the pretrained model as the proposal distribution, which leads to the following importance weight equation:
+\begin{align}
+    \label{eq:smc_importance_weight}
+    w_{t-\Delta t}^{(i)}=\frac{\exp( v(\B{x}^{(i)}_{t-\Delta t})/\beta)}{\exp( v(\B{x}^{(i)}_{t})/\beta)}w_t^{(i)}.
+\end{align}
+At each step when effective sample size $\left(\sum_{j=1}^N w_t^{(j)} \right)^2/\sum_{i=1}^N (w_t^{(i)})^2$ is below the threshold, we perform resampling, \ie, indices $\{ a_t^{(i)} \}_{i=1}^{N} $ are first sampled from a multinomial distribution based on the normalized importance weights:
+\begin{align}
+    \nonumber
+    \{ a_t^{(i)} \}_{i=1}^{N} \sim \text{Multinomial} \left(N,\quad \left\{ \frac{w_t^{(i)}}{\sum_{j=1}^{N}w_t^{(j)}} \right\}_{i=1}^{N} \right).
+\end{align}
+% These indices are then used to draw particles from $\{ \B{x}_t^{(i)} \}_{i=1}^N$, yielding $\{ \B{x}_{t}^{ ( a_t^{(i)} ) } \}_{i=1}^N$. This resampling step filters out low-weight particles while reinforcing high-weight ones. 
+These ancestor indices $a_t^{(i)}$ are then used to replicate high-weight particles and discard low-weight ones, yielding the resampled set $\{ \B{x}_{t}^{ ( a_t^{(i)} ) } \}_{i=1}^N$. If resampling is not performed, the indices are simply set as $a_t^{(i)} = i$.
+Lastly, one-step denoised samples are obtained from $\{\B{x}_{t}^{ ( a_t^{(i)} ) } \}_{i=1}^N$:
+\begin{align}
+    \nonumber
+    % \{ \B{x}^{(i)}_{t-\Delta t} \}_{i=1}^{N} \sim p(\B{x}_{t-\Delta t} | \{ \B{x}_{t}^{ ( a_t^{(i)} ) } \}_{i=1}^{N} ),
+    \B{x}^{(i)}_{t-\Delta t}  \sim p_\theta(\B{x}_{t-\Delta t} | \B{x}_{t}^{ ( a_t^{(i)} ) } ).
+\end{align}
+When resampling is performed, the importance weights are reinitialized to one, \ie, $w_t=\B{1}$. The importance weights for the next step, $w_{t-\Delta t}$ are subsequently computed according to Eq.~\ref{eq:smc_importance_weight}, regardless of whether resampling was applied.
+\\ 
+We used $N=50$ for all applications. 
+\\
+\\
+\textbf{Controlled Denoising} (CoDe)~\cite{Singh:2025CoDE} extends BoN by incorporating an interleaved selection step after every $L$ denoising steps. 
+% \begin{align}
+%     \nonumber
+%     \B{x}_{t-L\Delta t} &= \argmax_{\{ \B{x}^{(i)}_{t-L\Delta t} \}_{i=1}^{K} } r(\B{x}_{0|t-L\Delta t}^{(i)}) %, \quad \text{where} \\ 
+%     % \nonumber
+%     % \{ \B{x}^{(i)}_{t-M} \}_{i=1}^K &\sim \int p(\B{x}_T) \prod_{\small{s=t-M+1}}^{T} p_\text{ref} (\B{x}_{s-1} | \B{x}_s) \mathrm{d} \B{x}_{t-M+1:T}.
+% \end{align}
+\begin{align}
+    \nonumber
+    \B{x}_{t-L\Delta t} &= \argmax_{\{ \B{x}^{(i)}_{t-L\Delta t} \}_{i=1}^{K} } \exp\left(v(\B{x}^{(i)}_{t-L\Delta t})/\beta\right) %, \quad \text{where} \\ 
+    % \nonumber
+    % \{ \B{x}^{(i)}_{t-M} \}_{i=1}^K &\sim \int p(\B{x}_T) \prod_{\small{s=t-M+1}}^{T} p_\text{ref} (\B{x}_{s-1} | \B{x}_s) \mathrm{d} \B{x}_{t-M+1:T}.
+\end{align}
+
+We used $N=2$, $K=25$, and $L=2$ for all applications. 
+\\
+\\
+% where $\{ \B{x}^{(i)}_{t-M} \}_{i=1}^N &\sim \int p(\B{x}_t) \prod_{s=t-M+1}^{t} p_\text{ref} (\B{x}_{s-1} | \B{x}_s) \mathrm{d} \B{x}_{t-M+1:t}$. 
+% where $\{ \B{x}_{t-M} \}_{i=1}^K \sim p_{\text{ref}}(\B{x}_{t-M} | \B{x}_t) $. 
+% 
+% -----------------------------------------------------------------------------------------
+% -----------------------------------------------------------------------------------------
+% 
+\textbf{SVDD}~\cite{Li2024:SVDD} approximates the optimal policy in Eq.~\ref{eq:optimal_policy} by leveraging weighted $K$ particles:
+\begin{align}
+    \label{supp:SVDD_eq}
+    p^{*}_\theta(\B{x}_{t-\Delta t} | \B{x}_{t}) &\approx \sum_{i=1}^K  \frac{w^{(i)}_{t-\Delta t}}{\sum_{j=1}^K w^{(j)}_{t-\Delta t}} \delta_{\B{x}^{(i)}_{t-\Delta t}} \\
+    % p^{*}_\theta(\B{x}_{t-\Delta t} | \B{x}_{t}) \approx \sum_{i=1}^K & \frac{w^{(i)}_{t-\Delta t}}{\sum_{j=1}^K w^{(j)}_{t-\Delta t}} \\
+    \nonumber
+    \{ \B{x}^{(i)}_{t-\Delta t} \}_{i=1}^{K} & \sim p_\theta(\B{x}_{t-\Delta t} | \B{x}_{t})\\
+    \nonumber
+    w^{(i)}_{t-\Delta t} &= \exp( v ( \B{x}^{(i)}_{t-\Delta t} ) / \beta ).
+    % & \quad w^{(i)}_{t-\Delta t} = \exp( \frac{r ( \B{x}^{(i)}_{0|t-\Delta t} )}{\beta} ),
+\end{align}
+At each timestep, the approximate optimal policy in Eq.~\ref{supp:SVDD_eq} is sampled by first drawing an index $a_{t-\Delta t}$ from a categorical distribution:
+\begin{align}
+    a_{t-\Delta t} \sim \text{Categorical}\left(\left\{ \frac{w^{(i)}_{t-\Delta t}}{\sum_{j=1}^K w^{(j)}_{t-\Delta t}} \right\}_{i=1}^{K}\right)
+\end{align}
+This index is then used to select the sample from $\{ \B{x}^{(i)}_{t-\Delta t} \}_{i=1}^{K}$, \ie, $\B{x}_{t-\Delta t}\leftarrow \B{x}_{t-\Delta t}^{(a_{t-\Delta t})}$.
+% In practice, SVDD uses $\beta=0$ which corresponds to the argmax operation, \ie, the importance weights are used to filter out the particles except the one with the highest reward. 
+In practice, SVDD uses $\beta=0$, replacing sampling from the categorical distribution with a direct $\argmax$ operation, \ie, selecting the particle with the largest importance weight.
+Following the original implementation~\cite{Li2024:SVDD}, we used $N=2$ and $K=25$ for all applications. 
+% We solved the ODE or SDE 10 steps.
+% $\{ w^{(i)}_{t-1} \}_{i=1}^{N} = \exp(\frac{1}{\beta} r_\phi (\B{x}_{0|t-1}))$ 
+% -----------------------------------------------------------------------------------------
+\\
+\\
+\textbf{Rollover Budget Forcing} (\Ours{}) adaptively allocates compute across denoising timesteps. 
+At each timestep, when a particle with a higher reward than the previous one is discovered, it immediately takes a denoising step, and the remaining NFEs are rolled over to the next timestep, ensuring efficient utilization of the available compute. To maintain consistency with SVDD~\cite{Li2024:SVDD}, we set $N=2$, with the compute initially allocated uniformly across all timesteps. 
+We present the pseudocode for sampling from the stochastic proposal distribution with interpolant conversion in Alg.~\ref{alg:one-step_stochastic_denoising}. Specifically, the pseudocode for \Ours{} with SDE conversion and interpolant conversion is provided in Alg.~\ref{alg:ours}. 
+Here, we denote $\{S^{(i)}\}_{i=1}^{M}$ as a sequence of timesteps in descending order, where $S^{(1)} = 1$ and $S^{(M)} = 0$, and $M$ is the total number of denoising steps. 
+
+\input{Algorithms/ours}
+
+% -----------------------------------------------------------------------------------------
+
+
+\input{Figures/aesthetic/aesthetic}
+% 
+\section{Additional Results}
+\subsection{Aesthetic Image Generation}
+\label{sec:appendix_diff_reward}
+In this section, we demonstrate that inference-time scaling can also be applied to gradient-based methods, such as DPS~\cite{Chung:2023DPS}, for differentiable rewards. Specifically, we consider aesthetic image generation and show that \Ours{} leads to synergistic performance improvements. We first derive the formulation of the proposal distribution for differentiable rewards and then present qualitative and quantitative results. 
+
+\subsubsection{Gradient-Based Guidance}
+Uehara~\etal~\cite{Uehara:2024Bridging} have shown that the marginal distribution $p^{*}_t(\B{x}_t)$ is computed as follows:
+\begin{align}
+    % \label{eq:marginal_distribution}
+    \nonumber
+    p^{*}_t(\B{x}_t) &\propto \exp \left( \frac{v(\B{x}_t)}{\beta} \right) p_t(\B{x}_t) \approx \exp \left( \frac{r(\B{x}_{0|t})}{\beta} \right) p_t(\B{x}_t),
+\end{align}
+where the approximation follows from Eq.~\ref{eq:appendix_soft_value_func}. 
+When the reward is differentiable (\eg, aesthetic score~\cite{Schuhmann:aesthetics}), one can simulate samples from $p^{*}_t(\B{x}_t)$ by computing its score function:
+\begin{align}
+    \nonumber
+    \label{eq:differentiable_score}
+    \nabla \log p_t^{*}(\B{x}_t) &= \nabla \log \left[ \exp (\frac{r(\B{x}_{0|t})}{\beta}) p_t(\B{x}_t) \right] \\
+    &= \frac{1}{\beta} \underbrace{\nabla r (\B{x}_{0|t})}_{\text{Guidance}} + \underbrace{\nabla \log p_t(\B{x}_t)}_{\text{Pretrained Score}}.
+\end{align}
+For differentiable rewards, we incorporate the gradient-based guidance defined in Eq.~\ref{eq:differentiable_score} into the SDE sampling process described in Eq.~\ref{eq:reverse_sde}. 
+Notably, this approach is orthogonal to inference-time scaling, and \Ours{} can be additionally utilized to further enhance performance. 
+In the next section, we experimentally demonstrate that \Ours{} can be effectively integrated with gradient-based guidance. 
+
+\subsubsection{Aesthetic Image Generation Results}
+% In this section, we show that \Ours{} can also be applied to the case when the reward is differentiable by plugging the gradient-based guidance introduced in Eq.~\ref{eq:differentiable_score} to SDE sampling process in Eq.~\ref{eq:reverse_sde}. 
+The aesthetic image generation task aims to sample images that best capture human preferences, such as visual appeal. We use $45$ animal prompts from previous work, DDPO~\cite{Black2024:DDPO}. The aesthetic score~\cite{Schuhmann:aesthetics} serves as the given reward, while ImageReward~\cite{Xu2023:ImageReward} is used as the held-out reward. 
+
+We present quantitative and qualitative results of aesthetic image generation in Tab.~\ref{tab:aesthetic} and Fig.~\ref{fig:aesthetic}. Notably, \Ours{}, implemented with DPS~\cite{Chung:2023DPS}, achieves significant improvements on both the given and held-out rewards, even surpassing SVDD~\cite{Li2024:SVDD}. Qualitatively, \Ours{} effectively adapts the pretrained flow model to better align with human preferences, particularly in terms of visual appeal.  
+
+\input{Tables/diffusion_flow}
+\subsection{Comparison of Diffusion and Flow Models}
+\label{sec:appendix_diff_flow}
+We present quantitative comparisons between text-to-image diffusion and flow models in Tab.~\ref{tab:appendix_diff_flow}, using compositional text prompts from GenAI-Bench~\cite{Jiang:2024GenAI}.
+As shown, flow-based models outperform diffusion models across all evaluation metrics assessing image quality~\cite{Xu2023:ImageReward, Wu2023:hps, Kirstain2023:pickapic} and text alignment~\cite{radford2021:CLIP, Xu2023:ImageReward}. In the flow-based models, FLUX~\cite{BlackForestLabs:2024Flux} achieves competitive performance while requiring fewer steps compared to Stable Diffusion 3~\cite{Esser2403:scaling}. 
+% We present quantitative comparisons between text-to-image diffusion and flow models in Tab.~\ref{tab:appendix_diff_flow}. 
+% As shown in the table, flow-based models outperform diffusion models across all evaluation metrics assessing image quality~\cite{Xu2023:ImageReward, Wu2023:hps, Kirstain2023:pickapic} and text-alignment~\cite{radford2021:CLIP}. 
+% For the flow-based models, FLUX~\cite{BlackForestLabs:2024Flux} achieves competitive performance while requiring fewer NFEs than Stable Diffusion 3~\cite{Esser2403:scaling}. 
+
+\subsection{Scaling Behavior Comparison}
+As discussed in Sec.~\ref{sec:method}, expanding the exploration space and applying budget forcing significantly enhance the efficiency of \Ours{}, leading to superior performance improvements over BoN. 
+Here, we compare the scaling behavior of BoN, a representative Linear-ODE-based method, with \Ours{} across different numbers of function evaluations (NFEs). 
+
+We report qualitative and quantitative scaling results for quantity-aware image generation (Fig.~\ref{fig:appendix_nfe_scaling}, Tab.~\ref{tab:appendx_counting_nfe}) and for compositional text-to-image generation (Fig.~\ref{fig:composition_nfe_scaling_plot}, Tab.~\ref{tab:composition_nfe_scaling}), respectively.
+% 
+Our results indicate that allocating more compute leads to performance improvements for both BoN and \Ours{}. 
+% 
+However, the performance of BoN plateaus after $300$ NFEs, whereas \Ours{} continues to scale and achieves the highest reward in both tasks.  
+Notably, \Ours{} shows similar trend in the held-out reward, outperforming BoN and demonstrating its efficiency. 
+
+\input{Figures/scaling/NFE_scaling}
+
+
+% \begin{wraptable}{r}{0.54\textwidth}
+%     \centering
+%     \vspace{-1.5em}
+%     \scriptsize
+%     \caption{
+%         \textbf{Inference cost comparison.} 
+%         We denote \( S \) as the number of denoising steps, \( N \) as the NFE budget, and \( c_d \) and \( c_v \) as the costs of denoising and verification, respectively.
+%     }
+%     \label{tab:inference_cost}
+%     \newcolumntype{X}{>{\centering\arraybackslash}m{0.23\linewidth}}
+%     \newcolumntype{Z}{>{\centering\arraybackslash}m{0.24\linewidth}}
+%     \newcolumntype{Y}{>{\centering\arraybackslash}m{0.09\linewidth}}
+%     \vspace{-0.3em}
+%     \renewcommand{\arraystretch}{1.15}
+%     % \setlength{\tabcolsep}{6pt}
+%     % \begin{tabular}{X X}
+%     %     \toprule
+%     %     Method & Inference Cost \\
+%     %     \midrule
+%     %     Base & $S \cdot c_d$ \\
+%     %     BoN & $N \cdot c_d + \frac{N}{S} \cdot c_v$ \\
+%     %     SMC & $N \cdot c_d + N \cdot c_v$ \\
+%     %     \Ours{}, SVDD & $N \cdot c_d + N \cdot c_v$ \\
+%     %     \bottomrule
+%     % \end{tabular}
+%     \begin{tabular}{Y Z X X}
+%     \toprule
+%     Base & BoN & SMC~\cite{Kim:2025DAS} & SVDD~\cite{Li2024:SVDD}, \Ours{} \\
+%     \midrule
+%     $S \cdot c_d$
+%     & $N \cdot c_d + \frac{N}{S} \cdot c_v$
+%     & $N \cdot c_d + N \cdot c_v$
+%     & $N \cdot c_d + N \cdot c_v$ \\
+%     \bottomrule
+%     \end{tabular}
+%     \vspace{-0.3em}
+% \end{wraptable}
+
+% \begin{wraptable}{r}{0.54\textwidth}
+%     \centering
+%     \vspace{-0.3em}
+%     \scriptsize
+%     \caption{
+%         \Jaihoon{TODO}
+%     }
+%     \label{tab:runtime_rbf}
+%     \newcolumntype{X}{>{\centering\arraybackslash}m{0.12\linewidth}}
+%     \newcolumntype{Z}{>{\centering\arraybackslash}m{0.08\linewidth}}
+%     \newcolumntype{Y}{>{\centering\arraybackslash}m{0.09\linewidth}}
+%     \vspace{-0.3em}
+%     \renewcommand{\arraystretch}{1.15}
+%     \begin{tabularx}{\linewidth}{X | Z Z Z Z Z}
+%         \toprule
+%         & 50 & 100 & 300 & 500 & 1000 \\
+%         \midrule
+%         Runtime & 84.00 & 140.11 & 383.89 & 635.01 & 1243.68 \\
+%         VQAScore~\cite{Lin:2024CLIPFlanT5} & 0.858 & 0.882 & 0.915 & 0.925 & 0.928 \\
+%         \bottomrule
+%     \end{tabularx}
+%     \vspace{-1.5em}
+% \end{wraptable}
+
+
+
+\input{Tables/time_complexity}
+\paragraph{Time Complexity and Compute Analysis.}
+We present time complexity of scaling methods in Tab.~\ref{tab:inference_cost}. 
+% 
+Let $S$ as the number of denoising steps, $N$ as the NFE budget, and $c_s$ and $c_v$ as the costs of the denoising and verification, respectively. 
+% 
+Since all methods share the same NFE budget $N$, the total denoising cost is fixed at $N \cdot c_d$. 
+% 
+For the verification cost, although BoN has the lowest cost, \Ours{} consistently outperforms BoN across all NFE budget regimes in both compositional text-to-image generation and quantity-aware image generation tasks (Fig.~\ref{fig:appendix_nfe_scaling} and Fig.~\ref{fig:composition_nfe_scaling_plot}) while incurring only a marginal increase in verification overhead.
+
+
+Additionally, at inference time, a user can specify the compute budget (NFEs), which determines the total runtime of our method. We report the runtime of \Ours{} in Tab.~\ref{tab:runtime_rbf}. Under a $500$-NFE budget, scaling for compositional text-to-image generation (VQAScore~\cite{Lin:2024CLIPFlanT5}) requires $635.01$ seconds per image. 
+Runtime can be reduced by lowering the NFE budget—at the cost of reward performance—and further accelerated by decreasing output resolution or increasing batch size. 
+
+
+
+For all experiments, we use FLUX~\cite{BlackForestLabs:2024Flux}, which requires approximately $32$GB of GPU memory, accounting for the majority of overall memory usage. 
+All evaluations are performed on an NVIDIA RTX~A6000 GPU.
+
+
+
+% ------------------------------------------------------------------------------------
+
+
+\section{Implementation Details}
+\label{sec:appendix_impl_details}
+
+\input{Tables/hyperparameters}
+\subsection{Choice of Hyperparameters}
+We report quantitative results on aesthetic score~\cite{Schuhmann:aesthetics} and diversity~\cite{Kim:2025DAS} for images generated under different settings of the number of denoising steps and the diffusion coefficient. 
+% 
+As shown in Tab.~\ref{tab:hyperparams}(a), the number of denoising steps beyond $10$ gives marginal gains. 
+Hence, we fixed the number of denoising steps to $10$ to ensure fair and efficient evaluation across all methods. Note that once the number of denoising steps is fixed, the total particle count per step is automatically determined by dividing the total NFE budget by the number of steps. 
+% 
+Additionally, Tab.~\ref{tab:hyperparams}(b) reports results obtained under varying diffusion coefficients scaled by different norms. 
+% 
+We found that using $g(t) = 3t^2$ consistently offered the best trade-off between sample diversity and output fidelity, so we adopt this setting for all SDE sampling. 
+
+
+\subsection{Compositional Text-to-Image Generation}
+In the compositional text-to-image generation task, we use the VQAScore as the reward, which evaluates image-text alignment using a visual question-answering (VQA) model (CLIP-FlanT5~\cite{Lin:2024CLIPFlanT5} and InstructBLIP~\cite{Dai:2023InstructBLIP}). Specifically, VQAScore measures the probability that a given attribute or object is present in the generated image. To compute the reward, we scale the probability value by setting $\beta=0.1$ in Eq.~\ref{eq:optimal_policy}. 
+
+\subsection{Quantity-Aware Image Generation}
+In quantity-aware image generation, text prompts specify objects along with their respective quantities. To generate images that accurately match the specified object counts, we use the negation of the Residual Sum of Squares (RSS) as the given reward. 
+Here, RSS is computed to measure the discrepancy between the detected object count $\hat{C}_i$ and the target object count $C_i$ in the text prompt: $\text{RSS} = \sum_{i=1}^{n} \left( C_i - \hat{C}_i \right)^2$,
+where $n$ is the total number of object categories in the prompt. 
+We additionally report accuracy, which is defined as $1$ when $\text{RSS} = 0$ and $0$ otherwise. 
+For the held-out reward, we report VQAScore measured with CLIP-FlanT5~\cite{Lin:2024CLIPFlanT5} model. 
+
+\paragraph{Object Detection Implementation Details.} 
+To compute the given reward, RSS, it is necessary to detect the number of objects per category, $\hat{C}_i$. Here, we leverage the state-of-the-art object detection model, GroundingDINO~\cite{Liu:2024GroundingDINO} and the object segmentation model SAM~\cite{Kirillov2023:SAM}, which is specifically used to filter out duplicate detections. 
+
+We observe that na\"ively using the detection model~\cite{Liu:2024GroundingDINO} to compute RSS leads to poor detection accuracy due to two key issues: inner-class duplication and cross-class duplication.
+Inner-class duplication occurs when multiple detections are assigned to the same object within a category, leading to overcounting. This often happens when an object is detected both individually and as part of a larger group.
+Cross-class duplication arises when an object is assigned to multiple categories due to shared characteristics (\eg, a toy airplane being classified as both a toy and an airplane), making it difficult to assign it to a single category. 
+
+To address inner-class duplication, we refine the object bounding boxes detected by GroundingDINO~\cite{Liu:2024GroundingDINO} using SAM~\cite{Kirillov2023:SAM} and filter out overlapping detections. Smaller bounding boxes are prioritized, and larger ones that significantly overlap with existing detections are discarded. This ensures that each object is counted only once within its category.
+To resolve cross-class duplication, we assign each object to the category with the highest GroundingDINO~\cite{Liu:2024GroundingDINO} confidence score which prevents duplicate counting across multiple classes. 
+
+% A biology textbook by JS.... lol
+% Inner-class duplication occurs when a bounding box encompasses multiple objects of the same class. For example, if two bananas are placed side by side, the detection model may generate separate bounding boxes for each banana while also producing an additional box that encloses both. As a result, a naive count of the bounding boxes would be three, even though there are only two bananas.
+
+% To address the inner-class duplication problem, we employed SAM~\cite{Kirillov2023:SAM} to obtain precise object masks and filter bounding boxes to ensure each object is counted only once. Since bounding boxes covering multiple objects tend to have larger masks than those for individual objects, we sorted the bounding boxes by mask area, from smallest to largest. We then accumulated the tight masks sequentially, rejecting any new mask that significantly overlapped with the previously masked regions. This approach effectively mitigated inner-class duplication.
+
+% Another challenge, cross-class duplication, occurs when the same object is counted under multiple classes. For example, a toy airplane might be classified as both a toy and an airplane, leading to double counting. This issue cannot be resolved simply by using tight masks, as it requires correctly assigning objects to their appropriate categories. Consider a scenario where a prompt includes the classes chickens and birds---while a chicken is biologically a bird, it should only be counted under the chicken class, not the broader bird category.
+
+% To address this issue, we assigned each object to a specific class based on the GroundingDINO~\cite{Liu:2024GroundingDINO} score, selecting the class with the highest score over the majority of the object's area. Unlike before, we now accumulate masks separately for each class, storing the highest score for each pixel across all classes. By keeping only the bounding boxes where the majority of the area corresponds to the highest-scoring class, we ensure that each object is assigned to a single category, effectively eliminating cross-class duplication. 
+
+
+
+
+
+
+
+\begin{center}
+    \hfill \break
+    \textbf{More qualitative results are presented in the following pages.}
+\end{center}
+
+\clearpage
+\newpage
+
+\section{Additional Qualitative Results}
+\subsection{Comparisons of Inference-Time SDE Conversion and Interpolant Conversion}
+\label{sec:appendix_quali_ode_sde_vp}
+\input{Figures/ode-sde-vpsde/appendix}
+
+\clearpage
+\newpage
+\subsection{Comparisons of Inference-Time Scaling}
+\label{sec:appendix_quali_search_alg}
+\input{Figures/compositional_generation/compositional_generation_appendix}
+\input{Figures/counting_generation/appendix_counting_method}
+
+\clearpage
+\newpage

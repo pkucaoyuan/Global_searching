@@ -1,0 +1,1417 @@
+\documentclass{article}
+
+
+% if you need to pass options to natbib, use, e.g.:
+%     \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading neurips_2025
+
+
+% ready for submission
+% \usepackage{neurips_2025} %%%%%%%%%%%%%%%%%% TODO: SWITCH TO THIS BEFORE SUBMISSION. %%%%%%%%%%%%%%%%%%
+
+
+% to compile a preprint version, e.g., for submission to arXiv, add add the
+% [preprint] option:
+%     \usepackage[preprint]{neurips_2025}
+
+
+% to compile a camera-ready version, add the [final] option, e.g.:
+    \usepackage[final]{neurips_2025}
+
+
+% to avoid loading the natbib package, add option nonatbib:
+%    \usepackage[nonatbib]{neurips_2025}
+
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+% \usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{xcolor}         % colors
+
+\usepackage{graphicx}
+\usepackage{animate}
+
+\newlength{\mylength}
+\makeatletter
+\newcommand{\mycfs}[1]{%
+  \normalsize
+  \@defaultunits\mylength=#1pt\relax\@nnil
+  \edef\@tempa{{\strip@pt\mylength}}%
+  \ifx\protect\@typeset@protect
+     \edef\@currsize{\noexpand\mycfs\@tempa}% store calculated size
+  \fi
+  \mylength=1.2\mylength
+  \edef\@tempa{\@tempa{\strip@pt\mylength}}%
+  % \@tempa
+  \expandafter\fontsize\@tempa
+  \selectfont
+}
+\makeatother
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to LaTeX to determine where to break the
+% lines. Using \AND forces a line break at that point. So, if LaTeX puts 3 of 4
+% authors names on the first line, and the last on the second line, try using
+% \AND instead of \And before the third author name.
+
+
+\author{%
+  Vignav Ramesh \\
+  Harvard University \\
+  \texttt{vignavramesh@college.harvard.edu}
+  \And
+  Morteza Mardani \\
+  NVIDIA \\
+  \texttt{mmardani@nvidia.com}
+}
+
+
+\usepackage{theorem}
+\usepackage{float}
+\usepackage[normalem]{ulem}
+
+%\newcommand{\BlackBox}{\rule{1.5ex}{1.5ex}}  % end of proof
+%\newenvironment{proof}{\par\noindent{\bf Proof\ }}{\hfill\BlackBox\\[2mm]}
+% \newtheorem*{proof}{Proof}
+\newcommand{\BlackBox}{\rule{1.5ex}{1.5ex}}  % end of proof
+\newenvironment{proof}{\par\noindent{\bf Proof\ }}{\hfill\BlackBox\\[2mm]}
+%\newtheorem{proof}{Proof}
+\newtheorem{example}{Example}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{assumption}{Assumption}
+\newtheorem{proposition}{Proposition}
+\newtheorem{remark}{Remark}
+\newtheorem{corollary}{Corollary}
+\newtheorem{conjecture}{Conjecture}
+\newtheorem{axiom}{Axiom}
+\newtheorem{definition}{Definition}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage[colorlinks=true]{hyperref}
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{bm}
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{xcolor}         % colors
+\usepackage{amsmath,amssymb}
+\usepackage[capitalize,noabbrev]{cleveref}
+\crefname{equation}{Eq.}{Eqs.}
+\crefname{section}{Sec.}{Sec.}
+\crefname{figure}{Fig.}{Fig.}
+\newcommand{\rasool}[1][]{\textcolor{teal}{[RF: #1 ]}} 
+\definecolor{darkBlue}{RGB}{10,50,220}
+
+\hypersetup{
+	colorlinks=true,
+	linkcolor=darkBlue,
+	filecolor=magenta,      
+	urlcolor=cyan,
+	citecolor=magenta,
+}
+
+\usepackage{tikz}
+
+\usepackage{algorithm}
+\usepackage{algpseudocode} 
+\usetikzlibrary{arrows.meta, positioning}
+
+% Define custom commands
+\newcommand{\calN}{\mathcal{N}} % For Gaussian distribution
+\newcommand{\matI}{\mathbf{I}}   % For Identity matrix
+
+%first option
+\title{Test-Time Scaling of Diffusion Models via Noise Trajectory Search}
+
+%second option
+%\title{Adaptive Noise Trajectory Search: \\A New Frontier for Diffusion Model Test-Time Scaling}
+
+\newcommand{\x}{\mathbf{x}}
+\newcommand{\N}{\mathcal{N}}
+
+\usepackage{titletoc}
+
+% \usepackage[notitles]{minitoc}
+% \renewcommand \thepart{}
+% \renewcommand \partname{}
+% \mtcsetrules{parttoc}{off}
+
+\begin{document}
+
+% \doparttoc % Tell to minitoc to generate a toc for the parts
+% \faketableofcontents % Run a fake tableofcontents command for the partocs
+
+
+\maketitle
+
+
+\begin{abstract}
+%
+The iterative and stochastic nature of diffusion models enables \textit{test-time scaling}, whereby spending additional compute during denoising generates higher-fidelity samples. Increasing the number of denoising steps is the primary scaling axis, but this yields quickly diminishing returns. Instead, optimizing the \textit{noise trajectory}—the sequence of injected noise vectors—is promising, as the specific noise realizations critically affect sample quality; but this is challenging due to a high-dimensional search space, complex noise-outcome interactions, and costly trajectory evaluations. We address this by first casting diffusion as a Markov Decision Process (MDP) with a terminal reward, showing tree-search methods such as Monte Carlo tree search (MCTS) to be meaningful but impractical. To balance performance and efficiency, we then resort to a relaxation of MDP, where we view denoising as a sequence of independent \textit{contextual bandits}. This allows us to introduce an $\epsilon$-greedy search algorithm that \textit{globally explores} at extreme timesteps and \textit{locally exploits} during the intermediate steps where de-mixing occurs. Experiments on EDM and Stable Diffusion reveal state-of-the-art scores for class-conditioned/text-to-image generation, exceeding baselines by up to $164\%$ and matching/exceeding MCTS performance. To our knowledge, this is the first practical method for test-time noise \textit{trajectory} optimization of \textit{arbitrary (non-differentiable)} rewards. 
+
+\end{abstract}
+
+% \vspace{-1cm}
+
+
+% \part{} % Start the document part
+% % \parttoc % Insert the document TOC
+
+
+\section{Introduction}
+\label{introduction}
+%
+Diffusion models have emerged as the de-facto standard for generative modeling of visual and, more recently, language data~\citep{ho2020denoisingdiffusionprobabilisticmodels, sohldickstein2015deepunsupervisedlearningusing,nie2025largelanguagediffusionmodels}. A notable property of these models is their \textit{test-time scaling}: the iterative and stochastic nature of the generation process allows for enhanced sample quality by allocating additional computational resources during inference. A primary strategy for leveraging this has been to increase the number of \textit{denoising steps}. However, empirical observations indicate that performance gains from more denoising steps typically plateau after a few dozen iterations~\citep{karras2022elucidatingdesignspacediffusionbased, song2022denoisingdiffusionimplicitmodels, song2021scorebasedgenerativemodelingstochastic}.
+
+% Diffusion models \citep{ho2020denoisingdiffusionprobabilisticmodels, sohldickstein2015deepunsupervisedlearningusing} have emerged as the de facto standard for generative modeling in continuous data domains. One remarkable property of diffusion models is their innate flexibility to allocate varied compute at inference time for the same task, via scaling up the number of these \textit{denoising steps}. However, empirical observations suggest that the performance gains from increased denoising steps plateau after a few dozen \citep{karras2022elucidatingdesignspacediffusionbased, song2022denoisingdiffusionimplicitmodels, song2021scorebasedgenerativemodelingstochastic}.
+
+The diminishing returns from merely increasing denoising steps motivate exploring alternative test-time optimizations. Optimizing the \textit{noise trajectory} itself is a promising direction. Diffusion models iteratively transform an initial noise distribution towards a target data distribution via a stochastic process (often a stochastic differential equation (SDE)), where sequentially introduced fresh noise instances define a random path. 
+% A denoiser concurrently learns to reverse the noise added at each step. 
+The characteristics of these injected noises, forming the \textit{noise trajectory}, are crucial to sample quality.
+
+Recent studies show that injected noises are not equally effective; specific noise realizations can produce higher fidelity samples, with certain noises better suited for different objectives~\citep{qi2024noisescreatedequallydiffusionnoise, ahn2024noiseworthdiffusionguidance}. However, optimizing this \textit{noise trajectory} is challenging: the search space is vast, the noise affects the generation intricately, and evaluating entire trajectories is often computationally prohibitive.
+
+Recent works have explored this noise search; notably, \citet{ma2025inferencetimescalingdiffusionmodels} explores a zero-order \textit{local} search of candidates for the initial noise in ODE-based diffusion sampling. However, \textit{no work as of yet} has explored higher-order search over the \textit{entire} noise trajectory for SDE-based diffusion models.
+
+To develop a framework for finding the optimal trajectory of noise over $T$ denoising steps, we first frame the diffusion sampling process as a $T$-step Markov decision process (MDP) with a terminal reward that is generally non-differentiable. This allows us to explore sophisticated tree search algorithms including a Monte Carlo tree search (MCTS) over the denoising tree; however, MCTS---while a pseudo-upper bound on performance in its approximation of an exhaustive search over the denoising tree---is limited to a pre-selected set of noise candidates per timestep, and is quite computationally expensive (\autoref{tab:nfes}).
+
+To address this, we introduce a \textit{relaxation} of the aforementioned MDP by formulating each of the $T$ denoising steps as an independent contextual bandit problem. This approximation, which disregards inter-step dependencies inherent in the full MDP, enables more computationally tractable search strategies. Within this bandit framework, we propose a $\epsilon$-greedy variant of zero-order search. This method is designed to strike an effective balance between \textit{global exploration} of the noise space, particularly at extreme (initial and final) timesteps, and more focused \textit{local exploration} during the critical intermediate denoising steps where demixing and mode selection occur predominantly~\citep{karras2022elucidatingdesignspacediffusionbased, hang2024improvednoiseschedulediffusion, wang2025closerlooktimesteps}.
+
+\begin{figure}[t]
+    \centering
+    % Make sure 'tree.png' is in the same directory as your .tex file, or provide the correct path.
+    \includegraphics[width=\linewidth]{tree.png} 
+    \caption{\small (\textit{Left}) Implicit denoising tree traversed by search algorithms. (\textit{Right}) Visualization of local search in noise space to maximize reward at a single timestep ${t}$.}
+    \label{fig:tree_search_noise}
+\end{figure}
+
+We evaluate our proposed test-time scaling approach on the Elucidated Diffusion Model (EDM) \citep{karras2022elucidatingdesignspacediffusionbased} for class-conditional image generation (on ImageNet) and Stable Diffusion \citep{rombach2022highresolutionimagesynthesislatent} for text-to-image generation. Our experiments employ task-specific, generally non-differentiable rewards, e.g. a classifier-based reward for EDM to measure class adherence, and CLIP score to assess prompt-image alignment for Stable Diffusion. In both cases, our $\epsilon$-greedy noise trajectory search method achieves state-of-the-art generation quality. It significantly outperforms established baselines, including zero-order search~\citep{ma2025inferencetimescalingdiffusionmodels}, rejection sampling~\citep{chatterjee2017samplesizerequiredimportance}, and beam search~\citep{fernandes2025latentbeamdiffusionmodels}. Notably, our computationally efficient approach matches and exceeds MCTS, demonstrating its efficacy in navigating the noise trajectory search space.
+
+
+All in all, our key contributions are summarized as follows:
+%
+\begin{itemize}
+    \item We propose an effective \textbf{test-time} noise-trajectory search for diffusion models. Inspired by contextual bandits, it employs an $\epsilon$-greedy search to optimize \textit{arbitrary (non-differentiable) rewards} and \textit{empirically outperforms MCTS}.
+
+    \item We provide evidence and theoretical intuition that our $\epsilon$-greedy search algorithm \textbf{explores globally and exploits locally}. Notably, the search tends to be more local during middle diffusion steps where de-mixing occurs, and more global at large and small noise levels.
+
+    \item We perform extensive comparisons with alternative search algorithms, including zero-order search, best-of-$N$ sampling, beam search, and MCTS. These comparisons reveal the importance of adapting the search strategy (local vs. global) based on the diffusion step.
+
+    \item We demonstrate the efficacy of our method for noise optimization on \textbf{EDM} and \textbf{Stable Diffusion}. Under various rewards (e.g. classifier probability, VLM prompt-image alignment), our approach achieves up to \textbf{164\%} improvement in sample quality over vanilla generation.
+\end{itemize}
+
+
+
+
+\section{Related Work}
+\label{related_work}
+
+% \paragraph{Diffusion models} 
+% Diffusion models \citep{sohldickstein2015deepunsupervisedlearningusing, ho2020denoisingdiffusionprobabilisticmodels} and more generally flow-based models \citep{albergo2023buildingnormalizingflowsstochastic, lipman2023flowmatchinggenerativemodeling} are a family of generative models that learn to reverse the process of diffusing the data distribution $p_{\textrm{data}}(\x)$ into noise. 
+% Diffusion models have emerged as an effective class of generative models for modalities including images \citep{ramesh2021zeroshottexttoimagegeneration, saharia2022photorealistictexttoimagediffusionmodels}, videos \citep{ho2020denoisingdiffusionprobabilisticmodels, singer2022makeavideotexttovideogenerationtextvideo}, 3D shapes \citep{zhou20213dshapegenerationcompletion, zeng2022lionlatentpointdiffusion}, and robotic trajectories \citep{janner2022planningdiffusionflexiblebehavior, ajay2023conditionalgenerativemodelingneed, chi2024diffusionpolicyvisuomotorpolicy}. First proposed by \citep{sohldickstein2015deepunsupervisedlearningusing}, diffusion models were further developed for high-fidelity image generation by \citep{ho2020denoisingdiffusionprobabilisticmodels}, and generalized by \citep{song2021scorebasedgenerativemodelingstochastic} through the lens of SDEs. EDM \citep{karras2022elucidatingdesignspacediffusionbased} comprehensively studied the design space of Diffusion SDEs; in this paper, we follow their notation and build upon their derivations.
+
+
+% \paragraph{Diffusion models as sequential decision-making processes.} Although predating diffusion models,
+% \citet{bachman2015datagenerationsequentialdecision} posed data generation as a sequential decision-making problem
+% and used the resulting framework to apply reinforcement learning methods to image generation.
+% More recently, \citet{fan2023dpokreinforcementlearningfinetuning} and \citet{black2024trainingdiffusionmodelsreinforcement} posed the denoising process as a MDP and leveraged this formulation to train diffusion models via policy gradient methods. In this work, we adopt a similar MDP formulation, but also introduce an intermediate formulation of each denoising step as an independent continuous contextual bandit problem \citep{majzoubi2020efficientcontextualbanditscontinuous} that unlocks various test-time search algorithms such as beam search and ($\epsilon$-greedy) zero-order search.
+
+\paragraph{Reward optimization with diffusion models.} Several works have explored direct fine-tuning of diffusion models with reward functions or human preferences \citep{black2024trainingdiffusionmodelsreinforcement, domingoenrich2025adjointmatchingfinetuningflow,wallace2023diffusionmodelalignmentusing,wang2025diffusionnpo}. However, these approaches require expensive training and tie the model to a
+single reward. Alternatively, \citet{song2021scorebasedgenerativemodelingstochastic} and \citet{bansal2023universalguidancediffusionmodels} have explored reward gradient-based guidance; but this is limited to differentiable reward functions and continuous-state diffusion models. Therefore, steering arbitrary diffusion models at inference time with arbitrary rewards remains a challenge; our work addresses this with the implementation of more sophisticated step-level, gradient-free search algorithms used solely at inference time.
+
+\paragraph{Test-time scaling.} While test-time scaling has been predominantly explored for language models \citep{yao2023treethoughtsdeliberateproblem, muennighoff2025s1simpletesttimescaling}, recent work has begun to investigate test-time scaling behavior for diffusion. One means of investing more compute in diffusion model sampling is increasing the number of denoising steps; this generally leads to better generations, but
+with diminishing benefits, due to accumulation of approximation and discretization errors \citep{xu2023restartsamplingimprovinggenerative}.
+In this work, we fix the denoising steps and explore scaling along an orthogonal axis: compute devoted to searching for \textit{more favorable noise candidates} during the sampling process.
+
+Few past works have considered this search problem. \citet{ma2025inferencetimescalingdiffusionmodels} propose a framework for searching for optimal noise in diffusion model sampling, characterized by the choice of algorithm (e.g. best-of-$N$ search, zero-order search, and ``search over paths'') as well as reward function (e.g. FID \citep{heusel2018ganstrainedtimescaleupdate}, prompt-image embedding similarity \citep{radford2021learningtransferablevisualmodels, caron2021emergingpropertiesselfsupervisedvision}). However, all experiments are limited to the ODE formulation of diffusion models, which means that the mapping from the initial noise $\x_T$ to the clean sample $\x_0$ is entirely deterministic; that is, \citet{ma2025inferencetimescalingdiffusionmodels} only have to search over the choices for $\x_T$. In this work, we extend this to the SDE formulation and consider an exponentially larger search space: noise candidates at \textit{every denoising step}, $\{\mathbf{z}_t\}_{t=1}^T$. Hence this opens up an investigation of more sophisticated step‐level search algorithms (e.g. MCTS), which to our knowledge has \textit{never before been explored}.
+
+\cite{zhang2025tscendtesttimescalablemctsenhanced} propose T-SCEND, which sequentially performs best-of-$N$ random search and MCTS as denoising proceeds; however this paper does not truly implement standard MCTS as (1) at timestep $t$ they estimate reward by computing the predicted clean sample $\hat{\x}_0^{(t)}$ via Tweedie's formula \citep{tweedie} (which estimates the
+posterior mean $\mathbb{E}[\x_0 \mid \x_t, \mathbf{c}]$ from a noisy sample $\x_t$, see \autoref{tweedie}) rather than doing a complete rollout and then backpropagating reward on the true clean sample, making their method still a greedy search; and (2) their method performs best-of-$N$ search for the majority of denoising steps, only doing their ``MCTS'' for a small number ($\sim$$3$-$5$) of denoising steps near the very end of the sampling process. This version of MCTS can no longer be considered a true approximation of exhaustive tree search.
+
+% \citet{yeh2025trainingfreediffusionmodelalignment} propose Demon, a sampling strategy for SDE-based diffusion models where at each denoising step $t$, they: (1) sample $k$ noise candidates; (2) for each candidate, do a single sampling step to produce $\x_{t-\Delta}$; (3) run deterministic ODE denoising from $\x_{t-\Delta}$ to $\x_0$; (4) compute the reward on $\x_0$; and (5) do a final sampling step using the average of all $k$ noise candidate weighted by a function (e.g. $\tanh$) of the rewards. We view Demon as a variant of our beam search algorithm (Alg. \autoref{alg:beam}), where the application of Tweedie's formula is replaced with this weighted sum; importantly, Demon is still a form of greedy search and is restricted to Gaussian noise, whereas we implement algorithms such as MCTS, zero-order search, and $\epsilon$-greedy that outperform both beam search \textit{and Demon}.
+
+% \paragraph{Spending compute during denoising}
+
+
+
+
+\section{Background}
+\label{prelim}
+%
+\subsection{Diffusion Models} 
+%
+We consider conditional diffusion models that learn a distribution $p(\mathbf{x}_0\mid \mathbf{c})$ given data samples $\mathbf{x}_0$ and contexts $\mathbf{c}$. The continuous-time forward process gradually perturbs clean data $\mathbf{x}_0$ towards a noise distribution. This can be described by the stochastic differential equation (SDE):
+\begin{equation}
+d\mathbf{x}_t = \sqrt{2\sigma(t)\dot{\sigma}(t)} d\boldsymbol{\omega}_t,
+\label{eq:fwd_sde}
+\end{equation}
+where $\boldsymbol{\omega}_t$ is a standard Wiener process and $\sigma(t)$ is a monotonically increasing noise schedule with $\sigma(0)=0$. This process yields $\mathbf{x}_t \sim \calN(\mathbf{x}_0, \sigma(t)^2\matI)$. For a sufficiently large $\sigma(T)$ (e.g. $\sigma(T)=1$ for normalized data), the final distribution $p(\mathbf{x}_T \mid \mathbf{c}) \approx \calN(\mathbf{0}, \sigma(T)^2\matI)$.
+
+Sampling begins with drawing $\mathbf{x}_T \sim \calN(\mathbf{0}, \sigma(T)^2\matI)$ and then simulating the corresponding reverse time SDE to obtain a clean sample $\mathbf{x}_0$. This reverse process is given by:
+\begin{equation}
+d\mathbf{x}_t = -2\dot{\sigma}(t)\sigma(t)\nabla_{\mathbf{x}_t} \log p(\mathbf{x}_t\mid\sigma(t), \mathbf{c})dt + \sqrt{2\dot{\sigma}(t)\sigma(t)}d\bar{\boldsymbol{\omega}}_t,
+\label{eq:rev_sde}
+\end{equation}
+where $d\bar{\boldsymbol{\omega}}_t$ is a reverse-time Wiener process and $\dot{\sigma}(t) = d\sigma/dt$. The score function $\nabla_{\mathbf{x}_t} \log p(\mathbf{x}_t\mid\sigma(t), \mathbf{c})$ is approximated by a neural network $D_\theta(\mathbf{x}_t, \sigma(t), \mathbf{c})$.
+The choice of sampler, which discretizes Eq.~\eqref{eq:rev_sde}, is also crucial. In our experiments, we use either the EDM sampler (Alg. \ref{alg:edm_sampling}) \citep{karras2022elucidatingdesignspacediffusionbased} for class-conditional generation or the DDIM sampler (Alg. \ref{alg:ddim_sampling}) \citep{song2022denoisingdiffusionimplicitmodels} for text-to-image generation, enabling high-quality synthesis with few steps $T$ (e.g. $18$ for EDM, $50$ for DDIM).
+
+
+
+
+\subsection{From Markov Decision Processes to Contextual Bandits}
+\label{sec:mdps_to_bandits}
+%
+A Markov Decision Process (MDP) formalizes sequential decision-making problems. An MDP is defined by a tuple $(\mathcal{S}, \mathcal{A}, \rho_0, P, R)$, where $\mathcal{S}$ is the state space, $\mathcal{A}$ is the action space, $\rho_0$ is the initial state distribution, $P(\mathbf{s}_{t+1} \mid \mathbf{s}_t, \mathbf{a}_t)$ is the state transition probability kernel, and $R(\mathbf{s}_t, \mathbf{a}_t)$ is the reward function. At each timestep $t$, an agent observes a state $\mathbf{s}_t \in \mathcal{S}$, takes an action $\mathbf{a}_t \in \mathcal{A}$ according to its policy $\pi(\mathbf{a}_t \mid \mathbf{s}_t)$, receives a reward $r_t = R(\mathbf{s}_t, \mathbf{a}_t)$, and transitions to a new state $\mathbf{s}_{t+1} \sim P(\cdot \mid \mathbf{s}_t, \mathbf{a}_t)$.
+
+A continuous contextual bandit problem can be viewed as a specialized single-state, one-step MDP with a continuous action space. It is defined by a tuple $(\Phi, \mathcal{A}, \tilde{R})$, where $\Phi$ is the space of contexts, $\mathcal{A}$ is the continuous action space (shared with the definition of MDP), and $\tilde{R}$ is the reward function specific to the bandit setting. In each round $i$, the agent observes a context $\phi_i \in \Phi$ (analogous to an initial state $\mathbf{s}_0$ from $\rho_0$ in an MDP, but where contexts for different rounds are typically drawn independently). The agent then selects an action $\mathbf{a}_i \in \mathcal{A}$ based on its policy $\pi(\mathbf{a}_i \mid \phi_i)$ and immediately receives a reward $\tilde{r}_i = \tilde{R}(\phi_i, \mathbf{a}_i)$. 
+% Since actions do not influence future contexts within this formulation, the typical objective is to maximize the cumulative reward over $M$ rounds, $\sum_{i=1}^M \tilde{r}_i$.
+
+
+
+
+
+\section{Searching Over Noise Trajectories}
+\label{sec:searching_noise}
+%
+Standard diffusion samplers use random noise per reverse step. To optimize generation for a downstream reward $r(\mathbf{x}_0, \mathbf{c})$, we instead search for the optimal $T$-step noise trajectory $\mathbf{Z} := \begin{bmatrix}\mathbf{z}_T & \mathbf{z}_{T-1}& \cdots & \mathbf{z}_1\end{bmatrix}^\top$. Given an initial $\mathbf{x}_T \sim \calN(\mathbf{0}, \sigma(T)^2\matI)$, a pre-trained model $D_\theta$, context $\mathbf{c}$, and a chosen sampler, the map from $\mathbf{Z}$ to the final sample $\mathbf{x}_0(\mathbf{Z}, \mathbf{c}, \mathbf{x}_T)$ is deterministic. 
+
+The search space $\mathbf{Z} \in \mathbb{R}^{T \times d}$ (where $d$ is the noise dimension, i.e. $CHW$ where $C \times H \times W$ is the image resolution) is high-dimensional and unbounded; optimization typically explores specific regions or targeted deviations from standard Gaussian noise (Figure~\ref{fig:tree_search_noise}).
+
+\subsection{Diffusion as a Finite-Horizon MDP}
+
+To formalize this search, we cast the $T$-step reverse diffusion process (denoising steps indexed $t = T, \dots, 1$) as a Markov Decision Process (MDP) with a terminal reward:
+
+\begin{itemize}
+    \item \textbf{States:} $\mathbf{s}_t = (\mathbf{c}, \mathbf{x}_t, t)$, with $t \in \{T, \dots, 0\}$ indexing the reverse diffusion step.
+    \item \textbf{Actions:} $\mathbf{a}_t = \mathbf{z}_t$, the noise vector for $t \in \{T, \dots, 1\}$.
+    \item \textbf{Initial State:} $\mathbf{s}_T = (\mathbf{c}, \mathbf{x}_T, T)$, where $\mathbf{c} \sim p(\mathbf{c})$ and $\mathbf{x}_T \sim \calN(\mathbf{0}, \sigma(T)^2\matI)$.
+    \item \textbf{Transitions:} Deterministic. State $\mathbf{s}_t$ and action $\mathbf{a}_t=\mathbf{z}_t$ yield next state $\mathbf{s}_{t-1} = (\mathbf{c}, f(\mathbf{x}_t, t, \mathbf{c}, \mathbf{z}_t), t-1)$. The function $f$ is one step of the chosen sampler (e.g. lines 2-6 of Alg.~\ref{alg:edm_sampling}, lines  2-3 of Alg.~\ref{alg:ddim_sampling}) using $\mathbf{z}_t$ as the injected noise.
+    \item \textbf{Reward:} Terminal reward $R=r(\mathbf{x}_0, \mathbf{c})$ at state $\mathbf{s}_0$ (after action $\mathbf{a}_1$); zero otherwise. $r(\cdot,\cdot)$ evaluates the generated sample $\mathbf{x}_0$, potentially with respect to the conditioning $\mathbf{c}$.
+\end{itemize}
+
+Finding the optimal $\mathbf{Z}$ can be written as solving:
+\begin{equation}
+    \max_{\mathbf{Z} \in \mathbb{R}^{T \times d}} r(\mathbf{x}_0(\mathbf{Z}, \mathbf{c}, \mathbf{x}_T), \mathbf{c}),
+\label{eq:optimize_Z}
+\end{equation}
+where $\mathbf{x}_0(\mathbf{Z}, \mathbf{c}, \mathbf{x}_T)$ is the final sample generated using the noise sequence $\mathbf{Z}$.
+
+
+\subsection{Monte-Carlo Tree Search (MCTS)}
+%
+In this general formulation, the space of noise candidates $\textbf{Z} \in \mathbb{R}^{T \times d}$ is extremely large; hence, we first consider the simplification where we predecide a fixed set of $N$ noise candidates $\{\mathbf{z}_t^{(i)}\}_{i=1}^N$ for each timestep $t$. This gives rise to a ``denoising tree'' with depth $T$ and branching factor $N$ as shown in \autoref{fig:tree_search_noise}, where each node $\x_t$ is a latent in the sampling process and each edge is a noise candidate $\mathbf{z}_t^{(i)}$. Finding the best noise trajectory now corresponds to finding the best root-to-leaf path in this tree; hence, we can directly apply tree-search algorithms to this setting, including Monte Carlo tree search (MCTS) as detailed in Algorithm \autoref{alg:mcts}.
+
+MCTS approximates exhaustive search over the $N^T$ possible noise trajectories, with the approximation error going to $0$ as the number of simulations $S \to \infty$. Full MCTS though faces two key drawbacks: (1) it is extremely computationally expensive, with its number of function evaluations (NFEs)---i.e. number of forward passes through $D_\theta$---scaling \textit{quadratically} in the number of denoising steps $T$ (see \autoref{tab:nfes} for each sampling method's NFE formula); and (2) MCTS by definition is restricted to a fixed denoising tree, i.e. at each timestep $t$ we cannot explore ``noise space'' beyond the $N$ initially determined candidates. This is a critical issue, as the initial $N$ candidates are sampled uniformly from our prior (i.e., $\mathcal{N}(\mathbf{0},\sigma_t^2\mathbf{I})$)) as opposed to any higher-reward regions of noise space that might exist. In other words, we have no notion of importance sampling; we are allocating the entire computation cost of running MCTS to samples that in general, likely yield lower-than-optimal rewards \citep{chatterjee2017samplesizerequiredimportance}.
+
+To address these challenges, next we posit an alternative formulation of the denoising process that \textit{relaxes} the previous MDP.
+
+\subsection{Noise Search via Contextual Bandits}
+%
+Recall that the SDE diffusion formulation requires the injected noise samples at each timestep to be independent (and Normally distributed). Thus, if we assume independence of actions across timesteps, and ignore the impact of the action at timestep $t$ on the state at $t-1$, we can reformulate denoising as a sequence of $T$ independent continuous contextual bandit problems; at each timestep $t$, we have the bandit characterized by:
+$$\phi_i \triangleq (\mathbf{c},\x_t,t) \qquad {\mathbf{a}}_i \triangleq \mathbf{z}_t\qquad \tilde{R}(\phi_i, {\mathbf{a}}_i) \triangleq r\left(\hat{\mathbf{x}}_0^{(t)}\right)$$
+where $\hat{\mathbf{x}}_0^{(t)} = \mathbb{E}[\x_0\mid\x_t,\mathbf{z}_t,\mathbf{c}]$ is computed via Tweedie's formula.
+
+
+The ``sequence-of-bandits'' formulation for denoising introduces a key tradeoff. By ignoring interactions across steps (i.e., how $\mathbf{z}_t$ affects $\x_{t-1}$ which in turn informs the choice of $\mathbf{z}_{t-1}$), and computing reward on our time-$t$ predicted clean samples $\hat{\x}_0^{(t)}$ rather than our actual clean samples $\x_0$, we have a worse approximation of our original optimization problem; but we in turn have vastly more NFEs to spend on exploration at each timestep (i.e., those that were allocated to simulation/backpropagation in MCTS), and in particular can search over more of noise space than the fixed $N$ candidates we were previously limited to.
+
+\subsection{${\epsilon}$-greedy}
+
+Formally, with sequence-of-bandits denoising, we can explore ``greedy algorithms'' that attempt to independently solve at each timestep $t$:
+%
+\begin{equation}
+    \max_{\mathbf{z}_t \in \mathbb{R}^d} r(\hat{\x}_0^{(t)},\mathbf{c}), \quad \quad t=1,\ldots,T.
+\end{equation}
+%
+Inspired by the semi-uniform strategies originally proposed to approximately solve bandit problems \citep{slivkins2024introductionmultiarmedbandits}, including the original $\epsilon$-greedy bandit algorithm \citep{sutton1998reinforcement}, we introduce a novel sampling algorithm that is an $\epsilon$-contaminated version of zero-order search (henceforth simply ``$\epsilon$-greedy'' (Alg. \autoref{alg:epsgreedy}), where at each timestep $t$: (1) We start with a random Gaussian noise $\mathbf{p} \sim \mathcal{N}(\mathbf{0},\sigma_t^2\mathbf{I})$ as our \textit{pivot}. (2) We then find $N$ candidates $\{\mathbf{z}_t^{(i)}\}_{i=1}^N$, via the following procedure: with probability $\epsilon$, $\mathbf{z}_t^{(i)} \sim \mathcal{N}(\mathbf{0},\sigma_t^2\mathbf{I})$; else, we draw a random $\mathbf{z}_t^{(i)}$ from the pivot’s neighborhood ($\lambda\sqrt{2d}$-radius ball around $\mathbf{p}$). (3) We compute the clean sample predicted $\hat{\x}_0^{(i)}$ using Tweedie's formula using each candidate $\mathbf{z}_t^{(i)}$. (4) Finally, we score each clean sample, set the pivot to the noise candidate leading to the clean sample with the highest scoring, and repeat steps 1-3 $K-1$ times, finally setting $\mathbf{z}_t$ to the last value of $\mathbf{p}$.
+
+\begin{algorithm}[t]
+\caption{$\epsilon$-greedy noise search}
+\label{alg:epsgreedy}
+\begin{algorithmic}[1]
+\Require Discretization timesteps $T$, 
+         context (e.g. class label) $\mathbf{c}$,
+         learned denoising network $D_\theta$,
+         max. step size scaling factor $\lambda$, number of local search iterations $K$, branching factor (number of noise candidates) $N$, sampling step function $f$, mixture proportion $\epsilon$, reward function $r$, initial noise sample $\x_T$
+
+% \State \textbf{Sample} $\mathbf{p} \sim \mathcal{N}(\mathbf{0},\sigma_t^2\mathbf{I})$ 
+
+\For{$t = T$ \text{to} $1$}
+\vspace{1mm}
+
+    \textbf{Sample} $\mathbf{p} \sim \mathcal{N}(\mathbf{0},\sigma_t^2\mathbf{I})$ \textcolor{gray}{// pivot}
+
+    \For{$k=1$ \text{to} $K$}
+
+        $\forall$ $i = 1, \dots, N$ sample noise candidate $\mathbf{z}^{(i)}_t$ as follows: with probability $\epsilon$ sample $\mathbf{z}^{(i)}_t \sim \mathcal{N}(\mathbf{0},\sigma_t^2\mathbf{I})$, else let $\mathbf{z}^{(i)}_t = {\mathbf{u}\sqrt{2d}} \mathbf{z} + \mathbf{p}$ where $\mathbf{z} \sim \mathcal{N}(\mathbf{0},\mathbf{I}), \mathbf{u} \sim \textrm{Unif}(0,\lambda)$
+        
+        Set $\mathbf{p} = \mathbf{z}^{(i)}_t$ for $i$ s.t. one-step $\hat{\x}_0$ prediction using $\mathbf{z}^{(i)}_t$ attains highest score under $r$
+    
+    \EndFor
+
+    Set $\x_{t-1} = f(\x_t,t,\mathbf{c},\mathbf{p})$
+
+    
+\EndFor
+
+\State \textbf{return} $\x_0$
+\end{algorithmic}
+\end{algorithm}
+
+This simple change from the neighborhood in zero-order search to the $\epsilon$-contaminated mixture distribution $$\epsilon \mathcal{N}(\mathbf{0},\sigma_t^2\mathbf{I}) + (1-\epsilon)\mathcal{N}(\mathbf{p}, 2\lambda^2d\mathbf{I})$$ yields remarkable performance improvements, which we discuss in \autoref{experiments}. We also provide a theoretical formalization of our algorithm's effectiveness in \autoref{app:theory}.
+
+
+% \section{Experiments}
+% %
+% In all experiments, we adopt either the EDM sampler (Alg. \autoref{alg:edm_sampling}) \citep{karras2022elucidatingdesignspacediffusionbased} (for class-conditional generation) or DDIM sampler (Alg. \autoref{alg:ddim_sampling}) \citep{song2022denoisingdiffusionimplicitmodels} (for text-to-image generation) as it enables high-quality generation with low $T$ ($18$ in our experiments).
+
+
+\section{Experiments}
+\label{experiments}
+
+\subsection{Class-Conditional Image Generation}
+
+%
+To further elucidate our design choices, we start by presenting a \textit{design walk-through} for the \textbf{class-conditional ImageNet generation} task. We adopt EDM \citep{karras2022elucidatingdesignspacediffusionbased} pre-trained on ImageNet with resolution
+$64\times 64$ and perform sampling with the stochastic EDM sampler (Alg. \autoref{alg:edm_sampling}). The number of denoising steps is fixed to $18$. Unless otherwise specified, we use the classifier-free guidance $1.0$, focusing on the simple conditional generation task without guidance~\citep{ho2022classifierfreediffusionguidance} .
+
+\subsubsection{Baselines}
+
+As baselines, we consider the following algorithms (see details in \autoref{app:baselines}):
+
+\textbf{Rejection (best-of-$\bm{N}$) sampling \citep{chatterjee2017samplesizerequiredimportance}.} We randomly sample $N$ root-to-leaf paths of the \textit{denoising tree}, and choose the path that produces $\x_0$ with the highest reward.
+
+\textbf{Beam search \citep{fernandes2025latentbeamdiffusionmodels}.} We start at the root and at each node $\x_t$, traverse the edge to the child $\x_{t-1}^{(j)}$ whose corresponding $\hat{\x}_0^{(t-1)}$ (obtained via Tweedie's formula \citep{tweedie}) has the highest reward.
+
+\textbf{Zero-order search \citep{ma2025inferencetimescalingdiffusionmodels}.} At each timestep, we start with a random pivot and hill-climb with step size scaling factor $\lambda$ for $K$ iterations, greedily selecting the best candidate at each iteration. This can be seen as $\epsilon$-greedy with $\epsilon=0$, and thus no global exploration.
+
+
+\subsubsection{Rewards}
+%
+We consider the following reward functions:
+
+
+
+
+
+% \citet{dhariwal2021diffusionmodelsbeatgans} train these classifiers on the same noising distribution as their corresponding diffusion model (note this is different from EDM noising distributions), and also add random crops to reduce overfitting.
+
+\textbf{Brightness.} We compute the $[0,1]$-normalized luminance formula for perceived brightness, defined for an RGB image as $0.2126R + 0.7152G + 0.0722B$.
+
+\textbf{Compressibility.} Following \citet{black2024trainingdiffusionmodelsreinforcement}, we calculate the number of bytes $b$ of the maximally-compressed JPEG encoding of the generated images and then bound this in $[0,1]$-range via the formula $1 - \frac{b_{\textrm{max}}-b}{b}$, where $b_{\textrm{max}}=3000$ is manually set based on empirical observations of $50$ compressed real ImageNet images. Note that since we fix the resolution of diffusion model samples at $64\times 64$, the file size is determined
+solely by the compressibility of the image.
+
+\textbf{Class probability under ImageNet classifier.}~We adopt the ImageNet-1k \(64\times64\) classifier of \citet{dhariwal2021diffusionmodelsbeatgans} for classifier-guided diffusion. For each generated image–label pair, the reward is the classifier’s probability assigned to the ground-truth class. The classifier is the downsampling trunk of a U-Net, with an attention pool at the \(8\times8\) layer producing the final logits.
+\subsubsection{Results}
+\label{sec:results}
+
+\autoref{tab:edmresults} displays class-conditional image generation results. We discuss key observations below:
+
+\begin{table}
+  \centering
+  \caption{\small \textbf{EDM results by sampling method.} Each value in columns 2-4 is obtained by generating $36$ images given random ImageNet class labels. The column header denotes the reward used both to score the final images and during sampling if applicable. We set $\lambda=0.15$ and $\epsilon=0.4$. Note that we measure distance as $\|\mathbf{z}_t^{(i)}-\mathbf{p}\|_F$, hence let $\lambda$ a scaling factor applied to $\mathbb{E}_{\mathbf{x},\mathbf{y}\sim\mathcal{N}(0,1)^d}\left[\|\mathbf{x}-\mathbf{y}\|_F\right]\approx \sqrt{2d}$ (where $\|\cdot\|_F$ is the Frobenius norm. Re. notation, $N$ is branching factor, $B$ is beam width, $S$ is number of MCTS simulations, and $K$ is the number of local search iterations. Generating each sample took $<$$1$ second for naive sampling (the lowest-compute method) and $<$1 minute for MCTS (the highest-compute method) on a single A100 (40GB). We provide error bars for each reward and sampling method, computed as the standard deviation of scores for a given prompt over $20$ generations with variability from randomness of the noise draws.}
+  \label{tab:edmresults}
+  
+  \begin{tabular}{lcccc}
+    \toprule
+    \textbf{Method} & \textbf{Brightness} & \textbf{Compressibility} & \textbf{Classifier} & \textbf{NFEs} \\
+    \midrule
+    Naive Sampling & $0.4965${\mycfs{8.5}$\pm 0.01$} & $0.3563${\mycfs{8.5}$\pm 0.07$} & $0.3778${\mycfs{8.5}$\pm 0.04$} & $18$\\
+    Best of $4$ Sampling & $0.5767${\mycfs{8.5}$\pm 0.01$} & $0.4220${\mycfs{8.5}$\pm 0.02$} & $0.5461${\mycfs{8.5}$\pm 0.00$} & $72$\\
+    Beam Search ($N=4,B=2$) & $0.6334${\mycfs{8.5}$\pm 0.02$} & $0.4679${\mycfs{8.5}$\pm 0.05$} & $0.5536${\mycfs{8.5}$\pm 0.02$} & $144$\\
+    {MCTS} $(N=4,S=8)$ & {${0.7575}$}{\mycfs{8.5}$\pm 0.02$} & {${0.5395}$}{\mycfs{8.5}$\pm 0.04$} & {${0.9666}$}{\mycfs{8.5}$\pm 0.03$} & $3888$\\
+    Zero-Order Search $(N=4,K=20)$ & $0.6083${\mycfs{8.5}$\pm 0.01$} & $0.3751${\mycfs{8.5}$\pm 0.02$} & $0.6261${\mycfs{8.5}$\pm 0.04$} & $1440$\\
+    $\bm{\epsilon}$\textbf{-greedy} ${(N=4,K=20)}$ & $\mathbf{0.9813}${\mycfs{8.5}$\pm 0.01$} & $\mathbf{0.7208}${\mycfs{8.5}$\pm 0.03$} & $\mathbf{0.9885}${\mycfs{8.5}$\pm 0.04$} & $1440$\\
+    \bottomrule
+  \end{tabular}
+  
+\end{table}
+
+
+\paragraph{MCTS as an approximate upper bound.} Recall that rejection sampling, beam search, and MCTS are all methods to choose a \textit{root-to-leaf} path in a fixed denoising tree. Beam search, by virtue of greedily selecting the best noise candidate at each timestep independently, fails to consider interactions across trajectories; and rejection sampling, while considering trajectories as a whole, explores a very small number of them. (Indeed, rejection sampling faces the same issue as MCTS whereby we have no notion of importance sampling---we are allocating all computation to $N$ trajectories that, in general, likely yield lower-than-optimal rewards \citep{chatterjee2017samplesizerequiredimportance}; but this issue is far more pronounced for rejection sampling due to the limited number of trajectories seen during sampling).
+
+MCTS solves for these drawbacks by approximating exhaustive search over the $N^T$ possible root-to-leaf paths in the tree, with the approximation error going to $0$ as the number of simulations $S \to \infty$. We indeed see this in \autoref{tab:edmresults}: rejection sampling and beam search beat naive sampling across all reward functions; but excluding zero-order search, \textit{MCTS is best across the board, as expected}.
+
+\paragraph{Leaving the denoising tree.} Importantly, recall that rejection sampling, beam search, and MCTS all optimize a \textit{fixed} denoising tree, i.e. at each timestep $t$ we cannot explore ``noise space'' beyond the $N$ initially determined candidates. Zero-order search and $\epsilon$-greedy address this, with the amount of exploration in noise space dictated by the number of local search iterations $K$, the maximum step size scaling factor $\lambda$, and the \textit{global exploration factor} $\epsilon$. \autoref{tab:edmresults} displays results for both these methods; somewhat surprisingly, the vanilla zero-order search lags behind the MCTS performance, while $\epsilon$-greedy far exceeds it.
+
+
+
+\paragraph{Explore globally and exploit locally.} The above results lead us to ask: \textit{why does simply drawing a Normal sample w.p. $\epsilon$ while otherwise sampling from the pivot's neighborhood (w.p. $1-\epsilon$) yield such remarkable improvement}?
+
+We hypothesize the following: at time $t$, conditioned on latent $\x_t$, there is a specific ``region'' in the noise space (call it $\mathcal{Z}$) containing noise realizations that best fit the downstream objective (e.g. the green region in \autoref{fig:tree_search_noise}). In particular, $\mathcal{Z}$ is not necessarily a subset of $\mathcal{N}(\mathbf{0},\sigma_t^2\mathbf{I})$, although it can.
+
+During vanilla zero-order search, at each local search iteration of each timestep we are restricted to the $\lambda\sqrt{2d}$-radius ball around the original pivot, which is simply a random draw from $\mathcal{N}(\mathbf{0},\sigma_t^2\mathbf{I})$. More likely than not, the pivot $\mathbf{p} \not\in \mathcal{Z}$; and over $K$ local search iterations, we move an expected distance of $K\mathbb{E}_{\mathbf{u}\sim\mathrm{Unif}(0,\lambda)}[\mathbf{u}]\sqrt{2d} = K\lambda\sqrt{d/2}$ away from $\mathbf{p}$. But with $\epsilon$-greedy, we can explore the entire Normal with $\epsilon$ probability; a few such ``random jumps'' can move us into $\mathcal{Z}$, at which point we see large returns from hill-climbing. Indeed, we see this empirically: for each local search iteration $k \in \{1, \dots, K\}$ of $\epsilon$-greedy, let $I_k = \mathbb{I}(\epsilon$-greedy selects one of the random Normal draws instead of all the neighborhood draws in iteration $k)$. Define $\bar{k} = \sum_{k=1}^K (k-1)I_k$. Note that if $\epsilon$-greedy chooses one of the random draws at every iteration, $\bar{k} = 10$; but if $\bar{k} < 10$, $\epsilon$-greedy only chooses the random draw in early iterations $k$ and only hill-climbs (chooses candidates from the neighborhood) at later iterations. \autoref{lipschitz} (left) plots $\bar{k}$ as a function of $\sigma_t$. For initial denoising steps, the random noise is always chosen, hence $\bar{k}=10$. But in the intermediate denoising steps, $\bar{k} \ll 10$---supporting our hypothesis that we initially need a couple of random draws to get to $\mathcal{Z}$, but for all subsequent iterations, \textit{hill climbing is required for us to potentially leave the Normal distribution and find noises that maximize the reward}.
+
+\begin{figure}
+    \centering\includegraphics[width=\linewidth]{lipschitz_constant_plot.png}
+    \vspace{-5mm}
+    \caption{\small \textit{(Left)} {Average local-search iteration at which a random Normal candidate is chosen ($\bar{k}$) as a function of $\sigma_t$.} \textit{(Right)} {Estimated Lipschitz constant of the ImageNet reward as a function of $\x_t$, across $\sigma_t$ values.}}
+    \label{lipschitz}
+\end{figure}
+
+The aforementioned findings raise the question: in $\epsilon$-greedy, why do we only benefit from hill-climbing at \textit{intermediate denoising steps}? We posit that the reward landscape as a function of $\x_t$ is much smoother, perhaps near flat, at extreme time steps rather than intermediate ones, hence there is limited performance gain from hill climbing at those steps. This hypothesis aligns with the well-known result that denoising is harder at intermediate timesteps as this is where demixing occurs (the result is already well-refined at later denoising steps, and latents are too noisy to meaningfully understand the features of the image at earlier timesteps) \citep{karras2022elucidatingdesignspacediffusionbased, hang2024improvednoiseschedulediffusion, wang2025closerlooktimesteps}. To test this, we measure the \textit{sensitivity} of the reward landscape as a function of $\x_t$ for each $t$; specifically, we proxy the sensitivity with the Lipschitz constant estimator $\|\nabla_{\x_t} r(\hat{\x}_0^{(t)}, \mathbf{c})\|_2$, i.e. the local gradient norm of the reward function w.r.t. $\x_t$. \autoref{lipschitz} (right) shows a plot of the estimated Lipschitz constant by $\sigma_t$, in which we indeed see that the reward is most sensitive to $\x_t$ perturbations at intermediate steps. \textit{To our knowledge, this is the first work to demonstrate the importance of adapting the search strategy -- local vs. global -- based on the diffusion timestep.}
+
+Additional experiments, as well as qualitative results, are included in Appendices \ref{app:more}, \ref{app:hyperparams} and \ref{app:qual}. Notably, we conduct hyperparameter sweeps and measure how each sampling method scales with increasing NFEs in \autoref{app:hyperparams}, finding that \textit{$\epsilon$-greedy achieves the best scaling laws empirically amongst all sampling methods.}
+
+
+\subsection{Extending to Text-to-Image Generation}
+%
+Next, we extend our experiments to the more difficult task of \textbf{text-to-image generation}. We use Stable Diffusion v1.5 \citep{rombach2022highresolutionimagesynthesislatent}, setting all algorithm hyperparameters to their optimal values from EDM. We enable classifier-free guidance (default scale $7.5$) and set $T=50$ here as is typical with DDIM sampling. The resolution of the generated images is $512 \times 512$.
+\begin{table}
+  \centering
+  \caption{\small \textbf{Stable Diffusion results by sampling method.} Following \citet{ma2025inferencetimescalingdiffusionmodels}, we use natural language versions of the same class labels used in EDM generation (e.g. ``a toucan''). Generating each sample took $\sim$$1$ second for naive sampling (the lowest-compute method) and $<$2 minutes for MCTS (the highest-compute method) on a single A100 (40GB). We again provide as error bars the standard deviation of scores for a given prompt over $20$ generations with variability due to randomness of the noise draws.}
+  \label{tab:sdresults}
+  
+  \begin{tabular}{lcccc}
+    \toprule
+    \textbf{Method} & \textbf{Brightness} & \textbf{Compressibility} & \textbf{CLIP} & \textbf{NFEs} \\
+    \midrule
+    Naive Sampling & $0.4800${\mycfs{8.5}$\pm 0.02$} & $0.6314${\mycfs{8.5}$\pm 0.03$} & $0.2457${\mycfs{8.5}$\pm 0.00$} & $18$\\
+    Best of $4$ Sampling &  $0.5160${\mycfs{8.5}$\pm 0.04$} & $0.6847${\mycfs{8.5}$\pm 0.02$} & $0.2673${\mycfs{8.5}$\pm 0.00$} & $72$\\
+    % \hline
+    % Demon \citep{yeh2025trainingfreediffusionmodelalignment}\rule{0pt}{2.6ex}\rule[-1.3ex]{0pt}{0pt}\\
+    % \hline
+    Beam Search ($N=4,B=2$) & $0.4981${\mycfs{8.5}$\pm 0.01$} & $0.7014${\mycfs{8.5}$\pm 0.01$}  & $0.2682${\mycfs{8.5}$\pm 0.00$} & $144$\\
+    {MCTS} ($N=4,S=8$) & ${0.6077}${\mycfs{8.5}$\pm 0.03$} & ${0.7322}${\mycfs{8.5}$\pm 0.02$} & $0.2885${\mycfs{8.5}$\pm 0.01$} & ${3888}$\\
+    Zero-Order Search ($N=4,K=20$) & $0.5764${\mycfs{8.5}$\pm 0.02$} & $0.7281${\mycfs{8.5}$\pm 0.06$} & $0.2689${\mycfs{8.5}$\pm 0.02$}& $1440$\\
+    $\bm{\epsilon}$\textbf{-greedy} ($N=4,K=20$) & $\mathbf{0.7110}${\mycfs{8.5}$\pm 0.03$} & $\mathbf{0.8052}${\mycfs{8.5}$\pm 0.05$} & $\mathbf{0.2973}${\mycfs{8.5}$\pm 0.02$}& $1440$\\
+    \bottomrule
+  \end{tabular}
+  
+\end{table}
+
+%
+% \subsubsection{Rewards}
+%
+In lieu of the ImageNet classifier reward, we consider a very general purpose reward function for training a text-to-image model: \textit{prompt-image alignment}. However, specifying a reward that captures generic prompt alignment is difficult, conventionally requiring large-scale human labeling efforts. Following \citet{ma2025inferencetimescalingdiffusionmodels}, we proxy human ratings of prompt-image alignment with a direct measure of such alignment in joint image-text embedding space; namely, we compute the cosine similarity between the CLIP representations of both the image and original prompt \citep{radford2021learningtransferablevisualmodels}. Samples
+that more faithfully adhere to the semantics of the prompt should receive higher rewards under this framework, to the extent that
+those visual details are represented distinctly in CLIP embedding space. 
+% Note that this reward scales with the intelligence of the underlying models, as well as the compute given to the grader; the better the underlying VLM as well as more compute budget for computing the reward (e.g. running model ensembles, running multiple passes through models with stochastic generation processes), the more faithful to actual human raitings the reward should be.
+
+
+% \subsubsection{Results}
+%
+The Stable diffusion results (\autoref{tab:sdresults}) indeed affirm the superiority of our $\epsilon$-greedy search, which consistently outperforms other sampling methods across all reward functions. Specifically, $\epsilon$-greedy attains improvements of \textbf{48}/\textbf{26}/\textbf{20}$\%$ over vanilla sampling for the brightness/compressibility/CLIP reward functions, even exceeding MCTS by up to \textbf{18}$\%$. This underscores the robustness and generality
+of our method across
+diffusion model \textit{architectures} (image vs. latent models), number of \textit{denoising steps} ($18$-$50$), and
+and context modalities (class label vs. text).
+
+
+
+
+\section{Conclusion}
+\label{conc}
+%
+We present the first practical framework for \emph{test-time noise trajectory optimization} in SDE-based diffusion models. We first cast denoising as an MDP, enabling us to apply sophisticated step-level search algorithms including MCTS; then, via relaxing the MDP to a sequence of independent contextual bandits, we design a novel $\epsilon$-greedy search algorithm that adapts the search strategy (local exploitation vs. global exploration) based on the diffusion step, significantly outperforming vanilla sampling and even MCTS. We extensively discuss broader impacts, limitations, and future work in Appendices \ref{impacts} and \ref{limitations}.
+
+
+
+
+%
+% this section can be comprehensive and include discussions as well. it doesn't need to be in the main paper if the space is limite ... we can move all or part of it to the appendix ... 
+
+
+% summary of the work:
+
+% limitations and future work: 
+
+% one of the main limitations if still a large number of NFEs, another limitation is the evaluations -- one would expect to evalaute FID for a poulation of 50k samples generated each after noise trajectory optimziation ... 
+
+% another limitation that we deffer to future work is handing the scenarios that we have "human preferences", so there is no explicit rewaard function, but we have a human in the loop .. more or less like the DPO/RL setup ...
+
+
+\bibliography{references}
+\bibliographystyle{abbrvnat}
+% \newpage
+% \section*{NeurIPS Paper Checklist}
+
+% \begin{enumerate}
+
+% \item {\bf Claims}
+%     \item[] Question: Do the main claims made in the abstract and introduction accurately reflect the paper's contributions and scope?
+%     \item[] Answer: \answerYes{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
+%     \item[] Justification: All methods described in the abstract/introduction are explained in \autoref{sec:searching_noise}, and all experimental results are detailed in \autoref{experiments}.
+%     \item[] Guidelines:
+%     \begin{itemize}
+%         \item The answer NA means that the abstract and introduction do not include the claims made in the paper.
+%         \item The abstract and/or introduction should clearly state the claims made, including the contributions made in the paper and important assumptions and limitations. A No or NA answer to this question will not be perceived well by the reviewers. 
+%         \item The claims made should match theoretical and experimental results, and reflect how much the results can be expected to generalize to other settings. 
+%         \item It is fine to include aspirational goals as motivation as long as it is clear that these goals are not attained by the paper. 
+%     \end{itemize}
+
+% \item {\bf Limitations}
+%     \item[] Question: Does the paper discuss the limitations of the work performed by the authors?
+%     \item[] Answer: \answerYes{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
+%     \item[] Justification: See \autoref{limitations}.
+%     \item[] Guidelines:
+%     \begin{itemize}
+%         \item The answer NA means that the paper has no limitation while the answer No means that the paper has limitations, but those are not discussed in the paper. 
+%         \item The authors are encouraged to create a separate "Limitations" section in their paper.
+%         \item The paper should point out any strong assumptions and how robust the results are to violations of these assumptions (e.g., independence assumptions, noiseless settings, model well-specification, asymptotic approximations only holding locally). The authors should reflect on how these assumptions might be violated in practice and what the implications would be.
+%         \item The authors should reflect on the scope of the claims made, e.g., if the approach was only tested on a few datasets or with a few runs. In general, empirical results often depend on implicit assumptions, which should be articulated.
+%         \item The authors should reflect on the factors that influence the performance of the approach. For example, a facial recognition algorithm may perform poorly when image resolution is low or images are taken in low lighting. Or a speech-to-text system might not be used reliably to provide closed captions for online lectures because it fails to handle technical jargon.
+%         \item The authors should discuss the computational efficiency of the proposed algorithms and how they scale with dataset size.
+%         \item If applicable, the authors should discuss possible limitations of their approach to address problems of privacy and fairness.
+%         \item While the authors might fear that complete honesty about limitations might be used by reviewers as grounds for rejection, a worse outcome might be that reviewers discover limitations that aren't acknowledged in the paper. The authors should use their best judgment and recognize that individual actions in favor of transparency play an important role in developing norms that preserve the integrity of the community. Reviewers will be specifically instructed to not penalize honesty concerning limitations.
+%     \end{itemize}
+
+% \item {\bf Theory assumptions and proofs}
+%     \item[] Question: For each theoretical result, does the paper provide the full set of assumptions and a complete (and correct) proof?
+%     \item[] Answer: \answerNA{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
+%     \item[] Justification: No new theorems/proofs in the paper; all theoretical formulations discussed at length in \autoref{sec:searching_noise}.
+%     \item[] Guidelines:
+%     \begin{itemize}
+%         \item The answer NA means that the paper does not include theoretical results. 
+%         \item All the theorems, formulas, and proofs in the paper should be numbered and cross-referenced.
+%         \item All assumptions should be clearly stated or referenced in the statement of any theorems.
+%         \item The proofs can either appear in the main paper or the supplemental material, but if they appear in the supplemental material, the authors are encouraged to provide a short proof sketch to provide intuition. 
+%         \item Inversely, any informal proof provided in the core of the paper should be complemented by formal proofs provided in appendix or supplemental material.
+%         \item Theorems and Lemmas that the proof relies upon should be properly referenced. 
+%     \end{itemize}
+
+%     \item {\bf Experimental result reproducibility}
+%     \item[] Question: Does the paper fully disclose all the information needed to reproduce the main experimental results of the paper to the extent that it affects the main claims and/or conclusions of the paper (regardless of whether the code and data are provided or not)?
+%     \item[] Answer: \answerYes{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
+%     \item[] Justification: All experimental setup details and described in \autoref{experiments}, e.g. in captions of \autoref{tab:edmresults} and \autoref{tab:sdresults}. Code will also be uploaded by supplementary material deadline, providing full reproducibility.
+%     \item[] Guidelines:
+%     \begin{itemize}
+%         \item The answer NA means that the paper does not include experiments.
+%         \item If the paper includes experiments, a No answer to this question will not be perceived well by the reviewers: Making the paper reproducible is important, regardless of whether the code and data are provided or not.
+%         \item If the contribution is a dataset and/or model, the authors should describe the steps taken to make their results reproducible or verifiable. 
+%         \item Depending on the contribution, reproducibility can be accomplished in various ways. For example, if the contribution is a novel architecture, describing the architecture fully might suffice, or if the contribution is a specific model and empirical evaluation, it may be necessary to either make it possible for others to replicate the model with the same dataset, or provide access to the model. In general. releasing code and data is often one good way to accomplish this, but reproducibility can also be provided via detailed instructions for how to replicate the results, access to a hosted model (e.g., in the case of a large language model), releasing of a model checkpoint, or other means that are appropriate to the research performed.
+%         \item While NeurIPS does not require releasing code, the conference does require all submissions to provide some reasonable avenue for reproducibility, which may depend on the nature of the contribution. For example
+%         \begin{enumerate}
+%             \item If the contribution is primarily a new algorithm, the paper should make it clear how to reproduce that algorithm.
+%             \item If the contribution is primarily a new model architecture, the paper should describe the architecture clearly and fully.
+%             \item If the contribution is a new model (e.g., a large language model), then there should either be a way to access this model for reproducing the results or a way to reproduce the model (e.g., with an open-source dataset or instructions for how to construct the dataset).
+%             \item We recognize that reproducibility may be tricky in some cases, in which case authors are welcome to describe the particular way they provide for reproducibility. In the case of closed-source models, it may be that access to the model is limited in some way (e.g., to registered users), but it should be possible for other researchers to have some path to reproducing or verifying the results.
+%         \end{enumerate}
+%     \end{itemize}
+
+
+% \item {\bf Open access to data and code}
+%     \item[] Question: Does the paper provide open access to the data and code, with sufficient instructions to faithfully reproduce the main experimental results, as described in supplemental material?
+%     \item[] Answer: \answerYes{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
+%     \item[] Justification: Will be provided in supplementary material.
+%     \item[] Guidelines:
+%     \begin{itemize}
+%         \item The answer NA means that paper does not include experiments requiring code.
+%         \item Please see the NeurIPS code and data submission guidelines (\url{https://nips.cc/public/guides/CodeSubmissionPolicy}) for more details.
+%         \item While we encourage the release of code and data, we understand that this might not be possible, so “No” is an acceptable answer. Papers cannot be rejected simply for not including code, unless this is central to the contribution (e.g., for a new open-source benchmark).
+%         \item The instructions should contain the exact command and environment needed to run to reproduce the results. See the NeurIPS code and data submission guidelines (\url{https://nips.cc/public/guides/CodeSubmissionPolicy}) for more details.
+%         \item The authors should provide instructions on data access and preparation, including how to access the raw data, preprocessed data, intermediate data, and generated data, etc.
+%         \item The authors should provide scripts to reproduce all experimental results for the new proposed method and baselines. If only a subset of experiments are reproducible, they should state which ones are omitted from the script and why.
+%         \item At submission time, to preserve anonymity, the authors should release anonymized versions (if applicable).
+%         \item Providing as much information as possible in supplemental material (appended to the paper) is recommended, but including URLs to data and code is permitted.
+%     \end{itemize}
+
+
+% \item {\bf Experimental setting/details}
+%     \item[] Question: Does the paper specify all the training and test details (e.g., data splits, hyperparameters, how they were chosen, type of optimizer, etc.) necessary to understand the results?
+%     \item[] Answer: \answerYes{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
+%     \item[] Justification: All experimental setup details and described in \autoref{experiments}, e.g. in captions of \autoref{tab:edmresults} and \autoref{tab:sdresults}. Code will also be uploaded by supplementary material deadline, providing full reproducibility.
+%     \item[] Guidelines:
+%     \begin{itemize}
+%         \item The answer NA means that the paper does not include experiments.
+%         \item The experimental setting should be presented in the core of the paper to a level of detail that is necessary to appreciate the results and make sense of them.
+%         \item The full details can be provided either with the code, in appendix, or as supplemental material.
+%     \end{itemize}
+
+% \item {\bf Experiment statistical significance}
+%     \item[] Question: Does the paper report error bars suitably and correctly defined or other appropriate information about the statistical significance of the experiments?
+%     \item[] Answer: \answerYes{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
+%     \item[] Justification: See \autoref{tab:edmresults}, \autoref{tab:sdresults}.
+%     \item[] Guidelines:
+%     \begin{itemize}
+%         \item The answer NA means that the paper does not include experiments.
+%         \item The authors should answer "Yes" if the results are accompanied by error bars, confidence intervals, or statistical significance tests, at least for the experiments that support the main claims of the paper.
+%         \item The factors of variability that the error bars are capturing should be clearly stated (for example, train/test split, initialization, random drawing of some parameter, or overall run with given experimental conditions).
+%         \item The method for calculating the error bars should be explained (closed form formula, call to a library function, bootstrap, etc.)
+%         \item The assumptions made should be given (e.g., Normally distributed errors).
+%         \item It should be clear whether the error bar is the standard deviation or the standard error of the mean.
+%         \item It is OK to report 1-sigma error bars, but one should state it. The authors should preferably report a 2-sigma error bar than state that they have a 96\% CI, if the hypothesis of Normality of errors is not verified.
+%         \item For asymmetric distributions, the authors should be careful not to show in tables or figures symmetric error bars that would yield results that are out of range (e.g. negative error rates).
+%         \item If error bars are reported in tables or plots, The authors should explain in the text how they were calculated and reference the corresponding figures or tables in the text.
+%     \end{itemize}
+
+% \item {\bf Experiments compute resources}
+%     \item[] Question: For each experiment, does the paper provide sufficient information on the computer resources (type of compute workers, memory, time of execution) needed to reproduce the experiments?
+%     \item[] Answer: \answerYes{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
+%     \item[] Justification: See \autoref{experiments}, specifically \autoref{tab:edmresults}, \autoref{tab:sdresults}.
+%     \item[] Guidelines:
+%     \begin{itemize}
+%         \item The answer NA means that the paper does not include experiments.
+%         \item The paper should indicate the type of compute workers CPU or GPU, internal cluster, or cloud provider, including relevant memory and storage.
+%         \item The paper should provide the amount of compute required for each of the individual experimental runs as well as estimate the total compute. 
+%         \item The paper should disclose whether the full research project required more compute than the experiments reported in the paper (e.g., preliminary or failed experiments that didn't make it into the paper). 
+%     \end{itemize}
+    
+% \item {\bf Code of ethics}
+%     \item[] Question: Does the research conducted in the paper conform, in every respect, with the NeurIPS Code of Ethics \url{https://neurips.cc/public/EthicsGuidelines}?
+%     \item[] Answer: \answerYes{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
+%     \item[] Justification: Have reviewed and ensured compliance with the Code of Ethics.
+%     \item[] Guidelines:
+%     \begin{itemize}
+%         \item The answer NA means that the authors have not reviewed the NeurIPS Code of Ethics.
+%         \item If the authors answer No, they should explain the special circumstances that require a deviation from the Code of Ethics.
+%         \item The authors should make sure to preserve anonymity (e.g., if there is a special consideration due to laws or regulations in their jurisdiction).
+%     \end{itemize}
+
+
+% \item {\bf Broader impacts}
+%     \item[] Question: Does the paper discuss both potential positive societal impacts and negative societal impacts of the work performed?
+%     \item[] Answer: \answerYes{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
+%     \item[] Justification: See \autoref{impacts}.
+%     \item[] Guidelines:
+%     \begin{itemize}
+%         \item The answer NA means that there is no societal impact of the work performed.
+%         \item If the authors answer NA or No, they should explain why their work has no societal impact or why the paper does not address societal impact.
+%         \item Examples of negative societal impacts include potential malicious or unintended uses (e.g., disinformation, generating fake profiles, surveillance), fairness considerations (e.g., deployment of technologies that could make decisions that unfairly impact specific groups), privacy considerations, and security considerations.
+%         \item The conference expects that many papers will be foundational research and not tied to particular applications, let alone deployments. However, if there is a direct path to any negative applications, the authors should point it out. For example, it is legitimate to point out that an improvement in the quality of generative models could be used to generate deepfakes for disinformation. On the other hand, it is not needed to point out that a generic algorithm for optimizing neural networks could enable people to train models that generate Deepfakes faster.
+%         \item The authors should consider possible harms that could arise when the technology is being used as intended and functioning correctly, harms that could arise when the technology is being used as intended but gives incorrect results, and harms following from (intentional or unintentional) misuse of the technology.
+%         \item If there are negative societal impacts, the authors could also discuss possible mitigation strategies (e.g., gated release of models, providing defenses in addition to attacks, mechanisms for monitoring misuse, mechanisms to monitor how a system learns from feedback over time, improving the efficiency and accessibility of ML).
+%     \end{itemize}
+    
+% \item {\bf Safeguards}
+%     \item[] Question: Does the paper describe safeguards that have been put in place for responsible release of data or models that have a high risk for misuse (e.g., pretrained language models, image generators, or scraped datasets)?
+%     \item[] Answer: \answerNA{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
+%     \item[] Justification: No new assets released; safeguards to existing assets (publicly available diffusion models) with which our inference-time search algorithms are used should apply.
+%     \item[] Guidelines:
+%     \begin{itemize}
+%         \item The answer NA means that the paper poses no such risks.
+%         \item Released models that have a high risk for misuse or dual-use should be released with necessary safeguards to allow for controlled use of the model, for example by requiring that users adhere to usage guidelines or restrictions to access the model or implementing safety filters. 
+%         \item Datasets that have been scraped from the Internet could pose safety risks. The authors should describe how they avoided releasing unsafe images.
+%         \item We recognize that providing effective safeguards is challenging, and many papers do not require this, but we encourage authors to take this into account and make a best faith effort.
+%     \end{itemize}
+
+% \item {\bf Licenses for existing assets}
+%     \item[] Question: Are the creators or original owners of assets (e.g., code, data, models), used in the paper, properly credited and are the license and terms of use explicitly mentioned and properly respected?
+%     \item[] Answer: \answerYes{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
+%     \item[] Justification: Citations of all past work is referenced appropriately, see sections \ref{related_work} and \ref{experiments}.
+%     \item[] Guidelines:
+%     \begin{itemize}
+%         \item The answer NA means that the paper does not use existing assets.
+%         \item The authors should cite the original paper that produced the code package or dataset.
+%         \item The authors should state which version of the asset is used and, if possible, include a URL.
+%         \item The name of the license (e.g., CC-BY 4.0) should be included for each asset.
+%         \item For scraped data from a particular source (e.g. website), the copyright and terms of service of that source should be provided.
+%         \item If assets are released, the license, copyright information, and terms of use in the package should be provided. For popular datasets, \url{paperswithcode.com/datasets} has curated licenses for some datasets. Their licensing guide can help determine the license of a dataset.
+%         \item For existing datasets that are re-packaged, both the original license and the license of the derived asset (if it has changed) should be provided.
+%         \item If this information is not available online, the authors are encouraged to reach out to the asset's creators.
+%     \end{itemize}
+
+% \item {\bf New assets}
+%     \item[] Question: Are new assets introduced in the paper well documented and is the documentation provided alongside the assets?
+%     \item[] Answer: \answerNA{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
+%     \item[] Justification: No new assets released, just inference-time algorithms for leveraging existing diffusion models.
+%     \item[] Guidelines:
+%     \begin{itemize}
+%         \item The answer NA means that the paper does not release new assets.
+%         \item Researchers should communicate the details of the dataset/code/model as part of their submissions via structured templates. This includes details about training, license, limitations, etc. 
+%         \item The paper should discuss whether and how consent was obtained from people whose asset is used.
+%         \item At submission time, remember to anonymize your assets (if applicable). You can either create an anonymized URL or include an anonymized zip file.
+%     \end{itemize}
+
+% \item {\bf Crowdsourcing and research with human subjects}
+%     \item[] Question: For crowdsourcing experiments and research with human subjects, does the paper include the full text of instructions given to participants and screenshots, if applicable, as well as details about compensation (if any)? 
+%     \item[] Answer: \answerNA{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
+%     \item[] Justification: The paper does not involve crowdsourcing nor research with human subjects.
+%     \item[] Guidelines:
+%     \begin{itemize}
+%         \item The answer NA means that the paper does not involve crowdsourcing nor research with human subjects.
+%         \item Including this information in the supplemental material is fine, but if the main contribution of the paper involves human subjects, then as much detail as possible should be included in the main paper. 
+%         \item According to the NeurIPS Code of Ethics, workers involved in data collection, curation, or other labor should be paid at least the minimum wage in the country of the data collector. 
+%     \end{itemize}
+
+% \item {\bf Institutional review board (IRB) approvals or equivalent for research with human subjects}
+%     \item[] Question: Does the paper describe potential risks incurred by study participants, whether such risks were disclosed to the subjects, and whether Institutional Review Board (IRB) approvals (or an equivalent approval/review based on the requirements of your country or institution) were obtained?
+%     \item[] Answer: \answerNA{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
+%     \item[] Justification: The paper does not involve crowdsourcing nor research with human subjects.
+%     \item[] Guidelines:
+%     \begin{itemize}
+%         \item The answer NA means that the paper does not involve crowdsourcing nor research with human subjects.
+%         \item Depending on the country in which research is conducted, IRB approval (or equivalent) may be required for any human subjects research. If you obtained IRB approval, you should clearly state this in the paper. 
+%         \item We recognize that the procedures for this may vary significantly between institutions and locations, and we expect authors to adhere to the NeurIPS Code of Ethics and the guidelines for their institution. 
+%         \item For initial submissions, do not include any information that would break anonymity (if applicable), such as the institution conducting the review.
+%     \end{itemize}
+
+% \item {\bf Declaration of LLM usage}
+%     \item[] Question: Does the paper describe the usage of LLMs if it is an important, original, or non-standard component of the core methods in this research? Note that if the LLM is used only for writing, editing, or formatting purposes and does not impact the core methodology, scientific rigorousness, or originality of the research, declaration is not required.
+%     %this research? 
+%     \item[] Answer: \answerNA{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
+%     \item[] Justification: The core method development in this research does not involve LLMs as any important, original, or non-standard components.
+%     \item[] Guidelines:
+%     \begin{itemize}
+%         \item The answer NA means that the core method development in this research does not involve LLMs as any important, original, or non-standard components.
+%         \item Please refer to our LLM policy (\url{https://neurips.cc/Conferences/2025/LLM}) for what should or should not be described.
+%     \end{itemize}
+
+% \end{enumerate}
+
+
+
+\newpage
+
+% \tableofcontents
+
+% \clearpage
+
+\appendix
+
+\section*{Contents}
+\vspace{-1em}
+
+\startcontents[sections]
+\printcontents[sections]{l}{1}{\setcounter{tocdepth}{2}}
+
+
+% \addcontentsline{toc}{section}{Appendix} % Add the appendix text to the document TOC
+% \part{} % Start the appendix part
+% \parttoc % Insert the appendix TOC
+
+\clearpage
+
+
+\section{Samplers}
+
+In all experiments we adopt either the EDM sampler (Alg. \autoref{alg:edm_sampling}) \citep{karras2022elucidatingdesignspacediffusionbased} (for class-conditional generation) or DDIM sampler (Alg. \autoref{alg:ddim_sampling}) \citep{song2022denoisingdiffusionimplicitmodels} (for text-to-image generation) as it enables high-quality generation with low number of denoising steps $T$. Note that the choice of sampler fundamentally affects the formulation of denoising as an MDP/sequence-of-bandits problem, and hence our search over noise trajectories, since we define the transition function $P(\mathbf{s}_{t-1} \mid \mathbf{s}_t, \mathbf{a}_t) \triangleq \delta_{(\mathbf{c}, f(\mathbf{x}_t, t, \mathbf{c}, \mathbf{z}_t), t-1)}$ where $\delta_y$ is the Dirac delta function (places all probability mass on single point $y$) and $f$ is one step of the chosen sampler (e.g. lines 2-6 of Alg.~\ref{alg:edm_sampling}, lines  2-3 of Alg.~\ref{alg:ddim_sampling}) using $\mathbf{z}_t$ as the injected noise.
+
+\begin{algorithm}
+\caption{EDM Sampling Algorithm}
+\label{alg:edm_sampling}
+\begin{algorithmic}[1]
+\Require Number of timesteps $T$, noise levels $\{t_i\}_{i=0}^{N}$ with $t_0 = t_{\text{min}}$ and $t_N = t_{\text{max}}$,
+         expansion coefficients $\{\gamma_i\}_{i=0}^{N-1}$,
+         initial sample $\mathbf{x}_T \sim \mathcal{N}(\mathbf{0},\,t_N^2 \mathbf{I})$,
+         denoising network $D_\theta(\mathbf{x}, t,\mathbf{c})$, $\sigma_t$, noise samples $\{\mathbf{z}_i\}_{i=1}^N \sim \mathcal{N}(\mathbf{0}, \sigma_t^2 \mathbf{I})$
+
+\For{$i = T$ \textbf{to} $1$}
+    \State $\displaystyle \hat{t}_i \;=\; (1 + \gamma_i)\,t_i$; $\displaystyle \hat{\mathbf{x}}_i \;=\; \mathbf{x}_i \;+\; 
+            \sqrt{\,\hat{t}_i^{\,2} \;-\; t_i^{\,2}\,}\,\mathbf{z}_i$
+    
+    \State $\mathbf{d}_i = \left(\hat{\x}_i-D_\theta(\hat{\x}_i,\hat{t}_i,\mathbf{c})\right)/\hat{t}_i$; ${\x}_{i-1} = \hat{\x}_i + (t_{i-1}-\hat{t}_i)\mathbf{d}_i$
+
+    \If{$t_{i+1}\neq 0$}
+        \State $\mathbf{d}'_i = \left({\x}_{i-1}-D_\theta({\x}_{i-1},t_{i-1})\right)/{t}_{i-1}$; ${\x}_{i-1} = \hat{\x}_i + (t_{i-1}-\hat{t}_i)\left(\frac{1}{2}\mathbf{d}_i+\frac{1}{2}\mathbf{d}'_i\right)$
+    \EndIf
+\EndFor
+
+\State \textbf{return} $\mathbf{x}_0$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{DDIM Sampling Algorithm}
+\label{alg:ddim_sampling}
+\begin{algorithmic}[1]
+\Require Discretization timesteps $T$, diffusion coefficients $\alpha_1, \ldots, \alpha_T$, 
+         initial noise $\x_T \sim \mathcal{N}(\mathbf{0},\mathbf{I})$, context (e.g. text prompt) $\mathbf{c}$,
+         noise vectors $\mathbf{z}_1, \ldots, \mathbf{z}_T \sim \mathcal{N}(\mathbf{0},\mathbf{I})$,
+         coefficient $\eta \in [0,1]$ for balancing ODE and SDE,
+         denoising network $D_\theta(\x, t, \mathbf{c})$
+
+\For{$t = T$ \text{to} $1$}
+\vspace{2mm}
+
+    \State $\sigma_t = \eta \sqrt{(1 - \alpha_{t-1})/(1 - \alpha_{t})}
+            \sqrt{1 - \alpha_{t}/\alpha_{t-1}}$
+    \State $\x_{t-1} = \sqrt{\alpha_{t-1}/\alpha_t}\cdot \x_t 
+            - \left(\sqrt{\alpha_{t-1}(1-\alpha_t)/\alpha_t} - \sqrt{1-\alpha_{t-1}-\sigma_t^2}\right)\epsilon_\theta(\x_t,t,\mathbf{c}) + \sigma_t\mathbf{z}_t$
+\EndFor
+
+\State \textbf{return} $\x_0$
+\end{algorithmic}
+\end{algorithm}
+
+\section{Stepwise Noise Evaluation via Tweedie’s Formula}
+\label{tweedie}
+
+The greedy algorithms we treat as baselines (beam search, zero-order search), as well as our $\epsilon$-greedy algorithm itself, require evaluating multiple noise candidates $\{\mathbf{z}_t^{(i)}\}_{i=1}^N$ at timestep $t$, independent of future denoising  steps $t-1, \dots, 1$. We operationalize this evaluation by letting the best noise candidate $\mathbf{z}_t^{(i^*)}$ be that which maximizes the reward of the expected clean sample conditioned on that noise candidate, i.e.,
+\begin{equation}
+    i^* = \textrm{arg}\max_{i=1, \dots, N} r(\mathbb{E}[\x_0 \mid f(\mathbf{x}_t, t, \mathbf{c}, \mathbf{z}_t^{(i)})), \mathbf{c}]).
+\end{equation}
+
+We leverage Tweedie's formula \citep{tweedie} to compute the expected clean sample $\hat{\x}_0^{(t)}$ as an estimate of the posterior mean $\mathbb{E}[\x_0 \mid \x_{t-1}, \mathbf{c}]$ from the noisy sample $\x_{t-1}$ produced by doing a denoising step from $\x_t$ with noise candidate $\mathbf{z}_t^{(i)}$. Formally, given $\x_{t-1}, \sigma_{t-1}$, we have
+\begin{equation*}
+    \mathbb{E}[\x_0 \mid \x_{t-1}, \mathbf{c}] = \x_{t-1} + \sigma_{t-1}^2\nabla_{\x_{t-1}} \log p(\mathbf{x}_{t-1}\mid\sigma_{t-1}, \mathbf{c}),
+\end{equation*}
+where the denoiser $D_\theta$ is the diffusion model (e.g., EDM or Stable Diffusion v1.5) trained to approximate the score function $\nabla_{\x_{t-1}} \log p(\mathbf{x}_{t-1}\mid\sigma_{t-1}, \mathbf{c})$.
+
+% \clearpage
+
+\section{Search Algorithms}
+\label{app:baselines}
+
+Below, we provide detailed algorithms for the rejection sampling, beam search, zero-order search, and MCTS methods described in the main body of the paper. Table~\ref{tab:nfes} displays the NFEs required per sample generation using each method; notably, all sampling methods but MCTS---including $\epsilon$-greedy, which attains the highest performance across reward functions---require NFEs only \textit{linear} in the number of denoising steps $T$.
+
+\begin{algorithm}
+\caption{MCTS noise search}
+\label{alg:mcts}
+\begin{algorithmic}[1]
+\Require Discretization timesteps $T$, 
+         context (e.g. class label) $\mathbf{c}$,
+         learned denoising network $D_\theta$,
+         branching factor $N$, sampling step function $f$, $[0,1]$-bounded reward function $r$, fixed per-step noise candidates $\{\mathbf{z}_t^{(j)}\}_{(t,j) \in \{1,\dots,T\}\times\{1, \dots, N\}}$, number of simulations $S$, exploration constant $C = 1.414$, initial noise sample $\x_T$
+
+\vspace{2mm}
+Define UCB score($\x_t, t, \mathbf{z}_t^{(j)}$) = $\frac{\text{reward from }(f(\x_t,t,\mathbf{c},\mathbf{z}_t^{(j)}),t-1)}{\text{\# visits to }(f(\x_t,t,\mathbf{c},\mathbf{z}_t^{(j)}),t-1)} + C\sqrt{\frac{\log\left(\text{\# visits to }(\x_t,t)\right)}{\text{\# visits to }(f(\x_t,t,\mathbf{c},\mathbf{z}_t^{(j)}),t-1)}}$
+
+$\mathcal{C}(\x_t) \triangleq$ set of child nodes of $\x_t$, s.t. $|\mathcal{C}(\x_t)| \in \{0, N\}$, $c_j(\x_t) \triangleq f(\x_t,t,\mathbf{c},\mathbf{z}_t^{(j)})$
+\vspace{4mm}
+
+\For{$t = T$ \text{to} $1$}
+
+    \For{$s=1$ \text{to} $S$}
+    
+        $\:\:\:$ Let $t' = t$
+        
+        \While{$|\mathcal{C}(\x_{t'})| \neq 0$} \text{$\qquad\:\:\:\:\qquad\qquad\qquad\qquad\:\qquad\qquad\qquad\qquad\qquad$\textcolor{gray}{// selection}}
+            
+            $\qquad$ Let $\x_{t'-1} = f\left(\x_t,t,\mathbf{c},\mathbf{z}_t^{(\text{arg}\max_j \text{UCB score}(\x_{t'},t',\mathbf{z}_{t'}^{(j)}))}\right)$
+
+            $\qquad\: t' \leftarrow t' - 1$
+
+        \EndWhile
+
+        \If{$t' \neq 0$} \text{$\qquad\:\:\:\:\qquad\qquad\qquad\qquad\qquad\qquad\quad\:\:\qquad\qquad\qquad\qquad$\textcolor{gray}{// expansion}}
+
+            $\qquad$ $\mathcal{C}(\x_{t'}) \leftarrow \left\{c_j(\x_{t'})\right\}_{j=1}^N$
+
+        \EndIf
+
+        $\:\:\:$For random  $k \in \{1, \dots, N\}$, denoise from $c_k(\x_{t'})$ to get $\hat{\x}_0$ $\qquad \qquad$ $\qquad$ \text{\textcolor{gray}{// simulation}}
+
+        \For{$t'' = t'-1$ \text{to} $T$} \text{$\qquad\qquad\qquad\qquad\qquad\qquad\quad\:\:\:\:\:\qquad\qquad$\textcolor{gray}{// backpropagation}}
+        
+            $\qquad$ visits to $(\x_{t''},t'')$ += $1$
+            
+            $\qquad$ reward from $(\x_{t''},t'')$ += $r(\hat{\x}_0,\mathbf{c})$
+            
+        \EndFor
+
+        $\:\:\:$$\x_{t-1} \leftarrow \text{arg}\max_{c_j(\x_t)} \frac{\text{reward from }(c_j(\x_t),t-1)}{\text{\# visits to }(c_j(\x_t),t-1)}$
+
+    \EndFor
+
+    
+\EndFor
+
+\State \textbf{return} $\x_0$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Rejection Sampling}
+\label{alg:rs}
+\begin{algorithmic}[1]
+\Require Discretization timesteps $T$, 
+         context (e.g. class label) $\mathbf{c}$,
+         learned denoising network $D_\theta$,
+        number of samples $N$, sampling step function $f$, reward function $r$, initial noise sample $\x_T$
+
+\For{$n = 1$ \text{to} $N$}
+
+    \For{$t = T$ \text{to} $1$}
+    \vspace{1mm}
+    
+        $\:\:\:\:$Sample noise candidate $\mathbf{z}_t^{(n)} \sim \N(\mathbf{0}, \sigma_t^2\mathbf{I})$
+    
+        \State $\x_{t-1}^{(n)} = f(\x_t, t, \mathbf{c}, \mathbf{z}_t^{(n)})$
+        
+    \EndFor
+    \EndFor
+
+    
+
+\State \textbf{return} $\x_0^{(\textrm{argmax}_{n \in \{1,\dots,N\}} r\left(\x_0^{(n)},\mathbf{c}\right))}$
+\end{algorithmic}
+\end{algorithm}
+
+
+\begin{algorithm}
+\caption{Beam Search}
+\label{alg:beam}
+\begin{algorithmic}[1]
+\Require Discretization timesteps $T$, 
+         context (e.g. class label) $\mathbf{c}$,
+         learned denoising network $D_\theta$,
+        branching factor $N$, beam width $B$, sampling step function $f$, reward function $r$, initial noise samples $\{\x_T^{(j)}\}_{j=1}^B$
+
+\For{$t = T$ \text{to} $1$}
+\vspace{1mm}
+
+    Sample $N$ noise candidates $\{\mathbf{z}_t^{(i)}\}_{i=1}^N \sim \N(\mathbf{0}, \sigma_t^2\mathbf{I})$
+
+    $\mathcal{C} = \emptyset$
+
+    \For{$j=1$ \text{to} $B$}
+        \For{$i=1$ \text{to} $N$}
+    
+            $\qquad$ Add $f\left(\x_t^{(j)},t,\mathbf{c},\mathbf{z}_t^{(i)}\right)$ to $\mathcal{C}$
+
+        \EndFor
+    \EndFor
+
+    Let $\x_{t-1}^{(1\cdots B)}$ be the $B$ latents in $\mathcal{C}$ whose one-step denoised predictions $\hat{\x}_0^{(t-1)}$ (computed via Tweedie's formula \citep{tweedie}) have the highest scores under $r$
+
+    
+\EndFor
+
+\State \textbf{return} $\x_{\text{arg}\max_{j \in \{1,\dots,B\}} r\left(\x_0^{(j)},\mathbf{c}\right)}$
+\end{algorithmic}
+\end{algorithm}
+
+
+
+\begin{algorithm}
+\caption{Zero-Order Search}
+\label{alg:zo}
+\begin{algorithmic}[1]
+\Require Discretization timesteps $T$, 
+         context (e.g. class label) $\mathbf{c}$,
+         learned denoising network $D_\theta$,
+         max. deviation {scaling factor} $\lambda$, number of pivot updates $K$, number of samples $N$, sampling step function $f$, reward function $r$, initial noise sample $\x_T$
+
+\State \textbf{Sample} $\mathbf{p} \sim \mathcal{N}(\mathbf{0},\sigma_t^2\mathbf{I})$ \textcolor{gray}{// pivot}
+
+\For{$t = T$ \text{to} $1$}
+\vspace{1mm}
+
+    \textbf{Sample} $\mathbf{p} \sim \mathcal{N}(\mathbf{0},\sigma_t^2\mathbf{I})$
+
+    \For{$k=1$ \text{to} $K$}
+
+        Sample $N$ noise candidates $\{\mathbf{z}^{(i)}_t\}_{i=1}^N \sim \mathcal{N}(\mathbf{0},\sigma_t^2\mathbf{I})$, for each $i$ let $\mathbf{z}^{(i)}_t = \lambda \sqrt{2CHW} \mathbf{z}^{(i)}_t + \mathbf{p}$
+        
+        Set $\mathbf{p} = \mathbf{z}^{(i)}_t$ for $i$ s.t. one-step $\hat{\x}_0$ prediction using $\mathbf{z}^{(i)}_t$ attains highest score under $r$
+    
+    \EndFor
+
+    Set $\x_{t-1} = f(\x_t,t,\mathbf{c},\mathbf{p})$
+
+    
+\EndFor
+
+\State \textbf{return} $\x_0$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{table}[h]
+  \centering
+  \caption{\small \textbf{NFE formulas by sampling method using $T$ timesteps.} Note that NFEs denote ``number of function evaluations'' (i.e., number of calls to $D_\theta$) for sampling a single image.}
+  \label{tab:nfes}
+  \begin{tabular}{lccc}
+    \toprule
+    \textbf{Method} & \textbf{NFE formula} \\
+    \midrule
+    Naive Sampling & $T$\\
+    Best of $N$ Sampling & $NT$\\
+    $(N,B)$-Beam Search & $(N+B)T$\\
+    $(N,S)$-MCTS & $(N+S)T^2$\\
+    $(N,K)$-Zero-Order Search &$NKT$\\
+    $(N,K)$-$\epsilon$-greedy &$NKT$\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+
+\section{$\epsilon$-greedy Regret Analysis}
+\label{app:theory}
+
+To strengthen our claims on $\epsilon$-greedy's superiority, we derive its regret bound, showing that—even with only black‑box access to a Lipschitz surrogate—simple regret decays sublinearly in the total number of global samples.
+
+\begin{theorem}[Regret of $\epsilon$-greedy search]
+\label{}
+Let the noise at diffusion step $t$ be $\mathbf{z}_t \sim \mathcal{N}(\mathbf{0}, \sigma_t^2\mathbf{I}_d)$. Fix a confidence level $\eta$ and truncate noise-space to the high‑probability ball $\Gamma_t = \left\{ \mathbf{z} \in \mathbb{R}^d : \lvert \mathbf{z} \rvert \leq \sigma_t \sqrt{d \ln (1/\eta)} \right\}.$ Assume the surrogate reward $\tilde{R}_t: \Gamma_t \to [0,1]$ is $L$‑Lipschitz and satisfies 
+\begin{equation*}
+    \left|\tilde{R}_t - r(\mathbf{x}_0(\mathbf{z}), \mathbf{c})\right| \leq \delta \qquad  \forall \: \mathbf{z} \in \Gamma_t.
+\end{equation*}
+Run Algorithm 1 ($\epsilon$-greedy local search) for $K$ iterations with $N$ candidate points per iteration and global‑exploration probability 
+$\epsilon$, and let the final pivot be 
+$\mathbf{p}_t$. Then the expected simple regret at step $t$
+ obeys
+ \begin{equation*}
+     \mathbb{E}\!\left[ \max_{\mathbf{z} \in \Gamma_t} \widetilde{R}_t(\mathbf{z}) - \widetilde{R}_t(\mathbf{p}_t) \right] 
+\leq \delta + C_d \bigl( \epsilon N K \bigr)^{-1/d},
+ \end{equation*}
+ where the constant $C_d > 0$ depends only on the dimension $d$. Summing over $T$ diffusion steps yields
+ \begin{equation*}
+     R_{\text{tot}}
+= \sum_{t=1}^T 
+\mathbb{E}\!\left[ \max_{\mathbf{z} \in \Gamma_t} \widetilde{R}_t(\mathbf{z}) - \widetilde{R}_t(\mathbf{p}_t) \right]
+\leq T \left[ \delta + C_d (\epsilon N K)^{-1/d} \right].
+ \end{equation*}
+
+ \begin{proof}
+     By Gaussian concentration, $\mathbf{z}_t$ lies in $\Gamma_t$ with probability at least $1-\eta$, so we may restrict attention to $\Gamma_t$ at negligible cost. Each global‐exploration draw is uniform on $\Gamma_t$, and in total the algorithm collects $M = \epsilon NK$ such draws. It is a well-known result that the best of $M$ uniform samples over a $d$-dimensional, Lipschitz‐reward domain achieves expected simple regret on the order of $M^{-1/d}$. Since the $\epsilon$-greedy pivot never decreases in surrogate reward, its final surrogate value is at least that of the best global sample, inheriting the same $\Theta(M^{-1/d})$ rate. Finally, replacing the surrogate by the true reward adds at most $\delta$, yielding the per‑step bound; summing over $T$ steps gives the stated total regret.
+ \end{proof}
+\end{theorem}
+
+Note the following key points:
+\begin{itemize}
+    \item \textbf{Polynomial decay in global samples.} With $M = \epsilon NK$ global draws per step, regret scales as $O(M^{-1/d})$, so increasing the total sample budget drives simple regret to zero at the classic random‑search rate.
+    \item \textbf{Bias floor $\delta$.} In practice we can take $\delta$
+ to be quite low as it is simply the approximation error induced by application of Tweedie's formula, $|r(\mathbf{x}_0, \mathbf{c}) - r(\hat{\mathbf{x}}^{(t)}_0, \mathbf{c})|$.
+\end{itemize}
+
+\section{Visualizing $\epsilon$-greedy Noise Search}
+
+We display a animation visualizing the $\epsilon$-greedy search process at \href{https://diffusion-tts.netlify.app/}{this link}. For each timestep $t$, over the $K = 20$ local search iterations, we plot the 2D t-SNE \citep{JMLR:v9:vandermaaten08a} projection of the pivot and track it over time. The animation displays visually the emergent properties of $\epsilon$-greedy we describe in \autoref{sec:results} of the main paper: at early and late denoising steps, the search is mostly random global exploration; but at intermediate steps, after a couple initial random draws, all subsequent iterations are local hill-climbing.
+
+
+% \begin{figure}[t]
+%   \centering
+%   % \animategraphics{<fps>}{<basename>}{<start>}{<end>}
+%   % Do NOT include the numeric part in <basename>.
+%   \animategraphics[autoplay,loop,poster=first,width=\linewidth]{12}{frames/frame_}{0001}{0180}
+%   \caption{Example animation rendered from frame JPGs.}
+% \end{figure}
+
+\section{Additional Experiments}
+\label{app:more}
+
+\subsection{Scaling up dataset size}
+
+Below, we report EDM results using the ImageNet reward on $300$ images, a $10\times$ increase in dataset size. 
+This confirms the superiority of our $\epsilon$-greedy search.
+
+\begin{table}[h]
+  \centering
+  \caption{\small \textbf{EDM results by sampling method using classifier reward.} We use the same algorithm hyperparameters as in Table 1 of the main paper.}
+  \label{tab:edm_classifier}
+  \begin{tabular}{lcccccc}
+    \toprule
+    \textbf{Reward} & \textbf{Naive} & \textbf{Best-of-4 Sampling} & \textbf{Beam Search} & \textbf{MCTS} & \textbf{Zero-Order Search} & $\bm{\epsilon}$\textbf{-greedy} \\
+    \midrule
+    Classifier & $0.3738$ & $0.6413$ & $0.6928$ & $0.7311$ & $0.6818$ & $\mathbf{0.9790}$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Increasing task complexity}
+
+We provide results evaluating methods on a far harder set of prompts containing compositional information \cite{black2024trainingdiffusionmodelsreinforcement}, specifically those of the form ``a [SUBJECT] [PHRASE],'' e.g.\ ``a lion washing the dishes.'' \autoref{tab:sd_compositional} displays these results;
+$\epsilon$-greedy is again superior across the board.
+
+\begin{table}[h]
+  \centering
+  \caption{\small \textbf{SD results by sampling method, across reward functions, on compositional prompts.} We use the same hyperparameters as in Table 2 of the main paper.}
+  \label{tab:sd_compositional}
+  \begin{tabular}{lccc}
+    \toprule
+    \textbf{Method} & \textbf{Brightness} & \textbf{Compressibility} & \textbf{CLIP} \\
+    \midrule
+    Naive Sampling & $0.4579$ & $0.6866$ & $0.2578$ \\
+    Best-of-4 Sampling & $0.5257$ & $0.7639$ & $0.2618$ \\
+    Beam Search & $0.5179$ & $0.7690$ & $0.2646$ \\
+    MCTS & $0.5921$ & $0.7717$ & $0.2954$ \\
+    Zero-Order Search & $0.4573$ & $0.7128$ & $0.2802$ \\
+    $\bm{\epsilon}$-greedy & $\mathbf{0.6312}$ & $\mathbf{0.7869}$ & $\mathbf{0.3053}$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Increasing reward complexity}
+
+To test our method on harder rewards capturing more fine-grained details of images, we provide results evaluating each method using the counting reward from \citep{kim2025}, normalized to $[0,1]$.
+Each prompt is a comma-separated list of $1$--$6$ clauses, each of the form ``[NUMBER] [OBJECT],'' 
+e.g.\ ``five horses, three cars, one train, five airplanes.'' The counting reward function leverages open-source object detection models to compute the MSE between the actual and ground truth number of objects in the generated image, averaged across all objects described in the prompt. Even with this hard, non-differentiable counting reward function, we again see that $\epsilon$-greedy is superior across the board.
+
+\begin{table}[h]
+  \centering
+  \caption{\small \textbf{SD results by sampling method, using counting reward.}}
+  \label{tab:sd_counting}
+  \begin{tabular}{lcccccc}
+    \toprule
+    \textbf{Reward} & \textbf{Naive} & \textbf{Best-of-4} & \textbf{Beam Search} & \textbf{MCTS} & \textbf{Zero-Order Search} & $\bm{\epsilon}$\textbf{-greedy} \\
+    \midrule
+    Counting Reward & $0.3076$ & $0.3156$ & $0.4318$ & $0.4377$ & $0.3846$ & $\mathbf{0.5384}$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Varying model family, reward function}
+
+To support our claim of $\epsilon$-greedy's superiority, we display results using a larger text-to-image model (SDXL \citep{podell2023sdxlimprovinglatentdiffusion}) and the text-to-image human preference reward model ImageReward \citep{xu2023imagerewardlearningevaluatinghuman}. We use the same prompts and algorithm hyperparameters as in Table 2 of the main paper, and normalize the ImageReward score to $[0,1]$. Results are shown in \autoref{tab:sdxl_imagereward}.
+
+$\epsilon$-greedy remains the highest-performing sampling method in this experimental setting as well, highlighting its superiority across reward functions and diffusion model families/sizes.
+
+\begin{table}[h]
+  \centering
+  \caption{\small \textbf{SDXL results by sampling method, using ImageReward \citep{xu2023imagerewardlearningevaluatinghuman} as the reward function.}}
+  \label{tab:sdxl_imagereward}
+  \begin{tabular}{lcccc}
+    \toprule
+    \textbf{Reward} & \textbf{Naive} & \textbf{MCTS} & \textbf{Zero-Order Search} & $\bm{\epsilon}$\textbf{-greedy} \\
+    \midrule
+    Image-Reward & $0.4668$ & $0.5152$ & $0.5036$ & $\mathbf{0.5830}$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Tweedie estimates vs. learned reward models, few-step models}
+
+A possible concern with our proposed approach is that predicting $\mathbf{x}_0$ solely using Tweedie's formula with a base model remains too crude, potentially yielding relatively low benefits, especially during the initial sampling stages. Alternatives include using a learned soft value function on latents or a few-step model distilled from the corresponding base model, which might lead to better results.
+
+We test this empirically, showing that using a Tweedie estimate is extremely competitive with, and often \textit{actually outperforms} both these alternatives, across model architectures, sampling methods, and reward functions.
+
+First, in the class-conditional image generation setting, we compare running the ImageNet classifier on the Tweedie estimate $\hat{x}_0^{(t)}$, versus running a classifier on the noisy latent $x_t$ itself at each timestep $t$. For this ``noisy classifier'' we adopt the ImageNet-1k $64 \times 64$ classifier from \cite{dhariwal2021diffusionmodelsbeatgans}, trained to classify latents across timesteps and noise scales. As with the regular classifier reward, the reward here is the noisy classifier’s probability assigned to the ground-truth class. \autoref{tab:edm_tweedie_classifier} displays these results.
+
+\begin{table}[h]
+  \centering
+  \caption{\small \textbf{EDM results by sampling method using either a classifier reward on the Tweedie estimate, or a learned classifier on the noisy latents.}}
+  \label{tab:edm_tweedie_classifier}
+  \begin{tabular}{lccc}
+    \toprule
+    \textbf{Reward} & \textbf{Beam Search} & \textbf{Zero-Order Search} & $\bm{\epsilon}$\textbf{-greedy} \\
+    \midrule
+    ImageNet classifier on Tweedie-estimate & $0.9666$ & $\mathbf{0.6261}$ & $0.9885$ \\
+    Learned ImageNet classifier on latents & $\mathbf{0.9792}$ & $0.6099$ & $\mathbf{0.9998}$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Second, in the harder text-to-image generation setting, we compare computing the CLIP reward on the Tweedie estimate, with instead computing the CLIP reward on the clean sample generated using a one-step distilled model from the current latent and noise candidate, at each timestep $t$. As in the main paper, we use Stable Diffusion v1.5, and for the one-step model use InstaFlow-0.9B \citep{instaflow} which was distilled from SD1.5. Results are shown in \autoref{tab:sd_tweedie_onestep}.
+
+\begin{table}[h]
+  \centering
+  \caption{\small \textbf{SD results by sampling method using CLIP reward either on the Tweedie estimate or the predicted clean sample using a one-step distilled model.}}
+  \label{tab:sd_tweedie_onestep}
+  \begin{tabular}{lccc}
+    \toprule
+    \textbf{Reward} & \textbf{Beam Search} & \textbf{Zero-Order Search} & $\bm{\epsilon}$\textbf{-greedy} \\
+    \midrule
+    Tweedie-estimate & $\mathbf{0.2682}$ & $0.2689$ & $\mathbf{0.2973}$ \\
+    One-step model distilled from SD1.5 & $0.2671$ & $\mathbf{0.2825}$ & $0.2820$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Hyperparameter Settings \& Scaling}
+\label{app:hyperparams}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{scaling1.png}
+    \caption{\small \textbf{Performance scaling with number of noise candidates.} Performance of sampling methods as the number of noise candidates $N$ per timestep increases, measured on three reward functions (brightness, compressibility, ImageNet). $\epsilon$-greedy achieves the best scaling law, attaining the highest rewards at the majority of $N$ values; however, it experiences non-monotonic gains due to its greedy local selection, whereas MCTS—by approximating exhaustive search—shows steady, monotonic improvement.}
+    \label{scaling}
+\end{figure}
+
+
+
+\subsection{Scaling with Increasing $N, K$}
+
+It is important to recognize that \textbf{$\epsilon$-greedy attains the best ``scaling law'' among different search methods empirically}, although with drawbacks compared to MCTS. \autoref{scaling} displays the performance by sampling method as the number of noise candidates $N$ per timestep is scaled up, with all other hyperparameters fixed. Although $\epsilon$-greedy consistently achieves the best performance for sufficiently high $N$ as expected, it does face the limitation of not improving monotonically when scaling up $N$. This is because $\epsilon$-greedy (per its name) greedily selects the best noise based on $\hat{\x}_0^{(t)}$ at timestep $t$; hence, as we increase the number of noise candidates per timestep, it may greedily select a better noise at the current step which ends up being a worse one globally (i.e., a locally worse noise would have led to a better overall noise trajectory). MCTS is the only method that should (and indeed does) see monotonic improvements as it approximates exhaustive search over the $N^T$ possible noise trajectories.
+
+
+For this same reason, as shown in \autoref{scaling2} we see a similar lack of monotonicity in $\epsilon$-greedy and zero-order search's scaling as a function of the number of search iterations $K$ per timestep; though again $\epsilon$-greedy is empirically extremely performant, attaining higher rewards than vanilla zero-order search across $K \in [1,64]$ (leftmost figure).
+
+\subsection{Varying $K$ across timesteps}
+
+Recall that $\epsilon$-greedy requires $NKT$ NFEs for $K$ local search iterations. Note, however, that this assumes $K$ is fixed across timesteps. Letting 
+$K_t$ be the number of local search iterations at timestep $t$, we can significantly bring down $\mathbb{E}_t[K_t]$ by noting that $K_t$ only need be high at intermediate denoising steps where de-mixing occurs, and can be low at extreme (beginning and end) timesteps. We report $\epsilon$-greedy performance as a function of $\mathbb{E}_t[K_t]$ below in \autoref{avgkt}.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{scalingkt.png}
+    \caption{\small \textbf{EDM results by sampling method, varying $\mathbb{E}_t[K_t]$.} We use the same class labels and (other than $K$) algorithm hyperparameters as in Table 1 of the main paper.}
+    \label{avgkt}
+\end{figure}
+
+Indeed, $\epsilon$-greedy attains strong performance across all reward functions, even with extremely low average $K_t$ (can retain performance within 
+$0.002$ of the highest value with $\mathbb{E}_t[K_t]$  as low as 4), \textit{highlighting our method's computational efficiency compared to MCTS.}
+
+\subsection{Sweeps over $\lambda, \epsilon$}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{scaling2.png}
+    \caption{\small \textit{(Left)} \textbf{Average reward vs. number of search iterations per timestep.} \textit{(Center)} \textbf{Sweep over $\epsilon$ for $\epsilon$-greedy}. Highlights an optimal $\epsilon\approx 0.4$ that balances exploration and exploitation. \textit{(Right)} \textbf{Reward vs. maximum step size scaling factor $\lambda$ for zero-order and $\epsilon$-greedy search.} Demonstrates optimal $\lambda \in [0.1,0.2]$ and drastic performance drops at large $\lambda$, due to candidate set being overwhelmed by degenerate noise samples far outside the standard Normal distribution.}
+    \label{scaling2}
+\end{figure}
+
+We additionally conduct hyperparameter sweeps for $\lambda \in [0, 1]$ for zero-order and $\epsilon$-greedy) search, and the $\epsilon$ parameter in $\epsilon$-greedy (bottom right 2 plots of \autoref{scaling2}). We find optimal $\epsilon=0.4$ and $\lambda \in [0.1,0.2]$ across sampling methods and reward functions. Although the drop-offs in performance with higher $\epsilon$ and $\lambda$ (especially step for $\lambda$) seem surprising, we purport it is actually expected behavior again due to the greediness of zero-order and $\epsilon$-greedy search; the larger the $\epsilon$ and/or $\lambda$, the more we can move in ``noise space'' at each timestep, meaning the more likely it is for us to find a locally better but globally worse noise candidate. For large $\lambda$ especially, we may observe noise candidates far outside $\mathcal{N}(\mathbf{0},\sigma_t^2\mathbf{I})$ for which $\hat{\x}_0^{(t)}$ is no longer a meaningful sample under the reward function, which explains the very low scores in the lower right plot. (This also explains why $\epsilon$-greedy suffers less from this problem than vanilla zero-order search; it always has nonzero probability of selecting a random Normal sample and escaping these degenerate noise regions.)
+
+Overall, the optima we find seem to be a ``sweet spot'' in this regime---these values are large enough to permit exploration at each timestep, but not too large as to succumb to the aforementioned behavior.
+
+\subsection{Varying classifier-free guidance scale, number of timesteps $T$}
+
+See \autoref{tab:sd_cfg} and \autoref{tab:edm_T} above. These results confirm the \textit{superiority of 
+$\epsilon$-greedy irrespective of guidance scale and $T$}.
+
+\begin{table}
+  \centering
+  \caption{\small \textbf{SD results by sampling method, varying the classifier-free guidance scale.} We evaluate only CLIP reward as the brightness and compressibility rewards are generally insensitive to classifier-free guidance.}
+  \label{tab:sd_cfg}
+  \begin{tabular}{lccccc}
+    \toprule
+    \textbf{Method} & $\mathbf{cfg = 1.5}$ & $\mathbf{cfg = 3.0}$ & $\mathbf{cfg = 7.5}$ & $\mathbf{cfg = 9.0}$ & $\mathbf{cfg = 12.0}$ \\
+    \midrule
+    Naive Sampling       & $0.2446$ & $0.2635$ & $0.2457$ & $0.2650$ & $0.2671$ \\
+    Best-of-4 Sampling   & $0.2612$ & $0.2743$ & $0.2776$ & $0.2783$ & $0.2759$ \\
+    Beam Search          & $0.2673$ & $0.2314$ & $0.2682$ & $0.2801$ & $0.2780$ \\
+    MCTS                 & $0.2828$ & $0.2712$ & $0.2885$ & $0.2971$ & $0.2827$ \\
+    Zero-Order Search    & $0.2539$ & $0.2612$ & $0.2689$ & $0.2443$ & $0.2801$ \\
+    $\bm{\epsilon}$-greedy & $\mathbf{0.2958}$ & $\mathbf{0.3092}$ & $\mathbf{0.2973}$ & $\mathbf{0.3055}$ & $\mathbf{0.2994}$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{table}
+  \centering
+  \caption{\small \textbf{EDM results by sampling method, varying the value of $T$.} Each cell contains two values, corresponding to scores under the Brightness / Compressibility reward functions.}
+  \label{tab:edm_T}
+  \setlength{\tabcolsep}{4pt}   % default is 6pt
+    \renewcommand{\arraystretch}{1.05}
+    \small
+  \begin{tabular}{lccccc}
+    \toprule
+    \textbf{Method} & ${T=18}$ & ${T=32}$ & ${T=64}$ & ${T=128}$ & ${T=256}$ \\
+    \midrule
+    Naive Sampling     & $0.4965 / 0.3563$ & $0.3912 / 0.3921$ & $0.4621 / 0.4549$ & $0.4849 / 0.4052$ & $0.4541 / 0.4250$ \\
+    Best-of-4 Sampling & $0.5767 / 0.4220$ & $0.5666 / 0.4992$ & $0.6475 / 0.5084$ & $0.5801 / 0.5101$ & $0.5923 / 0.4917$ \\
+    Beam Search        & $0.6334 / 0.4679$ & $0.6013 / 0.4321$ & $0.5742 / 0.5023$ & $0.6162 / 0.4517$ & $0.6618 / 0.4879$ \\
+    MCTS               & $0.7575 / 0.5395$ & $0.6910 / 0.5153$ & $0.6831 / 0.5624$ & $0.6957 / 0.5018$ & $0.7494 / 0.5789$ \\
+    Zero-Order Search  & $0.6083 / 0.3751$ & $0.9999 / 0.7417$ & $0.9999 / \mathbf{0.7607}$ & $0.9999 / 0.7671$ & $0.9999 / \mathbf{0.7677}$ \\
+    $\bm{\epsilon}$-greedy & $\mathbf{0.9813} / \mathbf{0.7208}$ & $\mathbf{0.9999} / \mathbf{0.7424}$ & $\mathbf{0.9999} / 0.7588$ & $\mathbf{0.9999} / \mathbf{0.7680}$ & $\mathbf{0.9999} / 0.7672$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+
+% \clearpage
+
+\section{Qualitative Results}
+\label{app:qual}
+
+To assist the reader in understanding the optimization process, we offer visualizations of the generated $512\times 512$ resolution images from Stable Diffusion using our different sampling methods. The aim is to provide a qualitative evaluation of the proposed $\epsilon$-greedy method.
+
+As can be seen in the images below, our inference-time algorithms and most noticeably $\epsilon$-greedy indeed yield samples with significantly higher rewards, while avoiding mode collapse and ensuring distributional guarantees by virtue of being solely inference-time noise search methods.
+
+Not only do we \textit{not} cherry-pick examples, we in fact display results using prompts that are ``hard/adversarial'' with respect to the reward, i.e. ``a \textit{black} lizard'' for brightness or ``a potted fern \textit{with hundreds of leaves}'' for compressibility. The success of our method even on these samples highlights two desiderata our algorithms satisfy: \textbf{faithfulness to prompt} and \textbf{lack of mode collapse}.
+
+Quite remarkably, we see that when using our sampling algorithms, the denoising process consistently uses the additional NFEs to employ one of a \textit{limited} number of reward optimization ``strategies'' shared across prompts and methods. Some examples of these common strategies, prefixed by the reward functions they apply to, include:
+\begin{itemize}
+    \item (compressibility) blurring content;
+    \item (brightness, compressibility) occluding or minimizing the subject of the image;
+    \item (compressibility) changing style from photorealistic to ``animated/cartoonish'';
+    \item and (CLIP) emphasizing distinctive features of the image subject. Examples (see \autoref{fig:qualclip}) include the curved beak and wide brown region around the eyes of the kākāpō and the unique red nose of the red wolf. It's particularly remarkable that just noise optimization alone for the CLIP reward increases faithfulness to elements of the prompt like ``\textit{three} \textbf{rockhoppers} \underline{in a line};'' following detailed prompts like these is a notorious and long-standing problem in diffusion \citep{black2024trainingdiffusionmodelsreinforcement,kim2025visuallyguideddecodinggradientfree}, and \textit{none of these features together were captured by the other sampling methods besides $\epsilon$-greedy}.
+\end{itemize}
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{brightness.png}
+    \caption{\small Visualizations of images generated with Stable Diffusion v1.5, with varying sampling strategies, using the brightness reward function.}
+    \label{qual1}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{compress.png}
+    \caption{\small Visualizations of images generated with Stable Diffusion v1.5, with varying sampling strategies, using the compressibility reward function.}
+    \label{qual2}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{mcts.png}
+    \caption{\small Visualizations of images generated with Stable Diffusion v1.5, with varying sampling strategies, using the CLIP reward function.}
+    \label{fig:qualclip}
+\end{figure}
+
+\clearpage
+
+\section{Broader Impacts}
+\label{impacts}
+
+Our inference‐time optimization framework for diffusion models empowers users to steer generative outputs toward arbitrary, user-defined rewards. In positive scenarios, artists and designers can interactively refine visual concepts in real time, accelerating creative workflows; educators and accessibility advocates can tune outputs for enhanced contrast or simplified imagery to aid visually impaired learners; and scientists can optimize for perceptual clarity or domain-specific criteria (e.g.\ highlighting anatomical structures in medical images), improving interpretability of complex data visualizations.
+
+However, the same mechanism that makes our method so flexible also amplifies risks. By optimizing for malicious objectives—such as photorealistic deepfakes tailored to evade detection or synthetic imagery crafted to reinforce biased or harmful stereotypes—adversaries could undermine trust in visual media, facilitate disinformation campaigns, or violate individual privacy. Moreover, if reward functions inadvertently encode cultural or demographic biases, optimized outputs may perpetuate unfair or exclusionary representations.
+
+Notably, however, the proposed methods are simply algorithms with which to sample from existing, already released diffusion models; hence safeguards paired with those models remain in place. For instance, models like those in the Stable Diffusion family are paired with NSFW content checkers that will filter out images with harmful content that might be generated with our algorithms, helping mitigate harm from cases where users try to optimize objectives that reward for such content.
+
+\section{Discussion and Next Steps}
+\label{limitations}
+
+While our method yields state-of-the-art class-conditional and text-to-image generation results, it is not without its limitations:
+
+\subsection{Compute Efficiency} 
+
+For $N$ noise candidates and $K$ local search iterations per timestep, the $\epsilon$-greedy approach requires $NK$ times the NFEs compared to vanilla sampling for generating a single image. While this approach remains computationally linear with respect to the number of timesteps $T$, thus making it significantly less costly than more computationally intensive alternatives like MCTS, it nonetheless poses a computational burden. This additional computational cost could limit practical deployment scenarios, particularly where resources or latency constraints are critical factors.
+
+To mitigate this, recalling \autoref{lipschitz}, as a proof-of-concept, we run zero-order search and $\epsilon$-greedy with $K=20$ for only $\{t: 0.01 \leq \sigma_t \leq 1\}$, $K=1$ otherwise. This yields rewards within $\pm 0.04$ of the original results (where $K=20$ is used at all denoising steps), but cuts the NFEs by more than half. We recognize exploration of similar approaches to increase computational efficiency as an important direction for future research.
+
+\subsection{Population-Based Metrics} 
+
+Unlike traditional population-based metrics such as FID or Inception Score \citep{salimans2016improvedtechniquestraininggans}, our evaluation protocol focused on single-image rewards (e.g., classifier confidence, brightness, compressibility). Evaluating on population-based metrics is part of our future work. However, it is worth noting that the type of single-objective optimization we employ has become somewhat of a standard practice in recent works regarding reward optimization of diffusion models; e.g. \citet{yeh2025trainingfreediffusionmodelalignment, black2024trainingdiffusionmodelsreinforcement} use the exact same experimental setup as we do. In addition, our method poses no threat to the population-based guarantees that measures like FID try to make, since all our methods---by virtue of being inference-time search algorithms that are completely gradient-free---avoid mode collapse and ensure distributional guarantees \citep{yeh2025trainingfreediffusionmodelalignment}.
+
+\subsection{Reward Overoptimization}
+
+For high enough $\lambda$, the zero-order and $\epsilon$-greedy searches occasionally over-optimize the brightness and compressibility rewards, generating full-white and single-color images, respectively. This is due to the fact that, for large enough $\lambda$, the local-search iterations enable finding noises potentially far outside $\mathcal{N}(\mathbf{0},\sigma_t^2\mathbf{I})$ that no longer remain faithful to the context $\mathbf{c}$. While (1) this only occurs with rewards $r$ that grade samples $\x_0$ independent of their corresponding contexts $\mathbf{c}$, indicating that such over-optimization could be construed as extreme efficacy of our method; and (2) this behavior can be easily mitigated by reducing/tuning $\lambda$; alterations to this method to prevent over-optimization irrespective of hyperparameter settings remains an important direction of future work. Examples include the regularization mechanisms proposed by \citet{zhang2024confrontingrewardoveroptimizationdiffusion,tang2024inferencetimealignmentdiffusionmodels}.
+
+% \clearpage
+
+\subsection{Future Work} 
+
+Directions for future work include:
+
+\paragraph{Reducing computational overhead.} Future work should aim to lower the cost of per-step search, for instance through adaptive scheduling of NFEs or by learning proposal distributions that make candidate selection more efficient.  
+
+\paragraph{Exploring alternative bandit solvers.} Hybrid methods, such as combining tree-based search with bandit algorithms, may improve sample efficiency and accelerate convergence.  
+
+\paragraph{Mitigating reward overoptimization.} Regularization strategies could help reduce overfitting to specific reward signals.
+
+\paragraph{Modeling diffusion-step interactions.} More sophisticated search approaches should account for correlations between noise candidates across timesteps, rather than treating each step independently.  
+
+\paragraph{Learning compute-optimal regions.} Identifying points during denoising where search is most valuable could allow resources to be allocated selectively, improving efficiency without sacrificing quality.  
+
+\paragraph{Using reward ensembles.} Averaging across multiple reward metrics, such as different VLM-based signals, can provide more stable guidance than relying on a single objective.  
+
+\paragraph{Human-in-the-loop extensions.} Future systems could be adapted to operate in preference-based settings where only human ratings or feedback are available instead of closed-form reward functions.  
+
+% \section{Licenses for Existing Assets}
+
+% We leverage the following assets in our work:
+% \begin{enumerate}
+%     \item \textbf{Elucidated Diffusion Model (EDM)} \citep{karras2022elucidatingdesignspacediffusionbased}
+%     \begin{itemize}
+%         \item \textbf{URL}: \href{https://github.com/NVlabs/edm}{https://github.com/NVlabs/edm}
+%         \item \textbf{License \& Terms of Use}: \href{https://github.com/NVlabs/edm/blob/main/LICENSE.txt}{CC BY-NC-SA 4.0}
+%     \end{itemize}
+    
+%     \item \textbf{Stable Diffusion v1.5} \citep{rombach2022highresolutionimagesynthesislatent}
+%     \begin{itemize}
+%         \item \textbf{URL}: \href{https://huggingface.co/stable-diffusion-v1-5/stable-diffusion-v1-5}{https://huggingface.co/stable-diffusion-v1-5/stable-diffusion-v1-5}
+%         \item \textbf{License \& Terms of Use}: \href{https://huggingface.co/spaces/CompVis/stable-diffusion-license}{CreativeML OpenRAIL M}
+%     \end{itemize}
+    
+%     \item \textbf{CLIP} \citep{radford2021learningtransferablevisualmodels}
+%     \begin{itemize}
+%         \item \textbf{URL}: \href{https://github.com/openai/CLIP}{https://github.com/openai/CLIP}
+%         \item \textbf{License \& Terms of Use}: \href{https://github.com/openai/CLIP/blob/main/LICENSE}{MIT license}
+%     \end{itemize}
+%     \item \textbf{ImageNet-64 Classifier} \citep{dhariwal2021diffusionmodelsbeatgans}
+
+%     \begin{itemize}
+%         \item \textbf{URL}: \href{https://github.com/openai/guided-diffusion}{https://github.com/openai/guided-diffusion}
+%         \item \textbf{License \& Terms of Use}: \href{https://github.com/openai/guided-diffusion/blob/main/LICENSE}{MIT license}
+%     \end{itemize}
+    
+%     \item \textbf{ImageNet-64 Dataset} \citep{russakovsky2015imagenetlargescalevisual}
+
+%     \begin{itemize}
+%         \item \textbf{URL}: \href{https://www.image-net.org/}{https://www.image-net.org/}
+%         \item \textbf{License \& Terms of Use}: see \href{https://www.image-net.org/download.php}{here}
+%     \end{itemize}
+% \end{enumerate}
+
+\end{document}

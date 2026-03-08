@@ -1,0 +1,22 @@
+\section{Additional Qualitative Results}
+\label{sec:appx:additional qualitative}
+In this section, we present additional qualitative results that extend the examples shown in Fig.~\ref{fig:quali_all} of the main paper. Consistent with the Fig.~\ref{fig:quali_all}, all results here are generated using FLUX~\cite{BlackForestLabs:2024Flux}.
+
+\paragraph{Layout-to-Image Generation.}
+We present additional qualitative results for the layout-to-image generation task in Fig.~\ref{fig:quali_spatial}. Each example visualizes the input layout with color-coded phrases and their corresponding bounding boxes for clarity. \methodname{} consistently respects both the spatial constraints and object presence specified in the layout. The first four rows (Row 1–4) illustrate failure cases where baseline methods generate objects in incorrect locations---either misaligned with the bounding boxes or placed in unrelated regions. 
+For instance, in Row 1, baseline methods fail to accurately place objects within the designated bounding boxes—both the dog and the eagle appear misaligned. Similarly, in Row 4, objects such as the cat and skateboard do not conform to the specified spatial constraints, spilling outside their intended regions in the baseline outputs.  
+In contrast, \methodname{} successfully generates all objects within their designated bounding boxes. The last four rows (Rows 5–8) illustrate more severe failure cases by baselines, where not only is spatial alignment severly violated, but some objects are entirely missing. For example, in Row 5, DAS~\cite{kim2025DAS} fails to generate the apple altogether, while the other baselines exhibit significant spatial misalignment. In Row 7, some baselines produce unrealistic object combinations—such as the apple and red cup being merged—and misinterpret the layout, placing the apple inside the red cup instead of correctly positioning it in the wooden bowl.
+\methodname{} not only positions each object correctly but also ensures that all described entities are present and visually distinct.
+
+\paragraph{Quantity-Aware Image Generation.}
+We provide additional qualitative results for the quantity-aware image generation task in Fig.~\ref{fig:quali_counting_1} and Fig.~\ref{fig:quali_counting_2}. The examples cover a variety of object categories and target counts, showing that \methodname{} works reliably across different scenarios. 
+For each image, we overlay the predicted object centroids from a held-out counting model~\cite{AminiNaieni2024countgd} for easier comparison. Additionally, we display the predicted count below each image, along with the absolute difference from the target quantity in the format $(\Delta\cdot)$. We highlight best case with blue color.
+\methodname{} consistently generates the correct number of objects, even in more challenging cases like cluttered scenes or small, overlapping items. On the other hand, baseline methods often produce too many or too few objects, and sometimes include misleading objects. This trend holds across all categories, from food to everyday objects.
+
+
+\paragraph{Aesthetic-Preference Image Generation.}
+Further qualitative results for aesthetic-preference image generation are presented in Fig.~\ref{fig:appen:quali_aesthetic}. For each prompt (e.g., \textit{``Horse''}, \textit{``Bird''}), we show the predicted aesthetic score~\cite{schuhmann2022aesthetic} below each image. While all methods generate visually plausible outputs, \methodname{} consistently produces images with higher aesthetic appeal, as reflected in both qualitative impressions and the predicted aesthetic scores.
+
+\input{quali_appendix/spatial}
+\input{quali_appendix/counting}
+\input{quali_appendix/aesthetic}

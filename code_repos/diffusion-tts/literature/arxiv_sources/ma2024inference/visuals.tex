@@ -1,0 +1,144 @@
+\section{More Visualizations on Scaling Behavior}
+
+\subsection{SiT-XL}
+
+The images presented in this section are sampled from the pre-trained SiT-XL in $256$ resolution, using 2$^\text{nd}$ order Heun sampler and guidance scale of $4.0$. Each row of images is structured as follows: \begin{itemize}
+    \item \textbf{Left three}: sampled with increasing steps: 10, 20, 250. 
+    \item \textbf{Right three}: sampled with Zero-Order Search and the DINO classification verifier. We set $N = 2$ and $\lambda = 0.95$ for Zero-Order Search, and the equivalent NFEs invested are 450, 1850, 6650.
+\end{itemize}
+
+\begin{figure}[h]
+    \captionsetup{singlelinecheck=false} % <---
+    \centering
+    \includegraphics[width=\linewidth]{figures/sit_visuals/33_grid.png}
+    \caption{\textbf{``loggerhead turtle'' (33)}}
+\end{figure}
+
+\begin{figure}[h]
+    \captionsetup{singlelinecheck=false} % <---
+    \centering
+    \includegraphics[width=\linewidth]{figures/sit_visuals/89_grid.png}
+    \caption{\textbf{``Sulphur-crested cockatoo'' (89)}}
+\end{figure}
+
+\begin{figure}[h]
+    \captionsetup{singlelinecheck=false} % <---
+    \centering
+    \includegraphics[width=\linewidth]{figures/sit_visuals/250_grid.png}
+    \caption{\textbf{``Siberian husky'' (250)}}
+\end{figure}
+
+\begin{figure}[h]
+    \captionsetup{singlelinecheck=false} % <---
+    \centering
+    \includegraphics[width=\linewidth]{figures/sit_visuals/270_grid.png}
+    \caption{\textbf{``Arctic wolf'' (270)}}
+\end{figure}
+
+\begin{figure}[h]
+    \captionsetup{singlelinecheck=false} % <---
+    \centering
+    \includegraphics[width=\linewidth]{figures/sit_visuals/429_grid.png}
+    \caption{\textbf{``baseball'' (429)}}
+\end{figure}
+
+\begin{figure}[h]
+    \captionsetup{singlelinecheck=false} % <---
+    \centering
+    \includegraphics[width=\linewidth]{figures/sit_visuals/587_grid.png}
+    \caption{\textbf{``hammer'' (587)}}
+\end{figure}
+
+\begin{figure}[h]
+    \captionsetup{singlelinecheck=false} % <---
+    \centering
+    \includegraphics[width=\linewidth]{figures/sit_visuals/980_grid.png}
+    \caption{\textbf{``volcano'' (980)}}
+\end{figure}
+
+\clearpage
+
+\subsection{FLUX.1-dev}
+
+The images presented in this section are sampled from the pre-trained FLUX.1-dev in $1024$ resolution, using Euler sampler and guidance scale of $3.5$. Each row of images is structured as follows: \begin{itemize}
+    \item \textbf{Left three}: sampled with increasing steps: 4, 16, 30. 
+    \item \textbf{Right three}: sampled with Zero-Order Search and the Verifier Ensemble. We set $N = 2$ and $\lambda = 0.95$ for Zero-Order Search, and the equivalent NFEs invested are 120, 960, 2880.
+\end{itemize}
+
+
+\begin{figure}[h]
+    \includegraphics[width=\linewidth]{figures/flux_visuals/194_grid.jpg}
+    \caption{\textbf{``New York Skyline with `Diffusion' written with fireworks on the sky.''}}
+\end{figure}
+
+\begin{figure}[h]
+    \captionsetup{singlelinecheck=false} % <---
+    \centering
+    \includegraphics[width=\linewidth]{figures/flux_visuals/123_grid.jpg}
+    \caption{\textbf{``A zebra underneath a broccoli.''}}
+\end{figure}
+
+\begin{figure}[h]
+    \captionsetup{singlelinecheck=false} % <---
+    \centering
+    \includegraphics[width=\linewidth]{figures/flux_visuals/126_grid.jpg}
+    \caption{\textbf{``A car on the left of a bus.''}}
+\end{figure}
+
+\begin{figure}[h]
+    \captionsetup{singlelinecheck=false} % <---
+    \centering
+    \includegraphics[width=\linewidth]{figures/flux_visuals/149_grid.jpg}
+    \caption{\textbf{``Lego Arnold Schwarzenegger.''}}
+\end{figure}
+
+\begin{figure}[h]
+    \captionsetup{singlelinecheck=false} % <---
+    \centering
+    \includegraphics[width=\linewidth]{figures/flux_visuals/145_grid.jpg}
+    \caption{\textbf{``An ancient Egyptian painting depicting an argument over whose turn it is to take out the trash.''}}
+\end{figure}
+
+\begin{figure}[h]
+    \captionsetup{singlelinecheck=false} % <---
+    \centering
+    \includegraphics[width=\linewidth]{figures/flux_visuals/183_grid.jpg}
+    \caption{\textbf{``A storefront with `Deep Learning' written on it.''}}
+\end{figure}
+
+\begin{figure}[h]
+    \captionsetup{singlelinecheck=false} % <---
+    \centering
+    \includegraphics[width=\linewidth]{figures/flux_visuals/152_grid.jpg}
+    \caption{\textbf{``An IT-guy trying to fix hardware of a PC tower is being tangled by the PC cables like Laokoon. Marble, copy after Hellenistic original from ca. 200 BC. Found in the Baths of Trajan, 1506.''}}
+\end{figure}
+
+\clearpage
+
+\subsection{PixArt-$\Sigma$}
+
+The images presented in this section are sampled from the pre-trained PixArt-$\Sigma$ in $1024$ resolution, using DDIM sampler and guidance scale of $4.5$. Each row of images is structured as follows: \begin{itemize}
+    \item \textbf{Left three}: sampled with increasing steps: 4, 8, 28. 
+    \item \textbf{Right three}: sampled with Zero-Order Search and the Verifier Ensemble. We set $N = 2$ and $\lambda = 0.95$ for Zero-Order Search, and the equivalent NFEs invested are 112, 896, 2688.
+\end{itemize}
+
+\begin{figure}[h]
+    \captionsetup{singlelinecheck=false} % <---
+    \centering
+    \includegraphics[width=\linewidth]{figures/pixart_visuals/1_grid.jpg}
+    \caption{\textbf{``An oil painting portrait of the regal Burger King posing with a Whopper.''}}
+\end{figure}
+
+\begin{figure}[h]
+    \captionsetup{singlelinecheck=false} % <---
+    \centering
+    \includegraphics[width=\linewidth]{figures/pixart_visuals/3_grid.jpg}
+    \caption{\textbf{``A small cactus with a happy face in the Sahara desert.''}}
+\end{figure}
+
+\begin{figure}[h]
+    \captionsetup{singlelinecheck=false} % <---
+    \centering
+    \includegraphics[width=\linewidth]{figures/pixart_visuals/4_grid.jpg}
+    \caption{\textbf{``Greek statue of a man tripping over a cat.''}}
+\end{figure}

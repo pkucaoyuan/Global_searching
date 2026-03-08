@@ -1,0 +1,444 @@
+\begin{thebibliography}{10}
+
+\bibitem{openai:o3}
+OpenAI.
+\newblock {Introducing OpenAI o3 and o4-mini}.
+\newblock \url{https://openai.com/index/introducing-o3-and-o4-mini/}, 2025.
+
+\bibitem{Guo2025:deepseek}
+Daya Guo, Dejian Yang, Haowei Zhang, Junxiao Song, Ruoyu Zhang, Runxin Xu, Qihao Zhu, Shirong Ma, Peiyi Wang, Xiao Bi, et~al.
+\newblock {DeepSeek-R1}: Incentivizing reasoning capability in {LLMs} via reinforcement learning.
+\newblock {\em arXiv preprint arXiv:2501.12948}, 2025.
+
+\bibitem{sohldickstein2015deep}
+Jascha Sohl-Dickstein, Eric~A. Weiss, Niru Maheswaranathan, and Surya Ganguli.
+\newblock Deep unsupervised learning using nonequilibrium thermodynamics.
+\newblock In {\em ICML}, 2015.
+
+\bibitem{song2020sde}
+Yang Song, Jascha Sohl-Dickstein, Diederik~P Kingma, Abhishek Kumar, Stefano Ermon, and Ben Poole.
+\newblock Score-based generative modeling through stochastic differential equations.
+\newblock In {\em ICLR}, 2020.
+
+\bibitem{ho2020ddpm}
+Jonathan Ho, Ajay Jain, and Pieter Abbeel.
+\newblock Denoising diffusion probabilistic models.
+\newblock In {\em NeurIPS}, 2020.
+
+\bibitem{albergo2023stochasticinterpolantsunifyingframework}
+Michael~S. Albergo, Nicholas~M. Boffi, and Eric Vanden-Eijnden.
+\newblock Stochastic interpolants: A unifying framework for flows and diffusions.
+\newblock {\em arXiv preprint arXiv:2303.08797}, 2023.
+
+\bibitem{ma2024sitexploringflowdiffusionbased}
+Nanye Ma, Mark Goldstein, Michael~S. Albergo, Nicholas~M. Boffi, Eric Vanden-Eijnden, and Saining Xie.
+\newblock {SiT}: Exploring flow and diffusion-based generative models with scalable interpolant transformers.
+\newblock {\em arXiv preprint arXiv:2401.08740}, 2024.
+
+\bibitem{uehara2025inference}
+Masatoshi Uehara, Yulai Zhao, Chenyu Wang, Xiner Li, Aviv Regev, Sergey Levine, and Tommaso Biancalani.
+\newblock Inference-time alignment in diffusion models with reward-guided generation: Tutorial and review.
+\newblock {\em arXiv preprint arXiv:2501.09685}, 2025.
+
+\bibitem{doucet2001sequential}
+Arnaud Doucet, Nando De~Freitas, Neil~James Gordon, et~al.
+\newblock {\em Sequential Monte Carlo methods in practice}, volume~1.
+\newblock Springer, 2001.
+
+\bibitem{del2006sequential}
+Pierre Del~Moral, Arnaud Doucet, and Ajay Jasra.
+\newblock Sequential monte carlo samplers.
+\newblock {\em Journal of the Royal Statistical Society Series B: Statistical Methodology}, 68(3):411--436, 2006.
+
+\bibitem{chopin2020introduction}
+Nicolas Chopin, Omiros Papaspiliopoulos, et~al.
+\newblock {\em An introduction to sequential Monte Carlo}, volume~4.
+\newblock Springer, 2020.
+
+\bibitem{kim2025DAS}
+Sunwoo Kim, Minkyu Kim, and Dongmin Park.
+\newblock Test-time alignment of diffusion models without reward over-optimization.
+\newblock In {\em ICLR}, 2025.
+
+\bibitem{kim2025inference}
+Jaihoon Kim, Taehoon Yoon, Jisung Hwang, and Minhyuk Sung.
+\newblock Inference-time scaling for flow models via stochastic generation and rollover budget forcing.
+\newblock {\em arXiv preprint arXiv:2503.19385}, 2025.
+
+\bibitem{wu2023tds}
+Luhuan Wu, Brian~L. Trippe, Christian~A Naesseth, John~Patrick Cunningham, and David Blei.
+\newblock Practical and asymptotically exact conditional sampling in diffusion models.
+\newblock In {\em NeurIPS}, 2023.
+
+\bibitem{dou2024fps}
+Zehao Dou and Yang Song.
+\newblock Diffusion posterior sampling for linear inverse problem solving: A filtering perspective.
+\newblock In {\em ICLR}, 2024.
+
+\bibitem{singh2025code}
+Anuj Singh, Sayak Mukherjee, Ahmad Beirami, and Hadi~J. Rad.
+\newblock {CoDe}: Blockwise control for denoising diffusion models.
+\newblock {\em Transactions on Machine Learning Research}, 2025.
+
+\bibitem{li2024svdd}
+Xiner Li, Yulai Zhao, Chenyu Wang, Gabriele Scalia, Gokcen Eraslan, Surag Nair, Tommaso Biancalani, Shuiwang Ji, Aviv Regev, Sergey Levine, and Masatoshi Uehara.
+\newblock Derivative-free guidance in continuous and discrete diffusion models with soft value-based decoding.
+\newblock {\em arXiv preprint arXiv:2408.08252}, 2024.
+
+\bibitem{efron2011tweedie}
+Bradley Efron.
+\newblock Tweedie's formula and selection bias.
+\newblock {\em Journal of the American Statistical Association}, 106(496):1602--1614, 2011.
+
+\bibitem{uehara2024understanding}
+Masatoshi Uehara, Yulai Zhao, Tommaso Biancalani, and Sergey Levine.
+\newblock Understanding reinforcement learning-based fine-tuning of diffusion models: A tutorial and review.
+\newblock {\em arXiv preprint arXiv:2407.13734}, 2024.
+
+\bibitem{uehara2024finetuningcontinuoustimediffusionmodels}
+Masatoshi Uehara, Yulai Zhao, Kevin Black, Ehsan Hajiramezanali, Gabriele Scalia, Nathaniel~Lee Diamant, Alex~M Tseng, Tommaso Biancalani, and Sergey Levine.
+\newblock Fine-tuning of continuous-time diffusion models as entropy-regularized control.
+\newblock {\em arXiv preprint arXiv:2402.15194}, 2024.
+
+\bibitem{trippe2023smcdiff}
+Brian~L. Trippe, Jason Yim, Doug Tischer, David Baker, Tamara Broderick, Regina Barzilay, and Tommi~S. Jaakkola.
+\newblock Diffusion probabilistic modeling of protein backbones in {3D} for the motif-scaffolding problem.
+\newblock In {\em ICLR}, 2023.
+
+\bibitem{cardoso2024mcgdiff}
+Gabriel Cardoso, Yazid~Janati el~idrissi, Sylvain~Le Corff, and Eric Moulines.
+\newblock {Monte Carlo} guided denoising diffusion models for {Bayesian} linear inverse problems.
+\newblock In {\em ICLR}, 2024.
+
+\bibitem{song2023consistency}
+Yang Song, Prafulla Dhariwal, Mark Chen, and Ilya Sutskever.
+\newblock {Consistency Models}.
+\newblock In {\em ICML}, 2023.
+
+\bibitem{kim2023consistency}
+Dongjun Kim, Chieh-Hsin Lai, Wei-Hsiang Liao, Naoki Murata, Yuhta Takida, Toshimitsu Uesaka, Yutong He, Yuki Mitsufuji, and Stefano Ermon.
+\newblock {Consistency Trajectory Models}: Learning probability flow {ODE} trajectory of diffusion.
+\newblock In {\em ICLR}, 2024.
+
+\bibitem{lu2025scm}
+Cheng Lu and Yang Song.
+\newblock Simplifying, stabilizing and scaling continuous-time consistency models.
+\newblock In {\em ICLR}, 2025.
+
+\bibitem{sauer2024ladd}
+Axel Sauer, Frederic Boesel, Tim Dockhorn, Andreas Blattmann, Patrick Esser, and Robin Rombach.
+\newblock Fast high-resolution image synthesis with latent adversarial diffusion distillation.
+\newblock {\em arXiv preprint arXiv:2403.12015}, 2024.
+
+\bibitem{liu2023flow}
+Xingchao Liu, Chengyue Gong, and qiang liu.
+\newblock Flow straight and fast: Learning to generate and transfer data with rectified flow.
+\newblock In {\em ICLR}, 2023.
+
+\bibitem{BlackForestLabs:2024Flux}
+Black~Forest Labs.
+\newblock {FLUX}.
+\newblock \url{https://github.com/black-forest-labs/flux}, 2024.
+
+\bibitem{chen2025sanasprint}
+Junsong Chen, Shuchen Xue, Yuyang Zhao, Jincheng Yu, Sayak Paul, Junyu Chen, Han Cai, Enze Xie, and Song Han.
+\newblock {SANA-Sprint}: One-step diffusion with continuous-time consistency distillation.
+\newblock {\em arXiv preprint arXiv:2503.09641}, 2025.
+
+\bibitem{metropolis_hastings}
+W.~K. Hastings.
+\newblock Monte carlo sampling methods using markov chains and their applications.
+\newblock {\em Biometrika}, 57(1):97--109, 1970.
+
+\bibitem{bj/1178291835}
+Gareth~O. Roberts and Richard~L. Tweedie.
+\newblock Exponential convergence of langevin distributions and their discrete approximations.
+\newblock {\em Bernoulli}, 2(4):341 -- 363, 1996.
+
+\bibitem{roberts2002langevin}
+Gareth~O. Roberts and Osnat Stramer.
+\newblock Langevin diffusions and metropolis-hastings algorithms.
+\newblock {\em Methodology and computing in applied probability}, 4:337--357, 2002.
+
+\bibitem{duane1987hybrid}
+Simon Duane, Anthony~D Kennedy, Brian~J Pendleton, and Duncan Roweth.
+\newblock Hybrid monte carlo.
+\newblock {\em Physics letters B}, 195(2):216--222, 1987.
+
+\bibitem{girolami2011riemann}
+Mark Girolami and Ben Calderhead.
+\newblock Riemann manifold langevin and hamiltonian monte carlo methods.
+\newblock {\em Journal of the Royal Statistical Society Series B: Statistical Methodology}, 73(2):123--214, 2011.
+
+\bibitem{Brooks_2011}
+Steve Brooks, Andrew Gelman, Galin Jones, and Xiao-Li Meng.
+\newblock {\em Handbook of Markov Chain Monte Carlo}.
+\newblock Chapman and Hall/CRC, May 2011.
+
+\bibitem{Cotter_2013pcnl}
+S.~L. Cotter, G.~O. Roberts, A.~M. Stuart, and D.~White.
+\newblock {MCMC} methods for functions: Modifying old algorithms to make them faster.
+\newblock {\em Statistical Science}, 28(3), August 2013.
+
+\bibitem{Beskos_2017geometricMCMC}
+Alexandros Beskos, Mark Girolami, Shiwei Lan, Patrick~E. Farrell, and Andrew~M. Stuart.
+\newblock Geometric {MCMC} for infinite-dimensional inverse problems.
+\newblock {\em Journal of Computational Physics}, 335:327–351, April 2017.
+
+\bibitem{doi:10.1142/S0219493708002378pcnlDiffusionBridge}
+Alexandros Beskos, Gareth Roberts, Andrew Stuart, and Jochen Voss.
+\newblock {MCMC} methods for diffusion bridges.
+\newblock {\em Stochastics and Dynamics}, 08(03):319--350, 2008.
+
+\bibitem{chung2023dps}
+Hyungjin Chung, Jeongsol Kim, Michael~Thompson Mccann, Marc~Louis Klasky, and Jong~Chul Ye.
+\newblock Diffusion posterior sampling for general noisy inverse problems.
+\newblock In {\em ICLR}, 2023.
+
+\bibitem{yu2023freedom}
+Jiwen Yu, Yinhuai Wang, Chen Zhao, Bernard Ghanem, and Jian Zhang.
+\newblock {FreeDoM}: Training-free energy-guided conditional diffusion model.
+\newblock In {\em ICCV}, 2023.
+
+\bibitem{bansal2024universal}
+Arpit Bansal, Hong-Min Chu, Avi Schwarzschild, Roni Sengupta, Micah Goldblum, Jonas Geiping, and Tom Goldstein.
+\newblock Universal guidance for diffusion models.
+\newblock In {\em ICLR}, 2024.
+
+\bibitem{ye2024tfg}
+Haotian Ye, Haowei Lin, Jiaqi Han, Minkai Xu, Sheng Liu, Yitao Liang, Jianzhu Ma, James Zou, and Stefano Ermon.
+\newblock {TFG}: Unified training-free guidance for diffusion models.
+\newblock In {\em NeurIPS}, 2024.
+
+\bibitem{lee2023aligning}
+Kimin Lee, Hao Liu, Moonkyung Ryu, Olivia Watkins, Yuqing Du, Craig Boutilier, Pieter Abbeel, Mohammad Ghavamzadeh, and Shixiang~Shane Gu.
+\newblock Aligning text-to-image models using human feedback.
+\newblock {\em arXiv preprint arXiv:2302.12192}, 2023.
+
+\bibitem{wu2023hps}
+Xiaoshi Wu, Yiming Hao, Keqiang Sun, Yixiong Chen, Feng Zhu, Rui Zhao, and Hongsheng Li.
+\newblock Human preference score v2: A solid benchmark for evaluating human preferences of text-to-image synthesis.
+\newblock {\em arXiv preprint arXiv:2306.09341}, 2023.
+
+\bibitem{black2024ddpo}
+Kevin Black, Michael Janner, Yilun Du, Ilya Kostrikov, and Sergey Levine.
+\newblock Training diffusion models with reinforcement learning.
+\newblock In {\em ICLR}, 2024.
+
+\bibitem{fan2023reinforcement}
+Ying Fan, Olivia Watkins, Yuqing Du, Hao Liu, Moonkyung Ryu, Craig Boutilier, Pieter Abbeel, Mohammad Ghavamzadeh, Kangwook Lee, and Kimin Lee.
+\newblock Reinforcement learning for fine-tuning text-to-image diffusion models.
+\newblock In {\em NeurIPS}, 2023.
+
+\bibitem{Wallace_2024_DPO}
+Bram Wallace, Meihua Dang, Rafael Rafailov, Linqi Zhou, Aaron Lou, Senthil Purushwalkam, Stefano Ermon, Caiming Xiong, Shafiq Joty, and Nikhil Naik.
+\newblock Diffusion model alignment using direct preference optimization.
+\newblock In {\em CVPR}, 2024.
+
+\bibitem{yang2-24D3po}
+Kai Yang, Jian Tao, Jiafei Lyu, Chunjiang Ge, Jiaxin Chen, Weihan Shen, Xiaolong Zhu, and Xiu Li.
+\newblock Using human feedback to fine-tune diffusion models without any reward model.
+\newblock In {\em CVPR}, 2024.
+
+\bibitem{clark2024draft}
+Kevin Clark, Paul Vicol, Kevin Swersky, and David~J. Fleet.
+\newblock Directly fine-tuning diffusion models on differentiable rewards.
+\newblock In {\em ICLR}, 2024.
+
+\bibitem{prabhudesai2024alignprop}
+Mihir Prabhudesai, Anirudh Goyal, Deepak Pathak, and Katerina Fragkiadaki.
+\newblock Aligning text-to-image diffusion models with reward backpropagation.
+\newblock {\em arXiv preprint arXiv:2310.03739}, 2024.
+
+\bibitem{tang2024finetuningdiffusionmodelsstochastic}
+Wenpin Tang.
+\newblock Fine-tuning of diffusion models via stochastic control: entropy regularization and beyond.
+\newblock {\em arXiv preprint arXiv:2403.06279}, 2024.
+
+\bibitem{domingo-enrich2025adjoint}
+Carles Domingo-Enrich, Michal Drozdzal, Brian Karrer, and Ricky T.~Q. Chen.
+\newblock Adjoint matching: Fine-tuning flow and diffusion generative models with memoryless stochastic optimal control.
+\newblock In {\em ICLR}, 2025.
+
+\bibitem{lipman2023flow}
+Yaron Lipman, Ricky T.~Q. Chen, Heli Ben-Hamu, Maximilian Nickel, and Matthew Le.
+\newblock Flow matching for generative modeling.
+\newblock In {\em ICLR}, 2023.
+
+\bibitem{lipman2024flowmatchingguidecode}
+Yaron Lipman, Marton Havasi, Peter Holderrieth, Neta Shaul, Matt Le, Brian Karrer, Ricky T.~Q. Chen, David Lopez-Paz, Heli Ben-Hamu, and Itai Gat.
+\newblock Flow matching guide and code.
+\newblock {\em arXiv preprint arXiv:2412.06264}, 2024.
+
+\bibitem{haarnoja2017reinforcement}
+Tuomas Haarnoja, Haoran Tang, Pieter Abbeel, and Sergey Levine.
+\newblock Reinforcement learning with deep energy-based policies.
+\newblock In {\em ICML}, 2017.
+
+\bibitem{geist2019theory}
+Matthieu Geist, Bruno Scherrer, and Olivier Pietquin.
+\newblock A theory of regularized markov decision processes.
+\newblock In {\em ICML}, 2019.
+
+\bibitem{schulman2017equivalence}
+John Schulman, Xi~Chen, and Pieter Abbeel.
+\newblock Equivalence between policy gradients and soft q-learning.
+\newblock {\em arXiv preprint arXiv:1704.06440}, 2017.
+
+\bibitem{neu2017unified}
+Gergely Neu, Anders Jonsson, and Vicen{\c{c}} G{\'o}mez.
+\newblock A unified view of entropy-regularized markov decision processes.
+\newblock {\em arXiv preprint arXiv:1705.07798}, 2017.
+
+\bibitem{levine1805reinforcement}
+Sergey Levine.
+\newblock Reinforcement learning and control as probabilistic inference: Tutorial and review.
+\newblock {\em arXiv preprint arXiv:1805.00909}, 2018.
+
+\bibitem{uehara2024bridging}
+Masatoshi Uehara, Yulai Zhao, Ehsan Hajiramezanali, Gabriele Scalia, G{\"o}kcen Eraslan, Avantika Lal, Sergey Levine, and Tommaso Biancalani.
+\newblock Bridging model-based optimization and generative modeling via conservative fine-tuning of diffusion models.
+\newblock In {\em NeurIPS}, 2024.
+
+\bibitem{Chopin_2004}
+Nicolas Chopin.
+\newblock Central limit theorem for sequential monte carlo methods and its application to bayesian inference.
+\newblock {\em The Annals of Statistics}, 32(6), December 2004.
+
+\bibitem{moral2004feynman}
+Pierre Moral.
+\newblock {\em Feynman-Kac formulae: genealogical and interacting particle systems with applications}.
+\newblock Springer, 2004.
+
+\bibitem{kim2022dmcmc}
+Beomsu Kim and Jong~Chul Ye.
+\newblock Denoising {MCMC} for accelerating diffusion-based generative models.
+\newblock {\em arXiv preprint arXiv:2209.14593}, 2022.
+
+\bibitem{pmlr-v202-gao23h-bon}
+Leo Gao, John Schulman, and Jacob Hilton.
+\newblock Scaling laws for reward model overoptimization.
+\newblock In {\em ICML}, 2023.
+
+\bibitem{gui2024bonbon}
+Lin Gui, Cristina Garbacea, and Victor Veitch.
+\newblock Bo{NB}on alignment for large language models and the sweetness of best-of-n sampling.
+\newblock In {\em NeurIPS}, 2024.
+
+\bibitem{nakano2022webgptbrowserassistedquestionansweringhuman}
+Reiichiro Nakano, Jacob Hilton, Suchir Balaji, Jeff Wu, Long Ouyang, Christina Kim, Christopher Hesse, Shantanu Jain, Vineet Kosaraju, William Saunders, Xu~Jiang, Karl Cobbe, Tyna Eloundou, Gretchen Krueger, Kevin Button, Matthew Knight, Benjamin Chess, and John Schulman.
+\newblock {WebGPT}: Browser-assisted question-answering with human feedback.
+\newblock {\em arXiv preprint arXiv:2112.09332}, 2022.
+
+\bibitem{beirami2024theoretical_bon}
+Ahmad Beirami, Alekh Agarwal, Jonathan Berant, Alexander D'Amour, Jacob Eisenstein, Chirag Nagpal, and Ananda~Theertha Suresh.
+\newblock Theoretical guarantees on the best-of-n alignment policy.
+\newblock {\em arXiv preprint arXiv:2401.01879}, 2024.
+
+\bibitem{10619456}
+Joy~Qiping Yang, Salman Salamatian, Ziteng Sun, Ananda~Theertha Suresh, and Ahmad Beirami.
+\newblock Asymptotics of language model alignment.
+\newblock In {\em 2024 IEEE International Symposium on Information Theory (ISIT)}, pages 2027--2032, 2024.
+
+\bibitem{metropolis1953equation}
+Nicholas Metropolis, Arianna~W Rosenbluth, Marshall~N Rosenbluth, Augusta~H Teller, and Edward Teller.
+\newblock Equation of state calculations by fast computing machines.
+\newblock {\em The journal of chemical physics}, 21(6):1087--1092, 1953.
+
+\bibitem{1c05a07d-e307-3702-9d37-5f716e8c0dbdULAconvergence}
+Gareth~O. Roberts and Jeffrey~S. Rosenthal.
+\newblock Optimal scaling of discrete approximations to langevin diffusions.
+\newblock {\em Journal of the Royal Statistical Society. Series B (Statistical Methodology)}, 60(1):255--268, 1998.
+
+\bibitem{216920b6-7e32-3767-8d02-cac746ef1295burnin}
+Charles~J. Geyer.
+\newblock Practical markov chain monte carlo.
+\newblock {\em Statistical Science}, 7(4):473--483, 1992.
+
+\bibitem{liu2023grounding}
+Shilong Liu, Zhaoyang Zeng, Tianhe Ren, Feng Li, Hao Zhang, Jie Yang, Chunyuan Li, Jianwei Yang, Hang Su, Jun Zhu, et~al.
+\newblock Grounding {DINo}: Marrying {DINO} with grounded pre-training for open-set object detection.
+\newblock In {\em ECCV}, 2024.
+
+\bibitem{qian2025t2icount}
+Yifei Qian, Zhongliang Guo, Bowen Deng, Chun~Tong Lei, Shuai Zhao, Chun~Pong Lau, Xiaopeng Hong, and Michael~P Pound.
+\newblock {T2ICount}: Enhancing cross-modal understanding for zero-shot counting.
+\newblock In {\em CVPR}, 2025.
+
+\bibitem{Hou2024saliencedetr}
+Xiuquan Hou, Meiqin Liu, Senlin Zhang, Ping Wei, and Badong Chen.
+\newblock {Salience DETR}: Enhancing detection transformer with hierarchical salience filtering refinement.
+\newblock In {\em CVPR}, 2024.
+
+\bibitem{AminiNaieni2024countgd}
+N.~Amini-Naieni, T.~Han, and A.~Zisserman.
+\newblock {CountGD}: Multi-modal open-world counting.
+\newblock In {\em NeurIPS}, 2024.
+
+\bibitem{schuhmann2022aesthetic}
+Christoph Schuhmann.
+\newblock Laion aesthetic predictor.
+\newblock \url{https://laion.ai/blog/laion-aesthetics/}, 2022.
+\newblock Accessed: 2024-09-29.
+
+\bibitem{xu2023imagereward}
+Jiazheng Xu, Xiao Liu, Yuchen Wu, Yuxuan Tong, Qinkai Li, Ming Ding, Jie Tang, and Yuxiao Dong.
+\newblock {ImageReward}: learning and evaluating human preferences for text-to-image generation.
+\newblock In {\em NeurIPS}, 2023.
+
+\bibitem{lin2024vqa}
+Zhiqiu Lin, Deepak Pathak, Baiqi Li, Jiayao Li, Xide Xia, Graham Neubig, Pengchuan Zhang, and Deva Ramanan.
+\newblock Evaluating text-to-visual generation with image-to-text generation.
+\newblock In {\em ECCV}, 2024.
+
+\bibitem{zhang2018unreasonableLPIPS}
+Richard Zhang, Phillip Isola, Alexei~A Efros, Eli Shechtman, and Oliver Wang.
+\newblock The unreasonable effectiveness of deep features as a perceptual metric.
+\newblock In {\em CVPR}, 2018.
+
+\bibitem{li2023gligen}
+Yuheng Li, Haotian Liu, Qingyang Wu, Fangzhou Mu, Jianwei Yang, Jianfeng Gao, Chunyuan Li, and Yong~Jae Lee.
+\newblock Gligen: Open-set grounded text-to-image generation.
+\newblock In {\em CVPR}, 2023.
+
+\bibitem{xiao2023rnb}
+Jiayu Xiao, Liang Li, Henglei Lv, Shuhui Wang, and Qingming Huang.
+\newblock R\&b: Region and boundary aware zero-shot grounded text-to-image generation.
+\newblock In {\em ICLR}, 2024.
+
+\bibitem{phung2023attnrefocusing}
+Quynh Phung, Songwei Ge, and Jia-Bin Huang.
+\newblock Grounded text-to-image synthesis with attention refocusing.
+\newblock {\em arXiv preprint arXiv:2306.05427}, 2023.
+
+\bibitem{lee2024groundit}
+Yuseung Lee, TaeHoon Yoon, and Minhyuk Sung.
+\newblock Groundit: Grounding diffusion transformers via noisy patch transplantation.
+\newblock In {\em NeurIPS}, 2024.
+
+\bibitem{Eslam2023hrs}
+Eslam~Mohamed Bakr, Pengzhan Sun, Xiaoqian Shen, Faizan~Farooq Khan, Li~Erran Li, and Mohamed Elhoseiny.
+\newblock {HRS-Bench}: Holistic, reliable and scalable benchmark for text-to-image models.
+\newblock In {\em ICCV}, 2023.
+
+\bibitem{kang2025counting}
+Wonjun Kang, Kevin Galim, Hyung~Il Koo, and Nam~Ik Cho.
+\newblock Counting guidance for high fidelity text-to-image synthesis.
+\newblock In {\em WACV}, 2025.
+
+\bibitem{binyamin2024count}
+Lital Binyamin, Yoad Tewel, Hilit Segev, Eran Hirsch, Royi Rassin, and Gal Chechik.
+\newblock Make it count: Text-to-image generation with an accurate number of objects.
+\newblock {\em arXiv preprint arXiv:2406.10210}, 2024.
+
+\bibitem{zafar2024iterativecountgeneration}
+Oz~Zafar, Lior Wolf, and Idan Schwartz.
+\newblock Iterative object count optimization for text-to-image diffusion models.
+\newblock {\em arXiv preprint arXiv:2408.11721}, 2024.
+
+\bibitem{openai2024gpt4ocard}
+OpenAI.
+\newblock {GPT-4o} system card.
+\newblock {\em arXiv preprint arXiv:2410.21276}, 2024.
+
+\end{thebibliography}

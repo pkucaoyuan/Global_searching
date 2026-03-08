@@ -1,0 +1,129 @@
+% \input{Figures/ode-sde-vpsde/svdd}
+
+% 
+% 
+\vspace{-0.6\baselineskip}
+\section{Applications}
+\vspace{-0.6\baselineskip}
+\label{sec:applications}
+In this section, we present the experimental results of particle sampling methods for inference-time reward alignment. 
+In Appendix, we present i) implementation details of the search algorithms, ii) aesthetic image generation, iii) comparisons between diffusion and flow models, iv) scaling behavior comparison of Best-of-N (BoN) and \Ours{}, and v) additional qualitative results. 
+% 
+\vspace{-0.3\baselineskip}
+\subsection{Experiment Setup} 
+\vspace{-0.3\baselineskip}
+\paragraph{Tasks.}
+In this section, we present the results for the following applications: compositional text-to-image generation and quantity-aware image generation, where the rewards are non-differentiable. 
+For the differentiable reward case, we consider aesthetic image generation (Appendix~\ref{sec:appendix_diff_reward}). 
+% The goal of compositional text-to-image generation is to generate images that faithfully represent complex textual descriptions while ensuring the correct integration of attributes and logical relationships. 
+In compositional text-to-image generation, we use all $121$ text prompts from GenAI-Bench~\cite{Jiang:2024GenAI} that contain three or more advanced compositional elements. 
+% We use all $121$ text prompts containing three or more compositional elements from GenAI-Bench~\cite{Jiang:2024GenAI}. 
+For quantity-aware image generation, we use $100$ randomly sampled prompts from T2I-CompBench++~\cite{Huang:2025T2ICompBench++} numeracy category. 
+% produces images that precisely match the specified quantities and categories of objects in the given text prompts. We use $100$ randomly sampled prompts from T2I-CompBench++~\cite{Huang:2025T2ICompBench++}. 
+
+For all applications, we use FLUX~\cite{BlackForestLabs:2024Flux} as the pretrained flow model. We fix the total number of function evaluations (NFEs) to $500$ and set the number of denoising steps to $10$, which allocates $50$ NFEs per denoising step. As a reference, we also include the results of the base pretrained models without inference-time scaling. Additionally, we present a comparison between flow models and diffusion models in Appendix~\ref{sec:appendix_diff_flow}. 
+% 
+% 
+\vspace{-0.5\baselineskip}
+\paragraph{Baselines.} We evaluate inference-time search algorithms discussed in Sec.~\ref{sec:related}, including Best-of-N (BoN), Search over Paths (SoP)~\cite{Ma2025:SoP}, SMC~\cite{Kim:2025DAS}, CoDe~\cite{Singh:2025CoDE}, and SVDD~\cite{Li2024:SVDD}. 
+We categorize BoN and SoP as Linear-ODE-based methods, as their generative processes follow the deterministic process in Eq.~\ref{eq:pf-ode}. 
+For SMC, we adopt DAS~\cite{Kim:2025DAS}; however, when the reward is non-differentiable, we use the reverse transition kernel of the pretrained model as the proposal distribution. 
+
+
+\input{Tables/Composition_Main}
+\input{Figures/ode-sde-vpsde/composition}
+
+% \input{Figures/compositional_generation/compositional_generation}
+
+\vspace{-0.3\baselineskip}
+\subsection{Compositional Text-to-Image Generation}
+\vspace{-0.3\baselineskip}
+\label{sec:compositional_generation}
+\paragraph{Evaluation Metrics.} 
+In this work, we refer to the reward used for inference-time scaling as the given reward. 
+Here, the given reward is VQAScore, measured with CLIP-FlanT5~\cite{Lin:2024CLIPFlanT5}, which evaluates text-image alignment. 
+For the held-out reward, which is not used during inference, we evaluate the score using a different model, InstructBLIP~\cite{Dai:2023InstructBLIP}. 
+Additionally, we evaluate aesthetic score~\cite{Schuhmann:aesthetics} to assess the quality of the generated images. 
+
+\vspace{-0.5\baselineskip}
+\paragraph{Inference-Time SDE and Interpolant Conversion.} 
+The quantitative and qualitative results of compositional text-to-image generation are presented in Fig.~\ref{fig:composition_main} and Fig.~\ref{fig:composition_methods_vp}, respectively. 
+As discussed in Sec.~\ref{sec:ode_sde_conversion}, the deterministic sampling process in flow models limits the effectiveness of particle sampling, whereas introducing stochasticity significantly expands the search space and improves performance—highlighting a key contribution of our work: enabling effective particle sampling in flow models.
+The results in Fig.~\ref{fig:composition_main} support this finding, showing that Linear-SDE (yellow) consistently improves the given reward (left in Fig.~\ref{fig:composition_main}) over the Linear-ODE (green) across all particle sampling methods, even surpassing BoN and SoP~\cite{Ma2025:SoP}, which were previously the only available inference-time scaling approaches for ODE-based flow models.
+% However, the limited search space of Linear-SDE, as discussed in Sec.~\ref{sec:scheduler_conversion}, leads to suboptimal particle sampling performance, falling behind Linear-ODE-based sampling methods, BoN and SoP~\cite{Ma2025:SoP}, in the held-out reward. 
+Additionally, through inference-time interpolant conversion, VP-SDE (red) further improves performance across all particle sampling methods on both given and held-out rewards (left, middle in Fig.~\ref{fig:composition_main}) by expanding the search space, demonstrating the effectiveness of our proposed distribution.
+Notably, particle sampling methods with Linear-SDE and VP-SDE generate high-reward samples without significantly compromising image quality, as evidenced by aesthetic scores that remain comparable to the base FLUX model~\cite{BlackForestLabs:2024Flux} (right in Fig.~\ref{fig:composition_main}).
+Qualitatively, SDE conversion and interpolant conversion shown in Fig.~\ref{fig:composition_methods_vp} bring consistent performance improvements (see Appendix~\ref{sec:appendix_quali_ode_sde_vp} for additional results). 
+
+\vspace{-0.5\baselineskip}
+\paragraph{Rollover Budget Forcing.} 
+As discussed in Sec.~\ref{sec:roll_over}, instead of fixing the number of particles throughout the denoising process, we explore adaptive budget allocation through~\Ours{}. We demonstrate that budget forcing provides additional performance improvements, outperforming the previous particle sampling methods in the given reward (left in Fig.~\ref{fig:composition_main}). 
+We present qualitative comparisons of inference-time scaling methods in Appendix~\ref{sec:appendix_quali_search_alg}. 
+
+
+% =============== Ablation Inset ===============
+\begin{wraptable}{r}{0.48\textwidth}
+    \centering
+    \vspace{-1.25em}
+    \scriptsize
+    \caption{
+        \textbf{Ablation Study of Interpolant Conversion.}
+        \textsuperscript{\textdagger} denotes the given reward.
+    }
+    \label{tab:abl_sde_interpolant}
+    \vspace{-0.5em}
+    \renewcommand{\arraystretch}{1.0}
+    \setlength{\tabcolsep}{0pt}
+    \newcolumntype{Y}{>{\centering\arraybackslash}m{0.24\linewidth}}
+    \newcolumntype{X}{>{\centering\arraybackslash}m{0.12\linewidth}}
+    \begin{tabularx}{\linewidth}{Y | Y Y Y}
+        \toprule
+        Method &
+        \makecell{LPIPS-MPD $\uparrow$} &
+        VQAScore\textsuperscript{\textdagger} $\uparrow$ &
+        \makecell{Inst. BLIP $\uparrow$} \\
+        \midrule
+        Linear-ODE & -- & 0.788 & 0.789 \\
+        Linear-SDE & 0.158 & 0.900 & 0.813 \\
+        + Adapt. Time. & 0.270 & 0.908 & 0.813 \\
+        + Adapt. Diff. & 0.429 & 0.702 & 0.571 \\
+        VP-SDE & \textbf{0.509} & \textbf{0.925} & \textbf{0.843} \\
+        \bottomrule
+    \end{tabularx}
+    \vspace{-1.25em}
+\end{wraptable}
+
+% ============================================================
+\vspace{-0.5\baselineskip}
+\paragraph{Ablation study of interpolant conversion.}
+Building on the analysis in Sec.~\ref{sec:interpolant_diversity_analysis}, we examine how interpolant conversion contributes to sample diversity and reward alignment through its two underlying mechanisms, timestep conversion and diffusion coefficient scaling. 
+Tab.~\ref{tab:abl_sde_interpolant} extends the results of Fig.~\ref{fig:composition_main} by isolating the effect of each component to sample diversity, measured by LPIPS-MPD~\cite{Kim:2025DAS}, and reward alignment. 
+
+
+We observe that timestep conversion (row 3) yields only modest diversity gains: the benefit of sampling at lower log-SNR (Fig.~\ref{fig:interpolant_analysis}) is offset by smaller discretization steps that reduce proposal variance, limiting improvements in reward alignment. 
+On the other hand, applying diffusion coefficient scaling without timestep conversion (row 4) increases sample diversity but simultaneously leads to a significant drop in reward alignment indicating excessive noise injection. 
+% 
+Lastly, the VP-SDE interpolant conversion (row 5) synergistically combines both components, achieving high sample diversity without sacrificing quality and consequently yielding the highest reward. 
+
+
+
+\input{Tables/Counting_Main}
+\input{Figures/ode-sde-vpsde/quantity}
+% \input{Figures/counting_generation/counting_methods_vp}
+
+\vspace{-0.4\baselineskip}
+\subsection{Quantity-Aware Image Generation}
+\vspace{-0.3\baselineskip}
+\label{sec:counting_generation}
+\paragraph{Evaluation Metrics.} 
+Here, the given reward is the negation of the Residual Sum of Squares (RSS) between the target counts and the detected object counts, computed using GroundingDINO~\cite{Liu:2024GroundingDINO} and SAM~\cite{Kirillov2023:SAM} (details in Appendix~\ref{sec:appendix_impl_details}). Additionally, we report object count accuracy, which evaluates whether all object quantities are correctly shown in the image. For the held-out reward, we report VQAScore measured with CLIP-FlanT5~\cite{Lin:2024CLIPFlanT5}. 
+As in the previous application, we evaluate the quality of the generated images using the aesthetic score~\cite{Schuhmann:aesthetics}. 
+
+\vspace{-0.5\baselineskip}
+\paragraph{Results.} The quantitative and qualitative results are presented in Fig.~\ref{fig:counting_main} and Fig.~\ref{fig:counting_methods_vp}, respectively. 
+The trend in Fig.~\ref{fig:counting_main} align with those in Sec.~\ref{sec:compositional_generation}, demonstrating that SDE conversion and interpolant conversion synergistically enhance the identification of high-reward samples. 
+Notably, particle sampling methods with Linear-SDE already outperform Linear-ODE-based methods (BoN and SoP~\cite{Ma2025:SoP}), while interpolant conversion further improves accuracy, achieving a $4\sim6 \times$ improvement over the base model~\cite{BlackForestLabs:2024Flux}. 
+Our \Ours{} achieves the highest accuracy, outperforming all other particle sampling methods. 
+Qualitatively, Fig.~\ref{fig:counting_methods_vp} shows that SDE and interpolant conversion effectively identify high-reward samples that accurately match the specified object categories and quantities. Additional qualitative comparisons of the inference-time scaling methods are provided in Appendix~\ref{sec:appendix_quali_search_alg}. 
+
+% ===================================================================================================

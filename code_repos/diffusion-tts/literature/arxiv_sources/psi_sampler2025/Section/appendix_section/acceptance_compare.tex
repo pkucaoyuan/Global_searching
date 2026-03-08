@@ -1,0 +1,117 @@
+\section{Acceptance Probability of MALA and pCNL}
+\label{sec:appx:acceptence prob mala and pcnl}
+In this section we provide the Metropolis–Hastings (MH)~\cite{metropolis1953equation, metropolis_hastings} acceptance rule that underpins both the Metropolis-Adjusted Langevin Algorithm (MALA)~\cite{bj/1178291835, roberts2002langevin} and the preconditioned Crank–Nicolson Langevin algorithm (pCNL)~\cite{Cotter_2013pcnl, Beskos_2017geometricMCMC}.
+Metropolis-Hastings algorithms form a class of MCMC methods that generate samples from a target distribution by accepting or rejecting proposed moves according to a specific acceptance function.
+Let $p_{\text{tar}}$ denote a density proportional to the target distribution. Given the current state $\mathbf{x}$ and a proposal $\mathbf{x}'\sim q(\mathbf{x}'|\mathbf{x})$, the MH step accepts the move with probability:
+\begin{align}
+    \label{eq:acceptance:MH}
+    a(\mathbf{x},\mathbf{x}')= \min\left(1, \frac{p_{\text{tar}}(\mathbf{x}')q(\mathbf{x}|\mathbf{x}')}{p_{\text{tar}}(\mathbf{x})q(\mathbf{x}'|\mathbf{x})} \right).
+\end{align}
+If the proposal kernel $q(\mathbf{x}'|\mathbf{x})$ is taken to be the one–step Euler–Maruyama discretization of Langevin dynamics then it becomes the MALA, and Eq.~\ref{eq:acceptance:MH} corresponds to the acceptance probability of MALA.
+Choosing instead the semi-implicit (Crank–Nicolson-type) discretization yields the proposal used in the pCNL, and Eq.~\ref{eq:acceptance:MH} becomes the corresponding pCNL acceptance probability.\\
+
+We first show that preconditioned Crank-Nicolson (pCN), which is a modification of the Random-Walk Metropolis (RWM), preserves the Gaussian prior.
+pCN can be viewed as a special case of pCNL obtained when the underlying Langevin dynamics is chosen so that the Gaussian prior $\mathcal{N}(\mathbf{0}, \mathbf{I})$ is its invariant distribution.
+This leads to the proposal mechanism~\cite{Cotter_2013pcnl, Beskos_2017geometricMCMC}:
+\begin{align}
+    \label{eq:acceptance:pcn}
+    \mathbf{x}'=\rho \mathbf{x}+\sqrt{1-\rho^2}\mathbf{z}, \qquad \mathbf{z}\sim \mathcal{N}(\mathbf{0}, \mathbf{I}).
+\end{align}
+where $\rho=(1-\epsilon/4)/(1+\epsilon/4)$ with $\epsilon>0$ corresponding to the step size of the Langevin dynamics.\\
+Assume that the prior is the standard Gaussian $\mathcal{N}(\mathbf{0}, \mathbf{I})$ and let $\mathbf{x}\sim \mathcal{N}(\mathbf{0}, \mathbf{I})$, then Eq.~\ref{eq:acceptance:pcn} expresses $\mathbf{x}'$ as a linear combination of two independent Gaussian random variables with unit covariance. Hence, by the closure of the Gaussian family under affine transformations, $\mathbf{x}'\sim \mathcal{N}(\mathbf{0}, \mathbf{I})$ as well, thus preserving the Gaussian prior.\\
+Next, in the case of pCN, $p_1(\mathbf{x}')q_0(\mathbf{x}|\mathbf{x}')$, is symmetric, $i.e.$, $p_1(\mathbf{x}')q_0(\mathbf{x}|\mathbf{x}')=p_1(\mathbf{x})q_0(\mathbf{x}'|\mathbf{x})$, where $p_1(\cdot)$ denotes Gaussian prior and $q_0(\cdot|\cdot)$ denotes the proposal kernel of the pCN, $i.e.$, Eq.~\ref{eq:acceptance:pcn}.
+\begin{remark}
+    \label{remark:acceptance:pcn}
+    Let $p_1(\cdot)$ as Gaussian prior $\mathcal{N}(\mathbf{0}, \mathbf{I})$ and $q_0(\cdot|\cdot)$ as the proposal kernel of the pCN, $i.e., \;\mathcal{N}(\rho\mathbf{x}, (1-\rho^2)\mathbf{I})$, then $p_1(\mathbf{x}')q_0(\mathbf{x}|\mathbf{x}')=p_1(\mathbf{x})q_0(\mathbf{x}'|\mathbf{x})$.
+\end{remark}
+\begin{proof}
+    Apart from normalization constants, $p_1(\mathbf{x}')q_0(\mathbf{x}|\mathbf{x}')$ can be calculated as:
+    \begin{align}
+        \nonumber
+        \exp\left(-\frac{\mathbf{x}'^2}{2} \right)\exp\left( -\frac{(\mathbf{x}-\rho \mathbf{x}')^2}{2(1-\rho^2)} \right)=\exp \left(-\frac{\mathbf{x}'^2+\mathbf{x}^2-2\rho \mathbf{x}\mathbf{x}'}{2(1-\rho^2)} \right).
+    \end{align}
+    Repeating the same calculation with $p_1(\mathbf{x})q_0(\mathbf{x}'|\mathbf{x})$ merely swaps $\mathbf{x}$ and $\mathbf{x}'$, leaving the numerator unchanged. Hence the two products are identical.
+\end{proof}
+We provide additional remark for ease of calculation.
+\begin{remark}
+    \label{remark:acceptance:gaussian ratio}
+    Let $\mathcal{N}(\mathbf{x};\boldsymbol{\mu},\mathbf{C})$ be the
+    density of a multivariate Gaussian with mean $\boldsymbol{\mu}$ and
+    positive-definite covariance $\mathbf{C}$.  
+    For fixed $\mathbf{C}$, the ratio of two such densities that differ
+    only in the mean is
+    \[
+        \frac{\mathcal{N}(\mathbf{x};\;\boldsymbol{\mu},\mathbf{C})}
+             {\mathcal{N}(\mathbf{x};\;\mathbf{0},\mathbf{C})}
+        \;=\;
+       \exp \left( -\frac{1}{2}\| \boldsymbol{\mu} \|^2_{\mathbf{C}} +\langle\boldsymbol{\mu}, \mathbf{x}\rangle_\mathbf{C}\right)
+    \]
+    where
+    $\|\boldsymbol{\mu}\|_{\mathbf{C}}^{2}
+        :=\boldsymbol{\mu}^{\!\top}\mathbf{C}^{-1}\boldsymbol{\mu}$ and
+    $\langle\boldsymbol{\mu},\mathbf{x}\rangle_{\mathbf{C}}
+        :=\boldsymbol{\mu}^{\!\top}\mathbf{C}^{-1}\mathbf{x}$.
+\end{remark}
+In our case, $\mathbf{C}$ corresponds to the identity matrix. 
+\paragraph{Acceptance Probability of pCNL.}
+As before, let $q_0$ be a proposal kernel of the pCN (Eq.~\ref{eq:acceptance:pcn}) and $q_p$ be a proposal kernel of the pCNL:
+\begin{align}
+    q_0(\mathbf{x}'|\mathbf{x}) : \mathbf{x}'&=\rho \mathbf{x}+\sqrt{1-\rho^2}\mathbf{z}, \qquad \mathbf{z}\sim \mathcal{N}(\mathbf{0}, \mathbf{I})\\
+    q_p(\mathbf{x}'|\mathbf{x}): \mathbf{x}'&=\rho\mathbf{x}+\sqrt{1-\rho^2}\left( \mathbf{z}+\frac{\sqrt{\epsilon}}{2} \nabla \frac{r(\mathbf{x}_{0|1})}{\alpha}\right), \qquad \mathbf{z}\sim \mathcal{N}(\mathbf{0}, \mathbf{I}).
+\end{align}
+Let $\tilde{\mathbf{x}}:=\frac{\mathbf{x}'-\rho \mathbf{x}}{\sqrt{1-\rho^2}}$, and $\tilde{q}_0, \tilde{q}_p$ be the distributions of $\tilde{\mathbf{x}}$ under $q_0$ and $q_p$, respectively. Then we obtain:
+\begin{align}
+    \tilde q_0(\tilde{\mathbf{x}}|\mathbf{x})&=\mathcal{N}(\tilde{\mathbf{x}};\; \mathbf{0}, \mathbf{I})\\
+    \tilde q_p(\tilde{\mathbf{x}}|\mathbf{x})&=\mathcal{N}(\tilde{\mathbf{x}};\; \frac{\sqrt{\epsilon}}{2} \nabla \frac{r(\mathbf{x}_{0|1})}{\alpha}, \mathbf{I}).
+\end{align}
+Note that $\mathbf{x}_{0|1}$ is a function of $\mathbf{x}$.
+Then by Remark~\ref{remark:acceptance:gaussian ratio},
+\begin{align}
+    \label{eq:acceptance:pcnl qp/q0}
+    \frac{q_p(\mathbf{x}'|\mathbf{x})}{q_0(\mathbf{x}'|\mathbf{x})}=
+    \frac{\tilde q_p(\tilde{\mathbf{x}}|\mathbf{x})}{\tilde q_0(\tilde{\mathbf{x}}|\mathbf{x})}=\exp \left( -\frac{\epsilon}{8}\left\| \nabla \frac{r(\mathbf{x}_{0|1})}{\alpha} \right\|^2_\mathbf{I} + \frac{\sqrt{\epsilon}}{2}\left\langle \nabla \frac{r(\mathbf{x}_{0|1})}{\alpha}, \tilde{\mathbf{x}} \right\rangle_{\mathbf{I}}\; \right).
+\end{align}
+For the fraction part of the acceptance probability (Eq.~\ref{eq:acceptance:MH}) of pCNL, we have:
+\begin{align}
+    \label{eq:acceptance:pcnl_1}
+    \frac{p_1^*(\mathbf{x}')q_p(\mathbf{x}|\mathbf{x}')}{p_1^*(\mathbf{x})q_p(\mathbf{x}'|\mathbf{x})}&=\frac{(p_1^*(\mathbf{x}')q_p(\mathbf{x}|\mathbf{x}')) / (p_1(\mathbf{x}')q_0(\mathbf{x}|\mathbf{x}')) }{(p_1^*(\mathbf{x})q_p(\mathbf{x}'|\mathbf{x})) / ( p_1(\mathbf{x}')q_0(\mathbf{x}|\mathbf{x}'))}\\
+    \label{eq:acceptance:pcnl_2}
+    &=\frac{(p_1^*(\mathbf{x}')q_p(\mathbf{x}|\mathbf{x}')) / (p_1(\mathbf{x}')q_0(\mathbf{x}|\mathbf{x}')) }{(p_1^*(\mathbf{x})q_p(\mathbf{x}'|\mathbf{x})) / ( p_1(\mathbf{x})q_0(\mathbf{x}'|\mathbf{x}))}:=\frac{\varphi_p(\mathbf{x}',\mathbf{x})}{\varphi_p( \mathbf{x}, \mathbf{x}')},
+\end{align}
+where the target distribution is set as Eq.~\ref{eq:SOC:approx optimal initial distribution}. In Eq.~\ref{eq:acceptance:pcnl_1}, we divide both numerator and denominator by a common term, and in Eq.~\ref{eq:acceptance:pcnl_2}, we utilized Remark~\ref{remark:acceptance:pcn}.\\
+Denominator can be calculated utilizing Eq.~\ref{eq:acceptance:pcnl qp/q0}:
+\begin{align}
+    \label{eq:acceptance:pcnl:varphi}
+    \varphi_p( \mathbf{x}, \mathbf{x}')&=\frac{p_1^*(\mathbf{x})q_p(\mathbf{x}'|\mathbf{x})}{p_1(\mathbf{x})q_0(\mathbf{x}'|\mathbf{x})}\\
+    &=\exp \left(\frac{r(\mathbf{x}_{0|1})}{\alpha} \right)\exp \left( -\frac{\epsilon}{8}\left\| \nabla \frac{r(\mathbf{x}_{0|1})}{\alpha} \right\|^2_\mathbf{I} + \frac{\sqrt{\epsilon}}{2}\left\langle \nabla \frac{r(\mathbf{x}_{0|1})}{\alpha}, \frac{\mathbf{x}'-\rho \mathbf{x}}{\sqrt{1-\rho^2}} \right\rangle_{\mathbf{I}}\; \right),
+\end{align}
+with numerator being simply interchanging $\mathbf{x}$ and $\mathbf{x}'$.
+The acceptance probability of pCNL is $\min \left(1, \frac{\varphi_p(\mathbf{x}',\mathbf{x})}{\varphi_p(\mathbf{x}, \mathbf{x}')} \right)$.
+
+\paragraph{Acceptance Probability of MALA.}
+In the case of MALA, the proposal is given as:
+\begin{align}
+    \mathbf{x}'&=\mathbf{x}+\frac{\epsilon}{2}\nabla \log p_{\text{tar}}(\mathbf{x})+\sqrt{\epsilon}\mathbf{z},\qquad \mathbf{z}\sim \mathcal{N}(\mathbf{0}, \mathbf{I})\\
+    &=\mathbf{x}+\frac{\epsilon}{2}\left(-\mathbf{x}+\nabla\frac{r(\mathbf{x}_{0|1})}{\alpha} \right)+\sqrt{\epsilon}\mathbf{z},\qquad \mathbf{z}\sim \mathcal{N}(\mathbf{0}, \mathbf{I})
+\end{align}
+where as in pCNL we set the target distribution as Eq.~\ref{eq:SOC:approx optimal initial distribution}. Thus the proposal kernel of MALA $q_M$ can be expressed as:
+\begin{align}
+    q_M(\mathbf{x}'|\mathbf{x})=\mathcal{N}\left(\mathbf{x}';\; \mathbf{x}\left(1-\frac{\epsilon}{2} \right)+\frac{\epsilon}{2}\nabla\frac{r(\mathbf{x}_{0|1})}{\alpha}, \epsilon\mathbf{I}\right).
+\end{align}
+The fraction part of the acceptance probability (Eq.~\ref{eq:acceptance:MH}) of MALA is given as:
+\begin{align}
+    \frac{p_1^*(\mathbf{x}')q_M(\mathbf{x}|\mathbf{x}')}{p_1^*(\mathbf{x})q_M(\mathbf{x}'|\mathbf{x})}&=\frac{\mathcal{N}(\mathbf{x}';\;\mathbf{0}, \mathbf{I})\exp (r(\mathbf{x}_{0|1}')/\alpha)\mathcal{N}(\mathbf{x};\;\mathbf{x}'(1-\epsilon/2)+\epsilon/2\cdot \nabla r(\mathbf{x}_{0|1}')/\alpha, \epsilon\mathbf{I})}{\mathcal{N}(\mathbf{x};\;\mathbf{0}, \mathbf{I})\exp (r(\mathbf{x}_{0|1})/\alpha)\mathcal{N}(\mathbf{x}';\;\mathbf{x}(1-\epsilon/2)+\epsilon/2\cdot \nabla r(\mathbf{x}_{0|1})/\alpha, \epsilon\mathbf{I})}\\
+    &:=\frac{\varphi_M(\mathbf{x}',\mathbf{x})}{\varphi_M(\mathbf{x},\mathbf{x}')}
+\end{align}
+where we denote $\mathbf{x}_{0|1}':=\mathbf{x}_{0|1}(\mathbf{x}')$, $i.e.$, we calculate Tweedie's formula with $\mathbf{x}'$.
+Thus the denominator, which is $\varphi_M(\mathbf{x},\mathbf{x}')$, is proportional to the following expression:
+\begin{align}
+    \exp \left( -\frac{\|\mathbf{x}\|^2_{\mathbf{I}}}{2}+\frac{r(\mathbf{x}_{0|1})}{\alpha}-\frac{\|\mathbf{x}'-\{ \mathbf{x}\left(1-\frac{\epsilon}{2} \right)+\frac{\epsilon}{2}\nabla\frac{r(\mathbf{x}_{0|1})}{\alpha} \} \|^2_{\mathbf{I}}}{2\epsilon} \right).
+\end{align}
+After simplifying the expression—specifically, canceling out the cross terms involving $\mathbf{x}$ and $\mathbf{x}'$ that will appear symmetrically in the numerator and denominator—the expression for $\varphi_M(\mathbf{x},\mathbf{x}')$ becomes:
+\begin{align}
+    &\varphi_M(\mathbf{x},\mathbf{x}')\\
+    &=\exp \left(\frac{r(\mathbf{x}_{0|1})}{\alpha} \right)\exp \left( -\frac{\epsilon}{8}\left\| \nabla \frac{r(\mathbf{x}_{0|1})}{\alpha} \right\|^2_\mathbf{I}-\frac{\epsilon}{8}\|\mathbf{x} \|^2_{\mathbf{I}}+\frac{1}{2}  \left\langle \nabla \frac{r(\mathbf{x}_{0|1})}{\alpha},\left(\mathbf{x}'-\left(1-\frac{\epsilon}{2} \right)\mathbf{x} \right) \right\rangle_{\mathbf{I}}  \right).
+\end{align}
+The numerator $\varphi_M(\mathbf{x}', \mathbf{x})$ can be obtained by simply interchanging $\mathbf{x}$ and $\mathbf{x}'$.
+The acceptance probability of MALA is then, $\min \left(1, \frac{\varphi_M(\mathbf{x}',\mathbf{x})}{\varphi_M(\mathbf{x}, \mathbf{x}')} \right)$.

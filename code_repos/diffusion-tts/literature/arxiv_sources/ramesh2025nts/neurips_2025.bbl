@@ -1,0 +1,219 @@
+\begin{thebibliography}{41}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Ahn et~al.(2024)Ahn, Kang, Lee, Min, Kim, Jang, Cho, Paul, Kim, Cha, Jin, and Kim]{ahn2024noiseworthdiffusionguidance}
+D.~Ahn, J.~Kang, S.~Lee, J.~Min, M.~Kim, W.~Jang, H.~Cho, S.~Paul, S.~Kim, E.~Cha, K.~H. Jin, and S.~Kim.
+\newblock A noise is worth diffusion guidance, 2024.
+\newblock URL \url{https://arxiv.org/abs/2412.03895}.
+
+\bibitem[Bansal et~al.(2023)Bansal, Chu, Schwarzschild, Sengupta, Goldblum, Geiping, and Goldstein]{bansal2023universalguidancediffusionmodels}
+A.~Bansal, H.-M. Chu, A.~Schwarzschild, S.~Sengupta, M.~Goldblum, J.~Geiping, and T.~Goldstein.
+\newblock Universal guidance for diffusion models, 2023.
+\newblock URL \url{https://arxiv.org/abs/2302.07121}.
+
+\bibitem[Black et~al.(2024)Black, Janner, Du, Kostrikov, and Levine]{black2024trainingdiffusionmodelsreinforcement}
+K.~Black, M.~Janner, Y.~Du, I.~Kostrikov, and S.~Levine.
+\newblock Training diffusion models with reinforcement learning, 2024.
+\newblock URL \url{https://arxiv.org/abs/2305.13301}.
+
+\bibitem[Caron et~al.(2021)Caron, Touvron, Misra, Jégou, Mairal, Bojanowski, and Joulin]{caron2021emergingpropertiesselfsupervisedvision}
+M.~Caron, H.~Touvron, I.~Misra, H.~Jégou, J.~Mairal, P.~Bojanowski, and A.~Joulin.
+\newblock Emerging properties in self-supervised vision transformers, 2021.
+\newblock URL \url{https://arxiv.org/abs/2104.14294}.
+
+\bibitem[Chatterjee and Diaconis(2017)]{chatterjee2017samplesizerequiredimportance}
+S.~Chatterjee and P.~Diaconis.
+\newblock The sample size required in importance sampling, 2017.
+\newblock URL \url{https://arxiv.org/abs/1511.01437}.
+
+\bibitem[Dhariwal and Nichol(2021)]{dhariwal2021diffusionmodelsbeatgans}
+P.~Dhariwal and A.~Nichol.
+\newblock Diffusion models beat gans on image synthesis, 2021.
+\newblock URL \url{https://arxiv.org/abs/2105.05233}.
+
+\bibitem[Domingo-Enrich et~al.(2025)Domingo-Enrich, Drozdzal, Karrer, and Chen]{domingoenrich2025adjointmatchingfinetuningflow}
+C.~Domingo-Enrich, M.~Drozdzal, B.~Karrer, and R.~T.~Q. Chen.
+\newblock Adjoint matching: Fine-tuning flow and diffusion generative models with memoryless stochastic optimal control, 2025.
+\newblock URL \url{https://arxiv.org/abs/2409.08861}.
+
+\bibitem[Efron(2011)]{tweedie}
+B.~Efron.
+\newblock Tweedie's formula and selection bias.
+\newblock \emph{Journal of the American Statistical Association}, 106\penalty0 (496):\penalty0 1602--1614, 2011.
+\newblock \doi{10.1198/jasa.2011.tm11181}.
+\newblock URL \url{https://pubmed.ncbi.nlm.nih.gov/22505788/}.
+\newblock Epub 2012-01-24.
+
+\bibitem[Fernandes et~al.(2025)Fernandes, Ramos, Cohen, Szpektor, and Magalhães]{fernandes2025latentbeamdiffusionmodels}
+G.~Fernandes, V.~Ramos, R.~Cohen, I.~Szpektor, and J.~Magalhães.
+\newblock Latent beam diffusion models for decoding image sequences, 2025.
+\newblock URL \url{https://arxiv.org/abs/2503.20429}.
+
+\bibitem[Hang et~al.(2024)Hang, Gu, Geng, and Guo]{hang2024improvednoiseschedulediffusion}
+T.~Hang, S.~Gu, X.~Geng, and B.~Guo.
+\newblock Improved noise schedule for diffusion training, 2024.
+\newblock URL \url{https://arxiv.org/abs/2407.03297}.
+
+\bibitem[Heusel et~al.(2018)Heusel, Ramsauer, Unterthiner, Nessler, and Hochreiter]{heusel2018ganstrainedtimescaleupdate}
+M.~Heusel, H.~Ramsauer, T.~Unterthiner, B.~Nessler, and S.~Hochreiter.
+\newblock Gans trained by a two time-scale update rule converge to a local nash equilibrium, 2018.
+\newblock URL \url{https://arxiv.org/abs/1706.08500}.
+
+\bibitem[Ho and Salimans(2022)]{ho2022classifierfreediffusionguidance}
+J.~Ho and T.~Salimans.
+\newblock Classifier-free diffusion guidance, 2022.
+\newblock URL \url{https://arxiv.org/abs/2207.12598}.
+
+\bibitem[Ho et~al.(2020)Ho, Jain, and Abbeel]{ho2020denoisingdiffusionprobabilisticmodels}
+J.~Ho, A.~Jain, and P.~Abbeel.
+\newblock Denoising diffusion probabilistic models, 2020.
+\newblock URL \url{https://arxiv.org/abs/2006.11239}.
+
+\bibitem[Karras et~al.(2022)Karras, Aittala, Aila, and Laine]{karras2022elucidatingdesignspacediffusionbased}
+T.~Karras, M.~Aittala, T.~Aila, and S.~Laine.
+\newblock Elucidating the design space of diffusion-based generative models, 2022.
+\newblock URL \url{https://arxiv.org/abs/2206.00364}.
+
+\bibitem[Kim et~al.(2025{\natexlab{a}})Kim, Bae, Shim, and Shim]{kim2025visuallyguideddecodinggradientfree}
+D.~Kim, M.~Bae, K.~Shim, and B.~Shim.
+\newblock Visually guided decoding: Gradient-free hard prompt inversion with language models, 2025{\natexlab{a}}.
+\newblock URL \url{https://arxiv.org/abs/2505.08622}.
+
+\bibitem[Kim et~al.(2025{\natexlab{b}})Kim, Yoon, Hwang, and Sung]{kim2025}
+J.~Kim, T.~Yoon, J.~Hwang, and M.~Sung.
+\newblock Inference-time scaling for flow models via stochastic generation and rollover budget forcing, 2025{\natexlab{b}}.
+\newblock URL \url{https://arxiv.org/abs/2503.19385}.
+
+\bibitem[Liu et~al.(2024)Liu, Zhang, Ma, Peng, and Liu]{instaflow}
+X.~Liu, X.~Zhang, J.~Ma, J.~Peng, and Q.~Liu.
+\newblock Instaflow: One step is enough for high-quality diffusion-based text-to-image generation, 2024.
+\newblock URL \url{https://arxiv.org/abs/2309.06380}.
+
+\bibitem[Ma et~al.(2025)Ma, Tong, Jia, Hu, Su, Zhang, Yang, Li, Jaakkola, Jia, and Xie]{ma2025inferencetimescalingdiffusionmodels}
+N.~Ma, S.~Tong, H.~Jia, H.~Hu, Y.-C. Su, M.~Zhang, X.~Yang, Y.~Li, T.~Jaakkola, X.~Jia, and S.~Xie.
+\newblock Inference-time scaling for diffusion models beyond scaling denoising steps, 2025.
+\newblock URL \url{https://arxiv.org/abs/2501.09732}.
+
+\bibitem[Muennighoff et~al.(2025)Muennighoff, Yang, Shi, Li, Fei-Fei, Hajishirzi, Zettlemoyer, Liang, Candès, and Hashimoto]{muennighoff2025s1simpletesttimescaling}
+N.~Muennighoff, Z.~Yang, W.~Shi, X.~L. Li, L.~Fei-Fei, H.~Hajishirzi, L.~Zettlemoyer, P.~Liang, E.~Candès, and T.~Hashimoto.
+\newblock s1: Simple test-time scaling, 2025.
+\newblock URL \url{https://arxiv.org/abs/2501.19393}.
+
+\bibitem[Nie et~al.(2025)Nie, Zhu, You, Zhang, Ou, Hu, Zhou, Lin, Wen, and Li]{nie2025largelanguagediffusionmodels}
+S.~Nie, F.~Zhu, Z.~You, X.~Zhang, J.~Ou, J.~Hu, J.~Zhou, Y.~Lin, J.-R. Wen, and C.~Li.
+\newblock Large language diffusion models, 2025.
+\newblock URL \url{https://arxiv.org/abs/2502.09992}.
+
+\bibitem[Podell et~al.(2023)Podell, English, Lacey, Blattmann, Dockhorn, Müller, Penna, and Rombach]{podell2023sdxlimprovinglatentdiffusion}
+D.~Podell, Z.~English, K.~Lacey, A.~Blattmann, T.~Dockhorn, J.~Müller, J.~Penna, and R.~Rombach.
+\newblock Sdxl: Improving latent diffusion models for high-resolution image synthesis, 2023.
+\newblock URL \url{https://arxiv.org/abs/2307.01952}.
+
+\bibitem[Qi et~al.(2024)Qi, Bai, Xiong, and Xie]{qi2024noisescreatedequallydiffusionnoise}
+Z.~Qi, L.~Bai, H.~Xiong, and Z.~Xie.
+\newblock Not all noises are created equally:diffusion noise selection and optimization, 2024.
+\newblock URL \url{https://arxiv.org/abs/2407.14041}.
+
+\bibitem[Radford et~al.(2021)Radford, Kim, Hallacy, Ramesh, Goh, Agarwal, Sastry, Askell, Mishkin, Clark, Krueger, and Sutskever]{radford2021learningtransferablevisualmodels}
+A.~Radford, J.~W. Kim, C.~Hallacy, A.~Ramesh, G.~Goh, S.~Agarwal, G.~Sastry, A.~Askell, P.~Mishkin, J.~Clark, G.~Krueger, and I.~Sutskever.
+\newblock Learning transferable visual models from natural language supervision, 2021.
+\newblock URL \url{https://arxiv.org/abs/2103.00020}.
+
+\bibitem[Rombach et~al.(2022)Rombach, Blattmann, Lorenz, Esser, and Ommer]{rombach2022highresolutionimagesynthesislatent}
+R.~Rombach, A.~Blattmann, D.~Lorenz, P.~Esser, and B.~Ommer.
+\newblock High-resolution image synthesis with latent diffusion models, 2022.
+\newblock URL \url{https://arxiv.org/abs/2112.10752}.
+
+\bibitem[Salimans et~al.(2016)Salimans, Goodfellow, Zaremba, Cheung, Radford, and Chen]{salimans2016improvedtechniquestraininggans}
+T.~Salimans, I.~Goodfellow, W.~Zaremba, V.~Cheung, A.~Radford, and X.~Chen.
+\newblock Improved techniques for training gans, 2016.
+\newblock URL \url{https://arxiv.org/abs/1606.03498}.
+
+\bibitem[Slivkins(2024)]{slivkins2024introductionmultiarmedbandits}
+A.~Slivkins.
+\newblock Introduction to multi-armed bandits, 2024.
+\newblock URL \url{https://arxiv.org/abs/1904.07272}.
+
+\bibitem[Sohl-Dickstein et~al.(2015)Sohl-Dickstein, Weiss, Maheswaranathan, and Ganguli]{sohldickstein2015deepunsupervisedlearningusing}
+J.~Sohl-Dickstein, E.~A. Weiss, N.~Maheswaranathan, and S.~Ganguli.
+\newblock Deep unsupervised learning using nonequilibrium thermodynamics, 2015.
+\newblock URL \url{https://arxiv.org/abs/1503.03585}.
+
+\bibitem[Song et~al.(2022)Song, Meng, and Ermon]{song2022denoisingdiffusionimplicitmodels}
+J.~Song, C.~Meng, and S.~Ermon.
+\newblock Denoising diffusion implicit models, 2022.
+\newblock URL \url{https://arxiv.org/abs/2010.02502}.
+
+\bibitem[Song et~al.(2021)Song, Sohl-Dickstein, Kingma, Kumar, Ermon, and Poole]{song2021scorebasedgenerativemodelingstochastic}
+Y.~Song, J.~Sohl-Dickstein, D.~P. Kingma, A.~Kumar, S.~Ermon, and B.~Poole.
+\newblock Score-based generative modeling through stochastic differential equations, 2021.
+\newblock URL \url{https://arxiv.org/abs/2011.13456}.
+
+\bibitem[Sutton and Barto(1998)]{sutton1998reinforcement}
+R.~S. Sutton and A.~G. Barto.
+\newblock \emph{Reinforcement Learning: An Introduction}.
+\newblock MIT Press, Cambridge, MA, 1998.
+
+\bibitem[Tang et~al.(2024)Tang, Peng, Tang, Hong, Wang, and Chang]{tang2024inferencetimealignmentdiffusionmodels}
+Z.~Tang, J.~Peng, J.~Tang, M.~Hong, F.~Wang, and T.-H. Chang.
+\newblock Inference-time alignment of diffusion models with direct noise optimization, 2024.
+\newblock URL \url{https://arxiv.org/abs/2405.18881}.
+
+\bibitem[van~der Maaten and Hinton(2008)]{JMLR:v9:vandermaaten08a}
+L.~van~der Maaten and G.~Hinton.
+\newblock Visualizing data using t-sne.
+\newblock \emph{Journal of Machine Learning Research}, 9\penalty0 (86):\penalty0 2579--2605, 2008.
+\newblock URL \url{http://jmlr.org/papers/v9/vandermaaten08a.html}.
+
+\bibitem[Wallace et~al.(2023)Wallace, Dang, Rafailov, Zhou, Lou, Purushwalkam, Ermon, Xiong, Joty, and Naik]{wallace2023diffusionmodelalignmentusing}
+B.~Wallace, M.~Dang, R.~Rafailov, L.~Zhou, A.~Lou, S.~Purushwalkam, S.~Ermon, C.~Xiong, S.~Joty, and N.~Naik.
+\newblock Diffusion model alignment using direct preference optimization, 2023.
+\newblock URL \url{https://arxiv.org/abs/2311.12908}.
+
+\bibitem[Wang et~al.(2025{\natexlab{a}})Wang, Shui, Piao, Sun, and Li]{wang2025diffusionnpo}
+F.-Y. Wang, Y.~Shui, J.~Piao, K.~Sun, and H.~Li.
+\newblock Diffusion-npo: Negative preference optimization for better preference aligned generation of diffusion models.
+\newblock In \emph{Proceedings of the International Conference on Learning Representations (ICLR)}, 2025{\natexlab{a}}.
+\newblock URL \url{https://openreview.net/forum?id=iJi7nz5Cxc}.
+\newblock Poster.
+
+\bibitem[Wang et~al.(2025{\natexlab{b}})Wang, Shi, Zhou, Li, Yuan, Shang, Peng, Zhang, and You]{wang2025closerlooktimesteps}
+K.~Wang, M.~Shi, Y.~Zhou, Z.~Li, Z.~Yuan, Y.~Shang, X.~Peng, H.~Zhang, and Y.~You.
+\newblock A closer look at time steps is worthy of triple speed-up for diffusion model training, 2025{\natexlab{b}}.
+\newblock URL \url{https://arxiv.org/abs/2405.17403}.
+
+\bibitem[Xu et~al.(2023{\natexlab{a}})Xu, Liu, Wu, Tong, Li, Ding, Tang, and Dong]{xu2023imagerewardlearningevaluatinghuman}
+J.~Xu, X.~Liu, Y.~Wu, Y.~Tong, Q.~Li, M.~Ding, J.~Tang, and Y.~Dong.
+\newblock Imagereward: Learning and evaluating human preferences for text-to-image generation, 2023{\natexlab{a}}.
+\newblock URL \url{https://arxiv.org/abs/2304.05977}.
+
+\bibitem[Xu et~al.(2023{\natexlab{b}})Xu, Deng, Cheng, Tian, Liu, and Jaakkola]{xu2023restartsamplingimprovinggenerative}
+Y.~Xu, M.~Deng, X.~Cheng, Y.~Tian, Z.~Liu, and T.~Jaakkola.
+\newblock Restart sampling for improving generative processes, 2023{\natexlab{b}}.
+\newblock URL \url{https://arxiv.org/abs/2306.14878}.
+
+\bibitem[Yao et~al.(2023)Yao, Yu, Zhao, Shafran, Griffiths, Cao, and Narasimhan]{yao2023treethoughtsdeliberateproblem}
+S.~Yao, D.~Yu, J.~Zhao, I.~Shafran, T.~L. Griffiths, Y.~Cao, and K.~Narasimhan.
+\newblock Tree of thoughts: Deliberate problem solving with large language models, 2023.
+\newblock URL \url{https://arxiv.org/abs/2305.10601}.
+
+\bibitem[Yeh et~al.(2025)Yeh, Lee, and Chen]{yeh2025trainingfreediffusionmodelalignment}
+P.-H. Yeh, K.-H. Lee, and J.-C. Chen.
+\newblock Training-free diffusion model alignment with sampling demons, 2025.
+\newblock URL \url{https://arxiv.org/abs/2410.05760}.
+
+\bibitem[Zhang et~al.(2025)Zhang, Pan, Feng, and Wu]{zhang2025tscendtesttimescalablemctsenhanced}
+T.~Zhang, J.-S. Pan, R.~Feng, and T.~Wu.
+\newblock T-scend: Test-time scalable mcts-enhanced diffusion model, 2025.
+\newblock URL \url{https://arxiv.org/abs/2502.01989}.
+
+\bibitem[Zhang et~al.(2024)Zhang, Zhang, Zhan, Luo, Wen, and Tao]{zhang2024confrontingrewardoveroptimizationdiffusion}
+Z.~Zhang, S.~Zhang, Y.~Zhan, Y.~Luo, Y.~Wen, and D.~Tao.
+\newblock Confronting reward overoptimization for diffusion models: A perspective of inductive and primacy biases, 2024.
+\newblock URL \url{https://arxiv.org/abs/2402.08552}.
+
+\end{thebibliography}

@@ -1,0 +1,93 @@
+\begin{figure*}[t!]
+    \centering
+    \scriptsize
+    \setlength{\tabcolsep}{3pt}
+    \renewcommand{\arraystretch}{1.15}
+    \captionof{table}{
+    \textbf{Choice of hyperparameters.}
+    Evaluation of the images generated with different (a) number of denoising steps and (b) diffusion coefficient.}
+    \label{tab:hyperparams}
+    % --------- (a) Number of denoising steps ---------
+    \begin{subtable}[t]{0.4\textwidth}
+        \centering
+        \newcolumntype{X}{>{\centering\arraybackslash}m{0.18\linewidth}}
+        \newcolumntype{Y}{>{\centering\arraybackslash}m{0.3\linewidth}}
+        \begin{tabularx}{\linewidth}{Y | Y Y}
+            \toprule
+            Steps & Aesthetic \cite{Schuhmann:aesthetics} & \makecell{Diversity~\cite{Kim:2025DAS}} \\
+            \midrule
+            10 & \textbf{5.635} & \textbf{0.084} \\
+            20 & 5.680 & 0.103 \\
+            \bottomrule
+        \end{tabularx}
+        \caption{Number of denoising steps}
+        \label{tab:r1_steps}
+    \end{subtable}
+    \hfill
+    % --------- (b) Diffusion coefficient ---------
+    \begin{subtable}[t]{0.58\textwidth}
+        \centering
+        \newcolumntype{Z}{>{\centering\arraybackslash}m{0.1\linewidth}}
+        \newcolumntype{Y}{>{\centering\arraybackslash}m{0.2\linewidth}}
+        \begin{tabularx}{\linewidth}{Z | Y Y | Y Y}
+            \toprule
+            Norm & \makecell{Aesthetic~\cite{Schuhmann:aesthetics}\\$g(t)=t$} & \makecell{Diversity~\cite{Kim:2025DAS}\\$g(t)=t$} & \makecell{Aesthetic~\cite{Schuhmann:aesthetics}\\$g(t)=t^2$} & \makecell{Diversity~\cite{Kim:2025DAS}\\$g(t)=t^2$} \\
+            \midrule
+            1 & 5.635 & 0.084 & 5.652 & 0.083 \\
+            3 & 5.168 & 0.153 & \textbf{5.436} & \textbf{0.158} \\
+            5 & 4.608 & 0.223 & 4.838 & 0.187 \\
+            \bottomrule
+        \end{tabularx}
+        \caption{Diffusion coefficient}
+        \label{tab:r2_diffusion}
+    \end{subtable}
+\end{figure*}
+
+
+
+
+% \begin{figure*}[t!]
+%     \centering
+%     % ---------- Left: Number of Denoising Steps ----------
+%     \begin{minipage}[t]{0.45\textwidth}
+%         \centering
+%         \scriptsize
+%         \setlength{\tabcolsep}{3pt}
+%         \captionof{table}{
+%             Number of denoising steps.
+%         }
+%         \label{tab:hyperparameter_steps}
+%         \renewcommand{\arraystretch}{1.15}
+%         \newcolumntype{Y}{>{\centering\arraybackslash}X}
+%         \begin{tabularx}{\linewidth}{Y Y Y}
+%             \toprule
+%             Steps & Aesthetic & Diversity \\
+%             \midrule
+%             10 & \textbf{5.635} & \textbf{0.084} \\
+%             20 & 5.680 & 0.103 \\
+%             \bottomrule
+%         \end{tabularx}
+%     \end{minipage}
+%     \hfill
+%     % ---------- Right: Diffusion Coefficient ----------
+%     \begin{minipage}[t]{0.52\textwidth}
+%         \centering
+%         \scriptsize
+%         \setlength{\tabcolsep}{3pt}
+%         \captionof{table}{
+%             Diffusion coefficient.
+%         }
+%         \label{tab:hyperparameter_coeff}
+%         \renewcommand{\arraystretch}{1.15}
+%         \newcolumntype{Y}{>{\centering\arraybackslash}X}
+%         \begin{tabularx}{\linewidth}{Y Y Y Y Y}
+%             \toprule
+%             Norm & \makecell{Aesthetic\\$g(t)=t$} & \makecell{Diversity\\$g(t)=t$} & \makecell{Aesthetic\\$g(t)=t^2$} & \makecell{Diversity\\$g(t)=t^2$} \\
+%             \midrule
+%             1 & 5.635 & 0.084 & 5.652 & 0.083 \\
+%             3 & 5.168 & 0.153 & \textbf{5.436} & \textbf{0.158} \\
+%             5 & 4.608 & 0.223 & 4.838 & 0.187 \\
+%             \bottomrule
+%         \end{tabularx}
+%     \end{minipage}
+% \end{figure*}

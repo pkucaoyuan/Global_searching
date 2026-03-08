@@ -1,0 +1,26 @@
+\section{Sequential Monte Carlo and Reward-Guided Sampling}
+\label{sec:appx:smc}
+Sequential Monte Carlo (SMC) methods~\cite{doucet2001sequential, del2006sequential, chopin2020introduction}, also known as particle filter, are a class of algorithms for sampling from sequences of probability distributions.
+Beginning with $K$ particles drawn independently from an initial distribution, SMC maintains a weighted particle population, $\{\mathbf{x}^{(i)}_t\}_{i=1}^K$, and iteratively updates it through propagation, reweighting, and resampling steps to approximate the target distribution.
+During propagation, particles are moved using a proposal distribution; in the reweighting step, their importance weights are adjusted to reflect the discrepancy between the target and proposal distributions; and resampling preferentially retains high-weight particles while eliminating low-weight ones (this is performed only conditionally, see below). 
+The weights are updated over time according to the following rule:
+\begin{align}
+    \label{eq:SMC:weight for SMC}
+    w_{t-\Delta t}^{(i)}=\frac{p_{\text{tar}}(\mathbf{x}_{t-\Delta t}|\mathbf{x}_{t})}{q(\mathbf{x}_{t-\Delta t}|\mathbf{x}_{t})}w_t^{(i)}
+\end{align}
+where $p_{\text{tar}}$ is an intermediate target kernel we want to sample from, and $q(\mathbf{x}_{t-\Delta t}|\mathbf{x}_{t})$ is a proposal kernel used during propagation. \\
+At each time $t$, if the effective sample size (ESS), defined as $\left(\sum_{j=1}^K w_t^{(j)} \right)^2/\sum_{i=1}^K \left(w_t^{(i)}\right)^2$ falls below a predefined threshold, resampling is performed. Specifically, a set of ancestor indices $\{ a_t^{(i)} \}_{i=1}^{K}$ is drawn from a multinomial distribution based on the normalized weights. These indices are then used to form the resampled particle set $\{ \mathbf{x}_{t}^{ ( a_t^{(i)} ) } \}_{i=1}^K$. If resampling is not triggered, we simply set $a_t^{(i)}=i$. \\
+In the propagation stage, particle set $\{\mathbf{x}^{(i)}_{t-\Delta t}\}_{i=1}^K$ is generated via sampling from proposal distribution, $\mathbf{x}^{(i)}_{t-\Delta t} \sim q(\mathbf{x}_{t-\Delta t}|\mathbf{x}_t^{(a_t^{(i)})})$.
+When resampling is applied, the weights are reset to uniform values, $i.e.$, $w_t^{(i)}=1$ for all $i$. Regardless of whether resampling occurred, new weights $\{w^{(i)}_{t-\Delta t}\}_{i=1}^K$ are then computed using Eq.~\ref{eq:SMC:weight for SMC}. \\
+In the context of reward-alignment tasks, SMC can be employed to approximately sample from the target distribution defined in Eq.~\ref{eq:problem definition and related work:target distribution at t=0}. As the number of particles $K$ grows, the approximation becomes increasingly accurate due to the consistency of the SMC framework~\cite{Chopin_2004, moral2004feynman}.
+To make this effective, the proposal kernel should ideally match the optimal transition kernel given in Eq.~\ref{eq:SOC:optimal transition kernel}. However, as discussed in Appendix~\ref{sec:appx:SOC}, this kernel is computationally intractable. Therefore, prior work~\cite{wu2023tds, kim2025DAS, uehara2025inference} typically resorts to its approximated form, as expressed in Eq.~\ref{eq:SOC:approx optimal transition kernel}. This leads to the weight at each time being computed as:
+\begin{align}
+    w_{t-\Delta t}^{(i)}=\frac{\tilde{p}_{\theta}^*(\mathbf{x}_{t-\Delta t}|\mathbf{x}_{t})}{q(\mathbf{x}_{t-\Delta t}|\mathbf{x}_{t})}w_t^{(i)}=\frac{\exp (r(\mathbf{x}_{0|t-\Delta t})/\alpha)p_\theta(\mathbf{x}_{t-\Delta t}|\mathbf{x}_{t})}{\exp (r(\mathbf{x}_{0|t})/\alpha)q(\mathbf{x}_{t-\Delta t}|\mathbf{x}_{t})}w_t^{(i)},
+\end{align}
+where $p_\theta (\mathbf{x}_{t-\Delta t}|\mathbf{x}_t)$ denotes the transition kernel of the pretrained score-based generative model.\\
+The pretrained model follows the SDE given in Eq.~\ref{eq:preliminaries:pretrained model SDE}, which upon discretization yields a Gaussian transition kernel, $p_\theta(\mathbf{x}_{t-\Delta t}|\mathbf{x}_t)=\mathcal{N}(\mathbf{x}_t-\mathbf{f}(\mathbf{x}_t,t)\Delta t, g(t)^2\Delta t \mathbf{I})$.
+On the other hand, for reward-guided sampling, $i.e.$, to sample from the target distribution in Eq.~\ref{eq:problem definition and related work:target distribution at t=0}, we follow controlled SDE in Eq.~\ref{eq:SOC:target SDE}. At each intermediate time, the SOC framework (Appendix~\ref{sec:appx:SOC}) prescribes the use of the optimal control defined in Eq.~\ref{eq:SOC:optimal control}. However, due to its intractability, the approximation in Eq.~\ref{eq:SOC:approx optimal control} is typically adopted in practice. Discretizing the controlled SDE under this approximation leads to the following proposal distribution at each time:
+\begin{align}
+    q(\mathbf{x}_{t-\Delta t}|\mathbf{x}_{t})=\mathcal{N}(\mathbf{x}_t-\mathbf{f}(\mathbf{x}_t,t)\Delta t+g^2(t)\nabla \frac{r(\mathbf{x}_{0|t})}{\alpha}\Delta t,\;g(t)^2\Delta t \mathbf{I}).
+\end{align}
+A similar proposal has also been used in \cite{kim2025DAS, uehara2025inference}, where a Taylor expansion was applied in the context of entropy-regularized Markov Decision Process.

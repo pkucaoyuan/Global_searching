@@ -1,0 +1,156 @@
+\begin{figure}[ht!]
+{\tiny
+\setlength{\tabcolsep}{0.0em}
+\def\arraystretch{1.0}
+\newcolumntype{X}{>{\centering\arraybackslash}m{0.005\textwidth}}
+\newcolumntype{Y}{>{\centering\arraybackslash}m{0.05\textwidth}}
+\newcolumntype{Z}{>{\centering\arraybackslash}m{0.155\textwidth}}
+    \begin{tabularx}{\textwidth}{Y | Z Z Z X | X Z Z Z}
+        \toprule
+        & \scriptsize{Linear-ODE} & \scriptsize{Linear-SDE} & \scriptsize{VP-SDE} & & & \scriptsize{Linear-ODE} & \scriptsize{Linear-SDE} & \scriptsize{VP-SDE} \\
+        % \normalsize{VP-SDE} \\
+        % & \normalsize{L.O.} & \normalsize{L.S.} & \normalsize{V.S.} & & & \normalsize{L.O.} & \normalsize{L.S.} & \normalsize{V.S.} \\
+        % & L.O. & L.S. & V.S. & & & L.O. & L.S. & V.S. \\
+        \midrule
+        & \multicolumn{3}{c}{\textit{``Six people gathered for a picnic.''}} & & & \multicolumn{3}{c}{\textit{``Four candles, two balloons, one dog, two tomatoes and three helicopters.''}} \\
+        \rotatebox{90}{\makecell{\normalsize{SMC}~\cite{Kim:2025DAS}\\Quantity}} & \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/SMC_ODE_4.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/SMC_SDE_4.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/SMC_VP-SDE_4.jpg} & & &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/SMC_ODE_1.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/SMC_SDE_1.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/SMC_VP-SDE_1.jpg} \\
+        \midrule
+        & \multicolumn{3}{c}{\textit{``Four rabbits, three apples, two mice and four televisions.''}} & & & \multicolumn{3}{c}{\textit{``Seven pigs snorted and played in the mud.''}} \\
+        \rotatebox{90}{\makecell{\normalsize{SMC}~\cite{Kim:2025DAS}\\Quantity}} & \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/SMC_ODE_2.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/SMC_SDE_2.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/SMC_VP-SDE_2.jpg} & & &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/SMC_ODE_3.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/SMC_SDE_3.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/SMC_VP-SDE_3.jpg} \\
+        \midrule
+        & \multicolumn{3}{c}{\makecell{\textit{``Two frogs in tracksuits, competing in a high jump.}\\ \textit{The frog in blue tracksuit jumps higher than the frog not in blue tracksuit.''}}} & & & \multicolumn{3}{c}{\textit{\makecell{``Three purple gemstones and one pink gemstone,\\with the pink gemstone having the smoothest looking surface.''}}} \\
+        \rotatebox{90}{\makecell{\normalsize{SMC}~\cite{Kim:2025DAS}\\Composition}} &
+        \includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/SMC_ODE_2.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/SMC_SDE_2.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/SMC_VP-SDE_2.jpg} & & &
+        % & & & & & 
+        \includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/SMC_ODE_1.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/SMC_SDE_1.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/SMC_VP-SDE_1.jpg} \\
+        % Three small, non-blue boxes on a large blue box.
+        % \makecell{\textit{``Three purple gemstones and one pink gemstone,} \\ \textit{with the pink gemstone having the smoothest looking surface''}}
+        % 
+        \toprule
+        & \scriptsize{Linear-ODE} & \scriptsize{Linear-SDE} & \scriptsize{VP-SDE} & & & \scriptsize{Linear-ODE} & \scriptsize{Linear-SDE} & \scriptsize{VP-SDE} \\
+        % & \normalsize{L.O.} & \normalsize{L.S.} & \normalsize{V.S.} & & & \normalsize{L.O.} & \normalsize{L.S.} & \normalsize{V.S.} \\
+        \midrule
+        & \multicolumn{3}{c}{\textit{``Seven helmets''}} & & & \multicolumn{3}{c}{\textit{``Four couches, three candles, two fish, one frog and three plates.''}} \\
+        \rotatebox{90}{\makecell{\normalsize{CoDe}~\cite{Singh:2025CoDE}\\Quantity}} & \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/CoDe_ODE_0.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/CoDe_SDE_0.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/CoDe_VP-SDE_0.jpg} & & &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/CoDe_ODE_2.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/CoDe_SDE_2.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/CoDe_VP-SDE_2.jpg} \\
+        \midrule
+        & \multicolumn{3}{c}{\textit{``Seven lamps.''}} & & & \multicolumn{3}{c}{\textit{``Seven desks.''}} \\
+        \rotatebox{90}{\makecell{\normalsize{CoDe}~\cite{Singh:2025CoDE}\\Quantity}} & \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/CoDe_ODE_4.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/CoDe_SDE_4.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/CoDe_VP-SDE_4.jpg} & & &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/CoDe_ODE_3.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/CoDe_SDE_3.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/CoDe_VP-SDE_3.jpg} \\
+        \midrule
+        & \multicolumn{3}{c}{\textit{``In a collection of hats, each one is plain, but one is adorned with feathers.''}} & & & \multicolumn{3}{c}{\makecell{\textit{``A frog with a baseball cap is crouching on a lotus leaf,}\\ \textit{and another frog without a cap is crouching on a bigger lotus leaf.''}}} \\
+        \rotatebox{90}{\makecell{\normalsize{CoDe}~\cite{Singh:2025CoDE}\\Composition}} & \includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/CoDe_ODE_0.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/CoDe_SDE_0.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/CoDe_VP-SDE_0.jpg} & & &
+        \includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/CoDe_ODE_1.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/CoDe_SDE_1.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/CoDe_VP-SDE_1.jpg} \\
+        
+        \bottomrule
+        
+    \end{tabularx}
+  \caption{\textbf{Additional qualitative results of inference-time SDE conversion and interpolant conversion.} }
+  \label{fig:ode-sde-vpsde-appendix1}
+}
+\end{figure}
+
+
+\begin{figure}[ht!]
+{\tiny
+\setlength{\tabcolsep}{0.0em}
+\def\arraystretch{0.0}
+\newcolumntype{X}{>{\centering\arraybackslash}m{0.005\textwidth}}
+\newcolumntype{Y}{>{\centering\arraybackslash}m{0.05\textwidth}}
+\newcolumntype{Z}{>{\centering\arraybackslash}m{0.155\textwidth}}
+    \begin{tabularx}{\textwidth}{Y | Z Z Z X | X Z Z Z}
+        \toprule
+        & \scriptsize{Linear-ODE} & \scriptsize{Linear-SDE} & \scriptsize{VP-SDE} & & & \scriptsize{Linear-ODE} & \scriptsize{Linear-SDE} & \scriptsize{VP-SDE} \\
+        % & \normalsize{L.O.} & \normalsize{L.S.} & \normalsize{V.S.} & & & \normalsize{L.O.} & \normalsize{L.S.} & \normalsize{V.S.} \\
+        \midrule
+        & \multicolumn{3}{c}{\textit{``Six bottles.''}} & & & \multicolumn{3}{c}{\textit{``Five hamburgers sizzled on the grill.''}} \\
+        \rotatebox{90}{\makecell{\normalsize{SVDD}~\cite{Li2024:SVDD}\\Quantity}} & \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/SVDD_ODE_4.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/SVDD_SDE_4.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/SVDD_VP-SDE_4.jpg} & & &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/SVDD_ODE_1.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/SVDD_SDE_1.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/SVDD_VP-SDE_1.jpg} \\
+        \midrule
+        & \multicolumn{3}{c}{\textit{``Two men, four vases, four chickens and four ships.''}} & & & \multicolumn{3}{c}{\textit{``Six bicycles.''}} \\
+        \rotatebox{90}{\makecell{\normalsize{SVDD}~\cite{Li2024:SVDD}\\Quantity}} & \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/SVDD_ODE_5.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/SVDD_SDE_5.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/SVDD_VP-SDE_5.jpg} & & &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/SVDD_ODE_3.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/SVDD_SDE_3.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/SVDD_VP-SDE_3.jpg} \\
+        \midrule
+        & \multicolumn{3}{c}{\makecell{\textit{``Two people and two bicycles in the street,}\\ \textit{the bicycle with the larger wheels belongs to the taller person.''}}} & & & \multicolumn{3}{c}{\makecell{\textit{``There are two cups on the table, the cup without coffee}\\ \textit{is on the left of the other filled with coffee.''}}} \\
+        \rotatebox{90}{\makecell{\normalsize{SVDD}~\cite{Li2024:SVDD}\\Composition}} & \includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/SVDD_ODE_1.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/SVDD_SDE_1.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/SVDD_VP-SDE_1.jpg} & & &
+        \includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/SVDD_ODE_4.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/SVDD_SDE_4.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/SVDD_VP-SDE_4.jpg} \\
+        
+        \toprule
+        & \scriptsize{Linear-ODE} & \scriptsize{Linear-SDE} & \scriptsize{VP-SDE} & & & \scriptsize{Linear-ODE} & \scriptsize{Linear-SDE} & \scriptsize{VP-SDE} \\
+        % & \normalsize{L.O.} & \normalsize{L.S.} & \normalsize{V.S.} & & & \normalsize{L.O.} & \normalsize{L.S.} & \normalsize{V.S.} \\
+        \midrule
+        
+        & \multicolumn{3}{c}{\makecell{\textit{``Two giraffes, three eggs, two breads, }\\\textit{three microwaves and four strawberries.''}}} & & & \multicolumn{3}{c}{\textit{``Four pears, four desks, three paddles and two rabbits.''}} \\
+        \rotatebox{90}{\makecell{\normalsize{ {\Oursbf{}} (Ours) }\\Quantity}} &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/ours_ODE_4.jpg}  &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/ours_SDE_4.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/ours_VP-SDE_4.jpg} & & &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/ours_ODE_1.jpg}  &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/ours_SDE_1.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/ours_VP-SDE_1.jpg} \\
+        \midrule
+        & \multicolumn{3}{c}{\textit{``Four balloons, one cup, four desks, two dogs and four microwaves.''}} & & & \multicolumn{3}{c}{\textit{``Seven women.''}} \\
+        \rotatebox{90}{\makecell{\normalsize{ {\Oursbf{}} (Ours) }\\Quantity}} &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/ours_ODE_0.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/ours_SDE_0.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/ours_VP-SDE_0.jpg} & & &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/ours_ODE_3.jpg}  &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/ours_SDE_3.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/counting_generation/collection_ode_sde_vp/ours_VP-SDE_3.jpg} \\
+        \midrule
+        & \multicolumn{3}{c}{\textit{``Three sailboats on the water, each with sails of a different color.''}} & & & \multicolumn{3}{c}{\makecell{\textit{``Two birds are chasing each other in the air, with the one}\\ \textit{flying higher having a long tail and the other bird having a short tail.''}}} \\
+        \rotatebox{90}{\makecell{\normalsize{ {\Oursbf{}} (Ours) }\\Composition}} &
+        \includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/ours_ODE_0.jpg} & 
+        \includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/ours_SDE_0.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/ours_VP-SDE_0.jpg} & & &
+        \includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/ours_ODE_1.jpg} & 
+        \includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/ours_SDE_1.jpg} &
+        \includegraphics[width=0.15\textwidth]{Figures/compositional_generation/compositional_ode_sde_vp/ours_VP-SDE_1.jpg} \\
+        
+        \bottomrule
+        
+    \end{tabularx}
+  \caption{\textbf{Additional qualitative results of inference-time SDE conversion and interpolant conversion.} }
+  \label{fig:ode-sde-vpsde-appendix2}
+}
+\end{figure}
+
+

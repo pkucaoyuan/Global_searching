@@ -1,0 +1,66 @@
+\section{$\Psi$-Sampler: pCNL-Based Initial Particle Sampling}
+\label{sec:methods}
+In this work, we propose $\Psi$-Sampler, a framework that combines efficient initial particle samping with SMC-based inference-time reward alignment for score-based generative models. The initial particles are sampled using the Preconditioned Crank–Nicolson Langevin (pCNL) algorithm, hence the name \textbf{P}CNL-based initial particle sampling followed by \textbf{S}MC-based \textbf{I}nference-time reward alignment. The key idea is to allocate computational effort to the initial particle selection by sampling directly from the posterior distribution defined in Eq.~\ref{eq:problem definition and related work:approx optimal inital distribution}. This reward-informed initialization ensures that the particle set is better aligned with the target distribution from the outset, resulting in improved sampling efficiency and estimation accuracy in the subsequent SMC process. 
+
+While the unnormalized density of the posterior distribution in Eq.~\ref{eq:problem definition and related work:approx optimal inital distribution} has an analytical form, drawing exact samples from it remains challenging. A practical workaround is to approximate posterior sampling via a \textbf{Top-$K$-of-$N$} strategy: generate $N$ samples from the prior, and retain the top $K$ highest-scoring samples as initial particles. This variant of Best-of-$N$~\cite{pmlr-v202-gao23h-bon, gui2024bonbon, nakano2022webgptbrowserassistedquestionansweringhuman} resembles rejection sampling and serves as a crude approximation to posterior sampling~\cite{beirami2024theoretical_bon, 10619456}.
+We find that even this simple selection-based approximation leads to meaningful improvements. But considering that sampling space is high-dimensional, one can adopt Markov Chain Monte Carlo (MCMC)~\cite{metropolis_hastings, bj/1178291835, roberts2002langevin, duane1987hybrid, girolami2011riemann, Brooks_2011} which is known to be effective at sampling from high-dimensional space. In what follows, we briefly introduce Langevin-based MCMC algorithms that we adopt for posterior sampling.
+\subsection{Background: Langevin-Based Markov Chain Monte Carlo Methods}
+\label{sec:backgounds:mcmc}
+Langevin‑based MCMC refers to a class of samplers that generate proposals by discretizing the Langevin dynamics, represented as stochastic differential equation (SDE), 
+\begin{align}
+    \label{eq:methods:langevin dynamics}
+     \mathrm{d}\mathbf{x} = \frac{1}{2}\nabla\log p_{\text{tar }}\!\bigl(\mathbf{x}\bigr)\,\mathrm{d}t + \mathrm{d}\mathbf{W},
+\end{align}
+whose stationary distribution is the target density \(p_{\text{tar}}\).
+A single Euler–Maruyama discretization of the Langevin dynamics with step size \(\epsilon>0\) produces the proposal
+\begin{align}
+  \label{eq:methods:ula_proposal}
+  \mathbf{x}'= \mathbf{x} + \frac{\epsilon}{2}\nabla\log p_{\text{tar}}(\mathbf{x})
+  + \sqrt{\epsilon}\,\mathbf{z}, \qquad  \mathbf{z}\sim\mathcal{N}(\mathbf{0},\mathbf{I}).
+\end{align}
+Accepting every proposal yields the \textbf{Unadjusted Langevin Algorithm (ULA)}~\cite{bj/1178291835}. As a result, the Markov chain induced by ULA converges to a biased distribution whose discrepancy arises from the discretization error. 
+In particular, since ULA does not include a correction mechanism, it does not guarantee convergence to the target distribution $p_{\text{tar}}$. \textbf{Metropolis-Adjusted Langevin Algorithm (MALA)}~\cite{bj/1178291835, roberts2002langevin} combines the Langevin proposal Eq.~\ref{eq:methods:ula_proposal} with the Metropolis–Hastings (MH)~\cite{metropolis1953equation, metropolis_hastings} correction, a general accept–reject mechanism that eliminates discretization bias.  
+Given the current state \(\mathbf{x}\) and a proposal $\mathbf{x}'\sim q(\mathbf{x}'|\mathbf{x})$, the move is accepted with probability:  
+\begin{align}
+    \label{eq:sec5:mh correction}
+    a_{\textbf{M}}(\mathbf{x},\mathbf{x}')= \min\left(1, \frac{p_{\text{tar}}(\mathbf{x}')\;q(\mathbf{x}|\mathbf{x}')}{p_{\text{tar}}(\mathbf{x})\;q(\mathbf{x}'|\mathbf{x})} \right).
+\end{align}
+This rule enforces detailed balance, so \(p_{\text{tar}}\) is an invariant distribution of the resulting Markov chain.  
+While MALA is commonly used in practice due to its simplicity and gradient-based efficiency, it becomes increasingly inefficient in extremely high-dimensional settings, as is typical in image generative models ($e.g.$, 65,536 for FLUX~\cite{BlackForestLabs:2024Flux}). With a fixed step size, its acceptance probability degenerates as $d\to\infty$. Theoretically, to maintain a reasonable acceptance rate, the step size must shrink with dimension, typically at the optimal rate of $O(d^{-1/3})$~\cite{1c05a07d-e307-3702-9d37-5f716e8c0dbdULAconvergence}, which leads to extremely slow mixing and inefficient exploration in extremely high-dimension space.
+
+\subsection{Preconditioned Crank–Nicolson Langevin (pCNL) Algorithm}
+\label{sec:methods:pcn}
+To address high-dimensional sampling challenges (Sec.~\ref{sec:backgounds:mcmc}), infinite-dimensional MCMC methods~\cite{Cotter_2013pcnl, Beskos_2017geometricMCMC, doi:10.1142/S0219493708002378pcnlDiffusionBridge} were developed, particularly for PDE-constrained Bayesian inverse problems. These methods remain well-posed even when dimensionality increases. Among them, the preconditioned Crank–Nicolson (pCN) algorithm offers a simple, dimension-robust alternative to Random Walk Metropolis (RWM), though it fails to leverage the potential function, limiting its efficiency.
+
+To overcome this limitation, the preconditioned Crank–Nicolson Langevin (pCNL) algorithm has been proposed~\cite{Cotter_2013pcnl, Beskos_2017geometricMCMC}, which augments the dimension-robustness of pCN with the gradient-informed dynamics of Langevin methods (Eq.~\ref{eq:methods:langevin dynamics}), thereby improving sampling efficiency in high-dimensional settings.
+The pCNL algorithm employs a semi-implicit Euler (Crank–Nicolson-type) discretization of Langevin dynamics as follows:
+\begin{align}
+    \mathbf{x}'=\mathbf{x}+\frac{\epsilon}{2}\left( -\frac{\mathbf{x}+\mathbf{x}'}{2}+ \nabla \frac{r(\mathbf{x}_{0|1})}{\alpha}\right)+\sqrt{\epsilon}\,\mathbf{z}, \qquad \mathbf{z}\sim \mathcal{N}(\mathbf{0}, \mathbf{I}).
+\end{align}
+assuming prior is $\mathcal{N}(\mathbf{0}, \mathbf{I})$ as in our case.
+% Here, we assume that the target distribution is defined via a standard Gaussian prior $\mathcal{N}(\mathbf{0}, \mathbf{I})$ and an unnormalized likelihood term proportional to $\exp\left(r(\mathbf{x}_{0|1})/\alpha\right)$, consistent with our problem setup in Eq.~\ref{eq:problem definition and related work:approx optimal inital distribution}. 
+This Crank–Nicolson update admits an explicit closed-form solution, and hence retains the dimension-robustness of pCN, only when the drift induced by the prior is linear, as with a standard Gaussian prior. 
+Therefore, in our setting, it is applicable only at $t=1$, making it a particularly useful method that aligns with our proposal to sample particles from the posterior distribution Eq.~\ref{eq:problem definition and related work:approx optimal inital distribution}, where the prior is the standard Gaussian.
+With $\rho=(1-\epsilon/4)/(1+\epsilon/4)$, we can rewrite above equation as:
+\begin{align}
+    \label{eq:methods:pcnl version discretization of sde}
+    \mathbf{x}'=\rho\mathbf{x}+\sqrt{1-\rho^2}\left( \mathbf{z}+\frac{\sqrt{\epsilon}}{2} \nabla \frac{r(\mathbf{x}_{0|1})}{\alpha}\right), \qquad \mathbf{z}\sim \mathcal{N}(\mathbf{0}, \mathbf{I}).
+\end{align}
+Note that pCNL also adopts MH correction in Eq.~\ref{eq:sec5:mh correction} to guarantee convergence to the correct target distribution. 
+The pCN algorithm maintains a well-defined, non-zero acceptance probability even in the infinite-dimensional limit, allowing the use of fixed step sizes regardless of the dimension $d$~\cite{Cotter_2013pcnl, Beskos_2017geometricMCMC}. This property stems from its prior-preserving proposal, which ensures that the Gaussian reference measure is invariant under the proposal mechanism. This robustness carries over to pCNL, whose proposal inherits pCN’s ability to handle Gaussian priors in a dimension-independent manner. 
+We include the detailed acceptance probability formulas for MALA and pCNL in the Appendix~\ref{sec:appx:acceptence prob mala and pcnl}. 
+
+\input{figures/toy_exp}
+
+\subsection{Initial Particle Sampling}
+To sample initial particles using MCMC for the subsequent SMC process, we follow standard practices to ensure effective mixing and reduce sample autocorrelation. Specifically, we discard the initial portion of each chain as burn-in~\cite{216920b6-7e32-3767-8d02-cac746ef1295burnin} and apply thinning by subsampling at fixed intervals to mitigate high correlation between successive samples. A constant step size is used across iterations. Although adaptive step size schemes may improve convergence, we opt for a fixed-step approach for simplicity. Once the initial particles are sampled, we apply the existing SMC-based method~\cite{wu2023tds, uehara2025inference}.
+
+\vspace{-0.2cm}
+\paragraph{Comparison of SMC Initialization in a Toy Experiment.}
+
+In Fig.~\ref{fig:toy_exp}, we present a 2D toy experiment comparing SMC performance when initializing particles from the prior versus the posterior. We train a simple few-step score-based generative model on a synthetic dataset where the clean data distribution $p_0$ is a 6-mode Gaussian Mixture Model (GMM), shown as red dots in Fig.\ref{fig:toy_exp} (A). The prior distribution is shown in blue, and the gray lines depict sampling trajectories during generation.
+We define a reward function that assigns high scores to samples from only a subset of the GMM modes, yielding a target distribution at $t = 0$ (Eq.~\ref{eq:problem definition and related work:target distribution at t=0}), as illustrated in Fig.~\ref{fig:toy_exp} (B) (red dots). The corresponding optimal initial distribution—the posterior at $t = 1$ (Eq.~\ref{eq:problem definition and related work:approx optimal inital distribution})—is shown as blue dots in Fig.~\ref{fig:toy_exp} (B).
+We compare (C) standard SMC with prior sampled particles, (D) SMC with posterior samples from MALA, and (E) our $\Psi$-Sampler. All settings use the same total number of function evaluations (NFE). Prior-based SMC (C) uses 100 NFE; MALA+SMC and $\Psi$-Sampler allocate 50 NFE for MCMC and use fewer particles for SMC.
+% We used a smaller step size for MALA than pCNL to better reflect the main experimental settings.
+While MALA-based initialization method (D) significantly improves alignment with the target distribution (red dots in (B)) over prior-based method (C), some modes remain underrepresented. In contrast, $\Psi$-Sampler (E) provides tighter alignment with the target distribution and the posterior distribution, illustrating its effectiveness in sampling high-quality samples. 
+Full experimental details are provided in Appendix~\ref{sec:appx:toy exp setup and details}.

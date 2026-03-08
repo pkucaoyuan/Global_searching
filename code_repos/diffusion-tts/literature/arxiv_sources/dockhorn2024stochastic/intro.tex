@@ -1,0 +1,29 @@
+\section{Introduction}
+
+Deterministic flow models, including Rectified Flow~\citep{liu2022flow}, Flow Matching~\citep{lipman2022flow,tong2023improving}, Stochastic Interpolants~\citep{albergo2022building, albergo2023stochastic}, and probability flow ODE~\citep{song2020score} learn a reversible deterministic transport between two end distributions $p_0(x_0)$ and $p_1(x_1)$.
+Diffusion models require one of the distributions to be a Gaussian distribution, though generalizations exist~\citep{yoon2024score}.
+In contrast, Rectified Flows, Stochastic Interpolants, and Flow Matching offer a general framework for learning deterministic transports, without this restriction.
+While deterministic transport enables efficient deterministic sampling, e.g. by the rectification procedure suggested by~\citet{liu2022flow}, stochastic sampling may be desirable for:
+(1) robustness to estimation errors in the learned flow model,
+(2) ability to produce random samples conditioned on an intermediate state $x_t, t \in [0, 1]$,
+and (3) robustness to discretization error resulting from discrete step sampling from a continuous time model.
+We present a new theorem (\cref{thm:general}) that provides a recipe to create an infinite family of parameterized stochastic samplers, given access to the flow field and the score function for the marginal distributions.
+Our result provides a general and unified view, while including a few existing proposals (e.g. in \cite{huang2021variational,berner2022optimal}) as special cases.
+
+The deterministic transport specifies a deterministic mapping between the samples from the two distributions and is realized as a learned vector field corresponding to an ordinary differential equation (ODE).
+However, if one distribution is chosen to be a Gaussian, these Flow models can be viewed as reparameterizations of other deterministic models that also choose a Gaussian as one of the distributions e.g. probability flow ODEs arising from Gaussian diffusion models.
+We refer to such models as \emph{Gaussian flow} models.
+Transport map learning algorithms such as Gaussian flows are practical to train and enable applications like generative modeling~\citep{ramesh2022hierarchical,lu2022dpmsolver,saharia2022photorealistic,esser2024scaling}, stylization~\citep{isola2017image,meng2022sdedit}, and image restoration~\citep{delbracio2023inversion,rombach2022high,lugmayr2022repaint,kawar2022denoising}, to name a few.
+However, corresponding deterministic sampler has limitations that we empirically demonstrate on a toy Gaussian task, where it exhibits a bias and consistently underestimates the variance of the target distribution, as seen in \cref{fig:toy_samplers}.
+To enable stochastic sampling from such deterministic models, we provide a special case of our general result to turn the underlying ODE of Gaussian flow models into a family of stochastic differential equations (SDEs) that have the same marginal distributions.
+Our stochastic samplers allow trading the bias of deterministic sampler for increased variance in the estimated mean and variance parameters (\cref{fig:toy_bias_var}).
+Since, our method requires access to the score function for the marginal distributions, we impute it directly from the given flow model, alleviating the need for learning it separately.
+This method permits us to derive families of \emph{stochastic samplers}, for fixed (e.g., previously trained) \emph{deterministic} Gaussian flow models, that allow flexible and time dependent injection of stochasticity during sampling, enabling both deterministic and stochastic sampling.
+This additional degree of freedom allows exploration of stochastic samplers that can help alleviate the issues with the deterministic samplers and outperform them.
+We demonstrate this empirically on a toy Gaussian setup, as well as on the large scale ImageNet generation task.
+The stochastic samplers also provide an additional knob for controlling the diversity of generation as we qualitatively demonstrate in our experiments, and are compatible with classifier-free guidance~\citep{ho2022classifier}, as can be seen in \cref{fig:imagenet_cfg,fig:qual_alpha_vs_lambda}.
+
+\textbf{Our key contributions are:}
+\textbf{(1)} Specification of a flexible family of SDEs (\cref{thm:general}) that have the same marginal distributions as a given SDE or a flow model, enabling exploration of sampling schemes for a given fixed model,
+\textbf{(2)} Derivation of new as well as existing special cases directly from \cref{thm:general} (\cref{cor:diffusion_corollary} and \cref{cor:detflow_corollary}) demonstrating generality of \cref{thm:general},
+\textbf{(3)} Study of a set of SDE families corresponding to Gaussian flow models, derived using \cref{thm:general}, on both a toy as well as a large scale ImageNet setup, demonstrating flexible stochastic sampling and controllable diversity in generation, \emph{without requiring retraining} (\cref{tab:sde_family_table}, \cref{fig:imagenet_cfg,fig:qual_alpha_vs_lambda}).
