@@ -1,5 +1,5 @@
 """
-Scorers for FLUX backend.
+Scorers for flow model backend (PixArt-Sigma).
 Reuses the same scoring functions as SD (brightness, compressibility).
 """
 import torch

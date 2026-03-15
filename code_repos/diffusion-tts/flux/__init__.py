@@ -1,1 +1,1 @@
-# FLUX backend for noise trajectory search
+# PixArt flow model backend for noise trajectory search

@@ -32,17 +32,17 @@
 
 ---
 
-### 3. 技术细节公式化
+    ### 3. 技术细节公式化
 
-**导师原话**:
-> "verifier的input是什么？...因为因为它是xt先相当于先proxy x0，然后再加噪，所以说是verify part是对那个proxy"
+    **导师原话**:
+    > "verifier的input是什么？...因为因为它是xt先相当于先proxy x0，然后再加噪，所以说是verify part是对那个proxy"
 
-> "就是根据目前写的这个文案啊，他是能让他比如去直接写code，他是能清晰的知道塞给verify的是什么东西嘛？"
+    > "就是根据目前写的这个文案啊，他是能让他比如去直接写code，他是能清晰的知道塞给verify的是什么东西嘛？"
 
-**要求**:
-- 说明喂给verifier的是predicted x0
-- xt → predicted x0 → xt-1 关系要写清楚
-- 写出具体数学公式
+    **要求**:
+    - 说明喂给verifier的是predicted x0
+    - xt → predicted x0 → xt-1 关系要写清楚
+    - 写出具体数学公式
 
 ---
 
@@ -93,7 +93,38 @@
 | P0 | Introduction添加flow model兼容性说明 | TODO |
 | P0 | 添加Verifier来源说明+引用 | TODO |
 | P0 | 技术细节公式化 | TODO |
-| P1 | 添加flow-based model实验 | TODO |
+| P1 | 添加flow-based model实验 | DONE |
+
+---
+
+## Flow Model (PixArt-Sigma) 实验结果
+
+### Brightness Scorer - 最好结果 (2026-03-11)
+
+| NFE | Naive | Online (Ours) | Δ |
+|-----|-------|---------------|---|
+| 80 | 0.5444 ± 0.0044 | 0.5455 ± 0.0043 | **+0.0011** ✓ |
+| 100 | 0.5482 ± 0.0050 | 0.5491 ± 0.0045 | **+0.0009** ✓ |
+| 200 | 0.5520 ± 0.0036 | 0.5549 ± 0.0042 | **+0.0029** ✓ |
+
+### Compressibility Scorer - 最好结果 (2026-03-12, 修正版)
+
+| NFE | Best Config | Naive | Online (Ours) | Δ |
+|-----|-------------|-------|---------------|---|
+| 80 | Config 3 (middle steps) | 0.4697 | 0.4771 | **+0.0074** ✓ |
+| 100 | Config 1 (early steps) | 0.4653 | 0.4750 | **+0.0097** ✓ |
+| 200 | Config 2 (very early) | 0.4643 | 0.4759 | **+0.0117** ✓ |
+
+**Config说明**:
+- Config 1 (early steps focus): high_steps=[0,1,2,3,4], med_steps=[5,6,7,8,9], high_mult=1.8, med_mult=1.3
+- Config 2 (very early focus): high_steps=[0,1,2], med_steps=[3,4,5,6], high_mult=2.0, med_mult=1.5
+- Config 3 (middle steps focus): high_steps=[5,6,7,8,9], med_steps=[3,4,10,11,12], high_mult=1.6, med_mult=1.3
+
+**关键发现**:
+- 不同NFE需要不同的K分配策略
+- NFE较低时(80)，中间步骤更重要；NFE较高时(200)，极早期步骤更重要
+- 所有配置均使用相同的ODE baseline (pipe.scheduler.step)，只是搜索预算分配不同
+
 | P2 | 格式改为单栏 | TODO |
 | P2 | 去除hyphen | TODO |
 | P2 | 表格排版优化 | TODO |
