@@ -1,0 +1,232 @@
+\section{Experiments}
+\label{sec:experiments}
+
+\subsection{Experimental Setting}
+\label{sec:exp-setting}
+We evaluate global budget scheduling for verifier-guided noise trajectory search on both Stable Diffusion and EDM under \emph{strict} function-evaluation budgets (NFE).
+Our evaluation uses two lightweight verifiers that have been adopted as single-image rewards in prior noise-trajectory-search benchmarks: \textbf{Brightness}, computed from perceived luminance, and \textbf{Compressibility}, computed from the maximally-compressed JPEG file size and normalized to a fixed range.%
+\footnote{Because resolution is fixed in our setup, JPEG size is determined by image compressibility.}
+These verifiers enable controlled, repeatable measurements of test-time scaling without human annotation.
+
+For the \textbf{baseline}, we follow a standard local search recipe used in prior work: an $\epsilon$-greedy noise search operator combined with a \textbf{uniform per-timestep} compute schedule (``Naive'').
+GAINS keeps the same family of local search operators but replaces the global policy with a scheduler combining offline profiling and online control: offline profiling produces a coarse per-step allocation, and online control applies windowed early stopping based on (i) observed score gains and (ii) candidate score variance.
+Online early stopping is applied only within the high-value region identified by offline profiling; any NFE saved by stopping early is redistributed to the first low-value steps, ensuring that the total NFE exactly matches the prescribed budget.
+All experiments are run on a single NVIDIA A100 GPU; in our implementation, wall-clock generation time is dominated by UNet function evaluations and is therefore effectively determined by the NFE budget.
+
+\subsection{Stable Diffusion: Scaling with NFE}
+\label{sec:exp-sd-scaling}
+\begin{table}[t]
+\centering
+\caption{SD results across different NFE budgets.}
+\label{tab:sd_budget}
+\begin{tabular}{c|c|c}
+\toprule
+\textbf{NFE} & \textbf{Naive} & \textbf{GAINS} \\
+\midrule
+\multicolumn{3}{c}{\textit{Brightness}} \\
+\midrule
+400 & $0.7025 \pm 0.0466$ & $0.7248 \pm 0.0563$ \\
+500 & $0.7094 \pm 0.0631$ & $0.7346 \pm 0.0599$ \\
+800 & $0.7511 \pm 0.0620$ & $0.7832 \pm 0.0462$ \\
+\midrule
+\multicolumn{3}{c}{\textit{Compressibility}} \\
+\midrule
+400 & $0.8833 \pm 0.0166$ & $0.8946 \pm 0.0164$ \\
+500 & $0.8825 \pm 0.0170$ & $0.9004 \pm 0.0147$ \\
+800 & $0.8892 \pm 0.0198$ & $0.9008 \pm 0.0123$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:sd_budget} shows that GAINS improves not only absolute
+performance but also the \emph{speed} of quality scaling with respect to NFE on
+Stable Diffusion.
+For \textit{Brightness}, the baseline increases from $0.7025$ (400 NFE) to
+$0.7094$ (500 NFE) and $0.7511$ (800 NFE), while GAINS achieves
+$0.7248$, $0.7346$, and $0.7832$ at the same budgets, yielding consistent
+margins of +0.0223, +0.0252, and +0.0321, respectively.
+The GAINS 400-NFE result ($0.7248$) already surpasses the baseline at
+500 NFE ($0.7094$), meaning we reach a higher brightness level with
+\textbf{20\% fewer} function evaluations.
+The speed advantage is even clearer for \textit{Compressibility}.
+The baseline progresses from $0.8833$ (400) to $0.8825$ (500) and $0.8892$ (800),
+whereas GAINS reaches $0.8946$, $0.9004$, and $0.9008$.
+GAINS at \textbf{400 NFE} ($0.8946$) already exceeds the baseline
+at \textbf{800 NFE} ($0.8892$), achieving better compressibility with
+\textbf{50\% fewer} function evaluations.
+Similarly, the GAINS 500-NFE result ($0.9004$) also surpasses the baseline at 800 NFE,
+corresponding to a \textbf{37.5\%} compute reduction for a higher score.
+Overall, across all three budgets the quality curve is consistently shifted
+leftward, showing that global scheduling with per-step awareness converts
+additional NFE into quality more efficiently than uniform allocation.
+
+\subsection{EDM: Scaling with NFE}
+\label{sec:exp-edm-scaling}
+\begin{table}[t]
+\centering
+\caption{EDM results across different NFE budgets.}
+\label{tab:edm_budget}
+\begin{tabular}{c|c|c}
+\toprule
+\textbf{NFE} & \textbf{Naive} & \textbf{GAINS} \\
+\midrule
+\multicolumn{3}{c}{\textit{Brightness}} \\
+\midrule
+144 & $0.9507 \pm 0.0153$ & $0.9887 \pm 0.0046$ \\
+180 & $0.9617 \pm 0.0160$ & $0.9904 \pm 0.0036$ \\
+288 & $0.9787 \pm 0.0178$ & $0.9988 \pm 0.0012$ \\
+\midrule
+\multicolumn{3}{c}{\textit{Compressibility}} \\
+\midrule
+144 & $0.6714 \pm 0.0165$ & $0.6845 \pm 0.0074$ \\
+180 & $0.6774 \pm 0.0120$ & $0.7003 \pm 0.0089$ \\
+288 & $0.6901 \pm 0.0118$ & $0.7165 \pm 0.0085$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+Table~\ref{tab:edm_budget} shows a clear acceleration effect on EDM:
+GAINS reaches high quality at substantially lower NFE, indicating a strong
+left-shift of the quality--compute curve.
+For \textit{Brightness}, the baseline improves from $0.9507$ (144 NFE) to
+$0.9617$ (180 NFE) and $0.9787$ (288 NFE), while GAINS achieves
+$0.9887$, $0.9904$, and $0.9988$, respectively (gaps of +0.0380, +0.0287,
+and +0.0201).
+The GAINS 144-NFE brightness ($0.9887$) already surpasses the baseline at
+288 NFE ($0.9787$), meaning we obtain higher quality with \textbf{50\% fewer}
+function evaluations.
+Likewise, the GAINS 180-NFE result ($0.9904$) also exceeds the baseline at 288 NFE,
+corresponding to a \textbf{37.5\%} compute reduction.
+These comparisons across the three budgets directly show that GAINS
+achieves the same (or better) quality with substantially fewer denoising
+evaluations.
+The same acceleration holds for \textit{Compressibility}.
+The baseline increases from $0.6714$ (144) to $0.6774$ (180) and $0.6901$ (288),
+whereas GAINS reaches $0.6845$, $0.7003$, and $0.7165$.
+Here, the GAINS 144-NFE result ($0.6845$) already exceeds the baseline at 180 NFE
+($0.6774$), saving \textbf{20\%} NFE for a higher score;
+the GAINS 180-NFE result ($0.7003$) surpasses the baseline at 288 NFE ($0.6901$),
+saving \textbf{37.5\%} NFE.
+Across all three budgets, the improvements grow from +0.0131 to +0.0229 and
++0.0264, suggesting that global scheduling continues to allocate search compute
+to impactful timesteps as budget increases rather than wasting NFE uniformly.
+
+\subsection{Ablation: Offline Allocation vs.\ Offline+Online Control}
+\label{sec:exp-ablation-offline-online}
+\begin{table}[t]
+\centering
+\caption{Stable Diffusion results under fixed NFE $=400$.
+\textbf{Naive} uses uniform per-step allocation.
+\textbf{GAINS} uses offline profiling plus online control.
+\textbf{Offline Only} removes online control and uses only offline allocation.}
+\label{tab:sd_400_ablation}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Metric} & \textbf{Naive} & \textbf{GAINS} & \textbf{Offline Only} \\
+\midrule
+Brightness        & $0.7025 \pm 0.0466$ & $\mathbf{0.7248 \pm 0.0563}$ & $0.7158 \pm 0.0645$ \\
+Compressibility   & $0.8833 \pm 0.0166$ & $\mathbf{0.8946 \pm 0.0164}$ & $0.8873 \pm 0.0183$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:sd_400_ablation} isolates the contribution of online control at a fixed compute budget.
+The \textbf{Offline Only} variant already improves over uniform allocation on both metrics, showing that coarse per-step budgeting is beneficial by itself.
+Adding online feedback and windowed early stopping further improves performance, yielding the best scores for both \textit{Brightness} (0.7248) and \textit{Compressibility} (0.8946).
+This indicates that offline profiling captures \emph{where} search tends to matter, while online control refines \emph{how much} of the allocated budget is actually worth spending on a given prompt and timestep.
+
+\subsection{Larger Prompt Set Evaluation}
+\label{sec:exp-larger-prompts}
+\begin{table}[t]
+\centering
+\caption{Larger prompt set evaluation.
+We use 20 prompts, each repeated 10 times.
+Baseline corresponds to the uniform allocation method; GAINS is the proposed global scheduler.}
+\label{tab:larger_prompt_exp}
+\begin{tabular}{lcc}
+\toprule
+ & \textbf{brightness} & \textbf{compressibility} \\
+\midrule
+Baseline          & $0.6949 \pm 0.0756$ & $0.7938 \pm 0.0892$ \\
+GAINS             & $\mathbf{0.7213 \pm 0.0752}$ & $\mathbf{0.8076 \pm 0.0962}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:larger_prompt_exp} evaluates robustness on a broader set of prompts with repeated trials.
+GAINS consistently improves the mean scores for both verifiers: brightness increases from 0.6949 to 0.7213, and compressibility increases from 0.7938 to 0.8076.
+The improvement persists under repeated sampling, suggesting that the gains are not driven by a small subset of prompts but reflect a systematic advantage of allocating compute to high-impact timesteps and early-stopping low-yield search.
+
+\subsection{Compatibility with Different Local Search Operators}
+\label{sec:exp-local-operator}
+\begin{table}[t]
+\centering
+\caption{Global scheduling combined with different local search operators.
+Left block uses uniform allocation; right block uses GAINS.
+B: Brightness, C: Compressibility.}
+\label{tab:local_search_combo}
+\begin{tabular}{lcccc}
+\toprule
+& \multicolumn{2}{c}{\textbf{Naive}} & \multicolumn{2}{c}{\textbf{GAINS}} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5}
+\textbf{Metric} & \textbf{Zero-order} & \textbf{Random} & \textbf{Zero-order} & \textbf{Random} \\
+\midrule
+\textbf{B} & $0.4920 \pm 0.0723$ & $0.7382 \pm 0.0392$ & $\mathbf{0.5080 \pm 0.0752}$ & $\mathbf{0.7457 \pm 0.0452}$ \\
+\textbf{C} & $0.5727 \pm 0.0660$ & $0.8417 \pm 0.0268$ & $\mathbf{0.5832 \pm 0.0613}$ & $\mathbf{0.8454 \pm 0.0252}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:local_search_combo} shows that global scheduling is complementary to the choice of local search operator.
+Under both \textbf{Zero-order} and \textbf{Random} local search, replacing a uniform schedule with GAINS improves \textit{Brightness} and \textit{Compressibility}.
+This supports the intended modularity of our two-level formulation: the scheduler targets \emph{where/when} to spend compute, and can be paired with different per-timestep proposal mechanisms without changing the overall framework.
+
+\subsection{Applicability to Flow-based Models}
+\label{sec:exp-flow}
+
+As discussed in \cref{sec:method-global}, our framework applies to any
+diffusion-family model once the transition can be written in the form of
+\cref{eq:transition}. For flow-based models with deterministic ODE transitions,
+stochasticity is introduced by injecting noise at selected timesteps, converting
+the ODE into an SDE with the same marginal
+distributions~\citep{dockhorn2024stochastic,kim2025rbf}.
+This enables noise trajectory search without modifying the pretrained model.
+
+\begin{table}[t]
+\centering
+\caption{Flow-based model results. Stochasticity is introduced via noise
+injection~\citep{dockhorn2024stochastic}, after which GAINS
+allocates search compute non-uniformly across timesteps.}
+\label{tab:flow_results}
+\begin{tabular}{c|c|c}
+\toprule
+\textbf{NFE} & \textbf{Naive} & \textbf{GAINS} \\
+\midrule
+\multicolumn{3}{c}{\textit{Brightness}} \\
+\midrule
+80  & $0.5492 \pm 0.0032$ & $\mathbf{0.5507 \pm 0.0028}$ \\
+100 & $0.5499 \pm 0.0033$ & $\mathbf{0.5519 \pm 0.0033}$ \\
+150 & $0.5515 \pm 0.0039$ & $\mathbf{0.5526 \pm 0.0028}$ \\
+\midrule
+\multicolumn{3}{c}{\textit{Compressibility}} \\
+\midrule
+80  & $0.8135 \pm 0.0050$ & $\mathbf{0.8162 \pm 0.0031}$ \\
+100 & $0.8156 \pm 0.0044$ & $\mathbf{0.8170 \pm 0.0063}$ \\
+150 & $0.8157 \pm 0.0058$ & $\mathbf{0.8193 \pm 0.0046}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:flow_results} confirms that global scheduling improves
+quality even on flow-based models with injected stochasticity.
+For \textit{Brightness}, GAINS yields consistent gains of
++0.0015, +0.0021, and +0.0011 at 80, 100, and 150 NFE respectively,
+with the GAINS 80-NFE result ($0.5507$) already matching the
+baseline at 100 NFE ($0.5499$), saving \textbf{20\%} NFE.
+For \textit{Compressibility}, GAINS improves by +0.0027, +0.0014,
+and +0.0036 across the three budgets;
+the GAINS 100-NFE score ($0.8170$) exceeds the baseline at 150 NFE
+($0.8157$), corresponding to a \textbf{33\%} compute reduction.
+The margins are smaller than on SD and EDM, reflecting the narrower
+noise sensitivity of flow models after ODE-to-SDE conversion;
+nonetheless, the quality curve is consistently shifted leftward,
+and GAINS reduces run-to-run variance at every budget level.

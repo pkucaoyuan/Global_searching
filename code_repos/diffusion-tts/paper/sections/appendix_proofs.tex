@@ -1,0 +1,160 @@
+\section{Proofs of Theoretical Results}
+\label{sec:proofs}
+
+\begin{proof}[Proof of \cref{prop:offline}]
+\textbf{(i).}\;
+Under $\mathcal{D}_t(c,x_t)=\mathcal{D}_t$,
+$G_t(K_t)$ depends only on $(t,K_t)$, so
+$\sum_t G_t(K_t)$ is the same function of $\{K_t\}$ for every $(c,x)$.
+Any $\{K_t^*\}$ solving~\eqref{eq:alloc} is therefore simultaneously
+optimal for every prompt.
+
+\textbf{(ii).}\;
+Treating $K$ as continuous,
+under the location-scale assumption~\eqref{eq:gain-factor},
+$G_t(K)=\sigma_t\,a_K$ is strictly concave in $K$
+(since $a_K$ is strictly concave; see David and Nagaraja, 2003,
+Ch.~4 for the Gaussian case; the integer solution is obtained by
+rounding and loses at most one unit of gain per timestep).
+The Lagrangian of~\eqref{eq:alloc} is
+$\mathcal{L}=\sum_t G_t(K_t)-\lambda\bigl(\sum_t K_t - B\bigr)
++\sum_t \mu_t(K_t-1)$,
+giving the first-order and complementary-slackness conditions
+\[
+  G_t'(K_t^*)=\lambda^*-\mu_t^*,
+  \qquad
+  \mu_t^*\ge 0,
+  \qquad
+  \mu_t^*(K_t^*-1)=0.
+\]
+If $K_t^*>1$ then $\mu_t^*=0$ and $G_t'(K_t^*)=\lambda^*$.
+Substituting $G_t'(K)=\sigma_t\,a_K'$:
+\[
+  \sigma_t\,a_{K_t^*}' = \lambda^*
+  \quad\Longrightarrow\quad
+  a_{K_t^*}' = \frac{\lambda^*}{\sigma_t}.
+\]
+Because the location-scale assumption makes $a_K$ the \emph{same}
+function for every~$t$, the right-hand side pins $K_t^*$ on a single
+strictly decreasing curve $a_K'$.
+Hence $\sigma_{t_1}>\sigma_{t_2}$
+implies $a_{K_{t_1}^*}' < a_{K_{t_2}^*}'$, hence $K_{t_1}^*>K_{t_2}^*$.
+(If the shape of $\mathcal{D}_t$ varied with~$t$, each timestep would
+have its own curve $a_{K,t}'$ and this monotonicity would not follow
+from $\sigma_{t_1}>\sigma_{t_2}$ alone.)
+
+\textbf{(iii).}\;
+At $K_t\equiv B/T$, the marginal gains are
+$G_t'(B/T)=\sigma_t\,a_{B/T}'$.
+If $\sigma_{t_1}\neq\sigma_{t_2}$ for some pair, these are not equal,
+violating the KKT condition.
+Consider the perturbation $K_{t_1}=B/T+\epsilon$,
+$K_{t_2}=B/T-\epsilon$ with all other $K_t$ unchanged.
+By Taylor expansion,
+\begin{align*}
+  &\;\bigl[G_{t_1}(B/T+\epsilon)+G_{t_2}(B/T-\epsilon)\bigr]
+   -\bigl[G_{t_1}(B/T)+G_{t_2}(B/T)\bigr] \\
+  &= \epsilon\bigl[G_{t_1}'(B/T)-G_{t_2}'(B/T)\bigr]+O(\epsilon^2) \\
+  &= \epsilon\,(\sigma_{t_1}-\sigma_{t_2})\,a_{B/T}'+O(\epsilon^2)
+   \;>\;0
+\end{align*}
+for small $\epsilon>0$.
+The common factor $a_{B/T}'$ can be pulled out because $a_K$ is
+$t$-independent (location-scale); combined with
+$\sigma_{t_1}-\sigma_{t_2}>0$ and $a_{B/T}'>0$, the perturbation
+is strictly positive.
+The uniform allocation is therefore not a stationary point.
+Since the objective is concave over the convex constraint set
+$\{\sum_t K_t=B,\;K_t\ge 1\}$, any non-stationary feasible point
+is strictly suboptimal, so the global maximizer $\{K_t^*\}$
+must satisfy $\sum_t G_t(K_t^*)>\sum_t G_t(B/T)$ whenever
+$\{\sigma_t\}$ are not all equal.
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:online}]
+\textbf{(i).}\;
+For fixed $\{K_t\}$ with $\sum_t K_t=B$ and $K_t\ge 1$, the map
+$\boldsymbol{\sigma}\mapsto\sum_t\sigma_t\,a_{K_t}$ is linear.
+Hence
+\[
+  V^*(\boldsymbol{\sigma})
+  \;=\;
+  \max_{\{K_t\}:\,\sum_t K_t=B,\;K_t\ge 1}
+  \sum_t\sigma_t\,a_{K_t}
+  \;=\;
+  \sup_{\{K_t\}\in\mathcal{K}}\;
+  \langle\boldsymbol{a}_K,\,\boldsymbol{\sigma}\rangle
+\]
+is the pointwise supremum of linear functions, therefore convex
+(Boyd and Vandenberghe, 2004, \S3.2.3).
+By Jensen's inequality,
+\[
+  \mathbb{E}_{\boldsymbol{\sigma}}
+  \bigl[V^*(\boldsymbol{\sigma})\bigr]
+  \;\ge\;
+  V^*\!\bigl(\mathbb{E}[\boldsymbol{\sigma}]\bigr)
+  \;=\;
+  V^*(\bar{\boldsymbol{\sigma}}).
+\]
+Since $\mathcal{K}$ is finite (integer allocations), $V^*$ is the
+maximum of finitely many linear functions, hence convex and
+piecewise-linear.
+Equality holds iff the optimizer
+$\{K_t^*(\boldsymbol{\sigma})\}$ is constant a.s., i.e.,
+$\boldsymbol{\sigma}(c,x)=\bar{\boldsymbol{\sigma}}$ a.s.
+
+\textbf{(ii).}\;
+Under the location-scale model~\eqref{eq:gain-factor},
+$G_t(K)=\sigma_t\,a_K$ yields
+\[
+  G_t'(K)=\sigma_t\cdot a_K'.
+\]
+Because $a_K$ is $t$-independent, the marginal gain separates into
+a timestep-specific factor~$\sigma_t$ and a universal exhaustion
+curve~$a_K'$; this separation is what allows the two thresholds below
+to monitor each factor independently.
+The optimal stopping condition is $G_t'(K)\le\lambda^*$, where
+$\lambda^*$ is the shadow price of the budget constraint.
+For each completed step $s$, define
+$\bar{g}_s=G_s(\hat{K}_s)/(\hat{K}_s - 1)$.
+Since $G_s$ is concave with $G_s(1)=0$
+(a single candidate yields no gain), the chord from
+$(1,0)$ to $(\hat{K}_s, G_s(\hat{K}_s))$ lies above the tangent:
+\[
+  \bar{g}_s
+  =\frac{G_s(\hat{K}_s)-G_s(1)}{\hat{K}_s-1}
+  \ge G_s'(\hat{K}_s)
+  \qquad\text{(chord}\;\ge\;\text{tangent)}.
+\]
+Averaging:
+\[
+  \bar{g}
+  =\frac{1}{|\mathcal{H}_g|}\sum_s\bar{g}_s
+  \;\ge\;
+  \frac{1}{|\mathcal{H}_g|}\sum_s G_s'(\hat{K}_s).
+\]
+If the realized allocations $\{\hat{K}_s\}$ coincide with the optimal
+solution of~\eqref{eq:alloc}, then
+$G_s'(\hat{K}_s)=\lambda^*$ for every active $s$ (by Prop.~\ref{prop:offline}(ii)),
+giving $\bar{g}\ge\lambda^*$.
+In practice $\{\hat{K}_s\}$ are determined online and need not be
+exactly optimal, so $\beta_g\bar{g}$ ($\beta_g\in(0,1)$) serves as a
+conservative, adaptive estimate of $\lambda^*$.
+The gain threshold $\widetilde{g}_t^{(j)}<\beta_g\bar{g}$ tests the
+product $\sigma_t\,a_K'\le\lambda^*$; the variance threshold
+$\hat{\sigma}_t^{(j)}<\beta_\sigma\bar{\sigma}$ independently tests
+$\sigma_t\le\bar{\sigma}$.
+Requiring both thresholds to be met before stopping avoids
+premature termination at high-value timesteps under estimation noise.
+If only the gain threshold is checked, a timestep with high
+$\sigma_t$ but temporarily low $a_K'$ (exhaustion from a few
+unlucky draws) would be abandoned even though a single additional
+candidate could yield a large jump.
+Conversely, if only the variance threshold is checked, a low-$\sigma_t$
+timestep would be abandoned even when its $a_K'$ is still large and
+the search has not yet diminished.
+The conjunction ensures that stopping occurs only when both the
+timestep's intrinsic sensitivity and its remaining search potential
+are genuinely low, preventing the loss of high-value search
+opportunities.
+\end{proof}
