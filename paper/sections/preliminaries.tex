@@ -1,0 +1,136 @@
+% ============================================================
+% §2 Preliminaries and Problem Setting — NEW section (OR convention)
+% Formal definitions, notation, background extracted from method_framework
+% ============================================================
+\section{Preliminaries and Problem Setting}
+\label{sec:preliminaries}
+
+We first review diffusion models and fix notation, then formalize the
+noise trajectory search problem that motivates our approach.
+
+% -----------------------------------------------------------
+\subsection{Diffusion Models}
+\label{sec:diffusion-models}
+
+Diffusion models generate samples by progressively denoising random noise into
+data.
+We briefly review the two most common formulations, as our framework applies to
+both.
+
+\subsubsection{The DDPM Formulation.}
+The Denoising Diffusion Probabilistic Modeling (DDPM) formulation
+\citep{ho2020denoising} couples two Markov processes: a forward process
+($t = 1$ to $T$) that perturbs data with increasing Gaussian
+noise, and a backward process ($t = T$ to $1$) that converts noise back
+to data.
+Given a data distribution $\mathbf{x}_0 \sim q_{\mathrm{data}}(\mathbf{x}_0)$,
+the forward process progressively injects noise via
+\begin{equation}
+  q(\mathbf{x}_t \mid \mathbf{x}_{t-1})
+  = \mathcal{N}\bigl(\mathbf{x}_t;\, \sqrt{1 - \beta_t}\,\mathbf{x}_{t-1},\,
+    \beta_t \mathbf{I}\bigr),
+  \label{eq:ddpm-forward}
+\end{equation}
+where $\beta_t \in (0,1)$ are fixed hyperparameters.
+Setting $\alpha_t = 1 - \beta_t$ and
+$\bar{\alpha}_t = \prod_{s=0}^{t}\alpha_s$, we can express the noisy sample at
+any timestep directly as
+\begin{equation}
+  \mathbf{x}_t
+  = \sqrt{\bar{\alpha}_t}\,\mathbf{x}_0
+    + \sqrt{1 - \bar{\alpha}_t}\,\boldsymbol{\varepsilon},
+  \qquad \boldsymbol{\varepsilon} \sim \mathcal{N}(\mathbf{0}, \mathbf{I}).
+  \label{eq:ddpm-xt}
+\end{equation}
+A neural network
+$\boldsymbol{\varepsilon}_\theta(\mathbf{x}_t, t)$ trained to predict the noise
+parameterizes the backward process; samples emerge by iterating
+\begin{equation}
+  \mathbf{x}_{t-1}
+  = \frac{1}{\sqrt{1 - \beta_t}}
+    \biggl(\mathbf{x}_t - \frac{\beta_t}{\sqrt{1 - \bar{\alpha}_t}}\,
+    \boldsymbol{\varepsilon}_\theta(\mathbf{x}_t, t)\biggr)
+    + \sigma_t\,\boldsymbol{\varepsilon},
+  \label{eq:ddpm-reverse}
+\end{equation}
+from $\mathbf{x}_T \sim \mathcal{N}(\mathbf{0}, \mathbf{I})$ down to
+$\mathbf{x}_0$.
+
+\subsubsection{The SGM Formulation.}
+The Score-based Generative Model (SGM) formulation~\citep{song2019generative}
+builds on the score function
+$s(\mathbf{x}) = \nabla_\mathbf{x} \log q(\mathbf{x})$,
+i.e., the gradient of the log-density.
+Data are perturbed at different noise levels:
+$\tilde{\mathbf{x}}_t = \mathbf{x}_0 + \sigma_t\boldsymbol{\varepsilon}$
+for $0 < \sigma_1 < \sigma_2 < \cdots < \sigma_T$.
+A neural network
+$\mathbf{s}_\theta(\tilde{\mathbf{x}}_t, \sigma_t)$ approximates
+the score at each noise level.
+Annealed Langevin dynamics then generate samples: for each level
+$t = T, T{-}1, \ldots, 1$, the sampler iterates
+\begin{equation}
+  \mathbf{x}_{(i)}
+  = \mathbf{x}_{(i-1)}
+    + \delta_i\,\nabla_\mathbf{x}\log q(\mathbf{x}_{(i-1)})
+    + \sqrt{2\delta_i}\,\boldsymbol{\varepsilon}_i,
+  \label{eq:sgm-langevin}
+\end{equation}
+starting from a prior distribution $\mathbf{x}_{(0)} \sim \pi$.
+
+\begin{remark}
+Both DDPM and SGM traverse $T$ discrete timesteps.
+At each step, the transition from $\mathbf{x}_t$ to $\mathbf{x}_{t-1}$ depends
+on a stochastic noise variable (the injected $\boldsymbol{\varepsilon}$ in
+\eqref{eq:ddpm-reverse} or the Langevin noise in~\eqref{eq:sgm-langevin}).
+This shared structure underpins the transition abstraction
+in \cref{sec:framework}.
+\end{remark}
+
+% -----------------------------------------------------------
+\subsection{Inference-Time Noise Search}
+\label{sec:noise-search-problem}
+
+\begin{definition}[Noise Trajectory Search Problem]
+\label{def:nts}
+Given a pretrained diffusion model with transition function
+$F_\theta$, a conditioning signal $c$, a verifier $v(\cdot, c)$, and a total
+compute budget of $B$ function evaluations (NFE), the \emph{noise trajectory
+search problem} is to find a sequence of noise variables
+$\{\varepsilon_t^*\}_{t=1}^T$ that maximizes the verifier score of the final
+generated sample:
+\begin{equation}
+  \max_{\{\varepsilon_t\}_{t=1}^T}\;
+  v\!\bigl(x_0(\varepsilon_1, \ldots, \varepsilon_T),\, c\bigr)
+  \quad \text{subject to} \quad
+  \text{total NFE} \leq B.
+  \label{eq:nts-problem}
+\end{equation}
+\end{definition}
+
+The core difficulty is sequential: the noise
+$\varepsilon_t$ at timestep $t$ shapes the latent $x_{t-1}$, which in turn
+determines which noises are effective at subsequent steps.
+Because the budget $B$ must be respected globally, the problem further requires
+allocating computation across timesteps.
+
+\begin{definition}[Verifier]
+\label{def:verifier}
+A \emph{verifier} $v : \mathcal{X} \times \mathcal{C} \to \mathbb{R}$ scores a
+generated sample $x_0$ against its conditioning signal $c$, returning a scalar
+quality measure.
+The verifier is fixed and not trained during search.
+Examples include perceptual quality metrics, task-specific reward functions,
+and domain-specific performance measures.
+\end{definition}
+
+\begin{definition}[Function Evaluation Budget]
+\label{def:nfe}
+A single \emph{function evaluation} (NFE) corresponds to one forward pass
+through the denoising network.
+The budget $B$ caps how many forward passes the sampler may
+perform when generating a single sample.
+Standard diffusion sampling consumes exactly $T$ NFE (one per timestep);
+noise trajectory search spends the remaining $B - T$ NFE on local noise
+refinement.
+\end{definition}

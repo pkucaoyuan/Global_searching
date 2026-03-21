@@ -1,0 +1,381 @@
+\begin{thebibliography}{}
+
+\bibitem[\protect\citeauthoryear{Anderson}{Anderson}{1982}]{Anderson1982}
+Anderson, B. D.~O. (1982).
+\newblock Reverse-time diffusion equation models.
+\newblock {\em Stochastic Processes and their Applications\/}~{\em 12\/}(3),
+  313--326.
+
+\bibitem[\protect\citeauthoryear{Bengio, Lahlou, Deleu, Hu, Tiwari, and
+  Bengio}{Bengio et~al.}{2023}]{bengio2023gflownet}
+Bengio, Y., S.~Lahlou, T.~Deleu, E.~J. Hu, M.~Tiwari, and E.~Bengio (2023).
+\newblock Gflownet foundations.
+\newblock {\em Journal of Machine Learning Research\/}~{\em 24\/}(210), 1--55.
+
+\bibitem[\protect\citeauthoryear{Benveniste, M{\'e}tivier, and
+  Priouret}{Benveniste et~al.}{2012}]{benveniste2012adaptive}
+Benveniste, A., M.~M{\'e}tivier, and P.~Priouret (2012).
+\newblock {\em Adaptive algorithms and stochastic approximations}, Volume~22.
+\newblock Springer Science \& Business Media.
+
+\bibitem[\protect\citeauthoryear{Bhandari, Russo, and Singal}{Bhandari
+  et~al.}{2021}]{bhandari2021finite}
+Bhandari, J., D.~Russo, and R.~Singal (2021).
+\newblock A finite time analysis of temporal difference learning with linear
+  function approximation.
+\newblock {\em Operations Research\/}~{\em 69\/}(3), 950--973.
+
+\bibitem[\protect\citeauthoryear{Black, Janner, Du, Kostrikov, and
+  Levine}{Black et~al.}{2024}]{black2023training}
+Black, K., M.~Janner, Y.~Du, I.~Kostrikov, and S.~Levine (2024).
+\newblock Training diffusion models with reinforcement learning.
+\newblock In {\em The Twelfth International Conference on Learning
+  Representations}.
+
+\bibitem[\protect\citeauthoryear{Cattiaux, Conforti, Gentil, and
+  L{\'e}onard}{Cattiaux et~al.}{2023}]{cattiaux2023time}
+Cattiaux, P., G.~Conforti, I.~Gentil, and C.~L{\'e}onard (2023).
+\newblock Time reversal of diffusion processes under a finite entropy
+  condition.
+\newblock {\em Annales de l'Institut Henri Poincar{\'e} (B) Probabilit{\'e}s et
+  Statistiques\/}~{\em 59\/}(4), 1844--1881.
+
+\bibitem[\protect\citeauthoryear{Chen, Mei, Fan, and Wang}{Chen
+  et~al.}{2024}]{chen2024overview}
+Chen, M., S.~Mei, J.~Fan, and M.~Wang (2024).
+\newblock An overview of diffusion models: Applications, guided generation,
+  statistical rates and optimization.
+\newblock {\em arXiv preprint arXiv:2404.07771\/}.
+
+\bibitem[\protect\citeauthoryear{Clark, Vicol, Swersky, and Fleet}{Clark
+  et~al.}{2024}]{clark2023directly}
+Clark, K., P.~Vicol, K.~Swersky, and D.~J. Fleet (2024).
+\newblock Directly fine-tuning diffusion models on differentiable rewards.
+\newblock In {\em The Twelfth International Conference on Learning
+  Representations}.
+
+\bibitem[\protect\citeauthoryear{Dhariwal and Nichol}{Dhariwal and
+  Nichol}{2021}]{dhariwal2021diffusion}
+Dhariwal, P. and A.~Nichol (2021).
+\newblock Diffusion models beat {GAN}s on image synthesis.
+\newblock {\em Advances in Neural Information Processing Systems\/}~{\em 34},
+  8780--8794.
+
+\bibitem[\protect\citeauthoryear{Fan, Watkins, Du, Liu, Ryu, Boutilier, Abbeel,
+  Ghavamzadeh, Lee, and Lee}{Fan et~al.}{2023}]{fan2024reinforcement}
+Fan, Y., O.~Watkins, Y.~Du, H.~Liu, M.~Ryu, C.~Boutilier, P.~Abbeel,
+  M.~Ghavamzadeh, K.~Lee, and K.~Lee (2023).
+\newblock Reinforcement learning for fine-tuning text-to-image diffusion
+  models.
+\newblock {\em Advances in Neural Information Processing Systems\/}~{\em 36}.
+
+\bibitem[\protect\citeauthoryear{Haarnoja, Zhou, Abbeel, and Levine}{Haarnoja
+  et~al.}{2018}]{haarnoja2018soft}
+Haarnoja, T., A.~Zhou, P.~Abbeel, and S.~Levine (2018).
+\newblock Soft actor-critic: Off-policy maximum entropy deep reinforcement
+  learning with a stochastic actor.
+\newblock In {\em International Conference on Machine Learning}, pp.\
+  1861--1870. PMLR.
+
+\bibitem[\protect\citeauthoryear{Haussmann and Pardoux}{Haussmann and
+  Pardoux}{1986}]{haussmann1986time}
+Haussmann, U.~G. and E.~Pardoux (1986).
+\newblock Time reversal of diffusions.
+\newblock {\em The Annals of Probability\/}, 1188--1205.
+
+\bibitem[\protect\citeauthoryear{Heusel, Ramsauer, Unterthiner, Nessler, and
+  Hochreiter}{Heusel et~al.}{2017}]{heusel2017gans}
+Heusel, M., H.~Ramsauer, T.~Unterthiner, B.~Nessler, and S.~Hochreiter (2017).
+\newblock {GAN}s trained by a two time-scale update rule converge to a local
+  {N}ash equilibrium.
+\newblock In {\em Advances in Neural Information Processing Systems},
+  Volume~30.
+
+\bibitem[\protect\citeauthoryear{Ho, Jain, and Abbeel}{Ho
+  et~al.}{2020}]{Ho2020}
+Ho, J., A.~Jain, and P.~Abbeel (2020).
+\newblock Denoising diffusion probabilistic models.
+\newblock In {\em Advances in Neural Information Processing Systems},
+  Volume~33.
+
+\bibitem[\protect\citeauthoryear{Ho and Salimans}{Ho and
+  Salimans}{2022}]{ho2022classifier}
+Ho, J. and T.~Salimans (2022).
+\newblock Classifier-free diffusion guidance.
+\newblock {\em arXiv preprint arXiv:2207.12598\/}.
+
+\bibitem[\protect\citeauthoryear{Hoogeboom, Satorras, Vignac, and
+  Welling}{Hoogeboom et~al.}{2022}]{hoogeboom2022equivariant}
+Hoogeboom, E., V.~G. Satorras, C.~Vignac, and M.~Welling (2022).
+\newblock Equivariant diffusion for molecule generation in 3d.
+\newblock In {\em International conference on machine learning}, pp.\
+  8867--8887. PMLR.
+
+\bibitem[\protect\citeauthoryear{Hyv{\"a}rinen and Dayan}{Hyv{\"a}rinen and
+  Dayan}{2005}]{hyvarinen2005estimation}
+Hyv{\"a}rinen, A. and P.~Dayan (2005).
+\newblock Estimation of non-normalized statistical models by score matching.
+\newblock {\em Journal of Machine Learning Research\/}~{\em 6\/}(4), 695--708.
+
+\bibitem[\protect\citeauthoryear{Jia, Ouyang, and Zhang}{Jia
+  et~al.}{2025}]{jia2025accuracy}
+Jia, Y., D.~Ouyang, and Y.~Zhang (2025).
+\newblock Accuracy of discretely sampled stochastic policies in continuous-time
+  reinforcement learning.
+\newblock {\em arXiv preprint arXiv:2503.09981\/}.
+
+\bibitem[\protect\citeauthoryear{Jia and Zhou}{Jia and Zhou}{2022a}]{JZ21}
+Jia, Y. and X.~Y. Zhou (2022a).
+\newblock Policy evaluation and temporal-difference learning in continuous time
+  and space: A martingale approach.
+\newblock {\em Journal of Machine Learning Research\/}~{\em 23}, (154):1--55.
+
+\bibitem[\protect\citeauthoryear{Jia and Zhou}{Jia and Zhou}{2022b}]{JZ22}
+Jia, Y. and X.~Y. Zhou (2022b).
+\newblock Policy gradient and actor-critic learning in continuous time and
+  space: Theory and algorithms.
+\newblock {\em Journal of Machine Learning Research\/}~{\em 23}, (275):1--50.
+
+\bibitem[\protect\citeauthoryear{Jia and Zhou}{Jia and Zhou}{2023}]{jia2023q}
+Jia, Y. and X.~Y. Zhou (2023).
+\newblock q-learning in continuous time.
+\newblock {\em Journal of Machine Learning Research\/}~{\em 24\/}(161), 1--61.
+
+\bibitem[\protect\citeauthoryear{Jia and Zhou}{Jia and
+  Zhou}{2025}]{jia2025erratum}
+Jia, Y. and X.~Y. Zhou (2025).
+\newblock Erratum to “q-learning in continuous time”.
+\newblock {\em Available at
+  \url{https://www.columbia.edu/~xz2574/download/err.pdf}\/}.
+
+\bibitem[\protect\citeauthoryear{Karras, Aittala, Aila, and Laine}{Karras
+  et~al.}{2022}]{Karras2022}
+Karras, T., M.~Aittala, T.~Aila, and S.~Laine (2022).
+\newblock Elucidating the design space of diffusion-based generative models.
+\newblock In {\em Advances in Neural Information Processing Systems},
+  Volume~35.
+
+\bibitem[\protect\citeauthoryear{Kingma and Ba}{Kingma and
+  Ba}{2015}]{kingma2014adam}
+Kingma, D.~P. and J.~Ba (2015).
+\newblock Adam: A method for stochastic optimization.
+\newblock In {\em 3rd International Conference on Learning Representations}.
+
+\bibitem[\protect\citeauthoryear{Krizhevsky}{Krizhevsky}{2009}]{krizhevsky2009learning}
+Krizhevsky, A. (2009).
+\newblock Learning multiple layers of features from tiny images.
+
+\bibitem[\protect\citeauthoryear{Kushner and Yin}{Kushner and
+  Yin}{2003}]{kushner2003stochastic}
+Kushner, H. and G.~Yin (2003).
+\newblock Stochastic approximation and recursive algorithms.
+\newblock In {\em Stochastic Modelling and Applied Probability}, Volume~35.
+  Springer-Verlag NY.
+
+\bibitem[\protect\citeauthoryear{Lahlou, Deleu, Lemos, Zhang, Volokhova,
+  Hern{\'a}ndez-Garc{\i}a, Ezzine, Bengio, and Malkin}{Lahlou
+  et~al.}{2023}]{lahlou2023theory}
+Lahlou, S., T.~Deleu, P.~Lemos, D.~Zhang, A.~Volokhova,
+  A.~Hern{\'a}ndez-Garc{\i}a, L.~N. Ezzine, Y.~Bengio, and N.~Malkin (2023).
+\newblock A theory of continuous generative flow networks.
+\newblock In {\em International Conference on Machine Learning}, pp.\
+  18269--18300. PMLR.
+
+\bibitem[\protect\citeauthoryear{Lai, Takida, Murata, Uesaka, Mitsufuji, and
+  Ermon}{Lai et~al.}{2023}]{lai2023fp}
+Lai, C.-H., Y.~Takida, N.~Murata, T.~Uesaka, Y.~Mitsufuji, and S.~Ermon (2023).
+\newblock {FP-D}iffusion: Improving score-based diffusion models by enforcing
+  the underlying score fokker-planck equation.
+\newblock In {\em International Conference on Machine Learning}, pp.\
+  18365--18398. PMLR.
+
+\bibitem[\protect\citeauthoryear{Lee, Lu, and Tan}{Lee
+  et~al.}{2022}]{leeconvergence}
+Lee, H., J.~Lu, and Y.~Tan (2022).
+\newblock Convergence for score-based generative modeling with polynomial
+  complexity.
+\newblock In {\em Advances in Neural Information Processing Systems},
+  Volume~35.
+
+\bibitem[\protect\citeauthoryear{Lee, Liu, Ryu, Watkins, Du, Boutilier, Abbeel,
+  Ghavamzadeh, and Gu}{Lee et~al.}{2023}]{lee2023aligning}
+Lee, K., H.~Liu, M.~Ryu, O.~Watkins, Y.~Du, C.~Boutilier, P.~Abbeel,
+  M.~Ghavamzadeh, and S.~S. Gu (2023).
+\newblock Aligning text-to-image models using human feedback.
+\newblock {\em arXiv preprint arXiv:2302.12192\/}.
+
+\bibitem[\protect\citeauthoryear{Lu, Zhou, Bao, Chen, Li, and Zhu}{Lu
+  et~al.}{2022}]{lu2022dpm}
+Lu, C., Y.~Zhou, F.~Bao, J.~Chen, C.~Li, and J.~Zhu (2022).
+\newblock {DPM}-solver: A fast {ODE} solver for diffusion probabilistic model
+  sampling in around 10 steps.
+\newblock In {\em Advances in Neural Information Processing Systems},
+  Volume~35, pp.\  5775--5787.
+
+\bibitem[\protect\citeauthoryear{Ramesh, Dhariwal, Nichol, Chu, and
+  Chen}{Ramesh et~al.}{2022}]{ramesh2022hierarchical}
+Ramesh, A., P.~Dhariwal, A.~Nichol, C.~Chu, and M.~Chen (2022).
+\newblock Hierarchical text-conditional image generation with {CLIP} latents.
+\newblock {\em arXiv preprint arXiv:2204.06125\/}.
+
+\bibitem[\protect\citeauthoryear{Rombach, Blattmann, Lorenz, Esser, and
+  Ommer}{Rombach et~al.}{2022}]{rombach2022high}
+Rombach, R., A.~Blattmann, D.~Lorenz, P.~Esser, and B.~Ommer (2022).
+\newblock High-resolution image synthesis with latent diffusion models.
+\newblock In {\em Proceedings of the IEEE/CVF Conference on Computer Vision and
+  Pattern Recognition}, pp.\  10684--10695.
+
+\bibitem[\protect\citeauthoryear{Ronneberger, Fischer, and Brox}{Ronneberger
+  et~al.}{2015}]{ronneberger2015u}
+Ronneberger, O., P.~Fischer, and T.~Brox (2015).
+\newblock U-net: Convolutional networks for biomedical image segmentation.
+\newblock In {\em Medical image computing and computer-assisted
+  intervention--MICCAI 2015: 18th international conference, Munich, Germany,
+  October 5-9, 2015, proceedings, part III 18}, pp.\  234--241. Springer.
+
+\bibitem[\protect\citeauthoryear{Schulman, Moritz, Levine, Jordan, and
+  Abbeel}{Schulman et~al.}{2015}]{schulman2015high}
+Schulman, J., P.~Moritz, S.~Levine, M.~Jordan, and P.~Abbeel (2015).
+\newblock High-dimensional continuous control using generalized advantage
+  estimation.
+\newblock {\em arXiv preprint arXiv:1506.02438\/}.
+
+\bibitem[\protect\citeauthoryear{Sohl-Dickstein, Weiss, Maheswaranathan, and
+  Ganguli}{Sohl-Dickstein et~al.}{2015a}]{Sohl2015}
+Sohl-Dickstein, J., E.~Weiss, N.~Maheswaranathan, and S.~Ganguli (2015a).
+\newblock Deep unsupervised learning using nonequilibrium thermodynamics.
+\newblock In {\em International Conference on Machine Learning}, Volume~37,
+  pp.\  2256--2265. PMLR.
+
+\bibitem[\protect\citeauthoryear{Sohl-Dickstein, Weiss, Maheswaranathan, and
+  Ganguli}{Sohl-Dickstein et~al.}{2015b}]{sohl2015deep}
+Sohl-Dickstein, J., E.~Weiss, N.~Maheswaranathan, and S.~Ganguli (2015b).
+\newblock Deep unsupervised learning using nonequilibrium thermodynamics.
+\newblock In {\em International conference on machine learning}, pp.\
+  2256--2265. PMLR.
+
+\bibitem[\protect\citeauthoryear{Song, Meng, and Ermon}{Song
+  et~al.}{2020}]{song2020denoising}
+Song, J., C.~Meng, and S.~Ermon (2020).
+\newblock Denoising diffusion implicit models.
+\newblock In {\em International Conference on Learning Representations}.
+
+\bibitem[\protect\citeauthoryear{Song, Durkan, Murray, and Ermon}{Song
+  et~al.}{2021}]{song2021maximum}
+Song, Y., C.~Durkan, I.~Murray, and S.~Ermon (2021).
+\newblock Maximum likelihood training of score-based diffusion models.
+\newblock {\em Advances in Neural Information Processing Systems\/}~{\em 34},
+  1415--1428.
+
+\bibitem[\protect\citeauthoryear{Song and Ermon}{Song and
+  Ermon}{2019}]{SongErmon2019}
+Song, Y. and S.~Ermon (2019).
+\newblock Generative modeling by estimating gradients of the data distribution.
+\newblock In {\em Advances in Neural Information Processing Systems},
+  Volume~32.
+
+\bibitem[\protect\citeauthoryear{Song, Garg, Shi, and Ermon}{Song
+  et~al.}{2020}]{song2020sliced}
+Song, Y., S.~Garg, J.~Shi, and S.~Ermon (2020).
+\newblock Sliced score matching: A scalable approach to density and score
+  estimation.
+\newblock In {\em Uncertainty in Artificial Intelligence}, pp.\  574--584.
+  PMLR.
+
+\bibitem[\protect\citeauthoryear{Song, Sohl-Dickstein, Kingma, Kumar, Ermon,
+  and Poole}{Song et~al.}{2021}]{SongICLR2021}
+Song, Y., J.~Sohl-Dickstein, D.~P. Kingma, A.~Kumar, S.~Ermon, and B.~Poole
+  (2021).
+\newblock Score-based generative modeling through stochastic differential
+  equations.
+\newblock In {\em International Conference on Learning Representations}.
+
+\bibitem[\protect\citeauthoryear{Tang}{Tang}{2024}]{tang2024fine}
+Tang, W. (2024).
+\newblock Fine-tuning of diffusion models via stochastic control: entropy
+  regularization and beyond.
+\newblock {\em arXiv preprint arXiv:2403.06279\/}.
+
+\bibitem[\protect\citeauthoryear{Tang, Zhang, and Zhou}{Tang
+  et~al.}{2022}]{tang2022exploratory}
+Tang, W., Y.~P. Zhang, and X.~Y. Zhou (2022).
+\newblock Exploratory hjb equations and their convergence.
+\newblock {\em SIAM Journal on Control and Optimization\/}~{\em 60\/}(6),
+  3191--3216.
+
+\bibitem[\protect\citeauthoryear{Uehara, Zhao, Black, Hajiramezanali, Scalia,
+  Diamant, Tseng, Biancalani, and Levine}{Uehara et~al.}{2024}]{uehara2024fine}
+Uehara, M., Y.~Zhao, K.~Black, E.~Hajiramezanali, G.~Scalia, N.~L. Diamant,
+  A.~M. Tseng, T.~Biancalani, and S.~Levine (2024).
+\newblock Fine-tuning of continuous-time diffusion models as
+  entropy-regularized control.
+\newblock {\em arXiv preprint arXiv:2402.15194\/}.
+
+\bibitem[\protect\citeauthoryear{Vincent}{Vincent}{2011}]{vincent2011connection}
+Vincent, P. (2011).
+\newblock A connection between score matching and denoising autoencoders.
+\newblock {\em Neural Computation\/}~{\em 23\/}(7), 1661--1674.
+
+\bibitem[\protect\citeauthoryear{Wang, Zariphopoulou, and Zhou}{Wang
+  et~al.}{2020}]{Wang20}
+Wang, H., T.~Zariphopoulou, and X.~Y. Zhou (2020).
+\newblock Reinforcement learning in continuous time and space: A stochastic
+  control approach.
+\newblock {\em Journal of Machine Learning Research\/}~{\em 21}, (198):1--34.
+
+\bibitem[\protect\citeauthoryear{Wang, Kulkarni, and Verd{\'u}}{Wang
+  et~al.}{2009}]{wang2009divergence}
+Wang, Q., S.~R. Kulkarni, and S.~Verd{\'u} (2009).
+\newblock Divergence estimation for multidimensional densities via $ k
+  $-nearest-neighbor distances.
+\newblock {\em IEEE Transactions on Information Theory\/}~{\em 55\/}(5),
+  2392--2405.
+
+\bibitem[\protect\citeauthoryear{Wu, Gong, Liu, Ye, and Liu}{Wu
+  et~al.}{2022}]{wu2022diffusion}
+Wu, L., C.~Gong, X.~Liu, M.~Ye, and Q.~Liu (2022).
+\newblock Diffusion-based molecule generation with informative prior bridges.
+\newblock {\em Advances in Neural Information Processing Systems\/}~{\em 35},
+  36533--36545.
+
+\bibitem[\protect\citeauthoryear{Yang, Zhang, Song, Hong, Xu, Zhao, Shao,
+  Zhang, Cui, and Yang}{Yang et~al.}{2023}]{yang2022diffusion}
+Yang, L., Z.~Zhang, Y.~Song, S.~Hong, R.~Xu, Y.~Zhao, Y.~Shao, W.~Zhang,
+  B.~Cui, and M.-H. Yang (2023).
+\newblock Diffusion models: A comprehensive survey of methods and applications.
+\newblock {\em ACM Copmuting Surveys\/}~{\em 56\/}(4), 1--39.
+
+\bibitem[\protect\citeauthoryear{Yong and Zhou}{Yong and
+  Zhou}{2012}]{yong2012stochastic}
+Yong, J. and X.~Y. Zhou (2012).
+\newblock {\em Stochastic controls: Hamiltonian systems and HJB equations},
+  Volume~43.
+\newblock Springer Science \& Business Media.
+
+\bibitem[\protect\citeauthoryear{Zhang, Chen, Malkin, and Bengio}{Zhang
+  et~al.}{2022}]{zhang2022unifying}
+Zhang, D., R.~T. Chen, N.~Malkin, and Y.~Bengio (2022).
+\newblock Unifying generative models with gflownets and beyond.
+\newblock {\em arXiv preprint arXiv:2209.02606\/}.
+
+\bibitem[\protect\citeauthoryear{Zhang, Zhang, Gu, Zhang, Susskind, Jaitly, and
+  Zhai}{Zhang et~al.}{2024}]{zhang2024improving}
+Zhang, D., Y.~Zhang, J.~Gu, R.~Zhang, J.~Susskind, N.~Jaitly, and S.~Zhai
+  (2024).
+\newblock Improving {GFlowNets} for text-to-image diffusion alignment.
+\newblock {\em arXiv preprint arXiv:2406.00633\/}.
+
+\bibitem[\protect\citeauthoryear{Zhang and Chen}{Zhang and
+  Chen}{2023}]{zhang2023fast}
+Zhang, Q. and Y.~Chen (2023).
+\newblock Fast sampling of diffusion models with exponential integrator.
+\newblock In {\em International Conference on Learning Representations}.
+
+\bibitem[\protect\citeauthoryear{Zhao, Haoxian, Zhang, Yao, and Tang}{Zhao
+  et~al.}{2024}]{tang2024score}
+Zhao, H., C.~Haoxian, J.~Zhang, D.~Yao, and W.~Tang (2024).
+\newblock Scores as actions: a framework of fine-tuning diffusion models by
+  continuous-time reinforcement learning.
+\newblock {\em arXiv preprint arXiv:2409.08400\/}.
+
+\end{thebibliography}

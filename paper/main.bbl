@@ -1,0 +1,222 @@
+\begin{thebibliography}{33}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Anonymous(2025)]{ttsnap2025}
+Anonymous.
+\newblock {TTSnap}: Test-time scaling of diffusion models via noise-aware
+  pruning.
+\newblock \emph{arXiv preprint arXiv:2511.22242}, 2025.
+
+\bibitem[Aolaritei et~al.(2025)Aolaritei, Van~Parys, Lam, and
+  Jordan]{lam2025importance}
+Liviu Aolaritei, Bart P.~G. Van~Parys, Henry Lam, and Michael~I. Jordan.
+\newblock Stochastic optimization with optimal importance sampling.
+\newblock \emph{arXiv preprint arXiv:2504.03560}, 2025.
+
+\bibitem[Black et~al.(2023)Black, Janner, Du, Kostrikov, and
+  Levine]{black2023training}
+Kevin Black, Michael Janner, Yilun Du, Ilya Kostrikov, and Sergey Levine.
+\newblock Training diffusion models with reinforcement learning.
+\newblock \emph{arXiv preprint arXiv:2305.13301}, 2023.
+
+\bibitem[Cao et~al.(2024)]{cao2024comparative}
+Yuan Cao et~al.
+\newblock Comparative advantages of diffusion models to other generative
+  models.
+\newblock \emph{arXiv preprint}, 2024.
+
+\bibitem[Chen et~al.(2000)Chen, Lin, Y{\"u}cesan, and
+  Chick]{chen2000simulation}
+Chun-Hung Chen, Jianwu Lin, Enver Y{\"u}cesan, and Stephen~E. Chick.
+\newblock Simulation budget allocation for further enhancing the efficiency of
+  ordinal optimization.
+\newblock \emph{Discrete Event Dynamic Systems}, 10\penalty0 (3):\penalty0
+  251--270, 2000.
+
+\bibitem[Dockhorn et~al.(2024)Dockhorn, Vahdat, and
+  Kreis]{dockhorn2024stochastic}
+Tim Dockhorn, Arash Vahdat, and Karsten Kreis.
+\newblock Stochastic sampling from deterministic flow models.
+\newblock \emph{arXiv preprint arXiv:2410.02217}, 2024.
+
+\bibitem[Eyring et~al.(2025)Eyring, Karthik, Dosovitskiy, Ruiz, and
+  Akata]{eyring2025hypernetworks}
+Luis Eyring, Shyamgopal Karthik, Alexey Dosovitskiy, Nataniel Ruiz, and Zeynep
+  Akata.
+\newblock Noise hypernetworks: Amortizing test-time compute in diffusion
+  models.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2025.
+
+\bibitem[Fan et~al.(2024)Fan, Watkins, Du, Liu, Ryu, Boutilier, Abbeel,
+  Ghavamzadeh, Lee, and Lee]{fan2024reinforcement}
+Ying Fan, Olivia Watkins, Yuqing Du, Hao Liu, Moonkyung Ryu, Craig Boutilier,
+  Pieter Abbeel, Mohammad Ghavamzadeh, Kangwook Lee, and Kimin Lee.
+\newblock Reinforcement learning for fine-tuning text-to-image diffusion
+  models.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2024.
+
+\bibitem[Gao et~al.(2024)Gao, Zha, and Zhou]{gao2024reward}
+Xuefeng Gao, Jiale Zha, and Xunyu Zhou.
+\newblock Reward-directed score-based diffusion models via q-learning.
+\newblock \emph{arXiv preprint arXiv:2409.04832}, 2024.
+
+\bibitem[Ho et~al.(2020)Ho, Jain, and Abbeel]{ho2020denoising}
+Jonathan Ho, Ajay Jain, and Pieter Abbeel.
+\newblock Denoising diffusion probabilistic models.
+\newblock In \emph{Advances in Neural Information Processing Systems},
+  volume~33, pages 6840--6851, 2020.
+
+\bibitem[Ibaraki and Katoh(1988)]{ibaraki1988resource}
+Toshihide Ibaraki and Naoki Katoh.
+\newblock \emph{Resource Allocation Problems: Algorithmic Approaches}.
+\newblock MIT Press, 1988.
+
+\bibitem[Jia and Zhou(2024)]{zhou2024jumpdiffusion}
+Yanwei Jia and Xunyu Zhou.
+\newblock Reinforcement learning for jump-diffusions, with financial
+  applications.
+\newblock \emph{arXiv preprint arXiv:2405.16449}, 2024.
+
+\bibitem[Kim et~al.(2025{\natexlab{a}})Kim, Yoon, Hwang, and Sung]{kim2025rbf}
+Jaihoon Kim, Taehoon Yoon, Jisung Hwang, and Minhyuk Sung.
+\newblock Inference-time scaling for flow models via stochastic generation and
+  rollover budget forcing.
+\newblock \emph{arXiv preprint arXiv:2503.19385}, 2025{\natexlab{a}}.
+
+\bibitem[Kim et~al.(2025{\natexlab{b}})]{kim2025psi}
+Yunhao Kim et~al.
+\newblock $\psi$-sampler: Initial particle sampling for {SMC}-based
+  inference-time reward alignment in score models.
+\newblock In \emph{Advances in Neural Information Processing Systems},
+  2025{\natexlab{b}}.
+
+\bibitem[Lee et~al.(2025)Lee, Bao, Yoon, Lee, Kim, Bengio, and
+  Ahn]{lee2025abcd}
+Gyubin Lee, Truong Nhat~Nguyen Bao, Jaesik Yoon, Dongwoo Lee, Minsu Kim, Yoshua
+  Bengio, and Sungjin Ahn.
+\newblock Adaptive inference-time scaling via cyclic diffusion search.
+\newblock \emph{arXiv preprint arXiv:2505.14036}, 2025.
+
+\bibitem[Lipman et~al.(2023)Lipman, Chen, Ben-Hamu, Nickel, and
+  Le]{lipman2023flow}
+Yaron Lipman, Ricky~TQ Chen, Heli Ben-Hamu, Maximilian Nickel, and Matt Le.
+\newblock Flow matching for generative modeling.
+\newblock In \emph{International Conference on Learning Representations}, 2023.
+
+\bibitem[Liu et~al.(2023)Liu, Gong, and Liu]{liu2023flow}
+Xingchao Liu, Chengyue Gong, and Qiang Liu.
+\newblock Flow straight and fast: Learning to generate and transfer data with
+  rectified flow.
+\newblock \emph{arXiv preprint arXiv:2209.03003}, 2023.
+
+\bibitem[Ma et~al.(2025)Ma, Goldstein, Albergo, Berner, and
+  Vanden-Eijnden]{ma2024inference}
+Nanye Ma, Mark Goldstein, Michael~S Albergo, Julius Berner, and Eric
+  Vanden-Eijnden.
+\newblock Inference-time scaling for diffusion models beyond scaling denoising
+  steps.
+\newblock \emph{arXiv preprint arXiv:2501.09732}, 2025.
+
+\bibitem[Qi et~al.(2024)Qi, Bai, Xiong, and Xie]{qi2024noises}
+Zipeng Qi, Lichen Bai, Haoyi Xiong, and Zeke Xie.
+\newblock Not all noises are created equally: Diffusion noise selection and
+  optimization.
+\newblock \emph{arXiv preprint arXiv:2407.14041}, 2024.
+
+\bibitem[Ramesh and Mardani(2025)]{ramesh2025nts}
+Vignav Ramesh and Morteza Mardani.
+\newblock Test-time scaling of diffusion models via noise trajectory search.
+\newblock \emph{arXiv preprint arXiv:2506.03164}, 2025.
+
+\bibitem[Singhal et~al.(2025)Singhal, Horvitz, Teehan, Ren, Yu, McKeown, and
+  Ranganath]{singhal2025fk}
+Raghav Singhal, Zachary Horvitz, Ryan Teehan, Mengye Ren, Zhou Yu, Kathy
+  McKeown, and Rajesh Ranganath.
+\newblock A general framework for inference-time scaling and steering of
+  diffusion models.
+\newblock In \emph{International Conference on Machine Learning}, 2025.
+
+\bibitem[Song and Ermon(2019)]{song2019generative}
+Yang Song and Stefano Ermon.
+\newblock Generative modeling by estimating gradients of the data distribution.
+\newblock In \emph{Advances in Neural Information Processing Systems},
+  volume~32, 2019.
+
+\bibitem[Song et~al.(2021)Song, Sohl-Dickstein, Kingma, Kumar, Ermon, and
+  Poole]{song2021scorebased}
+Yang Song, Jascha Sohl-Dickstein, Diederik~P Kingma, Abhishek Kumar, Stefano
+  Ermon, and Ben Poole.
+\newblock Score-based generative modeling through stochastic differential
+  equations.
+\newblock In \emph{International Conference on Learning Representations}, 2021.
+
+\bibitem[Sundaresha et~al.(2025)Sundaresha, Haridas, Appia, and
+  Varshney]{sundaresha2025vt}
+Vignesh Sundaresha, Akash Haridas, Vikram Appia, and Lav~R. Varshney.
+\newblock An efficient test-time scaling approach for image generation.
+\newblock \emph{arXiv preprint arXiv:2512.08985}, 2025.
+
+\bibitem[Tang and Zhao(2024)]{tang2024contractive}
+Wenpin Tang and Hanyang Zhao.
+\newblock Contractive diffusion probabilistic models.
+\newblock \emph{arXiv preprint arXiv:2401.13115}, 2024.
+
+\bibitem[Tang and Zhao(2025)]{tang2024sde}
+Wenpin Tang and Hanyang Zhao.
+\newblock Score-based diffusion models via stochastic differential equations.
+\newblock \emph{Statistics Surveys}, 19:\penalty0 28--64, 2025.
+\newblock \doi{10.1214/25-SS152}.
+
+\bibitem[Tang et~al.(2024)Tang, Peng, Tang, Hong, Wang, and Chang]{tang2024dno}
+Zhiwei Tang, Jiangweizhi Peng, Jiasheng Tang, Mingyi Hong, Fan Wang, and
+  Tsung-Hui Chang.
+\newblock Inference-time alignment of diffusion models with direct noise
+  optimization.
+\newblock \emph{arXiv preprint arXiv:2405.18881}, 2024.
+
+\bibitem[Ye et~al.(2025)Ye, Zheng, Cao, and Zhuo]{ye2025tpdm}
+Zilyu Ye, Zhiyang Zheng, Yixin Cao, and Terry~Yue Zhuo.
+\newblock Schedule on the fly: Diffusion time prediction for faster and better
+  image generation.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision
+  and Pattern Recognition}, 2025.
+
+\bibitem[Yeh et~al.(2025)Yeh, Lee, and Chen]{yeh2025demons}
+Po-Hung Yeh, Kuang-Huei Lee, and Jun-Cheng Chen.
+\newblock Training-free diffusion model alignment with sampling demons.
+\newblock In \emph{International Conference on Learning Representations}, 2025.
+
+\bibitem[Zhang et~al.(2025{\natexlab{a}})Zhang, Wu, Xing, Shao, and
+  Jiang]{zhang2025adadiff}
+Hui Zhang, Zuxuan Wu, Zhen Xing, Jie Shao, and Yu-Gang Jiang.
+\newblock Adadiff: Adaptive step selection for fast diffusion models.
+\newblock In \emph{Proceedings of the AAAI Conference on Artificial
+  Intelligence}, 2025{\natexlab{a}}.
+
+\bibitem[Zhang et~al.(2025{\natexlab{b}})Zhang, Pan, Feng, and
+  Wu]{zhang2025tscend}
+Tao Zhang, Jia-Shu Pan, Ruiqi Feng, and Tailin Wu.
+\newblock {VFScale}: Intrinsic reasoning through verifier-free test-time
+  scalable diffusion model.
+\newblock \emph{arXiv preprint arXiv:2502.01989}, 2025{\natexlab{b}}.
+
+\bibitem[Zhang et~al.(2025{\natexlab{c}})Zhang, Lin, Ye, Zou, Ma, Liang, and
+  Du]{zhang2025classical}
+Xiangcheng Zhang, Haowei Lin, Haotian Ye, James Zou, Jianzhu Ma, Yitao Liang,
+  and Yilun Du.
+\newblock Inference-time scaling of diffusion models through classical search.
+\newblock \emph{arXiv preprint arXiv:2505.23614}, 2025{\natexlab{c}}.
+
+\bibitem[Zhou et~al.(2025)Zhou, Shao, Bai, Zhang, Xu, Han, and
+  Xie]{zhou2025golden}
+Zikai Zhou, Shitong Shao, Lichen Bai, Shufei Zhang, Zhiqiang Xu, Bo~Han, and
+  Zeke Xie.
+\newblock Golden noise for diffusion models: A learning framework.
+\newblock In \emph{Proceedings of the IEEE/CVF International Conference on
+  Computer Vision}, 2025.
+
+\end{thebibliography}

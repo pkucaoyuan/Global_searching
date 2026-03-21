@@ -1,0 +1,342 @@
+\begin{thebibliography}{}
+
+\bibitem[\protect\citeauthoryear{A{\"\i}t-Sahalia, Jacod, and
+  Li}{A{\"\i}t-Sahalia et~al.}{2012}]{ait2012testing}
+A{\"\i}t-Sahalia, Y., J.~Jacod, and J.~Li (2012).
+\newblock Testing for jumps in noisy high frequency data.
+\newblock {\em Journal of Econometrics\/}~{\em 168\/}(2), 207--222.
+
+\bibitem[\protect\citeauthoryear{Andersen, Benzoni, and Lund}{Andersen
+  et~al.}{2002}]{andersen2002empirical}
+Andersen, T.~G., L.~Benzoni, and J.~Lund (2002).
+\newblock An empirical investigation of continuous-time equity return models.
+\newblock {\em The Journal of Finance\/}~{\em 57\/}(3), 1239--1284.
+
+\bibitem[\protect\citeauthoryear{Applebaum}{Applebaum}{2009}]{applebaum2009levy}
+Applebaum, D. (2009).
+\newblock {\em L{\'e}vy Processes and Stochastic Calculus}.
+\newblock Cambridge University Press.
+
+\bibitem[\protect\citeauthoryear{Bates}{Bates}{1991}]{bates1991crash}
+Bates, D.~S. (1991).
+\newblock The crash of 87: was it expected? {T}he evidence from options
+  markets.
+\newblock {\em The Journal of Finance\/}~{\em 46\/}(3), 1009--1044.
+
+\bibitem[\protect\citeauthoryear{Bates}{Bates}{1996}]{bates1996jumps}
+Bates, D.~S. (1996).
+\newblock Jumps and stochastic volatility: Exchange rate processes implicit in
+  {D}eutsche {M}ark options.
+\newblock {\em The Review of Financial Studies\/}~{\em 9\/}(1), 69--107.
+
+\bibitem[\protect\citeauthoryear{Bender and Thuan}{Bender and
+  Thuan}{2023}]{bender2023entropy}
+Bender, C. and N.~T. Thuan (2023).
+\newblock Entropy-regularized mean-variance portfolio optimization with jumps.
+\newblock {\em arXiv preprint arXiv:2312.13409\/}.
+
+\bibitem[\protect\citeauthoryear{Bender and Thuan}{Bender and
+  Thuan}{2024}]{bender2024continuous}
+Bender, C. and N.~T. Thuan (2024).
+\newblock Continuous time reinforcement learning: A random measure approach.
+\newblock {\em Preprint\/}.
+
+\bibitem[\protect\citeauthoryear{Bo, Huang, Yu, and Zhang}{Bo
+  et~al.}{2024}]{bo2024continuous}
+Bo, L., Y.~Huang, X.~Yu, and T.~Zhang (2024).
+\newblock Continuous-time q-learning for jump-diffusion models under {T}sallis
+  entropy.
+\newblock {\em arXiv preprint arXiv:2407.03888\/}.
+
+\bibitem[\protect\citeauthoryear{Cai and Kou}{Cai and
+  Kou}{2011}]{cai2011option}
+Cai, N. and S.~G. Kou (2011).
+\newblock Option pricing under a mixed-exponential jump diffusion model.
+\newblock {\em Management Science\/}~{\em 57\/}(11), 2067--2081.
+
+\bibitem[\protect\citeauthoryear{Cont and Tankov}{Cont and
+  Tankov}{2004}]{tankov2004financial}
+Cont, R. and P.~Tankov (2004).
+\newblock {\em Financial Modelling with Jump Processes}.
+\newblock Chapman and Hall/CRC.
+
+\bibitem[\protect\citeauthoryear{Dai, Dong, and Jia}{Dai
+  et~al.}{2023}]{dai2023learning}
+Dai, M., Y.~Dong, and Y.~Jia (2023).
+\newblock Learning equilibrium mean--variance strategy.
+\newblock {\em Mathematical Finance\/}~{\em 33\/}(4), 1166--1212.
+
+\bibitem[\protect\citeauthoryear{Das}{Das}{2002}]{das2002surprise}
+Das, S.~R. (2002).
+\newblock The surprise element: {J}umps in interest rates.
+\newblock {\em Journal of Econometrics\/}~{\em 106\/}(1), 27--65.
+
+\bibitem[\protect\citeauthoryear{Denkert, Pham, and Warin}{Denkert
+  et~al.}{2024}]{denkert2024control}
+Denkert, R., H.~Pham, and X.~Warin (2024).
+\newblock Control randomisation approach for policy gradient and application to
+  reinforcement learning in optimal switching.
+\newblock {\em arXiv preprint arXiv:2404.17939\/}.
+
+\bibitem[\protect\citeauthoryear{Fang and Oosterlee}{Fang and
+  Oosterlee}{2009}]{fang2009novel}
+Fang, F. and C.~W. Oosterlee (2009).
+\newblock A novel pricing method for {E}uropean options based on
+  {F}ourier-cosine series expansions.
+\newblock {\em SIAM Journal on Scientific Computing\/}~{\em 31\/}(2), 826--848.
+
+\bibitem[\protect\citeauthoryear{Gammaitoni, H\"anggi, Jung, and
+  Marchesoni}{Gammaitoni et~al.}{1998}]{GHJM1998}
+Gammaitoni, L., P.~H\"anggi, P.~Jung, and F.~Marchesoni (1998).
+\newblock Stochastic resonance.
+\newblock {\em Reviews of Modern Physics\/}~{\em 70\/}(1), 223--287.
+
+\bibitem[\protect\citeauthoryear{Gao, Xu, and Zhou}{Gao
+  et~al.}{2022}]{gao2022state}
+Gao, X., Z.~Q. Xu, and X.~Y. Zhou (2022).
+\newblock State-dependent temperature control for langevin diffusions.
+\newblock {\em SIAM Journal on Control and Optimization\/}~{\em 60\/}(3),
+  1250--1268.
+
+\bibitem[\protect\citeauthoryear{Giraudo and Sacerdote}{Giraudo and
+  Sacerdote}{1997}]{GS1997}
+Giraudo, M.~T. and L.~Sacerdote (1997).
+\newblock Jump-diffusion processes as models for neuronal activity.
+\newblock {\em Biosystems\/}~{\em 40\/}(1-2), 75--82.
+
+\bibitem[\protect\citeauthoryear{Goswami, Boers, Rheinwalt, Marwan, Heitzig,
+  Breitenbach, and Kurths}{Goswami et~al.}{2018}]{Goswami2018}
+Goswami, B., N.~Boers, A.~Rheinwalt, N.~Marwan, J.~Heitzig, S.~Breitenbach, and
+  J.~Kurths (2018).
+\newblock Abrupt transitions in time series with uncertainties.
+\newblock {\em Nature Communications\/}~{\em 9\/}(1), 48--57.
+
+\bibitem[\protect\citeauthoryear{Guo, Hu, and Zhang}{Guo
+  et~al.}{2023}]{guo2023reinforcement}
+Guo, X., A.~Hu, and Y.~Zhang (2023).
+\newblock Reinforcement learning for linear-convex models with jumps via
+  stability analysis of feedback controls.
+\newblock {\em SIAM Journal on Control and Optimization\/}~{\em 61\/}(2),
+  755--787.
+
+\bibitem[\protect\citeauthoryear{Guo, Xu, and Zariphopoulou}{Guo
+  et~al.}{2022}]{guo2022entropy}
+Guo, X., R.~Xu, and T.~Zariphopoulou (2022).
+\newblock Entropy regularization for mean field games with learning.
+\newblock {\em Mathematics of Operations research\/}~{\em 47\/}(4), 3239--3260.
+
+\bibitem[\protect\citeauthoryear{Heyde and Kou}{Heyde and
+  Kou}{2004}]{heyde2004controversy}
+Heyde, C.~C. and S.~G. Kou (2004).
+\newblock On the controversy over tailweight of distributions.
+\newblock {\em Operations Research Letters\/}~{\em 32\/}(5), 399--408.
+
+\bibitem[\protect\citeauthoryear{Huang, Jia, and Zhou}{Huang
+  et~al.}{2022}]{huang2022achieving}
+Huang, Y., Y.~Jia, and X.~Zhou (2022).
+\newblock Achieving mean--variance efficiency by continuous-time reinforcement
+  learning.
+\newblock In {\em Proceedings of the Third ACM International Conference on AI
+  in Finance}, pp.\  377--385.
+
+\bibitem[\protect\citeauthoryear{Jacod and Shiryaev}{Jacod and
+  Shiryaev}{2013}]{jacod2013limit}
+Jacod, J. and A.~Shiryaev (2013).
+\newblock {\em Limit Theorems for Stochastic Processes}.
+\newblock Springer.
+
+\bibitem[\protect\citeauthoryear{Jia, Ouyang, and Zhang}{Jia
+  et~al.}{2025}]{jia2025accuracy}
+Jia, Y., D.~Ouyang, and Y.~Zhang (2025).
+\newblock Accuracy of discretely sampled stochastic policies in continuous-time
+  reinforcement learning.
+\newblock {\em arXiv preprint arXiv:2503.09981\/}.
+
+\bibitem[\protect\citeauthoryear{Jia and Zhou}{Jia and
+  Zhou}{2022a}]{jia2022policy}
+Jia, Y. and X.~Y. Zhou (2022a).
+\newblock Policy evaluation and temporal-difference learning in continuous time
+  and space: A martingale approach.
+\newblock {\em Journal of Machine Learning Research\/}~{\em 23\/}(154), 1--55.
+
+\bibitem[\protect\citeauthoryear{Jia and Zhou}{Jia and
+  Zhou}{2022b}]{jia2022policyb}
+Jia, Y. and X.~Y. Zhou (2022b).
+\newblock Policy gradient and actor-critic learning in continuous time and
+  space: Theory and algorithms.
+\newblock {\em Journal of Machine Learning Research\/}~{\em 23\/}(154), 1--55.
+
+\bibitem[\protect\citeauthoryear{Jia and Zhou}{Jia and Zhou}{2023}]{jia2022q}
+Jia, Y. and X.~Y. Zhou (2023).
+\newblock q-learning in continuous time.
+\newblock {\em Journal of Machine Learning Research\/}~{\em 24\/}(161), 1--61.
+
+\bibitem[\protect\citeauthoryear{Jia and Zhou}{Jia and
+  Zhou}{2025}]{jia2025erratum}
+Jia, Y. and X.~Y. Zhou (2025).
+\newblock Erratum to “q-learning in continuous time”.
+\newblock {\em forthcoming in {\it Journal of Machine Learning Research};
+  available at \url{https://www.columbia.edu/~xz2574/download/err.pdf}\/}.
+
+\bibitem[\protect\citeauthoryear{Kou}{Kou}{2002}]{kou2002jump}
+Kou, S.~G. (2002).
+\newblock A jump-diffusion model for option pricing.
+\newblock {\em Management Science\/}~{\em 48\/}(8), 1086--1101.
+
+\bibitem[\protect\citeauthoryear{Kunita}{Kunita}{2004}]{kunita2004stochastic}
+Kunita, H. (2004).
+\newblock Stochastic differential equations based on {L}{\'e}vy processes and
+  stochastic flows of diffeomorphisms.
+\newblock In M.~M. Rao (Ed.), {\em Real and Stochastic Analysis: New
+  Perspectives}, pp.\  305--373. Birkhäuser.
+
+\bibitem[\protect\citeauthoryear{Kushner}{Kushner}{2000}]{kushner2000jump}
+Kushner, H.~J. (2000).
+\newblock Jump-diffusions with controlled jumps: Existence and numerical
+  methods.
+\newblock {\em Journal of Mathematical Analysis and Applications\/}~{\em
+  249\/}(1), 179--198.
+
+\bibitem[\protect\citeauthoryear{Li and Linetsky}{Li and
+  Linetsky}{2014}]{li2014time}
+Li, L. and V.~Linetsky (2014).
+\newblock Time-changed {O}rnstein--{U}hlenbeck processes and their applications
+  in commodity derivative models.
+\newblock {\em Mathematical Finance\/}~{\em 24\/}(2), 289--330.
+
+\bibitem[\protect\citeauthoryear{Lim}{Lim}{2005}]{lim2005mean}
+Lim, A.~E. (2005).
+\newblock Mean-variance hedging when there are jumps.
+\newblock {\em SIAM Journal on Control and Optimization\/}~{\em 44\/}(5),
+  1893--1922.
+
+\bibitem[\protect\citeauthoryear{Merton}{Merton}{1976}]{merton1976option}
+Merton, R.~C. (1976).
+\newblock Option pricing when underlying stock returns are discontinuous.
+\newblock {\em Journal of Financial Economics\/}~{\em 3\/}(1-2), 125--144.
+
+\bibitem[\protect\citeauthoryear{Munos}{Munos}{2006}]{munos2006policy}
+Munos, R. (2006).
+\newblock Policy gradient in continuous time.
+\newblock {\em Journal of Machine Learning Research\/}~{\em 7}, 771--791.
+
+\bibitem[\protect\citeauthoryear{{\O}ksendal and Sulem}{{\O}ksendal and
+  Sulem}{2007}]{oksendal2007applied}
+{\O}ksendal, B.~K. and A.~Sulem (2007).
+\newblock {\em Applied Stochastic Control of Jump Diffusions}, Volume 498.
+\newblock Springer.
+
+\bibitem[\protect\citeauthoryear{Park, Kim, and Kim}{Park
+  et~al.}{2021}]{park2021time}
+Park, S., J.~Kim, and G.~Kim (2021).
+\newblock Time discretization-invariant safe action repetition for policy
+  gradient methods.
+\newblock {\em Advances in Neural Information Processing Systems\/}~{\em 34},
+  267--279.
+
+\bibitem[\protect\citeauthoryear{Reisinger and Zhang}{Reisinger and
+  Zhang}{2021}]{RZ2021}
+Reisinger, C. and Y.~Zhang (2021).
+\newblock Regularity and stability of feedback relaxed controls.
+\newblock {\em SIAM Journal on Control and Optimization\/}~{\em 59\/}(5),
+  3118--3151.
+
+\bibitem[\protect\citeauthoryear{Sato}{Sato}{1999}]{sato1999levy}
+Sato, K.-I. (1999).
+\newblock {\em L{\'e}vy Processes and Infinitely Divisible Distributions}.
+\newblock Cambridge University Press.
+
+\bibitem[\protect\citeauthoryear{Schweizer}{Schweizer}{1996}]{schweizer1996approximation}
+Schweizer, M. (1996).
+\newblock Approximation pricing and the variance-optimal martingale measure.
+\newblock {\em The Annals of Probability\/}~{\em 24\/}(1), 206--236.
+
+\bibitem[\protect\citeauthoryear{Schweizer}{Schweizer}{2001}]{schweizer2001guided}
+Schweizer, M. (2001).
+\newblock A guided tour through quadratic hedging approaches.
+\newblock In E.~Jouini, J.~Cvitanic, and M.~Musiela (Eds.), {\em Handbooks in
+  Mathematical Finance: Option Pricing, Interest Rates and Risk Management},
+  pp.\  538--74. Cambridge University Press.
+
+\bibitem[\protect\citeauthoryear{Situ}{Situ}{2006}]{rong2006theory}
+Situ, R. (2006).
+\newblock {\em Theory of Stochastic Differential Equations with Jumps and
+  Applications}.
+\newblock Springer.
+
+\bibitem[\protect\citeauthoryear{Szpruch, Treetanthiploet, and Zhang}{Szpruch
+  et~al.}{2024}]{szpruch2024optimal}
+Szpruch, L., T.~Treetanthiploet, and Y.~Zhang (2024).
+\newblock Optimal scheduling of entropy regularizer for continuous-time
+  linear-quadratic reinforcement learning.
+\newblock {\em SIAM Journal on Control and Optimization\/}~{\em 62\/}(1),
+  135--166.
+
+\bibitem[\protect\citeauthoryear{Tallec, Blier, and Ollivier}{Tallec
+  et~al.}{2019}]{tallec2019making}
+Tallec, C., L.~Blier, and Y.~Ollivier (2019).
+\newblock Making deep q-learning methods robust to time discretization.
+\newblock {\em arXiv preprint arXiv:1901.09732\/}.
+
+\bibitem[\protect\citeauthoryear{Tang, Zhang, and Zhou}{Tang
+  et~al.}{2022}]{tang2022exploratory}
+Tang, W., Y.~P. Zhang, and X.~Y. Zhou (2022).
+\newblock Exploratory {HJB} equations and their convergence.
+\newblock {\em SIAM Journal on Control and Optimization\/}~{\em 60\/}(6),
+  3191--3216.
+
+\bibitem[\protect\citeauthoryear{Wang, Gao, and Li}{Wang
+  et~al.}{2023}]{wang2023reinforcement}
+Wang, B., X.~Gao, and L.~Li (2023).
+\newblock Reinforcement learning for continuous-time optimal execution:
+  actor-critic algorithm and error analysis.
+\newblock {\em Available at SSRN 4378950\/}.
+
+\bibitem[\protect\citeauthoryear{Wang and Zheng}{Wang and
+  Zheng}{2022}]{wang2022testing}
+Wang, B. and X.~Zheng (2022).
+\newblock Testing for the presence of jump components in jump diffusion models.
+\newblock {\em Journal of Econometrics\/}~{\em 230\/}(2), 483--509.
+
+\bibitem[\protect\citeauthoryear{Wang, Zariphopoulou, and Zhou}{Wang
+  et~al.}{2020}]{wang2020reinforcement}
+Wang, H., T.~Zariphopoulou, and X.~Y. Zhou (2020).
+\newblock Reinforcement learning in continuous time and space: A stochastic
+  control approach.
+\newblock {\em Journal of Machine Learning Research\/}~{\em 21\/}(198), 1--34.
+
+\bibitem[\protect\citeauthoryear{Wang and Zhou}{Wang and
+  Zhou}{2020}]{wang2020continuous}
+Wang, H. and X.~Y. Zhou (2020).
+\newblock Continuous-time mean--variance portfolio selection: A reinforcement
+  learning framework.
+\newblock {\em Mathematical Finance\/}~{\em 30\/}(4), 1273--1308.
+
+\bibitem[\protect\citeauthoryear{Williams and Rasmussen}{Williams and
+  Rasmussen}{2006}]{williams2006gaussian}
+Williams, C.~K. and C.~E. Rasmussen (2006).
+\newblock {\em Gaussian Processes for Machine Learning}.
+\newblock MIT Press.
+
+\bibitem[\protect\citeauthoryear{Wu and Li}{Wu and
+  Li}{2024}]{wu2024reinforcement}
+Wu, B. and L.~Li (2024).
+\newblock Reinforcement learning for continuous-time mean--variance portfolio
+  selection in a regime-switching market.
+\newblock {\em Journal of Economic Dynamics and Control\/}~{\em 158}, 104787.
+
+\bibitem[\protect\citeauthoryear{Zhou and Li}{Zhou and
+  Li}{2000}]{zhou2000continuous}
+Zhou, X.~Y. and D.~Li (2000).
+\newblock Continuous-time mean-variance portfolio selection: A stochastic {LQ}
+  framework.
+\newblock {\em Applied Mathematics and Optimization\/}~{\em 42\/}(1), 19--33.
+
+\bibitem[\protect\citeauthoryear{Zhu, Yin, and Baran}{Zhu
+  et~al.}{2015}]{zhu2015feynman}
+Zhu, C., G.~Yin, and N.~A. Baran (2015).
+\newblock Feynman--{K}ac formulas for regime-switching jump diffusions and
+  their applications.
+\newblock {\em Stochastics\/}~{\em 87\/}(6), 1000--1032.
+
+\end{thebibliography}

@@ -1,0 +1,76 @@
+% ============================================================
+% §6 Conclusion — OR journal style: full section
+% Summary, managerial insights, limitations, future directions
+% ============================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+% --- Summary ---
+This paper addresses inference-time search computation allocation across
+the denoising trajectory of diffusion models under a strict budget of function
+evaluations.
+By separating local noise refinement from global timestep scheduling, we
+introduce a unified two-level framework that subsumes existing inference-time
+search methods as special cases.
+Within this framework, we develop GAINS, a global scheduling algorithm that
+combines offline sensitivity profiling with online feedback control.
+Offline profiling learns a coarse per-step budget from calibration
+runs, encoding model-dependent patterns of timestep importance.
+Online control refines this budget on a per-instance basis using windowed
+gain and variance signals for early stopping, while enforcing an exact NFE
+constraint.
+
+% --- Key findings ---
+Our theoretical analysis justifies both design components.
+Under a location-scale model of per-step score distributions, optimal offline
+allocation follows a water-filling structure that assigns more
+compute to high-variance timesteps (\cref{prop:offline}), and any fixed
+allocation incurs a Jensen gap that online adaptation can partially recover
+(\cref{prop:online}).
+Experiments on Stable Diffusion, EDM, and flow-based models confirm
+these predictions: GAINS reaches matched quality with 20--50\% fewer
+function evaluations, and the gains persist
+across different local search operators, prompt sets, and model architectures.
+
+% --- Managerial insights / operational protocols ---
+\paragraph{Operational guidelines.}
+Three concrete protocols follow from our results.
+(i)~\emph{Always allocate non-uniformly.}  Non-uniform compute distribution across
+denoising timesteps strictly dominates uniform distribution whenever timestep
+sensitivities differ, a condition satisfied by every model we tested;
+practitioners should run the one-time profiling step (50--100 calibration
+samples) before deploying any diffusion-based generation pipeline.
+(ii)~\emph{Amortize profiling cost.}  The offline profiling overhead is modest
+(a small calibration set suffices) and is paid once per model checkpoint;
+all subsequent inference calls reuse the same budget schedule.
+(iii)~\emph{Swap local search independently.}  The two-level design is modular:
+GAINS pairs with any local search operator, so teams can upgrade the
+local method (e.g., from random search to Langevin refinement) without
+retuning the global schedule.
+
+% --- Limitations ---
+\paragraph{Limitations.}
+Three limitations bound the current scope.
+First, our theoretical analysis assumes location-scale per-step score
+distributions; heavier tails or multimodal score distributions would require
+extended analysis.
+Second, the offline profiling stage treats timestep sensitivities as
+approximately stationary across prompts; highly heterogeneous prompt
+distributions may need finer-grained, prompt-conditional profiling.
+Third, our experiments use two lightweight verifiers (Brightness and
+Compressibility); testing GAINS with richer verifiers (e.g.,
+human-preference models, domain-specific quality metrics) would broaden the
+empirical scope.
+
+% --- Future directions (integrated into limitations, per Rule 39) ---
+Addressing these limitations opens natural extensions.
+The MDP formulation in \cref{sec:mdp} admits richer policy classes (backtracking
+to revisit high-value timesteps, mixing local search operators across timesteps,
+and hierarchical verifiers with a cheap proxy for screening and an expensive verifier for
+final selection) that may further push the quality--compute frontier, though
+they likely require learned (e.g., reinforcement-learning-based) optimization.
+Beyond diffusion models, the core principle, namely non-uniform compute allocation
+guided by sensitivity profiling, applies wherever computation is a scarce
+resource in sequential decisions: adaptive simulation budgeting in stochastic
+optimization and dynamic evaluation-effort distribution across stages of
+multi-stage decision problems are two immediate candidates.

@@ -59,6 +59,11 @@ tensorboard/
 *.log
 .DS_Store
 
+# 敏感/大文件
+*.pdf
+*.vtt
+.claude/settings.local.json
+
 # Jupyter Notebook
 .ipynb_checkpoints/
 *.ipynb

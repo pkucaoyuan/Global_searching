@@ -1,0 +1,160 @@
+% ============================================================
+% §3 A Two-Level Framework for Noise Trajectory Search
+% Content from method_framework.tex, restructured as independent section
+% ============================================================
+\section{A Two-Level Framework for Noise Trajectory Search}
+\label{sec:framework}
+
+We cast noise trajectory search as a two-level optimization problem.
+A general transition abstraction covers all diffusion-family models;
+the local search operator and global scheduler serve as its two components.
+We conclude by showing how existing methods arise as special cases.
+
+% -----------------------------------------------------------
+\subsection{A General Transition Abstraction}
+\label{sec:transition}
+
+Every diffusion-family model generates a sample by traversing
+$T$ discrete timesteps $t_T > t_{T-1} > \dots > t_1$.
+At each step the sampler applies a transition
+\begin{equation}
+  x_{t-1} = F_\theta(x_t, t, c, \varepsilon_t),
+  \label{eq:transition}
+\end{equation}
+where $x_t$ is the latent at timestep $t$, $c$ is the conditioning signal
+(e.g., a class label or text prompt), and $\varepsilon_t$ is a noise variable
+injecting stochasticity.
+The final step yields $x_0$, which the verifier $v(x_0, c)$ then scores.
+
+\paragraph{Applicability across model families.}
+The transition in \cref{eq:transition} is deliberately model-agnostic.
+For \emph{stochastic samplers} such as DDPM and SDE-based
+models~\citep{ho2020denoising,song2021scorebased}, $\varepsilon_t$ is the
+variance noise already present in sampling; searching over
+$\varepsilon_t$ therefore extends the base sampler naturally.
+For \emph{deterministic samplers} such as flow-matching ODE
+solvers~\citep{lipman2023flow,liu2023flow}, the transition is nominally
+noise-free.
+Yet stochasticity can be injected at selected timesteps, by converting the ODE
+into a family of SDEs sharing the same marginal
+distributions~\citep{dockhorn2024stochastic}, or by adding controlled
+perturbations for exploration~\citep{kim2025rbf,black2023training,fan2024reinforcement}.
+Either way, sampling takes the form of
+\cref{eq:transition}, so our framework applies to any diffusion-family
+model.
+
+% -----------------------------------------------------------
+\subsection{The Two-Level View}
+\label{sec:two-level}
+
+Noise trajectory search modifies the noise
+variables $\{\varepsilon_t\}_{t=1}^T$ along the latent trajectory
+$\{x_t\}_{t=1}^T$ under a fixed test-time compute budget to
+maximize the verifier score.
+This problem decomposes naturally into two levels
+(\cref{fig:architecture}):
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_architecture.pdf}
+\caption{Two-level view of noise trajectory search.
+The \emph{global scheduler}~$\mathcal{G}$ (top) receives budget~$B$
+and distributes per-step budgets $\{K_t\}$ across the denoising trajectory.
+At each timestep, the \emph{local search operator}~$\mathcal{L}_t$ (bottom)
+evaluates $K_t$ noise candidates and selects the best one.
+Bars above each step depict the non-uniform allocation:
+timesteps where noise perturbations matter more receive larger budgets.}
+\label{fig:architecture}
+\end{figure}
+
+\paragraph{Local search operator.}
+At timestep $t$, given the current latent $x_t$, conditioning $c$,
+verifier $v$, and base sampler $F_\theta$, the \emph{local} search operator
+\[
+  \mathcal{L}_t : (x_t, c, v, F_\theta, \text{budget at } t)
+  \longrightarrow (x_{t-1}, \varepsilon_t)
+\]
+samples multiple noise candidates $\varepsilon_t$ and selects the one that
+maximizes the verifier score.
+To evaluate candidate $\varepsilon_t^{(k)}$, we apply the
+base sampler, obtaining the next-step latent and its clean-output
+prediction in a single network pass:
+\begin{equation}
+  x_{t-1}^{(k)} = F_\theta(x_t,\, t,\, c,\, \varepsilon_t^{(k)}),
+  \qquad
+  \hat{x}_0^{(k)} = D_\theta(x_{t-1}^{(k)},\, t\!-\!1,\, c),
+  \label{eq:x0_prediction}
+\end{equation}
+where $D_\theta$ denotes Tweedie's denoising estimate~\citep{song2021scorebased},
+i.e., an intermediate network output that maps any noisy latent to a
+clean-data estimate.
+The verifier then scores this prediction:
+\begin{equation}
+  s^{(k)} = v\!\bigl(\hat{x}_0^{(k)},\, c\bigr).
+  \label{eq:score}
+\end{equation}
+In one local search round, $K$ candidate noises
+$\{\varepsilon_t^{(k)}\}_{k=1}^K$ are sampled and scored via
+\cref{eq:x0_prediction,eq:score}; the winner
+$k^* = \arg\max_k s^{(k)}$ is kept.
+Each candidate costs one NFE, so $K$ candidates consume $K$ NFE.
+Many existing search procedures (zero-order perturbation,
+$\epsilon$-greedy exploration, particle-based
+refinement) instantiate this operator; we treat
+$\mathcal{L}_t$ abstractly as a black-box mapping from $x_t$ to $x_{t-1}$
+given a per-step budget.
+
+\paragraph{Global scheduler over timesteps.}
+The local operator $\mathcal{L}_t$ decides \emph{how} to search at a given
+step, but not \emph{where along the trajectory} to invest computation.
+A global scheduler fills this role:
+\[
+  \mathcal{G} :
+  \bigl(x_T, c, v, F_\theta, B, \{\mathcal{L}_t\}_{t=1}^T\bigr)
+  \longrightarrow \bigl(x_0, \{x_t\}_{t=1}^T\bigr),
+\]
+which, starting from $x_T \sim \mathcal{N}(0, I)$, alternates
+denoising steps with local search under budget $B$ and
+returns both the final sample $x_0$ and the full latent trajectory
+$\{x_t\}_{t=1}^T$.
+
+Concretely, $\mathcal{G}$ walks timesteps from $T$ to $1$.
+At each step $t$ it either
+(i)~invokes $\mathcal{L}_t$ one or more times, spending
+part of the remaining budget, or
+(ii)~skips search and applies a single base step
+$x_{t-1} = F_\theta(x_t, t, c, \varepsilon_t)$.
+This decision must be made \emph{online}: at step $t$
+we cannot predict how effective search will be at later timesteps, yet
+computation spent now is lost forever.
+Our goal is to design scheduling policies that decide, under a fixed NFE
+budget, \emph{on which timesteps to search and for how long}.
+
+% -----------------------------------------------------------
+\subsection{Existing Methods as Special Cases}
+\label{sec:special-cases}
+
+This two-level view (local operator $\mathcal{L}_t$ plus global scheduler
+$\mathcal{G}$) unifies many prior
+inference-time search strategies:
+\begin{itemize}
+  \item \textbf{Plain diffusion sampling.}
+  If $\mathcal{L}_t$ reduces to a single denoising step with no extra budget,
+  $\mathcal{G}$ simply applies $F_\theta$ once per
+  timestep, recovering standard sampling.
+  \item \textbf{Best-of-$N$ / random search.}
+  Drawing multiple i.i.d.\ initial noises, propagating each to $x_0$ without
+  per-step modification, and selecting the best sample amounts to a
+  scheduler that spends all compute on full trajectories, performing only
+  a single global selection; no local search occurs.
+  \item \textbf{Noise-trajectory and tree-style search.}
+  Methods that iteratively refine a noise pivot or expand/prune partial
+  trajectories choose specific
+  forms of $\mathcal{L}_t$ paired with hard-coded $\mathcal{G}$ policies that
+  fix which timesteps receive search and how budget splits across time.
+\end{itemize}
+The remainder of the paper focuses on a particular, practically
+important family of methods, for which we develop a new global scheduler.
+A more general MDP formulation that subsumes the above and accommodates richer
+action spaces (multiple verifier types, backtracking) is presented in
+\cref{sec:mdp}.

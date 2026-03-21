@@ -1,0 +1,1693 @@
+\documentclass[letterpaper,11pt,reqno]{amsart}
+
+%\usepackage{showkeys}
+
+\makeatletter
+%--------------------------------------------------------------------------------
+\usepackage[square,sort,compress,comma,numbers]{natbib}
+\usepackage{amssymb}
+%\usepackage{amsmath} (inutile avec amsart.cls)
+\usepackage{latexsym}
+\usepackage{amsbsy}
+\usepackage{amsfonts}
+%\usepackage{showkeys}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{enumerate}
+\usepackage{enumitem}
+\usepackage{mathtools}
+\usepackage{subcaption}
+\usepackage{color}
+\usepackage{float}
+\usepackage{cleveref}
+\usepackage{booktabs}
+\newcommand{\blue}[1]{\textcolor{blue}{#1}}
+\newcommand{\red}[1]{\textcolor{red}{#1}}
+\usepackage{animate}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{babel}
+\usepackage[font=small,labelfont=bf]{caption}
+\usepackage[symbol]{footmisc}
+
+\usepackage{tikz}
+\def\page{\marginpar}
+\def\marginpar#1{\ignorespaces}
+
+\textheight=600pt \textwidth=440pt \oddsidemargin=10pt \evensidemargin=10pt \topmargin=14pt
+
+
+\headheight=8pt
+\parindent=0pt
+\parskip=2pt
+
+\def\Rcup{ \breve{ R } }
+\def\Rcap{ \hat{R} }
+
+\DeclareMathOperator\Leb{Leb}
+\DeclareMathOperator\tr{Tr}
+\DeclareMathOperator\sgn{sgn}
+\DeclareMathOperator\inv{inv}
+\DeclareMathOperator\var{Var}
+\DeclareMathOperator\argmin{\arg \min}
+\DeclareMathOperator\taudis{\tau_n^{\tiny \mbox{dis}}}
+\DeclarePairedDelimiter\ceil{\lceil}{\rceil}
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assump}[theorem]{Assumption}
+\newtheorem{hyp}[theorem]{Hypotheses}
+\newtheorem{example}{Example}
+\numberwithin{equation}{section}
+\makeatother
+%------------------------------------------------------------------------------------
+\begin{document}
+\title[Contractive diffusion models]{Contractive diffusion probabilistic models}
+
+\author[Wenpin Tang]{{Wenpin} Tang}
+\address{Department of Industrial Engineering and Operations Research, Columbia University. 
+} \email{wt2319@columbia.edu}
+
+\author[Hanyang Zhao]{{Hanyang} Zhao}
+\address{Department of Industrial Engineering and Operations Research, Columbia University. 
+} \email{hz2684@columbia.edu}
+
+\date{\today} 
+\begin{abstract}
+Diffusion probabilistic models (DPMs) have emerged as a promising technology in generative modeling. The success of DPMs relies on two ingredients: time reversal of Markov diffusion processes and score matching. Most existing works implicitly assume that score matching is close to perfect,
+while this assumption is questionable. In view of possibly unguaranteed score matching, we propose a new criterion -- the contraction of backward sampling in the design of DPMs, leading to a novel class of contractive DPMs (CDPMs). Our key insight lies on the illustration that the contraction in the backward process can narrow score matching errors as well as discretization errors, thus our proposed CDPMs are theorectically robust to both sources of error. For practical concerns, we further show that CDPM does not need any retraining and can leverage pretrained existing DPMs by a simple transformation. We corroborated our proposal by experiments on CIFAR-10/ImageNet-64 dataset: notably, CDPM shows the best performance among all known SDE-based DPMs, with pre-trained scores andNCSN++ \cite{Song20} architecture. %or EDM \cite{karras2022elucidating}. 
+\end{abstract}
+
+\maketitle
+\textit{Key words:} Contraction, diffusion probabilistic models, discretization, generative models, image synthesis, sampling, score matching, stochastic differential equations.
+
+%\setcounter{tocdepth}{1}
+%\tableofcontents
+%-------------------------------------------------------------------------------------------------
+\section{Introduction}
+\label{sc1}
+
+\quad Over the past decade, generative models have achieved remarkable success
+in creating instances across a wide variety of data modalities,
+including images \cite{Good14, Brock18, Razavi19},
+audio \cite{Prenger19, Borsos23}, video \cite{Kal17},
+and text \cite{Vaswani17, Brown20, Yang19}.
+Diffusion probabilistic models (DPMs) have emerged as a promising generative approach
+that is observed to outperform generative adversarial nets on image and audio synthesis \cite{Dh21, Kong21},
+and underpins the major accomplishment in text-to-image creators such as 
+DALL$\cdot$E 2 \cite{Ramesh22} and Stable Diffusion \cite{Rombach22}.
+The concept of DPMs finds its roots in energy-based models \cite{Sohl15},
+and is popularized by  \cite{Song19, Song20, Ho20}
+in an attempt to produce from noise new samples 
+(e.g. images, audio, text)
+that resemble the target data, while maintain diversity.
+See \cite{Yang23} for a comprehensive review on DPMs.
+
+\quad DPMs relies on forward-backward Markov processes.
+The forward process starts with the target data distribution, 
+and runs for some time until the signal is destroyed --
+this gives rise to {\em noise}. 
+The backward process is then initiated with the noise, 
+and reverses the forward process in time to generate samples
+whose distribution is close to the target distribution.
+In \cite{Song19, Ho20, Austin21}, DPMs are discrete time-indexed Markov chains;
+\cite{Song20, Song21, Chen23} model DPMs in continuous time as 
+stochastic differential equations (SDEs).
+Nevertheless,
+there is no conceptual distinction between discrete and continuous DPMs
+as continuous DPMs can be viewed as the continuum limits of discrete DPMs,
+and discrete DPMs are time discretization of continuous DPMs.
+In this paper, we adopt a {\em continuous time} perspective,
+and algorithms are derived by discretization.
+Being concrete:
+\begin{itemize}[itemsep = 3 pt]
+\item
+The forward process $(X_t, \, 0 \le t \le T)$ is governed by the SDE:
+\begin{equation*}
+dX_t = b(t,X_t)  dt + \sigma (t) dB_t, \quad \mbox{with } X_0  \sim p_{\tiny \mbox{data}}(\cdot),
+\end{equation*}
+where $(B_t, \, t \ge 0)$ is Brownian motion in $\mathbb{R}^d$, 
+$b: \mathbb{R}_+ \times \mathbb{R}^d \to \mathbb{R}^d$ and 
+ $\sigma: \mathbb{R}_+  \to \mathbb{R}_+$
+are model parameters to be designed,
+and $p_{\tiny \mbox{data}}(\cdot)$ is the target data distribution.
+\item
+The backward process $(\overline{X}_t, \, 0 \le t \le T)$ is governed by the SDE:
+\begin{equation*}
+d\overline{X}_t = \overline{b}(t, \overline{X}_t) dt + \overline{\sigma} (t)  d\overline{B}_t, \quad \mbox{with } X_0  \sim p_{\tiny \mbox{noise}}(\cdot),
+\end{equation*}
+where $(\overline{B}_t, \, t \ge 0)$ is Brownian motion in $\mathbb{R}^d$,
+$\overline{b}(t,x)$ and $\overline{\sigma}(\cdot,\cdot)$ are {\em some} functions,
+and $p_{\tiny \mbox{noise}}(\cdot)$ is the noise distribution that does not depend on $p_{\tiny \mbox{data}}(\cdot)$.
+\end{itemize}
+It is easy to see that the forward process transforms data
+to noise (with a suitable choice of $b(\cdot, \cdot)$ and $\sigma(\cdot)$).
+What is miraculous is how the backward process recovers the target data distribution 
+$\overline{X}_T \approx p_{\tiny \mbox{data}}(\cdot)$ from noise $p_{\tiny \mbox{noise}}(\cdot)$.
+The secret consists of two key ingredients:
+\begin{enumerate}[itemsep = 3 pt]
+\item
+{\em Time reversal of diffusion processes}:
+The backward process has an explicit form,
+where $\overline{b}(t,x)$ depends on $b(T-t,x)$, $\sigma(T-t)$ and Stein's score functions
+(the gradients of the log marginal density of the forward process),
+and $\overline{\sigma}(t)=\sigma(T-t)$ \cite{HP86, CCGL21}.
+\item
+{\em Score matching}: The backward process is easily sampled 
+given $b(\cdot,\cdot)$, $\sigma(\cdot)$ and score functions.
+The trick is to learn score functions via forward sampling,
+referred to as score-based DPMs.
+Leaning score functions, also known as score matching,
+features in a body of active research
+\cite{Hyv05, Vi11, Song20sl, Koe22}.
+\end{enumerate}
+In a nutshell, DPMs combine forward (score) learning/matching with backward sampling.
+
+\quad As is clear, a DPM is specified by the pair $(b(\cdot, \, \cdot),  \sigma(\cdot))$.
+Popular examples include
+Ornstein-Uhlenbeck (OU) processes \cite{DV21},
+variance exploding (VE) SDEs,
+variance preserving (VP) SDEs,
+and sub-variance preserving (sub-VP) SDEs \cite{Song20} (see Section \ref{sc2} for definitions).
+Especially, 
+VE and VP SDEs are the continuum limits of 
+score matching with Langevin dynamics (SMLD) \cite{Song19}
+and denoising diffusion probabilistic models (DDPMs) \cite{Ho20} respectively.
+A natural question is:
+\begin{equation*}
+\mbox{\bf How do we design the pair } \pmb{(b(\cdot, \, \cdot),  \sigma(\cdot))} \mbox{ \bf for a DPM?}
+\end{equation*}
+The first rule of thumb, which is satisfied by all the aforementioned examples,  is:
+
+\smallskip
+\noindent
+\quad {\bf Rule 1}. {\em The conditional distributions of} $X_t \,|\, X_0$ {\em are easy to sample (e.g. Gaussian)}.
+
+This rule allows efficient sampling in the forward process
+for score matching via stochastic optimization.
+Notably, Rule 1 provides only instructions on the forward learning step,
+but no requirement on backward sampling. 
+
+\quad The purpose of this paper is to put forward a principle regarding backward sampling
+in the design of DPMs.
+Our proposal is:
+
+\smallskip
+\noindent
+\quad {\bf  Rule 2}. {\em The backward process } $\overline{X}$ {\em is contractive}.
+
+Roughly speaking, being contractive indicates that
+the process tends to be confined, or converge (see Section \ref{sc3} for explanations).
+DPMs that comply with Rule 1 and 2
+are called {\em contractive DPMs} (CDPMs).
+Here we abuse the term contractive DPMs by meaning that 
+their backward processes, rather than the forward processes, 
+exhibit contractive properties.
+At a high level, 
+the contraction of the backward process will prevent score matching errors,
+which may be wild, from expanding over the time.
+The contributions of this work are summarized as follows.
+\begin{itemize}[itemsep = 3 pt]
+\item
+{\bf Methodology}:
+We propose a new criterion ({\bf Rule 2}) for designing DPMs.
+This naturally leads to a novel class of DPMs,
+including contractive OU processes and contractive sub-VP SDEs (see Section \ref{sc4}).
+The idea of requiring the backward process to be contractive
+stems from sampling theory of SDEs,
+so our methodology is theory-oriented. 
+To the best of our knowledge, 
+this is the first paper to integrate contraction into the design of DPMs,
+with both theoretical guarantees
+and good empirical performance.
+\item
+{\bf Theory}:
+We prove Wasserstein bounds between contractive DPM samplers
+and the target data distribution.
+While most previous work (e.g. \cite{Chen23, DV21, LLT22}) 
+focused on Kullback–Leibler (KL) or total variation bounds for OU processes,
+we consider the Wasserstein metric because  
+it has shown to align with human judgment on image similarity \cite{Bor19}, and the standard evaluation metric -- Fr\'echet inception distance (FID) is based on Wasserstein distance.
+Early work \cite{DV21, KW22} gave Wasserstein bounds for the existing DPMs (OU processes, VE and VP SDEs)
+with exponential dependence on $T$.
+This was improved in recent studies \cite{Chen23, LLT23, GNZ23}
+under various assumptions of $p_{\tiny \mbox{data}}(\cdot)$, 
+where the bounds are typically of form:
+\begin{equation*}
+\underbrace{(\small \mbox{noise inaccuracy}) \cdot e^{-T}}_{\tiny \mbox{initialization error}} + \underbrace{(\small \mbox{score mismatch}) \cdot \texttt{Poly}(T)}_{\tiny \mbox{score error}}
++ \underbrace{\texttt{Poly}(\small \mbox{step size}) \cdot \texttt{Poly}(T)}_{\tiny \mbox{discretization error}},
+\end{equation*}
+with $\texttt{Poly}(\cdot)$ referring to polynomial in the variable. 
+Our result gives a Wasserstein bound for CDPMs:
+\begin{equation*}
+\underbrace{(\small \mbox{noise inaccuracy}) \cdot e^{-T}}_{\tiny \mbox{initialization error}}  + \underbrace{(\small \mbox{score mismatch}) \cdot (1 - e^{-T})}_{\tiny \mbox{score error}} 
++ \underbrace{\texttt{Poly}(\small \mbox{step size})}_{\tiny \mbox{discretization error}}.
+\end{equation*}
+Score matching is often trained using blackbox function approximations,
+and the errors incurred in this step may be large. 
+So CDPMs are designed to be robust to score mismatch
+and discretization,
+at the cost of possible initialization bias.
+\item
+{\bf Experiments}: We apply the proposed CDPMs to both synthetic and real data. 
+In dimension one, 
+we compare contractive OU with
+OU, VE, VP and sub-VP.
+Our result shows that contractive OU consistently outperforms OU,
+and is robust to different target distributions.
+On the CIFAR-10 data, we obtain an FID score of 2.47 
+and an inception score of 10.18 for contractive sub-VP,
+which is comparable to the performance of VE with an FID score of 2.47
+and an inception score of 9.68,
+and outperforms other known SDE-based diffusion models.
+\end{itemize}
+ 
+\smallskip
+\noindent
+{\bf Literature review}.
+To conclude the introduction,
+we give a review on the relevant literature. 
+In the context of generative modeling, 
+DPMs were initiated by \cite{Song19} (SMLD) and \cite{Ho20} (DDPM)
+using forward-backward Markov chains.
+The work \cite{Song20, Song21} unified the previous models 
+via a score-based SDE framework,
+which also led to deterministic ordinary differential equation (ODE) samplers.
+Since then the field has exploded, 
+and lots of work has been built upon DPMs and their variants.
+Examples include 
+DPMs in constrained domains \cite{FK23, LE23, RDD22, DS22},
+DPMs on manifolds \cite{Pid22, DeB22, CH23},
+DPMs in graphic models \cite{Mei23},
+variational DPMs \cite{Kingma21, VK21}
+and consistency models \cite{SDC23},
+just to name a few.
+Early theory \cite{DV21, DeB22, KW22} established the convergence 
+of DPMs with exponential dependence on time horizon $T$
+and dimension $d$.
+Recently, polynomial convergence of various DPMs has been proved
+for stochastic samplers \cite{Chen23, Ben23a, LW23, GNZ23, LLT22, LLT23}
+and deterministic samplers \cite{Ben23b, Chen23b, Chen23c, LW23},
+under suitable conditions on the target data distribution. 
+
+\medskip
+\quad The remainder of the paper is organized as follows.
+In Section \ref{sc2}, we provide background on DPMs and score matching techniques.
+Theoretical results for CDPMs are presented in Section \ref{sc3},
+and experiments are reported in Section \ref{sc4}.
+We conclude with Section \ref{sc5}.
+
+%-------------------------------------------------------------------------------------------------
+\section{Background}
+\label{sc2}
+
+%-----------------------------------------------------------
+\subsection{Diffusion models}
+\label{sc21}
+
+Let's explain DPMs in the context of SDEs. 
+Consider the forward process: 
+\begin{equation}
+\label{eq:SDE}
+dX_t = b(t, X_t) dt + \sigma(t) dB_t, \quad \mbox{with } X_0 \sim p_{\tiny \mbox{data}}(\cdot),
+\end{equation}
+where
+$b: \mathbb{R}_+ \times \mathbb{R}^d \to \mathbb{R}^d$ and 
+ $\sigma: \mathbb{R}_+  \to \mathbb{R}_+$
+are model parameters.
+Some conditions on $b(\cdot, \cdot)$ and $\sigma(\cdot)$ are required
+so that the SDE \eqref{eq:SDE} is at least well-defined (see \cite[Chapter 5]{KS91}, \cite[Section 3.1]{TZ23}).
+Let $p(t, \cdot)$ be the probability density of $X_t$.
+
+\quad Set $T > 0$ to be fixed, and run the SDE \eqref{eq:SDE} until time $T$ to get $X_T \sim p(T, \cdot)$.
+Now if we start with $p(T, \cdot)$ and run the process $X$ backward,
+then we can generate a copy of $p(0, \, \cdot) = p_{\tiny \mbox{data}}(\cdot)$.
+Being precise, consider the time reversal $\overline{X}_t: = X_{T-t}$ for $0 \le t \le T$.
+Assuming that $\overline{X}$ also satisfies an SDE, 
+we can implement the backward procedure by
+\begin{equation*}
+d\overline{X}_t = \bar{b}(t, \overline{X}_t) dt + \bar{\sigma}(t) d\overline{B}_t, \quad \mbox{with } \overline{X}_0 \sim p(T, \cdot),
+\end{equation*}
+which samples the desired $\overline{X}_T  \sim p_{\tiny \mbox{data}}(\cdot)$ at time $T$.
+Note that the distribution $p(T, \cdot)$ depends on the target distribution $p_{\tiny \mbox{data}}(\cdot)$.
+The idea of DPMs is, however, to generate samples from noise.
+So we need to replace $p(T, \cdot)$ by a proxy $p_{\tiny \mbox{noise}}(\cdot)$ that is independent of $p_{\tiny \mbox{data}}(\cdot)$.
+This yields the backward process:
+\begin{equation}
+\label{eq:SDErev}
+d\overline{X}_t = \bar{b}(t, \overline{X}_t) dt + \bar{\sigma}(t) d \overline{B}_t, \quad \mbox{with } \overline{X}_0 \sim p_{\tiny \mbox{noise}}(\cdot).
+\end{equation}
+There are two questions:
+\begin{enumerate}[itemsep = 3 pt]
+\item
+How can we choose $p_{\tiny \mbox{noise}}(\cdot)$?
+\item
+What are the parameters $\bar{b}(\cdot, \cdot)$ and $\bar{\sigma}(\cdot)$?
+\end{enumerate}
+
+\quad For (1), the noise $p_{\tiny \mbox{noise}}(\cdot)$ is often derived
+by decoupling the conditional distribution of $X_t \,|\, X_0$ from $X_0$,
+as we will illustrate with examples later.
+%It should be kept in mind that
+%$p_{\tiny \mbox{noise}}(\cdot)$ is easy to sample, e.g. Gaussian.
+It is expected that the closer the distributions $p(T, \cdot)$ and $p_{\tiny \mbox{noise}}(\cdot)$ are,
+the closer the distribution of 
+$\overline{X}_T$ sampled from \eqref{eq:SDErev} is to $p_{\tiny \mbox{data}}(\cdot)$.
+For (2), it relies on the following result on the time reversal of SDEs \cite{Ander82, HP86}.
+\begin{theorem}
+\label{thm:SDErev}
+Under suitable conditions on $b(\cdot, \cdot)$, $\sigma(\cdot)$ and $\{p(t, \cdot)\}_{0 \le t \le T}$, 
+we have
+\begin{equation}
+\label{eq:coefrev}
+\overline{\sigma}(t) = \sigma(T-t), \quad
+\overline{b}(t,x) = -b(T-t, x) + \sigma^2(T-t)  \nabla \log p (T-t,x),
+\end{equation}
+where the term $\nabla \log p(\cdot, \cdot)$ is called Stein's score function.
+\end{theorem}
+
+\quad We give a derivation of Theorem \ref{thm:SDErev} with further references in Appendix A.
+As a consequence, the backward process is:
+\begin{equation}
+\label{eq:SDErevexp}
+d\overline{X}_t = \left(-b(T-t, \overline{X}_t) + \sigma^2(T-t) \nabla \log p(T-t, \overline{X}_t) \right)dt  \\+ \sigma(T-t) d\overline{B}_t.
+\end{equation}
+Since $b(\cdot, \cdot)$ and $\sigma(\cdot)$ are chosen in advance, 
+all but the term $\nabla \log p(T-t, \overline{X}_t)$ in \eqref{eq:SDErevexp} are available. 
+
+\quad Now we present a few examples of DPMs. 
+\begin{itemize}[itemsep = 3 pt]
+\item
+OU processes: $b(t,x) = \theta (\mu - x)$ with $\theta > 0$, $\mu \in \mathbb{R}^d$; 
+$\sigma(t) = \sigma > 0$.
+The distribution of $(X_t \,|\, X_0 = x)$ is 
+$\mathcal{N}(\mu + (x - \mu) e^{-\theta t}, \frac{\sigma^2}{2\theta} (1 - e^{-2 \theta t}) I)$,
+which is approximately 
+$\mathcal{N}(\mu, \frac{\sigma^2}{2 \theta} I)$ as $t$ is large.
+The backward process specializes to
+\begin{equation}
+\label{eq:OUrev2}
+d\overline{X}_t = (\theta(\overline{X}_t - \mu) + \sigma^2 \nabla \log p(T-t, \overline{X}_t)) dt  + \sigma dB_t, 
+\,\, \overline{X}_0 \sim \mathcal{N}\left(\mu, \frac{\sigma^2}{2 \theta} I\right).
+\end{equation}
+\item
+VE SDEs:
+$b(t,x) = 0$ and 
+$\sigma(t) = \sigma_{\min} \left(\frac{\sigma_{\max}}{\sigma_{\min}} \right)^{\frac{t}{T}} \sqrt{\frac{2}{T} \log \frac{\sigma_{\max}}{\sigma_{\min}}}$
+with 
+$\sigma_{\min} \ll  \sigma_{\max}$.
+The distribution of $(X_t \,|\, X_0 = x)$ is $\mathcal{N}\left(x, \sigma^2_{\min}\left( \left(\frac{\sigma_{\max}}{\sigma_{\min}} \right)^{\frac{2t}{T}}- 1 \right) I \right)$, 
+which can be approximated by $\mathcal{N}(0, \sigma^2_{\max} I)$ at $t = T$.
+The backward process is:
+\begin{equation}
+\label{eq:VErev2}
+d\overline{X}_t  = \sigma^2(T-t) ) \nabla \log p(T-t, \overline{X}_t)+  \sigma(T-t) dB_t, 
+\,\, \overline{X}_0 \sim \mathcal{N}(0, \sigma^2_{\max} I).
+\end{equation}
+\item
+VP SDEs: 
+$b(t,x) = -\frac{1}{2}\beta(t) x$ and $\sigma(t) = \sqrt{\beta(t)}$,
+where 
+$\beta(t):= \beta_{\min} + \frac{t}{T}(\beta_{\max} - \beta_{\min})$ with $\beta_{\min} \ll \beta_{\max}$.
+The distribution of $(X_t \,|\, X_0 = x)$ is
+$$\mathcal{N}( e^{-\frac{t^2}{4T}(\beta_{\max} - \beta_{\min}) - \frac{t}{2} \beta_{\min}}  x,  
+(1 -e^{-\frac{t^2}{2T}(\beta_{\max} - \beta_{\min}) - t \beta_{\min}} ) I),$$
+which can be approximated by $\mathcal{N}(0,I)$ at $t = T$.
+The backward process is:
+\begin{equation}
+\label{eq:VPrev2}
+\begin{aligned}
+d\overline{X}_t & = \bigg(\frac{1}{2} \beta(T-t) \overline{X}_t + \beta(T-t) \nabla \log p(T-t, \overline{X}_t)\bigg)  dt \\
+& \qquad \qquad \qquad \qquad \qquad \qquad  \quad + \sqrt{\beta(T-t))} dB_t, \,\, \overline{X}_0 \sim \mathcal{N}(0, I).
+\end{aligned}
+\end{equation}
+\item
+Sub-VP SDEs: 
+$b(t,x) = -\frac{1}{2} \beta(t)x$ and $\sigma(t) = \sqrt{\beta(t) (1 - e^{-2 \int_0^t \beta(s) ds})}$.
+The distribution of $(X_t \,|\, X_0 = x)$ is
+$\mathcal{N}( e^{-\frac{t^2}{4T}(\beta_{\max} - \beta_{\min}) - \frac{t}{2} \beta_{\min}}  x,  
+(1 -e^{-\frac{t^2}{2T}(\beta_{\max} - \beta_{\min}) - t \beta_{\min}} )^2 I )$,
+which can be approximated by $\mathcal{N}(0,I)$ at $t = T$.
+The backward process is:
+\begin{equation}
+\label{eq:SVPrev2}
+\begin{aligned}
+d\overline{X}_t & = \bigg( \frac{1}{2} \beta(T-t) \overline{X}_t  + \beta(T-t)(1 - \gamma(T-t)) \nabla \log p(T-t, \overline{X}_t)\bigg)  dt \\
+& \qquad \qquad \qquad \qquad + \sqrt{\beta(T-t) (1 - \gamma(T-t))} dB_t,  \,\, \overline{X}_0 \sim \mathcal{N}(0, I),
+\end{aligned}
+\end{equation}
+where $\gamma(t):= e^{-2 \int_0^t \beta(s) ds} = e^{-\frac{t^2}{T}(\beta_{\max} - \beta_{\min}) - 2t \beta_{\min}}$.
+\end{itemize}
+
+%-----------------------------------------------------------
+\subsection{Score matching}
+\label{sc22}
+
+As previously mentioned, 
+we need to compute the score function $\nabla \log p(t,x)$
+for backward sampling. 
+The idea from recently developed score-based generative modeling \cite{Ho20, Song19, Song20}
+is to estimate $\nabla \log p(t,x)$ by function approximations. 
+More precisely, 
+denote by $\{s_\theta(t,x)\}_\theta$ a family of functions on $\mathbb{R}_+ \times \mathbb{R}^d$
+parametrized by $\theta$.
+Fixing $t$, the goal is to solve the problem:
+\begin{equation}
+\label{eq:scoremat}
+\min_\theta \mathcal{J}_{\text{ESM}}(\theta):=\mathbb{E}_{p(t, \cdot)} |s_\theta(t,X) - \nabla \log p(t,X)|^2,
+\end{equation}
+which is known as the {\em explicit score matching} (ESM) objective. 
+Again the stochastic optimization \eqref{eq:scoremat} is far-fetched
+since the scores $\nabla \log p(t,x)$ are not available.  
+Interestingly, this problem has been studied in the context of estimating statistical models with unknown normalizing constant.
+The following result \cite{Hyv05} shows that the score matching problem \eqref{eq:scoremat}
+can be recast into a feasible stochastic optimization with no $\nabla \log p(t, X)$-term,
+known as {\em implicit score matching} (ISM) objective.
+
+\begin{theorem}
+\label{thm:scoremat}
+Let 
+$\mathcal{J}_{\text{ISM}}(\theta):= \mathbb{E}_{p(t, \cdot)} \left[ |s_\theta(t,X)|^2  + 2 \, \nabla \cdot s_\theta (t,X)\right]$.
+Under suitable conditions on $s_\theta$, we have 
+$\mathcal{J}_{\text{ISM}}(\theta) = \mathcal{J}_{\text{ESM}}(\theta) + C$ for some $C$ independent of $\theta$. 
+Consequently, the minimum point of $\mathcal{J}_{\text{ISM}}$ and that of $\mathcal{J}_{\text{ESM}}$ coincide. 
+\end{theorem}
+
+\quad We give a proof of this theorem in Appendix B.1 for completeness.
+In practice, the score matching problem with a continuous weighted combination is considered:
+\begin{equation}
+\label{eq:weighted score matching}
+\min_\theta \tilde{\mathcal{J}}_{\text{ESM}}(\theta) = \mathbb{E}_{t \in \mathcal{U}(0, T)}\mathbb{E}_{p(t, \cdot)} \left[\lambda(t)|s_\theta(t,X) - \nabla \log p(t,X)|^2\right].
+\end{equation}
+where $\mathcal{U}(0, T)$ denotes a uniform distribution on $[0, T]$, and $\lambda: \mathbb{R} \rightarrow \mathbb{R}_{+}$ is a positive weighting function. 
+We can alternate the inside part by ISM to solve the problem:
+\begin{equation}
+\label{eq:equivscorematb}
+\min_\theta \widetilde{\mathcal{J}}_{\text{ISM}}(\theta) = \mathbb{E}_{t \in \mathcal{U}(0, T)}\mathbb{E}_{p(t, \cdot)} \left[\lambda(t)\left(|s_\theta(t,X)|^2  + 2 \, \nabla \cdot s_\theta (t,X)\right)\right].
+\end{equation}
+
+However, the problem \eqref{eq:equivscorematb} can still be computationally costly when the dimension $d$ is large. 
+Using a neural network for $s_{\theta}(t,x)$, 
+we need to conduct $d$ times of backward propagation of all parameters to compute $\nabla\cdot s_{\theta}(t,x)$. 
+This means that the computation of the gradient scales linearly with the dimension, 
+thus making the gradient descent methods not efficient for solving the problem \eqref{eq:equivscorematb}
+with respect to examples such as image data in high dimension. {\em Denoising score matching} (DSM) \cite{Vi11}
+serves as a scalable alternative:
+$$
+\tilde{\mathcal{J}}_{\text{DSM}}(\theta)=\mathbb{E}_{t\sim\mathcal{U}(0, T)}\left\{\lambda(t) \mathbb{E}_{X_0\sim p_{data}(\cdot)} \mathbb{E}_{X_t \mid X_0}\left[\left|s_{\theta}(t,X(t))-\nabla_{X_t} \log p(t,X_t \mid X_0)\right|^2\right]\right\}.
+$$
+Its equivalent form
+and other methods such as sliced score matching \cite{Song20sl}
+are discussed in Appendix B.2.
+Now we replace $\nabla p(t,x)$ with the matched score $s_\theta(t,x)$ in \eqref{eq:SDErev} 
+to get the backward process:
+\begin{equation}
+\label{eq:SDErevc}
+d\overline{X}_t = \left(-b(T-t, \overline{X}_t) + \sigma^2(T-t) \, s_\theta(T-t, \overline{X}_t) \right)dt + \sigma(T-t) d\overline{B}_t,
+\,\, \overline{X}_0 \sim p_{\tiny \mbox{noise}}(\cdot).
+\end{equation}
+%\blue{and hopefully get the generated distribution $\operatorname{law}(\overline{X}_T)$ closed to the data distribution $\operatorname{law}(X_0)=p_{data}$.}
+%-------------------------------------------------------------------------------------------------
+\section{Theory for contractive DPMs}
+\label{sc3}
+
+\quad In this section,
+we introduce the idea of CDPMs, and present supportive theoretical results.
+For a DPM specified by \eqref{eq:SDE}-\eqref{eq:SDErevc},
+we also consider the Euler-Maruyama discretization of its backward process $\overline{X}$.
+Fix $\delta > 0$ as the step size,
+and set $t_k: = k \delta$ for $k = 0, \ldots, N:= T/\delta$.
+Let $\widehat{X}_0 = \overline{X}_0$, 
+and 
+\begin{equation}
+\label{eq:EMdisc}
+\begin{aligned}
+\widehat{X}_k: = \widehat{X}_{k-1} + (-b(T - t_k, \widehat{X}_{k-1}) + 
+& a(T - t_{k-1}) s_\theta(T - t_{k-1}, \widehat{X}_{k-1})) \delta \\
+& + \sigma(T-t_{k-1}) (B_{t_k} - B_{t_{k-1}}), 
+\quad \mbox{for } k = 1,\ldots, N.
+\end{aligned}
+\end{equation}
+Our goal is to bound the Wasserstein-2 distance $W_2(p_{\tiny \mbox{data}}(\cdot), \widehat{X}_N)$.
+Clearly, 
+\begin{equation}
+\label{eq:triangle}
+W_2(p_{\tiny \mbox{data}}(\cdot), \widehat{X}_N)
+\le W_2(p_{\tiny \mbox{data}}(\cdot), \overline{X}_T)
++ \left(\mathbb{E}|\overline{X}_T - \widehat{X}_N|^2\right)^{\frac{1}{2}},
+\end{equation}
+where the first term on the right side of \eqref{eq:triangle} is
+the sampling error at the continuous level,
+and the second term is the discretization error.
+We will study these two terms in the next two subsections,
+where CDPMs are justifed.
+
+%-----------------------------------------------------------
+\subsection{Sampling error in continuous time}
+\label{sc31}
+
+We are concerned with the term $W_2(p_{\tiny \mbox{data}}(\cdot), \overline{X}_T)$.
+Existing work \cite{Chen23, LLT23, DV21} established $W_2$ bounds 
+for OU processes under a bounded support assumption.
+Closer to our result (and proof) is the concurrent work \cite{GNZ23}, 
+where a $W_2$ bound is derived
+for a class of DPMs with $b(t,x)$ separable in $t$ and $x$,
+under a strongly log-concavity assumption.
+
+\begin{assump}
+\label{assump:sensitivity}
+The following conditions hold:
+\begin{enumerate}[itemsep = 3 pt]
+%\item
+%There exists $r_\sigma: [0,T] \to \mathbb{R}_+$ such that 
+%$|| a(t) ||_2 \le r_\sigma(t)$ for $0 \le t \le T$.
+\item
+There exists $r_b: [0,T] \to \mathbb{R}$ such that 
+$(x - x') \cdot (b(t,x) - b(t,x')) \ge r_b(t) |x - x'|^2$ for all $t$ and $x,x'$.
+\item
+There exists $L > 0$ such that $|\nabla \log p(t,x) - \nabla \log p(t,x')| \le L |x-x'|$ for all $t$ and $x,x'$.
+%There exists $L > 0$ such that $|s_\theta(t,x) - s_\theta(t,x')| \le L |x-x'|$ for all $0 \le t \le T$ and $x,x' \in \mathbb{R}^n$.
+\item
+There exists $\varepsilon > 0$ such that $\mathbb{E}_{p(t,\cdot)}|s_{\theta}(t,x) - \nabla \log p(t,x)|^2 \le \varepsilon^2$ for all $t$.
+\end{enumerate}
+\end{assump}
+
+\quad  The condition (1) assumes the monotonicity of $b(t, \cdot)$
+and (2) assumes the Lipschitz property of the score functions. 
+%We point out that in most existing work \cite{DV21, Chen23, GNZ23}, 
+%the Lipschitz assumption is for the score function $\nabla p(t, \cdot)$ rather than 
+%the score matching $s_\theta(t, \cdot)$.
+In the previous examples, 
+$b(t,x)$ is linear in $x$ 
+so the density $p(t, \cdot)$ is Gaussian-like,
+and its score is almost affine.
+Thus, it is reasonable to assume (2).
+Conditions (1) and (2) 
+are used to quantify how a perturbation of the model parameters in an SDE
+affects its distribution. 
+The condition (3) specifies how accurate Stein's score is estimated by 
+a blackbox estimation. 
+There has been work (e.g. \cite{CH23, Koe22, Oko23}) on the efficiency of score approximations.
+So it is possible to replace the condition (3) with those score approximation bounds.
+
+\begin{theorem}
+\label{thm:sensitivity}
+Let Assumption \ref{assump:sensitivity} hold, and $h > 0$.
+Define $\eta:=W_2(p(T, \cdot), p_{\tiny \mbox{noise}}(\cdot))$,
+and
+\begin{equation}
+\label{eq:uv}
+u(t):=\int_{T-t}^T \left(-2 r_b(s) + (2L + 2h) \sigma^2(s) \right)ds.
+\end{equation}
+Then we have 
+\begin{equation}
+\label{eq:sensitivity}
+W_2(p_{\tiny \mbox{data}}(\cdot), \overline{X}_T) \le \sqrt{\eta^2 e^{u(T)} + \frac{\varepsilon^2}{2h} \int_0^T \sigma^2(t) e^{u(T)-u(T-t)} dt}.
+\end{equation}
+%As a direct corollary, if $r_b(t)\leq \frac{1}{2}$ holds for all $t\in[0,T]$ (e.g. $r_b(t)\leq 0$), then the bound \eqref{eq:sensitivity} %can be simplified as:
+%\begin{equation}
+%\label{eq:sensitivity2}
+%W_2(p_{\tiny \mbox{data}}(\cdot), \overline{X}_T) \le \sqrt{\eta^2 e^{u(T)} + \frac{\varepsilon^2}{L^2}(e^{u(T)}-1)}.
+%\end{equation}
+\end{theorem}
+
+\quad The proof of Theorem \ref{thm:sensitivity} is deferred to Appendix C.
+A similar result was given in \cite{KW22} 
+under an unconventional assumption that
+the score matching functions $s_\theta(t,x)$,
+rather than the score functions $\nabla p(t,x)$,
+are Lipschitz.
+In fact,
+the (impractical) assumption that 
+the score matching functions are Lipschitz
+is not needed at the continuous level,
+and can be replaced with the Lipschitz condition on the score functions.
+On the other hand,
+the Lipschitz property of the score matching functions
+are required, for technical purposes,
+to bound the discretization error in Section \ref{sc32}.
+
+\quad It is possible to establish sharper bounds under extra (structural) conditions on $(b(\cdot, \cdot), \sigma(\cdot))$, 
+and also specify the dependence in dimension $d$ (e.g. \cite{Chen23, GNZ23}).
+For instance, if we assume $b(t,x)$ is separable in $t$ and $x$ and linear in $x$,
+and $p_{\tiny \mbox{data}}(\cdot)$ is strongly log-concave,
+then the term $L \sigma^2(s)$ in \eqref{eq:uv} will become $-L' \sigma^2(s)$ for some $L' > 0$.
+Since the purpose of this paper is to introduce the methodology of CDPMs, 
+we leave the full investigation of its theory to the future work.
+
+\quad Now let's explain contractive DPMs. 
+Looking at the bound \eqref{eq:sensitivity}, 
+the sampling error $W_2(p_{\tiny \mbox{data}}(\cdot), \overline{X}_T)$
+is linear in the score matching error $\varepsilon$
+and the initialization error $\eta$,
+and these errors may be amplified in time $T$
+-- in most aforementioned DPMs, 
+$r_b(t) \le 0$ so $u(t)$ is positive and at least linear.
+This implies that the sampling error explodes if $T$ is set to be large
+even at the continuous level. 
+As mentioned earlier,
+it is especially problematic 
+if we don't know how good a blackbox score matching $s_\theta(t,x)$ is.
+Our idea is simply
+ to make $u(t)$ be negative, that is to set $r_b(t) > 0$ sufficiently large, 
+in order to prevent the score matching error from propagating in backward sampling.
+This yields the class of CDPMs,
+which is inherently different from existing DPMs in the sense that
+these DPMs often have contractive forward processes,
+while our proposal requires contractive backward processes.
+Quantitatively, we can set for some $\alpha > 0$,
+\begin{equation}
+\label{eq:contra1}
+\inf_{0 \le t \le T} \left(r_b(t) - (L + h) \sigma^2(t) \right) \ge \alpha.
+\end{equation} 
+In practice, it suffices to design $(b(\cdot, \cdot), \sigma(\cdot))$ with a positive $r_b(t)$.
+We present two examples, contractive OU processes and contractive sub-VP SDEs,
+for experiments in Section \ref{sc4}.
+
+%-----------------------------------------------------------
+\subsection{Discretization error}
+\label{sc32}
+
+We study the discretization error $\left(\mathbb{E}|\overline{X}_T - \widehat{X}_N|^2\right)^{\frac{1}{2}}$
+for CDPMs.
+Classical SDE theory \cite{KP92} indicates that $\left(\mathbb{E}|\overline{X}_T - \widehat{X}_N|^2\right)^{\frac{1}{2}} \le C(T) \delta$,
+with the constant $C(T)$ exponential in $T$.
+Here we show that by a proper choice of the pair $(b(\cdot, \cdot), \sigma(\cdot))$ leading to CDPMs, 
+the constant $C(T)$ can be made independent of $T$.
+In other words, the discretization error will not expand over the time.
+
+\quad We need some technical assumptions. 
+\begin{assump}
+\label{assump:2dis}
+The following conditions hold:
+\begin{enumerate}[itemsep = 3 pt]
+\item 
+There exists $L_\sigma > 0$ such that $|\sigma(t) - \sigma(t')| \le L_\sigma |t-t'|$ for all $t, t'$.
+\item 
+There exists $R_\sigma > 0$ such that $\sigma(t) \le R_\sigma$ for all $t$. 
+\item 
+There exists $L_b > 0$ such that $|b(t,x) - b(t',x')| \le L_b  (|t-t'| + |x - x'|)$ for all $t,t'$ and $x, x'$.
+\item 
+There exists $L_s > 0$ such that $|s_\theta(t,x) - s_\theta(t',x')| \le L_s (|t -t'| + |x- x'|)$ for all $t,t'$ and $x,x'$.
+\item 
+There exists $R_s > 0$ such that $|s_\theta(T,x)| \le R_s (1 + |x|)$ for all $x$.
+\end{enumerate}
+\end{assump}
+
+\quad Next we introduce a contractive assumption that is consistent with \eqref{eq:contra1}
+
+\begin{assump}
+\label{assump:contraction}
+There exists $\beta > 0$ such that
+\begin{equation}
+\label{eq:condcontraction}
+\int_{T-t}^T (r_b(s) - L_s \sigma^2(s))\, ds \ge \beta t, \quad \mbox{for all }t,
+\end{equation}
+or simply 
+\begin{equation}
+\label{eq:contral2}
+\beta: = \inf_{0 \le t \le T} \left(r_b(t) - L_s \sigma^2(t)\right) > 0.
+\end{equation}
+\end{assump}
+
+\begin{theorem}
+\label{thm:globalerr}
+Let Assumptions \ref{assump:sensitivity}, \ref{assump:2dis} and \ref{assump:contraction} hold.
+Then there exists $C > 0$ (independent of $\delta, T$) such that
+for $\delta >0$ sufficiently small,
+\begin{equation}
+\label{eq:globalerr}
+\left(\mathbb{E}|\overline{X}_T - \widehat{X}_N|^2 \right)^{\frac{1}{2}} \le C \sqrt{\delta}.
+\end{equation}
+\end{theorem}
+
+\quad The proof of Theorem \ref{thm:globalerr} is given in Appendix D. 
+By \eqref{eq:triangle}, Theorem \ref{thm:sensitivity} and 
+Theorem \ref{thm:globalerr}, 
+we get a bound 
+$W_2(p_{\tiny \mbox{data}}(\cdot), \widehat{X}_N)$
+of order 
+$\eta e^{-T} + \varepsilon (1 - e^{-T}) + \sqrt{\delta}$
+for CDPMs,
+where the discretization error is independent of $T$.
+%If we choose 
+%$N = T^\gamma$ steps with $\gamma > 1$,
+%then $\delta = T^{1 - \gamma}$.
+%The discretization error scales as $T^{-\frac{\gamma-1}{2}} = N^{-\frac{\gamma-1}{2 \gamma}}$, which is roughly $N^{-\frac{1}{2}}$ for large $\gamma$.
+
+
+%-------------------------------------------------------------------------------------------------
+\subsection{CDPM examples}
+\quad In this section, we consider some examples of CDPMs. 
+As mentioned in Section \ref{sc31},
+the ideal candidates should satisfy 
+the contractive assumptions such as \eqref{eq:contra1} 
+or \eqref{eq:contral2}.
+However, we generally don't know the Lipschitz constants $L$ and $L_s$.
+The practical way is only to require 
+$\inf_{t\in\left[0,T\right]}r_b(t)>0$, 
+leading to the following examples.
+\begin{itemize}[itemsep = 3 pt]
+\item 
+Contractive Ornstein-Ulenback (COU) process: 
+$b(t,x) = \theta (x - \mu)$ with $\theta > 0$, $\mu \in \mathbb{R}^d$ and $\sigma(t) = \sigma$.
+The backward process is:
+\begin{equation}
+d\overline{X}_t = \bigg(-\theta (\overline{X}_t - \mu)  + \sigma^2 \nabla \log p(T-t, \overline{X}_t)\bigg)  dt + \sigma dB_t,
+\end{equation}
+with $\overline{X}_0 \sim \mathcal{N}\left(0,  
+\frac{\sigma^2}{2\theta} ( e^{2 \theta T} -1) I \right)$.
+\item 
+Contractive sub-variance preserving (C sub-VP) SDEs:
+$b(t,x) = \frac{1}{2} \beta(t)x$ and $\sigma(t) = \sqrt{\beta(t) (e^{2\int_0^t \beta(s) ds}-1)}$,
+where $\beta(t)= \beta_{\min} + \frac{t}{T}(\beta_{\max} - \beta_{\min})$. The distribution of $(X-t\mid X_0=x)$ is
+\begin{equation}
+\begin{aligned}
+\mathcal{N}\left( e^{\frac{t^2}{4T}(\beta_{\max} - \beta_{\min}) + \frac{t}{2} \beta_{\min}}  x,  
+(e^{\frac{t^2}{2T}(\beta_{\max} - \beta_{\min}) + t \beta_{\min}}-1 )^2 I \right)
+\end{aligned}
+\end{equation}
+By setting $\gamma(t)= e^{2 \int_0^t \beta(s) ds}$,
+the backward process is: 
+\begin{equation}
+\begin{aligned}
+d\overline{X}_t & = \bigg(-\frac{1}{2} \beta(T-t) \overline{X}_t  + \beta(T-t)(\gamma(T-t)-1) \nabla \log p(T-t, \overline{X}_t)\bigg)  dt \\
+& \qquad \qquad \qquad \qquad \qquad \qquad \qquad \qquad+ \sqrt{\beta(T-t) (\gamma(T-t)-1)} dB_t,
+\end{aligned}
+\end{equation}
+with $\overline{X}_0 \sim \mathcal{N}\left( 0, 
+(e^{\frac{T}{2} (\beta_{\max} + \beta_{\min})}-1 )^2 I \right)$.
+\end{itemize}
+
+\section{Discussions and Comparisons}
+In this section, we first show that although VE is not explicitly contractive from our theory, it is implicitly contractive.
+\subsection{VE SDE is implicitly CDPMs}
+
+\subsection{Training CDPMs}
+We further show that CDPM, although taking different parameters from existing DPMs, does not need pretraining by e.g. optimizing again the denoising score matching objective. For practical considerations, since CDPM also admits the property that $b(t,x)$ can be decoupled as $b(t)\cdot x$ (like VP and VE), we follow \cite{karras2022elucidating} and define the pertubation kernel representation of the CDPMs as:
+$$
+X_t \mid X_0\sim \mathcal{N}\left(f(t) X_0, f(t)^2 g(t)^2 I\right),
+$$
+in which:
+$$
+f(t)=e^{\frac{t^2}{4T}(\beta_{\max} - \beta_{\min}) + \frac{t}{2} \beta_{\min}}, \quad \text { and } \quad g(t)=f(t)-f^{-1}(t).
+$$
+Denote the probability distribution of $X_t$ following the VE and Contractive subVP as $p_{\tiny \mbox{VE}}(t,\cdot)$ and $p_{\tiny \mbox{CsubVP}}(t,\cdot)$ correspondingly. Assume that we have a trained approximation to the scores of existing VE models, in the form of 
+$$
+s_{pre}(t,x)\approx \nabla_x p_{VE}(t,x),
+$$
+then to compute the score functions at time $t$, we can adopt the transformation using the following theorem, which is a direct result of Equation (12) and (19) of \cite{karras2022elucidating}.
+
+\begin{theorem}
+Assume that the parameters of VE SDE and CsubVP SDE yields $\sigma^2_{\max}-\sigma^2_{\min}>g(T)$.Then we have that the pdf of CsubVP SDE at time $t\in [0,T]$ yields
+\begin{equation}
+p_{\tiny \mbox{CsubVP}}(t,x) = f(t)^{-d} p_{\tiny \mbox{VE}}(t^*,x/f(t))
+\end{equation}
+in which $t^*$ such that:
+\begin{equation}
+\sigma^2_{\min}\left( \left(\frac{\sigma_{\max}}{\sigma_{\min}} \right)^{\frac{2t^*}{T}}- 1 \right) = g(t)^2.
+\end{equation}
+or
+\begin{equation}
+t^*(t)=\frac{T}{2}\frac{\log(1+\frac{g(t)^2}{\sigma^2_{\min}})}{\log(\sigma_{\max}/\sigma_{\min})}.
+\end{equation}
+\end{theorem}
+Thus we have: 
+$$\nabla_x\log p_{\tiny \mbox{CsubVP}}(t,x)\approx s_{pre}(t^*(t),x/f(t)),$$
+which validates our claim of using existing score matchings or pretrained weights.
+
+\section{Experiments}
+\label{sc4}
+\subsection{1-dimensional examples} 
+\label{sc41}
+We conduct experiments on two synthetic datasets:
+(i) a single point mass at $x_0=-1$;
+(ii)) the mixture of two equally-weighted Gaussian distributions $\mathcal{N}(\mu_1,\sigma_1^2)$ and $\mathcal{N}(\mu_2,\sigma_2^2)$, 
+with parameters $\mu_1 = -1.5$, $\sigma_1 = 1$
+and 
+$\mu_2 = 1.5$, $\sigma_2 = 0.5$ respectively.
+To illustrate the effect of CDPMs 
+in stablizing score matching and discretization errors,
+we initialize the backward process
+with the exact distribution $p(T, \cdot)$, 
+i.e. a sample of $X_T$.
+We use a three layer neural network (with residual connection) to learn the score functions. 
+Implementation details are provided in Appendix E.1.
+
+\begin{figure}[H]
+   \begin{subfigure}{0.45\textwidth}
+     \centering
+     \includegraphics[width=0.9\linewidth]{Figures/single_point.png}
+     \caption{single point}
+     \label{Fig: Single Point NN}
+   \end{subfigure}\hfill
+   \begin{subfigure}{0.45\textwidth}
+     \centering
+     \includegraphics[width=0.9\linewidth]{Figures/GM.png}
+     \caption{Gaussian mixture}
+     \label{Fig: Gaussian Mixture}
+   \end{subfigure}
+   \caption{Evolution of $W_2$ distance in time.}
+   \label{fig:1dex}
+\end{figure}
+
+\quad Figure \ref{fig:1dex} plots the evolution of 
+the Wasserstein-2 distance 
+between the generated sample distribution and the true distribution
+over $T \le T_{\max}$.
+Here $T_{\max}$ is the time horizon on which the score functions are learnt, 
+and the diffusion coefficients are scaled accordingly. 
+Our result shows that C-OU processes have a similar performance as VE,
+while outperform other models (OU, VP and sub-VP)
+in both settings. We also plot the learned score and the true score difference in Appendix E.1.
+
+\subsection{Swiss Roll and MNIST datasets}
+\label{sc42}
+We apply contractive sub-VP to Swiss Roll and MNIST datasets. 
+Implementation details are reported in Appendix E.2.
+Figure \ref{fig:Swiss Roll Original} plots the original Swiss Roll;
+Figure \ref{fig:Swiss Roll} shows the evolution process of contractive sub-VP sampling on the Swiss Roll data.
+Figure \ref{fig:MNIST} illustrates image synthesis by contractive sub-VP 
+on the MNIST data.
+
+\begin{figure}[hbtp]
+    \begin{subfigure}{1\textwidth}
+        \centering
+        \includegraphics[width=0.2\linewidth]{Figures/swiss_roll_original.png}
+        \caption{Original Swiss Roll}
+        \label{fig:Swiss Roll Original}
+    \end{subfigure}%
+
+    \begin{subfigure}{1\textwidth}
+        \includegraphics[width=1\linewidth]{Figures/swiss_roll.png}
+        \caption{Swiss Roll generation with 200, 400, 600, 800, 10000 iterations.}
+        \label{fig:Swiss Roll}
+    \end{subfigure}
+    \caption{Swiss Roll generation by contractive sub-VP.}
+\end{figure}
+
+\begin{figure}[hbtp]
+    \centering
+    \includegraphics[width=0.6\linewidth]{Figures/MNIST.png}
+    \caption{MNIST synthesis by contractive sub-VP.}
+    \label{fig:MNIST}
+\end{figure}
+
+\subsection{CIFAR-10 dataset}
+\label{sc43}
+We demonstrate the performance of our proposed contractive sub-VP
+SDEs on the task of unconditional synthesis of the CIFAR-10 dataset. 
+We compute and compare the FID scores of the images generated by previous (diffusion) models and our proposed model.
+Implementation details are given in Appendix E.3.
+
+\begin{minipage}{\textwidth}
+\begin{minipage}[b]{0.49\textwidth}
+    \centering
+    \includegraphics[width=0.95\linewidth]{Figures/CsubVP_samples.png}
+    \captionof{figure}{CIFAR-10 Synthesis}
+    \label{fig:CIFAR10syn}
+  \end{minipage}
+\hfill
+\begin{minipage}[b]{0.49\textwidth}
+% \parbox{.45\linewidth}{
+    \small
+    \centering
+    \begin{tabular}{l c c c c}
+    \toprule
+        Model & Inception $\uparrow$  &FID $\downarrow$\\
+         \midrule
+        PixelCNN~\cite{van2016conditional} & 4.60 &65.9\\
+        IGEBM~\citep{du2020improved}& 6.02 &40.6\\
+        ViTGAN~\cite{lee2021vitgan} & $9.30$ &$6.66$\\
+        StyleGAN2-ADA~\citep{karras2020training}& $9.83$ & $2.92$\\
+        NCSN~\cite{Song19}&${8.87 }$ & $25.32$\\
+        NCSNv2~\cite{song2020improved}&${8.40 }$ & $10.87$\\
+        DDPM~\citep{Ho20}&$9.46$ & $3.17$\\
+        DDIM, $T=50$~\citep{DDIM} &-&$4.67$\\
+        DDIM, $T=100$~\citep{DDIM} &-&$4.16$\\
+        \midrule
+        \textbf{NCSN$++$}\\
+        \midrule
+        VP SDE~\cite{Song20}& $9.58$ &  $2.55$\\
+        sub-VP SDE~\cite{Song20}& $9.56$ & $2.61$\\
+         VE SDE~\cite{Song20}& $9.68^*$ &  $2.47^*$\\
+         CDPM~(ours) & $\textbf{10.18}$ & $\textbf{2.47}$ &\\
+         \bottomrule
+\end{tabular}
+\vspace{-2.5pt}
+\captionof{table}{Inception \& FID scores}
+\label{tab:cifar}
+\end{minipage}
+\end{minipage}
+
+\medskip
+\quad Figure \ref{fig:CIFAR10syn} provides image synthesis 
+on the CIFAR-10 data.
+From Table \ref{tab:cifar},
+our proposed model (CDPM) shows the best performance
+among all known classes of SDE-based diffusion models.
+In particular, it outperforms VE SDEs (non-deep version in \cite{Song20})
+in the sense of achieving a better inception score
+when having the same FID 
+($*$ the model evaluation is conducted on our own machine 
+(4 3080Ti GPUs)
+given the checkpoints provided by \cite{Song20}).
+
+%-------------------------------------------------------------------------------------------------
+\section{Conclusion}
+\label{sc5}
+
+\quad In this paper,
+we propose a new criterion -- 
+the contraction of backward sampling
+in the design of SDE-based DPMs.
+This naturally leads to a novel class of contractive DPMs.
+The main takeaway is that the contraction of the backward process
+limits score matching errors from propagating,
+and controls discretization error as well. 
+Our proposal is supported by theoretical considerations,
+and is corroborated by experiments. 
+Notably, our proposed contractive sub-VP outperforms
+other SDE-based DPMs on CIFAR 10 dataset.
+Though the intention of this paper is not to beat SOTA diffusion models,
+CDPMs show promising results
+that we hope to trigger further research.
+
+\quad There are a few directions to extend this work.
+First, we assume that score matching errors
+are bounded in $L^2$
+as in \cite{Chen23, GNZ23, LLT23}.
+It is interesting to see whether this assumption 
+can be relaxed to more realistic conditions 
+given the application domain. 
+Second, it is desirable to establish sharp theory for CDPMs, with dimension dependence.
+Finally, our formulation is based on SDEs,
+and hence stochastic samplers.
+We don't look into ODE samplers as in 
+\cite{Song20,xu2022poisson,LW23, Chen23b}.
+This leaves open the problems such as
+whether the proposed CDPMs perform
+well by ODE samplers,
+and why the ODE samplers derived from SDEs
+outperform those directly learnt,
+as observed in previous studies.
+
+
+\medskip
+{\bf Acknowledgement}: 
+We thank Jason Altschuler, Yuxin Chen, Sinho Chewi, Xuefeng Gao, Dan Lacker, Yuting Wei and David Yao for helpful discussions.
+We gratefully acknowledges financial support through NSF grants DMS-2113779 and
+DMS-2206038,
+and by a start-up grant at Columbia University.
+
+\newpage
+%-------------------------------------------------------------------------------------------------
+\section*{Appendix}
+
+%------------------------------------------------
+\subsection*{A. Proof of Theorem \ref{thm:SDErev}}
+
+\begin{proof}
+Here we give a heuristic derivation of the time reversal formula \eqref{eq:coefrev}.
+First, the infinitesimal generator of $X$ is 
+$\mathcal{L}:= \frac{1}{2} \sigma^2(t) \Delta  +b \cdot \nabla$.
+It is known that the density $p(t,x)$ satisfies the the Fokker–Planck equation:
+\begin{equation}
+\label{eq:FPfd}
+\frac{\partial}{\partial t} p(t,x) = \mathcal{L}^*p(t,x),
+\end{equation}
+where $\mathcal{L}^*:= \frac{1}{2} \sigma^2(t) \Delta - \nabla \cdot b$ is the adjoint of $\mathcal{L}$.
+Let $\overline{p}(t,x) := p(T-t, x)$ be the probability density of the time reversal $\overline{X}$. 
+By \eqref{eq:FPfd}, we get
+\begin{equation}
+\label{eq:FPfdbar}
+\frac{\partial}{\partial t} \overline{p}(t,x) = -\frac{1}{2} \sigma^2 (t) \Delta \overline{p}(t,x)  + \nabla \cdot \left(b(T-t, x) \, \overline{p}(t,x) \right).
+\end{equation}
+On the other hand, we expect the generator of $\overline{X}$ to be 
+$\overline{\mathcal{L}}:=  \frac{1}{2} \overline{\sigma}^2(t)  \Delta + \overline{b} \cdot \nabla$.
+The Fokker-Planck equation for $\overline{p}(t,x)$ is
+\begin{equation}
+\label{eq:FPbdbar}
+\frac{\partial}{\partial t} \overline{p}(t,x) = \frac{1}{2}  \overline{\sigma}^2(t) \Delta \overline{p}(t,x)- \nabla \cdot \left(\overline{b}(t, x) \, \overline{p}(t,x) \right).
+\end{equation}
+Comparing \eqref{eq:FPfdbar} and \eqref{eq:FPbdbar},
+we set $\overline{\sigma}(t) = \sigma(T-t)$ and then get
+\begin{equation*}
+\left(b(T-t,x) + \overline{b}(t,x)\right) \overline{p}(t,x) = \sigma^2(T-t) \, \nabla \overline{p}(t,x).
+\end{equation*}
+This yields the desired result. 
+\end{proof}
+
+\quad Let's comment on Theorem \ref{thm:SDErev}.
+\cite{HP86} proved the result by assuming that $b(\cdot, \cdot)$ and $\sigma(\cdot, \cdot)$ are globally Lipschitz, and 
+the density $p(t,x)$ satisfies an a priori $H^1$ bound. 
+The implicit condition on $p(t,x)$ is guaranteed if $\partial_t + \mathcal{L}$ is hypoelliptic.
+These conditions were relaxed in \cite{Quastel02}. 
+In another direction, \cite{Fo85, Fo86} used an entropy argument to prove the time reversal formula in the case $\sigma(t) = \sigma$. 
+This approach was further developed in \cite{CCGL21} which made connections to optimal transport. 
+
+%------------------------------------------------
+\subsection*{B. Score matching}
+
+\subsubsection*{B.1. Proof of Theorem \ref{thm:scoremat}}
+\begin{proof}
+We have 
+\begin{equation*}
+\begin{aligned}
+\nabla_\theta \mathcal{J}_{\text{ISM}}(\theta) 
+& = \nabla_\theta \mathbb{E}_{p(t, \cdot)} \left[|s_\theta(t,X)|^2\right] - 2 \mathbb{E}_{p(t, \cdot)} \left[\nabla_\theta s_\theta(t,X) \cdot \nabla \log p(t,X)\right] \\
+& =  \nabla_\theta \mathbb{E}_{p(t, \cdot)} \left[|s_\theta(t,X)|^2\right]  - 2 \int \nabla_\theta s_\theta(t,x) \cdot \nabla p(t,x) dx \\
+& =\nabla_\theta \mathbb{E}_{p(t, \cdot)} \left[|s_\theta(t,X)|^2\right]  - 2 \, \nabla_\theta \int  s_\theta(t,x) \cdot \nabla p(t,x) dx  \\ 
+& = \nabla_\theta \mathbb{E}_{p(t, \cdot)} \left[|s_\theta(t,X)|^2\right] + 2 \nabla_\theta \int \nabla \cdot s_\theta(t,x) \, p(t,x) dx \\
+& = \nabla_\theta \mathbb{E}_{p(t, \cdot)}\left[ |s_\theta(t,X)|^2 + 2\, \nabla \cdot s_\theta(t,X) \right] = \nabla_\theta \widetilde{\mathcal{J}}(\theta),
+\end{aligned}
+\end{equation*}
+where we use the divergence theorem in the fourth equation. 
+\end{proof}
+
+\subsubsection*{B.2. Scalable score matching methods}
+$~$ 
+
+\smallskip
+(a) Sliced score matching. 
+One way is that we further address the term $\nabla_x\cdot s_{\theta}(t,x)$ by random projections. The method proposed in \cite{Song20sl} is called sliced score matching. 
+Considering the Jacobian matrix $\nabla s_{\theta}(t,x)\in\mathbb{R}^{d \times d}$, 
+we have
+$$
+\nabla \cdot s_{\theta}(t,x)=\operatorname{Tr}(\nabla s_{\theta}(t,x))=\mathbb{E}_{v\sim \mathcal{N}(0,I)}\left[v^{\top}\nabla s_{\theta}(t,x)v\right].
+$$
+We can then rewrite the training objective as:
+\begin{equation}
+\label{eq:equivscorematb_slicedSM}
+\min_\theta \widetilde{\mathcal{J}}_{\text{SSM}}(\theta) = \mathbb{E}_{t \in \mathcal{U}(0, T)}\mathbb{E}_{v_t\sim \mathcal{N}(0,I)}\mathbb{E}_{p(t, \cdot)} \left[\lambda(t)\left(\|s_\theta(t,X)\|^2  + 2 \, v^{\top}\nabla (v^{\top}s_{\theta}(t,x))\right)\right].
+\end{equation}
+which can be computed easily. 
+It requires only two times of back propagation, as $v^{\top}s_{\theta}(t,x)$ can be seen as adding a layer of the inner product between $v$ and $s_{\theta}$.
+
+\medskip
+(b) Denoising score matching. 
+The second way is that we go back to the objective \eqref{eq:weighted score matching},
+and use a nonparametric estimation.
+The idea stems from \cite{Hyv05,Vi11},
+in which it was shown that 
+$\mathcal{J}_{ESM}$ is equivalent to the following denoising score matching (DSM) objective:
+$$
+\tilde{\mathcal{J}}_{\text{DSM}}(\theta)=\mathbb{E}_{t\sim\mathcal{U}(0, T)}\left\{\lambda(t) \mathbb{E}_{X_0\sim p_{data}(\cdot)} \mathbb{E}_{X_t \mid X_0}\left[\left|s_{\theta}(t,X(t))-\nabla_{X_t} \log p(t,X_t \mid X_0)\right|^2\right]\right\}
+$$
+
+\begin{theorem}
+\label{thm:DSM}
+Let 
+$\mathcal{J}_{\text{DSM}}(\theta):= \mathbb{E}_{X_0\sim p_{data}(\cdot)} \mathbb{E}_{X_t \mid X_0}\left[\left|s_{\theta}(t,X(t))-\nabla_{X_t} \log p(t,X_t \mid X_0)\right|^2\right]$.
+Under suitable conditions on $s_\theta$, we have 
+$\mathcal{J}_{\text{DSM}}(\theta) = \mathcal{J}_{\text{ESM}}(\theta) + C$ for some $C$ independent of $\theta$. 
+Consequently, the minimum point of $\mathcal{J}_{\text{DSM}}$ and that of $\mathcal{J}_{\text{ESM}}$ coincide. 
+\end{theorem}
+\begin{proof}
+We have 
+\begin{equation*}
+\begin{aligned}
+\mathcal{J}_{\text{ESM}}(\theta) 
+& = \mathbb{E}_{p(t, \cdot)} |s_\theta(t,X) - \nabla \log p(t,X)|^2\\
+& = \mathbb{E}_{p(t, \cdot)} \left[|s_\theta(t,X)|^2 - 2 s_\theta(t,X)^{\top}\nabla \log p(t,X)+|\nabla \log p(t,X)|^2\right].
+\end{aligned}
+\end{equation*}
+Consider the inner product term, rewriting it as:
+\begin{equation*}
+\begin{aligned}
+\mathbb{E}_{p(t, \cdot)} \left[s_\theta(t,X)^{\top}\nabla \log p(t,X)\right]& = \int_{x}p(t,x)s_\theta(t,x)^{\top}\nabla \log p(t,x) \mathrm{d}x\\
+& = \int_{x}s_\theta(t,x)^{\top}\nabla p(t,x) \mathrm{d}x\\
+& = \int_{x}
+s_\theta(t,x)^{\top}\nabla 
+\int_{x_0}p(0,x_0)p(t,x|x_0)\mathrm{d}x_0 \mathrm{d}x\\
+& = \int_{x_0}\int_{x}
+s_\theta(t,x)^{\top} 
+p(0,x_0)\nabla p(t,x|x_0)\mathrm{d}x\mathrm{d}x_0 \\
+& = \int_{x_0}p(0,x_0)\int_{x}
+s_\theta(t,x)^{\top} 
+p(t,x|x_0) \nabla \log p(t,x|x_0)\mathrm{d}x\mathrm{d}x_0\\
+& = \mathbb{E}_{X_0\sim p(0,\cdot)} \mathbb{E}_{X_t \mid X_0} \left[s_{\theta}(t,X(t))^{\top}\nabla_{X_t} \log p(t,X_t \mid X_0)\right],
+\end{aligned}
+\end{equation*}
+combining $\mathbb{E}_{X} |s_\theta(t,X)|^2=\mathbb{E}_{X_0} \mathbb{E}_{X \mid X_0}|s_\theta(t,X)|^2$ concludes our proof.
+\end{proof}
+
+\quad The intuition of DSM is that following the gradient $s_{\theta}$ of the log density at some corrupted point $\tilde{x}$ should ideally move us towards the clean sample $x$. The reason that the objective $\mathcal{J}_{DSM}$ is comparatively easy to solve is that conditional distribution usually satisfies a good distribution, like Gaussian kernel, i.e. $p(X_t \mid X_0) \sim N\left(X_t ; \mu_{t}(X_0), \sigma_t^2 I\right)$, which is satisfied in many cases of DPM, we can explicitly compute that:
+$$
+\nabla_{X_t} \log p(t,X_t \mid X_0)=\frac{1}{\sigma_t^2}(\mu_{t}(X_0)-X_t) .
+$$
+Direction $\frac{1}{\sigma_t^2}(X_0-\mu_{t}(X_0))$ clearly corresponds to moving from $\tilde{x}$ back towards clean sample $x$, and we want $s_{\theta}$ to match that as best it can. Moreover,  empirically validated by e.g. \cite{Song20}, a good candidate of $\lambda(t)$ is chosen as:
+$$
+\lambda(t) \propto 1 / \mathbb{E}\left[\left|\nabla_{X_t} \log p(t,X_t \mid X_0)\right|^2\right]=\sigma_t^2
+$$
+Thus, our final optimization objective is:
+$$
+\begin{aligned}
+\tilde{\mathcal{J}}_{\text{DSM}}(\theta)&=\mathbb{E}_{t\sim\mathcal{U}(0, T)}\left\{\sigma_t^2 \mathbb{E}_{X_0\sim p_{data}(\cdot)} \mathbb{E}_{X_t \mid X_0}\left[\left|s_{\theta}(t,X(t))-\nabla_{X_t} \log p(t,X_t \mid X_0)\right|^2\right]\right\}\\
+& = \mathbb{E}_{t\sim\mathcal{U}(0, T)}\left\{ \mathbb{E}_{X_0\sim p_{data}(\cdot)} \mathbb{E}_{X_t \mid X_0}\left[\left|\sigma_t s_{\theta}(t,X(t))+\frac{X_t-\mu_{t}(X_0)}{\sigma_t}\right|^2\right]\right\}\\
+& = \mathbb{E}_{t\sim\mathcal{U}(0, T)}\left\{ \mathbb{E}_{X_0\sim p_{data}(\cdot)} \mathbb{E}_{\epsilon_t\sim\mathcal{N}(0,I)}\left[\left|\sigma_t s_{\theta}(t,\mu_{t}(X_0)+\sigma_t\epsilon_t)+\epsilon_t\right|^2\right]\right\}
+\end{aligned}
+$$
+where the second equality holds when $X_t\mid X_0$ follows a conditionally normal and the third equality follows from a reparameterization/change of variables.
+
+
+\subsection*{C. Proof of Theorem \ref{thm:sensitivity}}
+
+ \begin{proof}
+The idea relies on coupling, which is similar to \cite[Lemma 4]{ZTY23}.
+Consider the coupled SDEs:
+\begin{equation*}
+\left\{ \begin{array}{lcl}
+d Y_t = \left(-b(T-t, Y_t) + \sigma^2(T-t) \nabla \log p(T-t, Y_t) \right) dt+ \sigma(T-t) dB_t, \\
+d Z_t =  \left(-b(T-t, Z_t) + \sigma^2(T-t)s_\theta(T-t, Z_t) \right) dt+ \sigma(T-t) dB_t,
+\end{array}\right.
+\end{equation*}
+where $(Y_0, Z_0)$ are coupled to achieve $W_2(p(T,\cdot), p_{\tiny \mbox{noise}}(\cdot))$,
+i.e. $\mathbb{E}|Y_0 - Z_0|^2=W_2(p(T,\cdot), p_{\tiny \mbox{noise}}(\cdot))$. 
+It is easy to see that
+\begin{equation}
+\label{eq:W2}
+W_2^2(p_{\tiny \mbox{data}}(\cdot), \overline{X}_T) \le \mathbb{E}|Y_T - Z_T|^2.
+\end{equation}
+So the goal is to bound $\mathbb{E}|Y_T - Z_T|^2$. 
+By It\^o's formula, we get
+\begin{multline*}
+d|Y_t - Z_t|^2 = 2(Y_t - Z_t) \cdot (-b(T-t, Y_t) + \sigma^2(T-t) \nabla \log p(T-t, Y_t) \\ + b(T-t, Z_t) - \sigma^2(T-t)s_\theta(T-t, Z_t)) dt
+\end{multline*}
+which implies that 
+\begin{multline}
+\label{eq:diff}
+\frac{d \, \mathbb{E}|Y_t - Z_t|^2}{dt} 
+= -2 \underbrace{\mathbb{E}((Y_t - Z_t) \cdot (b(T-t, Y_t) - b(T-t, Z_t))}_{(a)}) \\
++ 2 \underbrace{\mathbb{E}((Y_t - Z_t) \cdot \sigma^2(T-t) (\nabla \log p(T-t, Y_t) - s_\theta(T-t, Z_t)))}_{(b)}.
+\end{multline}
+By Assumption \ref{assump:sensitivity} (1), we get
+\begin{equation}
+\label{eq:terma}
+(a) \ge r_b(T-t) \, \mathbb{E}|Y_t - Z_t|^2.
+\end{equation}
+Moreover,
+\begin{equation}
+\label{eq:termb}
+\begin{aligned}
+(b) & = \sigma^2(T-t) \bigg( \mathbb{E}((Y_t - Z_t) \cdot (\nabla \log p(T-t, Y_t) - \nabla \log p (T-t, Z_t))) \\
+& \qquad \qquad \qquad \qquad \qquad \qquad \qquad \qquad + \mathbb{E}((Y_t - Z_t) \cdot (\nabla \log p (T-t, Z_t) - s_{\theta}(T-t, Z_t))) \bigg)\\
+&  \le  \sigma^2(T-t) \left( L\, \mathbb{E}|Y_t - Z_t|^2 + h \mathbb{E}|Y_t - Z_t|^2 + \frac{1}{4h} \varepsilon^2\right), \\
+%& \frac{1}{2} \mathbb{E}|Y_t - Z_t|^2 + \frac{1}{2} \mathbb{E}|\sigma^2(T-t) (\nabla \log p(T-t, Y_t) - s_\theta(T-t, Z_t))|^2 \\
+%& \le  \frac{1}{2} \mathbb{E}|Y_t - Z_t|^2 + \frac{1}{2} \sigma^2 (T-t) \, \mathbb{E}|\nabla \log p(T-t, Y_t) - s_\theta(T-t, Z_t)|^2 \\
+%& \le  \frac{1}{2} \mathbb{E}|Y_t - Z_t|^2 + \sigma^2 (T-t) \bigg(\mathbb{E}|\nabla \log p(T-t, Y_t)- s_\theta(T-t, Y_t)|^2 \\
+%& \qquad \qquad \qquad \qquad \qquad \qquad \qquad \qquad + \mathbb{E}|s_\theta(T-t, Y_t) - s_\theta(T-t, Z_t)|^2 \bigg) \\
+%& \le \left( \frac{1}{2} + L^2 \sigma^2(T-t)\right) \mathbb{E}|Y_t - Z_t|^2 + \varepsilon^2 \sigma^2 (T-t),
+\end{aligned}
+\end{equation}
+where we use Assumption \ref{assump:sensitivity} (2)(3) in the last inequality.
+Combining \eqref{eq:diff}, \eqref{eq:terma} and \eqref{eq:termb}, we have
+\begin{equation}
+\label{eq:Gronwall}
+\frac{d \, \mathbb{E}|Y_t - Z_t|^2}{dt} \le \left(-2 r_b(T-t) + (2h + 2L) \sigma^2(T-t) \right) \mathbb{E}|Y_t -Z_t|^2
++ \frac{\varepsilon^2}{2h} \sigma^2(T-t).
+\end{equation}
+Applying Gr\"onwall's inequality, we have:
+\begin{equation*}
+\mathbb{E}|Y_T - Z_T|^2\leq e^{u(T)}\mathbb{E}|Y_0 - Z_0|^2+ \frac{\varepsilon^2}{2h} \int_0^T \sigma^2(T-t) e^{u(T)-u(t)} dt,
+\end{equation*}
+which combined with \eqref{eq:W2} yields \eqref{eq:sensitivity}. 
+%Notice that denoting $f(t)=u(T)-u(T-t)$, then
+%$$
+%\frac{df}{dt}(s)=-2 r_b(s) + 2L^2 r^2_\sigma(s)+1.
+%$$
+%Thus if $r_b(t)\leq \frac{1}{2}$, then combining the following inequality leads to \eqref{eq:sensitivity2}, as
+%$$
+%\int_0^T r^2_\sigma(t) e^{u(T)-u(T-t)} dt \leq \int_0^T \frac{1}{2L^2}f^{\prime}(t) e^{f(t)} dt=\frac{1}{2L^2}(e^{f(T)}-e^{f(0)})=\frac{1}{2L^2}(e^{u(T)}-1).
+%$$
+\end{proof}
+
+\subsection*{D. Proof of Theorem \ref{thm:globalerr}}
+
+The analysis of the error $\left(\mathbb{E}|\overline{X}_T - \widehat{X}_N|^2\right)^{\frac{1}{2}}$
+relies on the following lemmas. 
+The lemma below proves the contraction of the backward SDE $\overline{X}$.
+\begin{lemma}
+\label{lem:contraction}
+Let $(\overline{X}^x_t, \, 0 \le t \le T)$
+be defined by \eqref{eq:SDErevc} with $\overline{X}^x_0 = x$.
+Let Assumptions \ref{assump:sensitivity}, \ref{assump:2dis} and \ref{assump:contraction} hold.
+Then
+\begin{equation}
+\label{eq:contraction}
+\left(\mathbb{E}|\overline{X}^x_t - \overline{X}^y_t|^2\right)^{\frac{1}{2}}
+\le \left(\mathbb{E}|x - y|^2\right)^{\frac{1}{2}} \exp(- 2 \beta t), \quad \mbox{for all } t,
+\end{equation}
+
+where $\overline{X}^x$ and $\overline{X}^y$ be coupled, i.e.
+they are driven by the same Brownian motion with (different) initial values $x$ and $y$ respectively ($x$ and $y$ represent two random variables).
+\end{lemma}
+\begin{proof}
+Note that
+\begin{multline*}
+d|\overline{X}^x_s - \overline{X}^y_s|^2
+= 2 \left(\overline{X}^x_s - \overline{X}^y_s \right)\cdot
+\bigg(-b(T-s, \overline{X}^x_s) + \sigma^2(T-s) s_\theta(T-s, \overline{X}^x_s)\\
++ b(T-s, \overline{X}^y_s) - \sigma^2(T-s) s_\theta(\overline{X}^y_s)\bigg) ds.
+\end{multline*}
+Thus, 
+\begin{equation}
+\label{eq:diffiden}
+\begin{aligned}
+\frac{d}{ds} \mathbb{E}|\overline{X}^x_s - \overline{X}^y_s|^2
+= -2 & \underbrace{\mathbb{E}\left[(\overline{X}^x_s - \overline{X}^y_s) \cdot (b(T-s, \overline{X}^x_s) - b(T-s, \overline{X}^y_s))\right]}_{(a)} \\
+& + 2 \underbrace{\mathbb{E}\left[(\overline{X}^x_s - \overline{X}^y_s) \sigma^2(T-s) 
+(s_\theta(T-s, \overline{X}^x_s) - s_\theta(T-s,\overline{X}^y_s))\right]}_{(b)}.
+\end{aligned}
+\end{equation}
+By Assumption \ref{assump:sensitivity} (1),
+we get
+\begin{equation}
+\label{eq:terma_diff}
+(a) \ge  r_b(T-s) \mathbb{E}|\overline{X}^x_s - \overline{X}^y_s|^2.
+\end{equation}
+By Assumption \ref{assump:2dis} (4), we obtain
+\begin{equation}
+\label{eq:termb_diff}
+(b) \le L_s \sigma^2(T-s) \mathbb{E}|\overline{X}^x_s - \overline{X}^y_s|^2.
+\end{equation}
+Combining \eqref{eq:diffiden}, \eqref{eq:terma_diff} 
+and \eqref{eq:termb_diff} yields
+\begin{equation*}
+\frac{d}{ds} \mathbb{E}|\overline{X}^x_s - \overline{X}^y_s|^2 
+\le -2 (r_b(T-s) - L_s \sigma^2(T-s)) \mathbb{E}|\overline{X}^x_s - \overline{X}^y_s|^2.
+\end{equation*}
+By Gr\"onwall's inequality, we have
+\begin{equation*}
+\mathbb{E}|\overline{X}^x_s - \overline{X}^y_s|^2 
+\le \mathbb{E}|x - y|^2 \exp \left(-2 \int_0^t (r_b(T-s) - L_s \sigma^2(T-s)) ds  \right),
+\end{equation*}
+which, by the condition \eqref{eq:condcontraction}, yields \eqref{eq:contraction}
+\end{proof}
+
+\quad Next we deal with the {\em local (one-step) discretization error} of the process $\overline{X}$.
+Fixing $t_{\star} \le T-\delta$, 
+the (one-step) discretization of $\overline{X}$ starting at $\overline{X}_{t_\star} = x$
+is:
+\begin{equation}
+\label{eq:localEM}
+\begin{aligned}
+\widehat{X}^{t_\star, x}_1 = x + (-b(T-t_\star, x) + 
+\sigma^2(T-t_\star) s_\theta(T-t_\star, x)) \delta + \sigma(T - t_\star) (B_{t_\star + \delta} - B_{t_\star}). 
+\end{aligned}
+\end{equation}
+The following lemma provides an estimate of the local discretization error.
+\begin{lemma}
+\label{lem:localest}
+Let $(\overline{X}_t^{t_\star, x}, \, t_\star \le t \le T)$ be defined by \eqref{eq:SDErevc} with $\overline{X}^{t_\star, x}_{t_\star} = x$,
+and $\widehat{X}^{t_\star, x}_1$ be given by \eqref{eq:localEM}.
+Let Assumption \ref{assump:2dis} hold. 
+Then for $\delta$ sufficiently small (i.e. $\delta \le \overline{\delta}$ for some $\overline{\delta} < 1$),
+there exists $C_1, C_2 > 0$ independent of $\delta$ and $x$ such that
+\begin{equation}
+\label{eq:localest1}
+\left(\mathbb{E}|\overline{X}^{t_\star, x}_{t_{\star} + \delta} -\widehat{X}^{t_\star, x}_1 |^2 \right)^{\frac{1}{2}}
+\le (C_1 + C_2 \sqrt{\mathbb{E}|x|^2} )^{\frac{1}{2}} \delta^{\frac{3}{2}},
+\end{equation}
+\begin{equation}
+\label{eq:localest2}
+|\mathbb{E}(\overline{X}^{t_\star, x}_{t_{\star} + \delta} -\widehat{X}^{t_\star, x}_1)|
+\le (C_1 + C_2 \sqrt{\mathbb{E}|x|^2} )^{\frac{1}{2}} \delta^{\frac{3}{2}}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+For ease of presentation, 
+we write $\overline{X}_{t}$ (resp. $\widehat{X}_1$) 
+for $\overline{X}^{t_\star, x}_t$ (resp. $\widehat{X}^{t_\star, x}_1$).
+Without loss of generality, set $t_\star = 0$.
+We have
+\begin{equation*}
+\begin{aligned}
+& \overline{X}_\delta = x + \int_0^\delta -b(T-t, \overline{X}_t) + \sigma^2(T-t) s_\theta(T-t, \overline{X}_t) dt + \int_0^\delta \sigma(T-t) dB_t, \\
+& \widehat{X}_1 = x + \int_0^\delta -b(T,x) + \sigma^2(T) s_\theta(T,x) dt
++ \int_0^\delta \sigma(T) dB_t.
+\end{aligned}
+\end{equation*}
+So
+\begin{equation}
+\label{eq:diffthree}
+\begin{aligned}
+& \mathbb{E}|\overline{X}_\delta -\widehat{X}_1|^2  \\
+& = \mathbb{E} \bigg|\int_0^\delta b(T,x) - b(T-t, \overline{X}_t) dt + 
+\int_0^\delta \sigma^2(T-t) s_\theta(T-t, \overline{X}_t) -\sigma^2(T) s_\theta(T,x) dt  \\
+& \qquad \qquad \qquad \qquad \qquad \qquad \qquad \qquad \qquad + \int_0^\delta \sigma (T-t) - \sigma(T) dB_t \bigg|^2 \\
+&\le 3 \mathbb{E} \bigg( \left|\int_0^\delta b(T,x) - b(T-t, \overline{X}_t) dt\right|^2
++ \left| \int_0^\delta \sigma^2(T-t) s_\theta(T-t, \overline{X}_t) -\sigma^2(T) s_\theta(T,x) dt\right|^2 \\
+&  \qquad \qquad \qquad \qquad \qquad \qquad \qquad \qquad \qquad +
+\left| \int_0^\delta \sigma (T-t) - \sigma(T) dB_t \right|^2 \bigg) \\
+& \le 3 \bigg(\delta  \underbrace{\int_0^\delta \mathbb{E} |b(T,x) - b(T-t, \overline{X}_t)|^2 dt}_{(a)} + \delta \underbrace{\int_0^\delta \mathbb{E} |\sigma^2(T-t) s_\theta(T-t, \overline{X}_t) -\sigma^2(T) s_\theta(T,x)|^2 dt}_{(b)} \\
+& \qquad \qquad \qquad \qquad \qquad \qquad \qquad \qquad \qquad +
+\underbrace{\int_0^\delta |\sigma(T-t) - \sigma(T)|^2 dt}_{(c)} \bigg),
+\end{aligned}
+\end{equation}
+where we use the Cauchy–Schwarz inequality and It\^o's isometry in the last inequality. 
+By Assumption \ref{assump:2dis} (1), we get
+\begin{equation}
+\label{eq:diffthreec}
+(c) \le \int_0^\delta L_\sigma^2 t^2 dt = \frac{L_\sigma^2}{3} \delta^3.
+\end{equation}
+By Assumption \ref{assump:2dis} (3), we have
+\begin{equation*}
+(a) \le \int_0^\delta 2 L_b^2 (t^2 + \mathbb{E}|\overline{X}_t - x|^2) dt
+= 2L_b^2 \left(\frac{\delta^3}{3} + \int_0^\delta \mathbb{E}|\overline{X}_t - x|^2 dt \right).
+\end{equation*}
+According to \cite[Theorem 4.5.4]{KP92},
+we have $\mathbb{E}|\overline{X}_t - x|^2 \le C(1 + \mathbb{E}|x|^2)t e^{Ct}$ 
+for some $C>0$ (independent of $x$).
+Consequently, for $t \le \delta$ sufficiently small (bounded by $\overline{\delta} < 1$),
+\begin{equation*}
+\mathbb{E}|\overline{X}_t - x|^2 \le C'(1 + \mathbb{E}|x|^2) t, \quad \mbox{for some } C' > 0 \mbox{ (independent of } \delta, x).
+\end{equation*}
+We then get
+\begin{equation}
+\label{eq:diffthreea}
+(a) \le 2 L_b^2 \left(\frac{\delta^3}{3} + \frac{C'(1 + \mathbb{E}|x|^2)}{2} \delta^2  \right) \le 2 L_b^2 \left(\frac{1}{3} + \frac{C'}{2} + \frac{C'}{2} \mathbb{E}|x|^2 \right) \delta^2.
+\end{equation}
+Similarly, we obtain by Assumption \ref{assump:2dis} (1)(2)(4)(5):
+\begin{equation}
+\label{eq:diffthreeb}
+(b) \le C'' (1 + \mathbb{E}|x|^2) \delta^2, \quad \mbox{for some } C''>0 \mbox{ (independent of } \delta, x).
+\end{equation}
+Combining \eqref{eq:diffthree}, \eqref{eq:diffthreec},
+\eqref{eq:diffthreea} and \eqref{eq:diffthreeb} yields
+the estimate \eqref{eq:localest1}.
+
+\quad Next we have
+\begin{align*}
+& |\mathbb{E}(\overline{X}_\delta - \widehat{X}_1)|  \\
+& = \left|\mathbb{E}\int_0^\delta b(T,x) - b(T-t,\overline{X}_t) dt
++ \mathbb{E}\int_0^\delta \sigma^2(T-t) s_\theta(T-t, \overline{X}_t) - \sigma^2(T)s_\theta(T,x) dt \right| \\
+& \le \int_0^\delta \mathbb{E}|b(T,x) - b(T-t,\overline{X}_t)| dt
++ \int_0^\delta \mathbb{E}|\sigma^2(T-t) s_\theta(T-t, \overline{X}_t) - \sigma^2(T)s_\theta(T,x)| dt \\
+& \le C''' \int_0^\delta  \left(t (1 + \mathbb{E}|x|) + \mathbb{E}|\overline{X}_t - x| \right) dt \\
+& \le C''''(1 + \sqrt{\mathbb{E}|x|^2}) \delta^{\frac{3}{2}},
+\quad \mbox{for some } C''''>0 \mbox{ (independent of } \delta, x).
+\end{align*}
+where the third inequality follows from Assumption \ref{assump:2dis}, and the last inequality is due to the fact that
+$\mathbb{E}|\overline{X}_t - x| \le \left(\mathbb{E}|\overline{X}_t - x|^2\right)^{\frac{1}{2}} \le \sqrt{C'(1 + \mathbb{E}|x|^2)t}$.
+This yields the estimate \eqref{eq:localest2}.
+\end{proof}
+
+
+\begin{proof}[Proof of Theorem \ref{thm:globalerr}]
+The proof is split into four steps.
+
+\smallskip
+{\bf Step 1}. Recall that $t_k = k \delta$ for $k = 0, \ldots, N$.
+Denote $\overline{X}_k:=\overline{X}_{t_k}$,
+and let 
+\begin{equation*}
+e_k: = \left(\mathbb{E}|\overline{X}_k - \widehat{X}_k|^2 \right)^{\frac{1}{2}}.
+\end{equation*}
+The idea is to build a recursion for the sequence $(e_k)_{k = 0, \ldots, N}$.
+Also write $(\overline{X}^{t_\star, x}_t, \, t_\star \le t \le T)$ to emphasize that
+the reversed SDE \eqref{eq:SDErevc} starts at $\overline{X}^{t_\star, x}_{t_\star} = x$,
+so $\overline{X}_{k+1} = \overline{X}^{t_k, \overline{X}_k}_{t_{k+1}}$.
+We have
+\begin{equation}
+\label{eq:decompabc}
+\begin{aligned}
+e_{k+1}^2 & = \mathbb{E}\left|\overline{X}_{k+1} - \overline{X}_{t_{k+1}}^{t_k, \widehat{X}_k} +  \overline{X}_{t_{k+1}}^{t_k, \widehat{X}_k}- \widehat{X}_{k+1} \right|^2 \\
+& = \underbrace{\mathbb{E}|\overline{X}_{k+1} - \overline{X}_{t_{k+1}}^{t_k, \widehat{X}_k}|^2}_{(a)} + \underbrace{\mathbb{E}|\overline{X}_{t_{k+1}}^{t_k, \widehat{X}_k}- \widehat{X}_{k+1}|^2}_{(b)} + 2 \underbrace{\mathbb{E}\left[ (\overline{X}_{k+1} - \overline{X}_{t_{k+1}}^{t_k, \widehat{X}_k}) (\overline{X}_{t_{k+1}}^{t_k, \widehat{X}_{k}}- \widehat{X}_{k+1})\right]}_{(c)}.
+\end{aligned}
+\end{equation}
+
+{\bf Step 2}. We analyze the term (a) and (b). 
+By Lemma \ref{lem:contraction} (the contraction property), 
+we get
+\begin{equation}
+\label{eq:terma1}
+(a) = \mathbb{E}|\overline{X}_{t_{k+1}}^{t_k, \overline{X}_k} - \overline{X}_{t_{k+1}}^{t_k, \widehat{X}_k}|^2 \le e_k^2 \exp(- 2 \beta \delta).
+\end{equation}
+By \eqref{eq:localest1} (in Lemma \ref{lem:localest}), we have
+\begin{equation}
+\label{eq:termb1}
+(b) \le \left(C_1 + C_2 \mathbb{E}|\widehat{X}_k|^2 \right) \delta^3.
+\end{equation}
+
+{\bf Step 3}. We analyze the cross-product (c). 
+By splitting
+\begin{equation*}
+\overline{X}_{k+1} - \overline{X}_{t_{k+1}}^{t_k, \widehat{X}_k}
+= (\overline{X}_k - \widehat{X}_k) + \underbrace{\left[ (\overline{X}_{k+1} - \overline{X}_k) - (\overline{X}_{t_{k+1}}^{t_k, \widehat{X}_k} - \widehat{X}_k)\right]}_{:= d_\delta(\overline{X}_k, \widehat{X}_k)},
+\end{equation*}
+we obtain
+\begin{equation}
+\label{eq:termc2}
+(c) = \underbrace{\mathbb{E}\left[(\overline{X}_k - \widehat{X}_k) (\overline{X}_{t_{k+1}}^{t_k, \widehat{X}_{k}}- \widehat{X}_{k+1})\right]}_{(d)} + \underbrace{\mathbb{E}\left[d_\delta(\overline{X}_k, \widehat{X}_k) (\overline{X}_{t_{k+1}}^{t_k, \widehat{X}_{k}}- \widehat{X}_{k+1})\right]}_{(e)}.
+\end{equation}
+For the term (d), we have
+\begin{equation}
+\label{eq:termd}
+\begin{aligned}
+(d)& = \mathbb{E}\left[(\overline{X}_k - \widehat{X}_k) \, \mathbb{E}(\overline{X}_{t_{k+1}}^{t_k, \widehat{X}_{k}}- \widehat{X}_{k+1}| \mathcal{F}_k)\right] \\
+& \le e_k \left(\mathbb{E}|\mathbb{E}(\overline{X}_{t_{k+1}}^{t_k, \widehat{X}_{k}}- \widehat{X}_{k+1}| \mathcal{F}_k)|^2 \right)^{\frac{1}{2}} \\
+& \le e_k \left(C_1 + C_2 \sqrt{\mathbb{E}|\widehat{X}_k|^2} \right) \delta^{\frac{3}{2}},
+\end{aligned}
+\end{equation}
+where we use the tower property (of the conditional expectation) in the first equation, the Cauchy-Schwarz inequality in the second inequality, and \eqref{eq:localest2} in the final inequality. 
+According to \cite[Lemma 1.3]{MT04}, there exists $C_0 > 0$ (independent of $\delta, \widehat{X}_k$) such that
+\begin{equation}
+\label{eq:dest}
+\left(\mathbb{E}d^2_\delta(\overline{X}_k, \widehat{X}_k)\right)^{\frac{1}{2}} \le C_0 e_k \sqrt{\delta}.
+\end{equation}
+Thus,
+\begin{equation}
+\label{eq:terme}
+\begin{aligned}
+(e) & \le \left( \mathbb{E} d^2_\delta(\overline{X}_k, \widehat{X}_k \right)^{\frac{1}{2}} \left( \mathbb{E}|\overline{X}_{t_{k+1}}^{t_k, \widehat{X}_{k}}- \widehat{X}_{k+1}|^2\right)^{\frac{1}{2}} \\
+& \le C_0 e_k \left(C_1 + C_2 \sqrt{\mathbb{E}|\widehat{X}_k|^2} \right)\delta^2.
+\end{aligned}
+\end{equation}
+where we use \eqref{eq:localest1} and \eqref{eq:dest} in the last inequality.
+Combining \eqref{eq:termc2}, \eqref{eq:termd} and \eqref{eq:terme} yields
+for $\delta$ sufficiently small,
+\begin{equation}
+\label{eq:termc}
+(c) \le e_k \left(C'_1 + C'_2 \sqrt{\mathbb{E}|\widehat{X}_k|^2} \right) \delta^{\frac{3}{2}}, \quad \mbox{for some } C'_1, C'_2 > 0 \mbox{ (independent of } \delta, \widehat{X}_k).
+\end{equation}
+
+{\bf Step 4}. Combining \eqref{eq:decompabc} with \eqref{eq:terma1}, \eqref{eq:termb1} and \eqref{eq:termc} yields
+\begin{equation*}
+e_{k+1}^2 \le e_k^2 \exp(- 2 \beta \delta) + \left( C_1 + C_2 \mathbb{E}|\widehat{X}_k|^2 \right) \delta^3 + e_k \left(C'_1 + C'_2 \sqrt{\mathbb{E}|\widehat{X}_k|^2} \right) \delta^{\frac{3}{2}}.
+\end{equation*}
+A standard argument shows that Lemma \ref{lem:contraction} (the contraction property) implies
+$\mathbb{E}|\overline{X}_t|^2 \le C$ for some $C > 0$.
+Thus, $\mathbb{E}|\widehat{X}_k|^2 \le 2(C + e_k^2)$.
+As a result, for $\delta$ sufficiently small,
+\begin{equation}
+\label{eq:rec1}
+e_{k+1}^2 \le e_k^2\left(1 - \frac{3}{4} \beta \delta \right)
++ D_1 \delta^3 + D_2 e_k^2 \left(\delta^3 + \delta^{\frac{3}{2}} \right)  + D_3 e_k \delta^{\frac{3}{2}},
+\end{equation}
+for some $D_1, D_2, D_3> 0$ (independent of $\delta$).
+Note that 
+\begin{equation*}
+D_2 e_k^2 \left(\delta^3 + \delta^{\frac{3}{2}} \right) \le \frac{1}{4} e_k^2 \beta \delta, \quad \mbox{ for } \delta \mbox{ sufficiently small},
+\end{equation*}
+and 
+\begin{equation*}
+D_3 e_k \delta^{\frac{3}{2}} \le \frac{1}{4}e_k^2 \beta \delta + \frac{2 D^{2}_3}{\beta} \delta^2.
+\end{equation*}
+Thus, the estimate \eqref{eq:rec1} leads to
+\begin{equation}
+\label{eq:rec2}
+e_{k+1}^2 \le e_k^2 \left(1 - \frac{1}{4} \beta \delta \right) + D \delta^2, \quad 
+\mbox{for some } D > 0 \mbox{ (independent of } \delta).
+\end{equation}
+Unfolding the inequality \eqref{eq:rec2} yields
+the estimate \eqref{eq:globalerr}.
+\end{proof}
+
+\quad As a remark, if we can improve the estimate in \eqref{eq:localest2} to
+\begin{equation}
+|\mathbb{E}(\overline{X}^{t_\star, x}_{t_{\star} + \delta} -\widehat{X}^{t_\star, x}_1)|
+\le (C_1 + C_2 \sqrt{\mathbb{E}|x|^2} )^{\frac{1}{2}} \delta^{2},
+\end{equation} 
+(i.e. $\delta^2$ local error instead of $\delta^{\frac{3}{2}}$),
+then the discretization error is $C \delta$.
+
+\subsection*{E. Experimental Details}
+We provide implementation details of the experiments in Section \ref{sc4}. 
+All codes will soon be available at github.
+
+\subsection*{E.1. 1-dimensional data experiments}
+For both experiments, starting from either a single point or Gaussian mixture, 
+we use a three-layer neural network for score matching, and use $J_{ISM}$ with $\lambda(t)\equiv 1$ as the loss optimization objective. 
+The parameters of the DPMs are chosen as below. (Detailed implementation can be found at \href{https://drive.google.com/file/d/1lrRYsoo2cNXgfdeCKffSW6h62e25uyko/view?usp=sharing}{here})
+
+\begin{table}[!htbp]
+\centering
+\begin{tabular}{l c c c c}
+    \toprule
+        Parameter & Value & Used in Model\\
+         \midrule
+        $\mu$ & 0 & OU, COU\\
+        $\theta$ & $0.2$ &OU, COU\\
+        $\sigma$ & $0.5$ &OU, COU\\
+        $\beta_{min} $ & $0.02$& VP, subVP, CsubVP\\
+        $\beta_{max} $ & $0.2$& VP, subVP, CsubVP \\
+        $\sigma_{min} $ & $0.05$ & VE\\
+        $\sigma_{max} $ & $0.5$ & VE \\
+        $T_{max}$ & $10$ & all\\
+    \bottomrule
+\end{tabular}
+\caption{Parameters of the DPMs in one dimension.}
+\end{table}
+Below we plot the score mismatch of the learned score functions at different times 
+%to display the actual mechanism of 
+for the single point case.
+\begin{figure}[H]
+     \centering
+     \includegraphics[width=0.9\linewidth]{Figures/Score_Matching_Error/OU_SME.png}
+     \caption{OU score mismatch.}
+     \label{Fig: Single Point OU SME}
+\end{figure}
+\begin{figure}[H]
+     \centering
+     \includegraphics[width=0.9\linewidth]{Figures/Score_Matching_Error/VE_SME.png}
+     \caption{VE score mismatch.}
+     \label{Fig: Single Point VE SME}
+\end{figure}
+\begin{figure}[H]
+     \centering
+     \includegraphics[width=0.9\linewidth]{Figures/Score_Matching_Error/VP_SME.png}
+     \caption{VP score mismatch.}
+     \label{Fig: Single Point VP SME}
+\end{figure}
+\begin{figure}[H]
+     \centering
+     \includegraphics[width=0.9\linewidth]{Figures/Score_Matching_Error/subVP_SME.png}
+     \caption{sub-VP score mismatch.}
+     \label{Fig: Single Point subVP SME}
+\end{figure}
+\begin{figure}[H]
+     \centering
+     \includegraphics[width=0.9\linewidth]{Figures/Score_Matching_Error/COU_SME.png}
+     \caption{COU score mismatch.}
+     \label{Fig: Single Point COU subVP SME}
+\end{figure}
+In all cases, score matching errors explode when $t$ is small, 
+and become smaller when $t$ is larger.
+%This underpins the success of diffusion models over the energy-based models.
+Notably, 
+OU and COU have similar score matching errors
+(by using a simple yet general 3-layer neural network),
+but COU ourperforms OU in data generation.
+This supports our proposal of CDPMs.
+
+\begin{table}
+\centering
+\begin{tabular}{l c c c c}
+    \toprule
+        Noise Level $\backslash$ $W_2\downarrow$ & $OU$ & $COU$ \\
+        \midrule
+        $\epsilon = 0.02$ ~& $0.245$ & $0.22$\\
+
+         $\epsilon = 0.05$ & $0.265$ & $0.227$\\
+         $\epsilon = 0.1$ & $0.30$ & $0.23$\\
+         $\epsilon = 0.2$ & $0.39$ & $0.25$\\
+         $\epsilon = 0.5$ & $0.7$ & $0.42$\\
+         $\epsilon = 1$ & $1.3$ & $0.8$\\
+         \bottomrule
+\end{tabular}
+\caption{$W_2$ metric on 1-dim with same score matching error ($\Delta t= 0.02$) }
+\end{table}
+
+\begin{table}
+\centering
+\begin{tabular}{l c c c c}
+    \toprule
+        Noise Level $\backslash W_2\downarrow$ & $OU$ & $COU$ \\
+        \midrule
+        $\epsilon = 0.02$ ~& $0.41$ & $0.35$\\
+
+         $\epsilon = 0.05$ & $0.44$ & $0.36$\\
+         $\epsilon = 0.1$ & $0.48$ & $0.36$\\
+         $\epsilon = 0.2$ & $0.58$ & $0.36$\\
+         $\epsilon = 0.5$ & $0.92$ & $0.43$\\
+         $\epsilon = 1$ & $1.5$ & $0.7$\\
+         \bottomrule
+\end{tabular}
+\caption{$W_2$ metric on 1-dim with same score matching error ($\Delta t= 0.05$)}
+\end{table}
+
+\subsection*{E.2. Swiss Roll and MNIST experiments}
+In both experiments, 
+we use contractive sub-VP with predictor-corrector sampler. 
+We recommend to use $\beta_{min}=0.01$ and $\beta_{max}=8$ for a good result. The signal-noise-ratio is set to be $0.2$ for Swiss Roll,
+and $0.1$ for MNIST. 
+The Jupyter Notebook can be found at \href{https://colab.research.google.com/drive/1lQhUnIYR9VJIVhlD8t0p73JXKKe6ra09?usp=sharing}{Swiss Roll}, 
+and \href{https://colab.research.google.com/drive/1g_sE-E1S8_FVYiqA-VkzFROz4bFXNByZ?usp=sharing}{MNIST}.\\
+\begin{table}
+\centering
+\begin{tabular}{l c c c c}
+    \toprule
+        Model (SDE) & $W_2$  $\downarrow$\\
+        \midrule
+        OU ~& $0.29$ \\
+        VP~\cite{Song20}& $0.33$\\
+        sub-VP~\cite{Song20}& $0.34$\\
+        VE~\cite{Song20}& $0.18$\\
+        \midrule
+        \textbf{CDPMs}\\
+        \midrule
+         COU & $\textbf{0.10}$\\
+         CsubVP & $\textbf{0.14}$\\
+         \bottomrule
+\end{tabular}
+\caption{$W_2$ metric on Swiss Roll data}
+\end{table}
+
+\begin{table}
+\centering
+\begin{tabular}{l c c c c}
+    \toprule
+        Model (SDE) & FIDs  $\downarrow$\\
+        \midrule
+        VP~\cite{Song20}& $0.79$\\
+        sub-VP~\cite{Song20}& $0.52$\\
+        VE~\cite{Song20}& $0.20$\\
+        \midrule
+        \textbf{CDPMs}\\
+        \midrule
+         CsubVP & $\textbf{0.03}$\\
+         \bottomrule
+\end{tabular}
+\caption{FIDs on MNIST dataset}
+\end{table}
+
+\subsection*{E.3. CIFAR10 experiments}
+We use contractive sub-VP with predictor-corrector sampler. 
+We recommend to use $\beta_{min}=0.01$ and $\beta_{max}=8$ for a good result.
+The signal-noise-ratio is set to be 0.11 for the best result. 
+The experiments based on NCSN++ \cite{Song20} are as below.
+
+\begin{table}[!htbp]
+\centering
+\begin{tabular}{l c c c c}
+    \toprule
+        Parameter & Value\\
+         \midrule
+        $\beta_{min} $ & $0.01$\\
+        $\beta_{max} $ & $8$\\
+        $snr$ & $0.11$\\
+        $\operatorname{grad}_{clip} $ & $10$\\
+        $\operatorname{\alpha_{lr}}$ & $5e^{-4}$\\
+    \bottomrule
+\end{tabular}
+\caption{Parameters of the CDPM for CIFAR-10.}
+\end{table}
+
+
+\bibliographystyle{abbrv}
+\bibliography{diffusion}
+\end{document}

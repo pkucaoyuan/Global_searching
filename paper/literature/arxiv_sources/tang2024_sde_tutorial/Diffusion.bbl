@@ -1,0 +1,620 @@
+\begin{thebibliography}{100}
+
+\bibitem{Ander82}
+B.~D.~O. Anderson.
+\newblock Reverse-time diffusion equation models.
+\newblock {\em Stochastic Process. Appl.}, 12(3):313--326, 1982.
+
+\bibitem{Ben23a}
+J.~Benton, V.~De~Bortoli, A.~Doucet, and G.~Deligiannidis.
+\newblock Linear convergence bounds for diffusion models via stochastic
+  localization.
+\newblock In {\em ICLR}, 2024.
+
+\bibitem{Ben23b}
+J.~Benton, G.~Deligiannidis, and A.~Doucet.
+\newblock Error bounds for flow matching methods.
+\newblock 2023.
+\newblock arXiv:2305.16860.
+
+\bibitem{Black23}
+K.~Black, M.~Janner, Y.~Du, I.~Kostrikov, and S.~Levine.
+\newblock Training diffusion models with reinforcement learning.
+\newblock In {\em ICLR}, 2024.
+
+\bibitem{Bor19}
+A.~Borji.
+\newblock Pros and cons of {G}{A}{N} evaluation measures.
+\newblock {\em Comput. Vis. Image Underst.}, 179:41--65, 2019.
+
+\bibitem{CCGL21}
+P.~Cattiaux, G.~Conforti, I.~Gentil, and C.~L\'{e}onard.
+\newblock Time reversal of diffusion processes under a finite entropy
+  condition.
+\newblock {\em Ann. Inst. Henri Poincar\'{e} Probab. Stat.}, 59(4):1844--1881,
+  2023.
+
+\bibitem{CH23}
+M.~Chen, K.~Huang, T.~Zhao, and M.~Wang.
+\newblock Score approximation, estimation and distribution recovery of
+  diffusion models on low-dimensional data.
+\newblock In {\em ICML}, volume~40, pages 4672--4712, 2023.
+
+\bibitem{CM242}
+M.~Chen, S.~Mei, J.~Fan, and M.~Wang.
+\newblock Opportunities and challenges of diffusion models for generative ai.
+\newblock {\em Natl. Sci. Rev.}, 11(12):nwae348, 2024.
+
+\bibitem{CM24}
+M.~Chen, S.~Mei, J.~Fan, and M.~Wang.
+\newblock An overview of diffusion models: Applications, guided generation,
+  statistical rates and optimization.
+\newblock 2024.
+\newblock arXiv:2404.07771.
+
+\bibitem{Chen23b}
+S.~Chen, S.~Chewi, H.~Lee, Y.~Li, J.~Lu, and A.~Salim.
+\newblock The probability flow {O}{D}{E} is provably fast.
+\newblock In {\em Neurips}, volume~36, 2023.
+
+\bibitem{Chen23}
+S.~Chen, S.~Chewi, J.~Li, Y.~Li, A.~Salim, and A.~R. Zhang.
+\newblock Sampling is as easy as learning the score: theory for diffusion
+  models with minimal data assumptions.
+\newblock 2023.
+
+\bibitem{Chen23c}
+S.~Chen, G.~Daras, and A.~Dimakis.
+\newblock Restoration-degradation beyond linear diffusions: A non-asymptotic
+  analysis for ddim-type samplers.
+\newblock In {\em ICML}, volume~40, pages 4462--4484, 2023.
+
+\bibitem{CE05}
+A.~S. Cherny and H.-J. Engelbert.
+\newblock {\em Singular stochastic differential equations}, volume 1858 of {\em
+  Lecture Notes in Mathematics}.
+\newblock Springer-Verlag, 2005.
+
+\bibitem{DeB22}
+V.~De~Bortoli.
+\newblock Convergence of denoising diffusion models under the manifold
+  hypothesis.
+\newblock 2022.
+\newblock arXiv:2208.05314.
+
+\bibitem{DV21}
+V.~De~Bortoli, J.~Thornton, J.~Heng, and A.~Doucet.
+\newblock Diffusion {S}chr{\"o}dinger bridge with applications to score-based
+  generative modeling.
+\newblock In {\em Neurips}, volume~34, pages 17695--17709, 2021.
+
+\bibitem{Dh21}
+P.~Dhariwal and A.~Nichol.
+\newblock Diffusion models beat {G}{A}{N}s on image synthesis.
+\newblock In {\em Neurips}, volume~34, pages 8780--8794, 2021.
+
+\bibitem{DS22}
+S.~Dieleman, L.~Sartran, A.~Roshannai, N.~Savinov, Y.~Ganin, P.~H. Richemond,
+  A.~Doucet, R.~Strudel, C.~Dyer, and C.~Durkan.
+\newblock Continuous diffusion for categorical data.
+\newblock 2022.
+\newblock arXiv preprint arXiv:2211.15089.
+
+\bibitem{Efron11}
+B.~Efron.
+\newblock Tweedie's formula and selection bias.
+\newblock {\em J. Amer. Statist. Assoc.}, 106(496):1602--1614, 2011.
+
+\bibitem{Esser24}
+P.~Esser, S.~Kulal, A.~Blattmann, R.~Entezari, J.~M{\"u}ller, H.~Saini,
+  Y.~Levi, D.~Lorenz, A.~Sauer, and F.~Boesel.
+\newblock Scaling rectified flow transformers for high-resolution image
+  synthesis.
+\newblock In {\em ICML}, pages 12606--12633, 2024.
+
+\bibitem{fan2023optimizing}
+Y.~Fan and K.~Lee.
+\newblock Optimizing {D}{D}{P}{M} sampling with shortcut fine-tuning.
+\newblock 2023.
+\newblock arXiv:2301.13362.
+
+\bibitem{FK23}
+N.~Fishman, L.~Klarner, V.~De~Bortoli, E.~Mathieu, and M.~Hutchinson.
+\newblock Diffusion models for constrained domains.
+\newblock 2023.
+\newblock arXiv:2304.05364.
+
+\bibitem{Fo85}
+H.~F\"{o}llmer.
+\newblock An entropy approach to the time reversal of diffusion processes.
+\newblock In {\em Stochastic differential systems ({M}arseille-{L}uminy,
+  1984)}, volume~69 of {\em Lect. Notes Control Inf. Sci.}, pages 156--163.
+  Springer, Berlin, 1985.
+
+\bibitem{Fo86}
+H.~F\"{o}llmer.
+\newblock Time reversal on {W}iener space.
+\newblock In {\em Stochastic processes---mathematics and physics ({B}ielefeld,
+  1984)}, volume 1158 of {\em Lecture Notes in Math.}, pages 119--129.
+  Springer, Berlin, 1986.
+
+\bibitem{GNZ23}
+X.~Gao, H.~M. Nguyen, and L.~Zhu.
+\newblock Wasserstein convergence guarantees for a general class of score-based
+  generative models.
+\newblock {\em J. Mach. Learn. Res.}, 26(43):1--54, 2025.
+
+\bibitem{GZZ24}
+X.~Gao, J.~Zha, and X.~Y. Zhou.
+\newblock Reward-directed score-based diffusion models via q-learning.
+\newblock 2024.
+\newblock arXiv:2409.04832.
+
+\bibitem{GZ24}
+X.~Gao and L.~Zhu.
+\newblock Convergence analysis for general probability flow {O}{D}{E}s of
+  diffusion models in {W}asserstein distances.
+\newblock 2024.
+\newblock arXiv:2401.17958.
+
+\bibitem{Veo}
+Google.
+\newblock State-of-the-art video and image generation with {V}eo 2 and {I}magen
+  3.
+\newblock 2024.
+\newblock Available at
+  \url{https://blog.google/technology/google-labs/video-image-generation-update-december-2024/}.
+
+\bibitem{Guo24}
+Y.~Guo, H.~Yuan, Y.~Yang, M.~Chen, and M.~Wang.
+\newblock Gradient guidance for diffusion models: An optimization perspective.
+\newblock 2024.
+\newblock arXiv:2404.14743.
+
+\bibitem{HR24}
+Y.~Han, M.~Razaviyayn, and R.~Xu.
+\newblock Neural network-based score estimation in diffusion models:
+  Optimization and generalization.
+\newblock In {\em ICLR}, 2024.
+
+\bibitem{HP86}
+U.~G. Haussmann and E.~Pardoux.
+\newblock Time reversal of diffusions.
+\newblock {\em Ann. Probab.}, 14(4):1188--1205, 1986.
+
+\bibitem{Ho20}
+J.~Ho, A.~Jain, and P.~Abbeel.
+\newblock Denoising diffusion probabilistic models.
+\newblock In {\em Neurips}, volume~33, pages 6840--6851, 2020.
+
+\bibitem{HS21}
+J.~Ho and T.~Salimans.
+\newblock Classifier-free diffusion guidance.
+\newblock In {\em NeurIPS 2021 Workshop on Deep Generative Models and
+  Downstream Applications}, 2021.
+
+\bibitem{huang2021variational}
+C.-W. Huang, J.~H. Lim, and A.~C. Courville.
+\newblock A variational perspective on diffusion-based generative models and
+  score matching.
+\newblock In {\em Neurips}, volume~34, pages 22863--22876, 2021.
+
+\bibitem{HHL25}
+D.~Z. Huang, J.~Huang, and Z.~Lin.
+\newblock Convergence analysis of probability flow ode for score-based
+  generative models.
+\newblock 2025.
+\newblock arXiv:2404.09730. To appear in IEEE Trans. Inf. Theory.
+
+\bibitem{HWC24}
+Z.~Huang, Y.~Wei, and Y.~Chen.
+\newblock Denoising diffusion probabilistic models are optimally adaptive to
+  unknown low dimensionality.
+\newblock 2024.
+\newblock arXiv:2410.18784.
+
+\bibitem{Hyv05}
+A.~Hyv\"{a}rinen.
+\newblock Estimation of non-normalized statistical models by score matching.
+\newblock {\em J. Mach. Learn. Res.}, 6:695--709, 2005.
+
+\bibitem{Hyv07}
+A.~Hyv\"{a}rinen.
+\newblock Some extensions of score matching.
+\newblock {\em Comput. Statist. Data Anal.}, 51(5):2499--2512, 2007.
+
+\bibitem{Jia22}
+Y.~Jia and X.~Y. Zhou.
+\newblock Policy gradient and actor-critic learning in continuous time and
+  space: Theory and algorithms.
+\newblock {\em J. Mach. Learn. Res.}, 23(154):1--55, 2022.
+
+\bibitem{Jia222}
+Y.~Jia and X.~Y. Zhou.
+\newblock q-learning in continuous time.
+\newblock {\em J. Mach. Learn. Res.}, 24(161):1--61, 2023.
+
+\bibitem{KS91}
+I.~Karatzas and S.~E. Shreve.
+\newblock {\em Brownian motion and stochastic calculus}, volume 113 of {\em
+  Graduate Texts in Mathematics}.
+\newblock Springer-Verlag, New York, second edition, 1991.
+
+\bibitem{karras2022elucidating}
+T.~Karras, M.~Aittala, T.~Aila, and S.~Laine.
+\newblock Elucidating the design space of diffusion-based generative models.
+\newblock In {\em Neurips}, volume~35, pages 26565--26577, 2022.
+
+\bibitem{Kim23}
+D.~Kim, C.-H. Lai, W.-H. Liao, N.~Murata, Y.~Takida, T.~Uesaka, Y.~He,
+  Y.~Mitsufuji, and S.~Ermon.
+\newblock Consistency trajectory models: Learning probability flow {O}{D}{E}
+  trajectory of diffusion.
+\newblock In {\em ICLR}, 2024.
+
+\bibitem{KG23}
+D.~Kingma and R.~Gao.
+\newblock Understanding diffusion objectives as the elbo with simple data
+  augmentation.
+\newblock In {\em Neurips}, volume~36, pages 65484--65516, 2023.
+
+\bibitem{KP92}
+P.~E. Kloeden and E.~Platen.
+\newblock {\em Numerical solution of stochastic differential equations},
+  volume~23 of {\em Applications of Mathematics (New York)}.
+\newblock Springer-Verlag, Berlin, 1992.
+
+\bibitem{Koe22}
+F.~Koehler, A.~Heckett, and A.~Risteski.
+\newblock Statistical efficiency of score matching: The view from isoperimetry.
+\newblock In {\em ICLR}, 2023.
+
+\bibitem{KW22}
+D.~Kwon, Y.~Fan, and K.~Lee.
+\newblock Score-based generative modeling secretly minimizes the {W}asserstein
+  distance.
+\newblock In {\em Neurips}, volume~35, pages 20205--20217, 2022.
+
+\bibitem{LLT22}
+H.~Lee, J.~Lu, and Y.~Tan.
+\newblock Convergence for score-based generative modeling with polynomial
+  complexity.
+\newblock In {\em Neurips}, volume~35, pages 22870--22882, 2022.
+
+\bibitem{LLT23}
+H.~Lee, J.~Lu, and Y.~Tan.
+\newblock Convergence of score-based generative modeling for general data
+  distributions.
+\newblock In {\em ALT}, pages 946--985, 2023.
+
+\bibitem{Lee23}
+K.~Lee, H.~Liu, M.~Ryu, O.~Watkins, Y.~Du, C.~Boutilier, P.~Abbeel,
+  M.~Ghavamzadeh, and S.~S. Gu.
+\newblock Aligning text-to-image models using human feedback.
+\newblock 2023.
+\newblock arXiv:2302.12192.
+
+\bibitem{LC24}
+G.~Li and C.~Cai.
+\newblock Provable acceleration for diffusion models under minimal assumptions.
+\newblock 2024.
+\newblock arXiv:2410.23285.
+
+\bibitem{LH24}
+G.~Li, Y.~Huang, T.~Efimov, Y.~Wei, Y.~Chi, and Y.~Chen.
+\newblock Accelerating convergence of score-based diffusion models, provably.
+\newblock In {\em ICML}, 2024.
+
+\bibitem{LHW24}
+G.~Li, Z.~Huang, and Y.~Wei.
+\newblock Towards a mathematical theory for consistency training in diffusion
+  models.
+\newblock 2024.
+\newblock arXiv:2402.07802.
+
+\bibitem{LW23}
+G.~Li, Y.~Wei, Y.~Chen, and Y.~Chi.
+\newblock Towards faster non-asymptotic convergence for diffusion-based
+  generative models.
+\newblock In {\em ICLR}, 2024.
+
+\bibitem{LYl24}
+G.~Li and Y.~Yan.
+\newblock Adapting to unknown low-dimensional structures in score-based
+  diffusion models.
+\newblock In {\em Neurips}, volume~37, pages 126297--126331, 2024.
+
+\bibitem{LY24}
+G.~Li and Y.~Yan.
+\newblock O (d/t) convergence theory for diffusion probabilistic models under
+  minimal assumptions.
+\newblock In {\em ICLR}, 2025.
+
+\bibitem{LHC25}
+J.~Liang, Z.~Huang, and Y.~Chen.
+\newblock Low-dimensional adaptation of diffusion models: Convergence in total
+  variation.
+\newblock 2025.
+\newblock arXiv preprint arXiv:2501.12982.
+
+\bibitem{Lip23}
+Y.~Lipman, R.~T. Chen, H.~Ben-Hamu, M.~Nickel, and M.~Le.
+\newblock Flow matching for generative modeling.
+\newblock In {\em ICLR}, 2023.
+
+\bibitem{Liu22}
+X.~Liu, C.~Gong, and Q.~Liu.
+\newblock Flow straight and fast: Learning to generate and transfer data with
+  rectified flow.
+\newblock In {\em ICLR}, 2022.
+
+\bibitem{LE23}
+A.~Lou and S.~Ermon.
+\newblock Reflected diffusion models.
+\newblock 2023.
+\newblock arXiv:2304.04740.
+
+\bibitem{luo2022understanding}
+C.~Luo.
+\newblock Understanding diffusion models: A unified perspective.
+\newblock 2022.
+\newblock arXiv:2208.11970.
+
+\bibitem{LCM}
+S.~Luo, Y.~Tan, L.~Huang, J.~Li, and H.~Zhao.
+\newblock Latent consistency models: Synthesizing high-resolution images with
+  few-step inference.
+\newblock 2023.
+\newblock arXiv:2310.04378.
+
+\bibitem{MNS89}
+A.~Millet, D.~Nualart, and M.~Sanz.
+\newblock Integration by parts and time reversal for diffusion processes.
+\newblock {\em Ann. Probab.}, 17(1):208--238, 1989.
+
+\bibitem{Os98}
+B.~\O~ksendal.
+\newblock {\em Stochastic differential equations}.
+\newblock Universitext. Springer-Verlag, Berlin, fifth edition, 1998.
+\newblock An introduction with applications.
+
+\bibitem{Sora}
+OpenAI.
+\newblock Sora: Creating video from text.
+\newblock 2024.
+\newblock Available at \url{https://openai.com/sora}.
+
+\bibitem{PR23}
+C.~Pabbaraju, D.~Rohatgi, A.~Sevekari, H.~Lee, A.~Moitra, and A.~Risteski.
+\newblock Provable benefits of score matching.
+\newblock 2023.
+\newblock arXiv:2306.01993.
+
+\bibitem{PN21}
+G.~Papamakarios, E.~Nalisnick, D.~J. Rezende, S.~Mohamed, and
+  B.~Lakshminarayanan.
+\newblock Normalizing flows for probabilistic modeling and inference.
+\newblock {\em J. Mach. Learn. Res.}, 22:Paper No. 57, 64, 2021.
+
+\bibitem{pid22}
+J.~Pidstrigach.
+\newblock Score-based generative models detect manifolds.
+\newblock In {\em Neurips}, volume~35, pages 35852--35865, 2022.
+
+\bibitem{PAD24}
+P.~Potaptchik, I.~Azangulov, and G.~Deligiannidis.
+\newblock Linear convergence of diffusion models under the manifold hypothesis.
+\newblock 2024.
+\newblock arXiv:2410.09046.
+
+\bibitem{Quastel02}
+J.~Quastel.
+\newblock Time reversal of degenerate diffusions.
+\newblock In {\em In and out of equilibrium ({M}ambucaba, 2000)}, volume~51 of
+  {\em Progr. Probab.}, pages 249--257. Birkh\"{a}user Boston, Boston, MA,
+  2002.
+
+\bibitem{Ramesh22}
+A.~Ramesh, P.~Dhariwal, A.~Nichol, C.~Chu, and M.~Chen.
+\newblock Hierarchical text-conditional image generation with clip latents.
+\newblock 2022.
+\newblock arXiv:2204.06125.
+
+\bibitem{RDD22}
+P.~H. Richemond, S.~Dieleman, and A.~Doucet.
+\newblock Categorical {S}{D}{E}s with simplex diffusion.
+\newblock 2022.
+\newblock arXiv:2210.14784.
+
+\bibitem{Robbins56}
+H.~Robbins.
+\newblock An empirical {B}ayes approach to statistics.
+\newblock In {\em Proceedings of the {T}hird {B}erkeley {S}ymposium on
+  {M}athematical {S}tatistics and {P}robability, 1954--1955, vol. {I}}, pages
+  157--163. Univ. California Press, Berkeley-Los Angeles, Calif., 1956.
+
+\bibitem{Rombach22}
+R.~Rombach, A.~Blattmann, D.~Lorenz, P.~Esser, and B.~Ommer.
+\newblock High-resolution image synthesis with latent diffusion models.
+\newblock In {\em CVPR}, pages 10684--10695, 2022.
+
+\bibitem{schulman2017}
+J.~Schulman, F.~Wolski, P.~Dhariwal, A.~Radford, and O.~Klimov.
+\newblock Proximal policy optimization algorithms.
+\newblock 2017.
+\newblock arXiv:1707.06347.
+
+\bibitem{Singer22}
+U.~Singer, A.~Polyak, T.~Hayes, X.~Yin, J.~An, S.~Zhang, Q.~Hu, H.~Yang,
+  O.~Ashual, and O.~Gafni.
+\newblock Make-a-video: Text-to-video generation without text-video data.
+\newblock In {\em ICLR}, 2023.
+
+\bibitem{Sohl15}
+J.~Sohl-Dickstein, E.~Weiss, N.~Maheswaranathan, and S.~Ganguli.
+\newblock Deep unsupervised learning using nonequilibrium thermodynamics.
+\newblock In {\em ICML}, volume~32, pages 2256--2265, 2015.
+
+\bibitem{DDIM}
+J.~Song, C.~Meng, and S.~Ermon.
+\newblock Denoising diffusion implicit models.
+\newblock In {\em ICLR}, 2021.
+
+\bibitem{song2023improved}
+Y.~Song and P.~Dhariwal.
+\newblock Improved techniques for training consistency models.
+\newblock In {\em ICLR}, 2023.
+
+\bibitem{SDC23}
+Y.~Song, P.~Dhariwal, M.~Chen, and I.~Sutskever.
+\newblock Consistency models.
+\newblock In {\em ICML}, volume~40, page 32211–32252, 2023.
+
+\bibitem{Song21}
+Y.~Song, C.~Durkan, I.~Murray, and S.~Ermon.
+\newblock Maximum likelihood training of score-based diffusion models.
+\newblock In {\em Neurips}, volume~34, pages 1415--1428, 2021.
+
+\bibitem{Song19}
+Y.~Song and S.~Ermon.
+\newblock Generative modeling by estimating gradients of the data distribution.
+\newblock In {\em Neurips}, volume~32, page 11918–11930, 2019.
+
+\bibitem{Song20sl}
+Y.~Song, S.~Garg, J.~Shi, and S.~Ermon.
+\newblock Sliced score matching: A scalable approach to density and score
+  estimation.
+\newblock In {\em UAI}, volume~35, pages 574--584, 2020.
+
+\bibitem{Song20}
+Y.~Song, J.~Sohl-Dickstein, D.~P. Kingma, A.~Kumar, S.~Ermon, and B.~Poole.
+\newblock Score-based generative modeling through stochastic differential
+  equations.
+\newblock In {\em ICLR}, 2021.
+
+\bibitem{SV79}
+D.~W. Stroock and S.~R.~S. Varadhan.
+\newblock {\em Multidimensional diffusion processes}, volume 233 of {\em
+  Grundlehren der Mathematischen Wissenschaften}.
+\newblock Springer-Verlag, 1979.
+
+\bibitem{TY25}
+J.~Tang and Y.~Yan.
+\newblock Adaptivity and convergence of probability flow odes in diffusion
+  generative models.
+\newblock 2025.
+\newblock arXiv:2501.18863.
+
+\bibitem{Tang24}
+W.~Tang.
+\newblock Fine-tuning of diffusion models via stochastic control: entropy
+  regularization and beyond.
+\newblock 2024.
+\newblock arXiv:2403.06279.
+
+\bibitem{TTZ25}
+W.~Tang, N.~Touzi, and X.~Y. Zhou.
+\newblock Tweedie's formula for diffusion generative models beyond {G}aussian.
+\newblock 2025+.
+\newblock Working paper.
+
+\bibitem{TX25}
+W.~Tang and R.~Xu.
+\newblock A stochastic analysis approach to conditional diffusion guidance.
+\newblock 2025.
+\newblock Available at \url{https://www.columbia.edu/~wt2319/CDG.pdf}.
+
+\bibitem{TZ24}
+W.~Tang and H.~Zhao.
+\newblock Contractive diffusion probabilistic models.
+\newblock 2024.
+\newblock arXiv:2401.13115.
+
+\bibitem{UZ24}
+M.~Uehara, Y.~Zhao, K.~Black, E.~Hajiramezanali, G.~Scalia, N.~L. Diamant,
+  A.~M. Tseng, T.~Biancalani, and S.~Levine.
+\newblock Fine-tuning of continuous-time diffusion models as
+  entropy-regularized control.
+\newblock 2024.
+\newblock arXiv:2402.15194.
+
+\bibitem{UZ242}
+M.~Uehara, Y.~Zhao, K.~Black, E.~Hajiramezanali, G.~Scalia, N.~L. Diamant,
+  A.~M. Tseng, S.~Levine, and T.~Biancalani.
+\newblock Feedback efficient online fine-tuning of diffusion models.
+\newblock 2024.
+\newblock arXiv:2402.16359.
+
+\bibitem{Vi11}
+P.~Vincent.
+\newblock A connection between score matching and denoising autoencoders.
+\newblock {\em Neural Comput.}, 23(7):1661--1674, 2011.
+
+\bibitem{WZZ20}
+H.~Wang, T.~Zariphopoulou, and X.~Y. Zhou.
+\newblock Reinforcement learning in continuous time and space: A stochastic
+  control approach.
+\newblock {\em J. Mach. Learn. Res.}, 21(198):1--34, 2020.
+
+\bibitem{WHT24}
+Y.~Wang, Y.~He, and M.~Tao.
+\newblock Evaluating the design space of diffusion-based generative models.
+\newblock In {\em Neurips}, volume~37, pages 19307--19352, 2024.
+
+\bibitem{Win25}
+G.~I. Winata, H.~Zhao, A.~Das, W.~Tang, D.~D. Yao, S.-X. Zhang, and S.~Sahu.
+\newblock Preference tuning with human feedback on language, speech, and vision
+  tasks: A survey.
+\newblock {\em J. Artif. Intell. Res.}, 82:2595--2661, 2025.
+
+\bibitem{WC24}
+Y.~Wu, M.~Chen, Z.~Li, M.~Wang, and Y.~Wei.
+\newblock Theoretical insights for diffusion guidance: A case study for
+  gaussian mixture models.
+\newblock In {\em ICML}, volume~41, pages 53291 -- 53327, 2024.
+
+\bibitem{WCW24}
+Y.~Wu, Y.~Chen, and Y.~Wei.
+\newblock Stochastic {R}unge-{K}utta methods: Provable acceleration of
+  diffusion models.
+\newblock 2024.
+\newblock arXiv:2410.04760.
+
+\bibitem{Yang23}
+L.~Yang, Z.~Zhang, Y.~Song, S.~Hong, R.~Xu, Y.~Zhao, W.~Zhang, B.~Cui, and
+  M.-H. Yang.
+\newblock Diffusion models: A comprehensive survey of methods and applications.
+\newblock {\em ACM Comput. Surv.}, 56(4):1--39, 2023.
+
+\bibitem{ZC23}
+Q.~Zhang and Y.~Chen.
+\newblock Fast sampling of diffusion models with exponential integrator.
+\newblock In {\em ICLR}, 2023.
+
+\bibitem{ZSC23}
+Q.~Zhang, J.~Song, and Y.~Chen.
+\newblock Improved order analysis and design of exponential integrator for
+  diffusion models sampling.
+\newblock 2023.
+\newblock arXiv:2308.02157.
+
+\bibitem{ZZT24}
+H.~Zhao, H.~Chen, J.~Zhang, D.~D. Yao, and W.~Tang.
+\newblock Scores as actions: a framework of fine-tuning diffusion models by
+  continuous-time reinforcement learning.
+\newblock 2024.
+\newblock arXiv:2409.08400.
+
+\bibitem{ZCZ25}
+H.~Zhao, H.~Chen, J.~Zhang, D.~D. Yao, and W.~Tang.
+\newblock Score as action: Fine-tuning diffusion generative models by
+  continuous-time reinforcement learning.
+\newblock 2025.
+\newblock arXiv:2502.01819. To appear in ICML.
+
+\bibitem{ZTY23}
+H.~Zhao, W.~Tang, and D.~D. Yao.
+\newblock Policy optimization for continuous reinforcement learning.
+\newblock In {\em Neurips}, volume~36, 2023.
+
+\end{thebibliography}

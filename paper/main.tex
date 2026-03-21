@@ -1,0 +1,74 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+\usepackage{amsmath,amssymb,mathtools,amsthm}
+\usepackage[capitalize,noabbrev]{cleveref}
+\usepackage[numbers,sort&compress]{natbib}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  citecolor=blue,
+  urlcolor=blue
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% THEOREMS (OR-style: section-numbered)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\newtheorem{example}[theorem]{Example}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\title{Leveraging Inference-Time Compute for Diffusion Models via Global Scheduling of Denoising Trajectories}
+\author{Anonymous Author(s)}
+\date{}
+
+\begin{document}
+\maketitle
+
+% Abstract with keywords (OR style)
+\input{sections/abstract}
+
+% §1 Introduction (includes §1.1 Related Literature)
+\input{sections/introduction}
+
+% §2 Preliminaries and Problem Setting
+\input{sections/preliminaries}
+
+% §3 A Two-Level Framework for Noise Trajectory Search
+\input{sections/framework}
+
+% §4 The GAINS Algorithm and Theoretical Analysis
+\input{sections/algorithm}
+
+% §5 Numerical Experiments
+\input{sections/experiments}
+
+% §6 Conclusion
+\input{sections/conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{main}
+
+\appendix
+% Appendix A: General MDP Formulation
+\input{sections/appendix_mdp}
+% Appendix B: Proofs
+\input{sections/appendix_proofs}
+
+\end{document}

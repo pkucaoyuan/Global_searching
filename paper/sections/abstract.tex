@@ -1,0 +1,41 @@
+% ============================================================
+% Abstract — OR journal style: single paragraph + keywords
+% ============================================================
+\begin{abstract}
+Diffusion models generate samples by traversing a denoising trajectory,
+a sequence of noise-reduction steps that progressively transforms random noise
+into data from the target distribution.
+Allocating additional computation along this trajectory at inference time,
+without retraining, can substantially improve the quality of the generated
+samples.
+However, existing methods distribute this computational budget uniformly or
+with fixed heuristics across denoising steps, ignoring that different steps
+differ markedly in their sensitivity to noise perturbations.
+We formalize inference-time noise refinement as a two-level optimization
+problem: a \emph{local} operator searches for better noise at a chosen
+timestep, while a \emph{global} scheduler allocates per-timestep search
+iterations under a strict budget of function evaluations.
+Standard diffusion sampling, best-of-$N$
+selection, and recent noise search methods emerge as special cases with fixed or
+heuristic scheduling policies.
+We propose \textbf{GAINS} (Global Adaptive Inference-time Noise Scheduling),
+which combines offline sensitivity profiling with online
+feedback control: offline analysis assigns a coarse per-step budget based on
+estimated timestep importance, and an online controller applies windowed early
+stopping driven by observed score gains and candidate variance, while enforcing
+the exact compute budget.
+Via a Taylor expansion of the verifier score along the diffusion SDE, we
+derive a location-scale decomposition of per-step scores and obtain an explicit
+formula for timestep sensitivity in terms of the diffusion coefficient and
+the verifier gradient.
+Under this structure, optimal allocation follows a water-filling rule
+favoring high-sensitivity timesteps, and online adaptation can partially
+recover a Jensen gap that any fixed allocation necessarily incurs.
+On Stable Diffusion, EDM, and flow-based models, GAINS matches the uniform-allocation benchmark
+with 20--50\% fewer function evaluations, and exceeds it at equal
+budgets.
+\end{abstract}
+
+\noindent\textit{Key words}: diffusion models; inference-time scaling; computational budget allocation; noise trajectory search; global scheduling; resource allocation; sequential decision making
+
+\vspace{1em}

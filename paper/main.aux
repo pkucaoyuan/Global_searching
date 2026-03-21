@@ -1,0 +1,299 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{song2019generative}
+\citation{ho2020denoising}
+\citation{cao2024comparative}
+\citation{tang2024sde}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{section.1}\protected@file@percent }
+\newlabel{sec:intro}{{1}{1}{Introduction}{section.1}{}}
+\newlabel{sec:intro@cref}{{[section][1][]1}{[1][1][]1}}
+\citation{ma2024inference,ramesh2025nts}
+\citation{ramesh2025nts}
+\citation{kim2025rbf}
+\citation{ramesh2025nts}
+\citation{kim2025rbf}
+\citation{zhang2025tscend}
+\citation{ma2024inference,ramesh2025nts}
+\citation{ma2024inference}
+\citation{qi2024noises}
+\citation{zhou2025golden}
+\citation{ma2024inference}
+\citation{tang2024dno}
+\citation{ramesh2025nts}
+\citation{kim2025rbf}
+\citation{zhang2025tscend}
+\citation{zhang2025classical}
+\citation{lee2025abcd}
+\citation{ttsnap2025}
+\citation{singhal2025fk}
+\citation{kim2025psi}
+\citation{eyring2025hypernetworks}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.1}Related Literature}{3}{subsection.1.1}\protected@file@percent }
+\newlabel{sec:related-lit}{{1.1}{3}{Related Literature}{subsection.1.1}{}}
+\newlabel{sec:related-lit@cref}{{[subsection][1][1]1.1}{[1][3][]3}}
+\@writefile{toc}{\contentsline {paragraph}{Inference-time scaling for diffusion models.}{3}{section*.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Noise search and trajectory refinement.}{3}{section*.2}\protected@file@percent }
+\citation{zhang2025adadiff}
+\citation{ye2025tpdm}
+\citation{yeh2025demons}
+\citation{sundaresha2025vt}
+\citation{ibaraki1988resource}
+\citation{chen2000simulation}
+\citation{lam2025importance}
+\citation{gao2024reward}
+\citation{tang2024contractive}
+\citation{zhou2024jumpdiffusion}
+\@writefile{toc}{\contentsline {paragraph}{Adaptive compute allocation.}{4}{section*.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Resource allocation and simulation optimization.}{4}{section*.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Theoretical foundations of diffusion models.}{4}{section*.5}\protected@file@percent }
+\citation{ho2020denoising}
+\citation{song2019generative}
+\@writefile{toc}{\contentsline {section}{\numberline {2}Preliminaries and Problem Setting}{5}{section.2}\protected@file@percent }
+\newlabel{sec:preliminaries}{{2}{5}{Preliminaries and Problem Setting}{section.2}{}}
+\newlabel{sec:preliminaries@cref}{{[section][2][]2}{[1][5][]5}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Diffusion Models}{5}{subsection.2.1}\protected@file@percent }
+\newlabel{sec:diffusion-models}{{2.1}{5}{Diffusion Models}{subsection.2.1}{}}
+\newlabel{sec:diffusion-models@cref}{{[subsection][1][2]2.1}{[1][5][]5}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.1}The DDPM Formulation.}{5}{subsubsection.2.1.1}\protected@file@percent }
+\newlabel{eq:ddpm-forward}{{1}{5}{The DDPM Formulation}{equation.2.1}{}}
+\newlabel{eq:ddpm-forward@cref}{{[equation][1][]1}{[1][5][]5}}
+\newlabel{eq:ddpm-xt}{{2}{5}{The DDPM Formulation}{equation.2.2}{}}
+\newlabel{eq:ddpm-xt@cref}{{[equation][2][]2}{[1][5][]5}}
+\newlabel{eq:ddpm-reverse}{{3}{5}{The DDPM Formulation}{equation.2.3}{}}
+\newlabel{eq:ddpm-reverse@cref}{{[equation][3][]3}{[1][5][]5}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.2}The SGM Formulation.}{5}{subsubsection.2.1.2}\protected@file@percent }
+\newlabel{eq:sgm-langevin}{{4}{5}{The SGM Formulation}{equation.2.4}{}}
+\newlabel{eq:sgm-langevin@cref}{{[equation][4][]4}{[1][5][]5}}
+\citation{ho2020denoising,song2021scorebased}
+\citation{lipman2023flow,liu2023flow}
+\citation{dockhorn2024stochastic}
+\citation{kim2025rbf,black2023training,fan2024reinforcement}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Inference-Time Noise Search}{6}{subsection.2.2}\protected@file@percent }
+\newlabel{sec:noise-search-problem}{{2.2}{6}{Inference-Time Noise Search}{subsection.2.2}{}}
+\newlabel{sec:noise-search-problem@cref}{{[subsection][2][2]2.2}{[1][5][]6}}
+\newlabel{def:nts}{{2.2}{6}{Noise Trajectory Search Problem}{theorem.2.2}{}}
+\newlabel{def:nts@cref}{{[definition][2][2]2.2}{[1][5][]6}}
+\newlabel{eq:nts-problem}{{5}{6}{Noise Trajectory Search Problem}{equation.2.5}{}}
+\newlabel{eq:nts-problem@cref}{{[equation][5][]5}{[1][6][]6}}
+\newlabel{def:verifier}{{2.3}{6}{Verifier}{theorem.2.3}{}}
+\newlabel{def:verifier@cref}{{[definition][3][2]2.3}{[1][6][]6}}
+\newlabel{def:nfe}{{2.4}{6}{Function Evaluation Budget}{theorem.2.4}{}}
+\newlabel{def:nfe@cref}{{[definition][4][2]2.4}{[1][6][]6}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}A Two-Level Framework for Noise Trajectory Search}{6}{section.3}\protected@file@percent }
+\newlabel{sec:framework}{{3}{6}{A Two-Level Framework for Noise Trajectory Search}{section.3}{}}
+\newlabel{sec:framework@cref}{{[section][3][]3}{[1][6][]6}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}A General Transition Abstraction}{6}{subsection.3.1}\protected@file@percent }
+\newlabel{sec:transition}{{3.1}{6}{A General Transition Abstraction}{subsection.3.1}{}}
+\newlabel{sec:transition@cref}{{[subsection][1][3]3.1}{[1][6][]6}}
+\newlabel{eq:transition}{{6}{6}{A General Transition Abstraction}{equation.3.6}{}}
+\newlabel{eq:transition@cref}{{[equation][6][]6}{[1][6][]6}}
+\@writefile{toc}{\contentsline {paragraph}{Applicability across model families.}{6}{section*.6}\protected@file@percent }
+\citation{song2021scorebased}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Two-level view of noise trajectory search. The \emph  {global scheduler}~$\mathcal  {G}$ (top) receives budget~$B$ and distributes per-step budgets $\{K_t\}$ across the denoising trajectory. At each timestep, the \emph  {local search operator}~$\mathcal  {L}_t$ (bottom) evaluates $K_t$ noise candidates and selects the best one. Bars above each step depict the non-uniform allocation: timesteps where noise perturbations matter more receive larger budgets.}}{7}{figure.caption.7}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{fig:architecture}{{1}{7}{Two-level view of noise trajectory search. The \emph {global scheduler}~$\mathcal {G}$ (top) receives budget~$B$ and distributes per-step budgets $\{K_t\}$ across the denoising trajectory. At each timestep, the \emph {local search operator}~$\mathcal {L}_t$ (bottom) evaluates $K_t$ noise candidates and selects the best one. Bars above each step depict the non-uniform allocation: timesteps where noise perturbations matter more receive larger budgets}{figure.caption.7}{}}
+\newlabel{fig:architecture@cref}{{[figure][1][]1}{[1][7][]7}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}The Two-Level View}{7}{subsection.3.2}\protected@file@percent }
+\newlabel{sec:two-level}{{3.2}{7}{The Two-Level View}{subsection.3.2}{}}
+\newlabel{sec:two-level@cref}{{[subsection][2][3]3.2}{[1][6][]7}}
+\@writefile{toc}{\contentsline {paragraph}{Local search operator.}{7}{section*.8}\protected@file@percent }
+\newlabel{eq:x0_prediction}{{7}{7}{Local search operator}{equation.3.7}{}}
+\newlabel{eq:x0_prediction@cref}{{[equation][7][]7}{[1][7][]7}}
+\newlabel{eq:score}{{8}{7}{Local search operator}{equation.3.8}{}}
+\newlabel{eq:score@cref}{{[equation][8][]8}{[1][7][]7}}
+\@writefile{toc}{\contentsline {paragraph}{Global scheduler over timesteps.}{8}{section*.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Existing Methods as Special Cases}{8}{subsection.3.3}\protected@file@percent }
+\newlabel{sec:special-cases}{{3.3}{8}{Existing Methods as Special Cases}{subsection.3.3}{}}
+\newlabel{sec:special-cases@cref}{{[subsection][3][3]3.3}{[1][8][]8}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}The GAINS Algorithm}{8}{section.4}\protected@file@percent }
+\newlabel{sec:algorithm}{{4}{8}{The GAINS Algorithm}{section.4}{}}
+\newlabel{sec:algorithm@cref}{{[section][4][]4}{[1][8][]8}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Offline Coarse Time Scheduling}{9}{subsection.4.1}\protected@file@percent }
+\newlabel{sec:offline}{{4.1}{9}{Offline Coarse Time Scheduling}{subsection.4.1}{}}
+\newlabel{sec:offline@cref}{{[subsection][1][4]4.1}{[1][8][]9}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Online Fine-Grained Scheduling}{9}{subsection.4.2}\protected@file@percent }
+\newlabel{sec:online}{{4.2}{9}{Online Fine-Grained Scheduling}{subsection.4.2}{}}
+\newlabel{sec:online@cref}{{[subsection][2][4]4.2}{[1][9][]9}}
+\newlabel{eq:gain-increment}{{9}{9}{Online Fine-Grained Scheduling}{equation.4.9}{}}
+\newlabel{eq:gain-increment@cref}{{[equation][9][]9}{[1][9][]9}}
+\newlabel{eq:var-iteration}{{10}{9}{Online Fine-Grained Scheduling}{equation.4.10}{}}
+\newlabel{eq:var-iteration@cref}{{[equation][10][]10}{[1][9][]9}}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces GAINS: Global Adaptive Inference-time Noise Scheduling}}{10}{algorithm.1}\protected@file@percent }
+\newlabel{alg:offline_online_budget}{{1}{10}{GAINS: Global Adaptive Inference-time Noise Scheduling}{algorithm.1}{}}
+\newlabel{alg:offline_online_budget@cref}{{[algorithm][1][]1}{[1][10][]10}}
+\@writefile{toc}{\contentsline {paragraph}{Overall procedure.}{10}{section*.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}SDE Foundations for the Score Distribution}{11}{subsection.4.3}\protected@file@percent }
+\newlabel{sec:sde-foundations}{{4.3}{11}{SDE Foundations for the Score Distribution}{subsection.4.3}{}}
+\newlabel{sec:sde-foundations@cref}{{[subsection][3][4]4.3}{[1][10][]11}}
+\newlabel{eq:euler-sde}{{11}{11}{SDE Foundations for the Score Distribution}{equation.4.11}{}}
+\newlabel{eq:euler-sde@cref}{{[equation][11][]11}{[1][11][]11}}
+\newlabel{eq:score-from-sde}{{12}{11}{SDE Foundations for the Score Distribution}{equation.4.12}{}}
+\newlabel{eq:score-from-sde@cref}{{[equation][12][]12}{[1][11][]11}}
+\newlabel{asm:smooth}{{4.1}{11}{Verifier smoothness}{theorem.4.1}{}}
+\newlabel{asm:smooth@cref}{{[assumption][1][4]4.1}{[1][11][]11}}
+\newlabel{prop:taylor}{{4.2}{11}{Score Taylor expansion}{theorem.4.2}{}}
+\newlabel{prop:taylor@cref}{{[proposition][2][4]4.2}{[1][11][]11}}
+\newlabel{eq:taylor-score}{{13}{11}{Score Taylor expansion}{equation.4.13}{}}
+\newlabel{eq:taylor-score@cref}{{[equation][13][]13}{[1][11][]11}}
+\newlabel{thm:loc-scale}{{4.3}{11}{Location-scale structure of per-step scores}{theorem.4.3}{}}
+\newlabel{thm:loc-scale@cref}{{[theorem][3][4]4.3}{[1][11][]11}}
+\newlabel{eq:mu-sigma-sde}{{14}{11}{Location-scale structure of per-step scores}{equation.4.14}{}}
+\newlabel{eq:mu-sigma-sde@cref}{{[equation][14][]14}{[1][11][]11}}
+\newlabel{eq:var-approx}{{15}{11}{Location-scale structure of per-step scores}{Item.1}{}}
+\newlabel{eq:var-approx@cref}{{[equation][15][]15}{[1][11][]11}}
+\newlabel{eq:gain-sde}{{16}{12}{Location-scale structure of per-step scores}{Item.2}{}}
+\newlabel{eq:gain-sde@cref}{{[equation][16][]16}{[1][11][]12}}
+\newlabel{eq:gain-explicit}{{17}{12}{Location-scale structure of per-step scores}{Item.3}{}}
+\newlabel{eq:gain-explicit@cref}{{[equation][17][]17}{[1][11][]12}}
+\newlabel{cor:sde-alloc}{{4.5}{12}{SDE-based approximate allocation}{theorem.4.5}{}}
+\newlabel{cor:sde-alloc@cref}{{[corollary][5][4]4.5}{[1][12][]12}}
+\newlabel{eq:aggregate-gain}{{18}{12}{SDE-based approximate allocation}{equation.4.18}{}}
+\newlabel{eq:aggregate-gain@cref}{{[equation][18][]18}{[1][12][]12}}
+\newlabel{eq:alloc-sde}{{19}{12}{SDE-based approximate allocation}{equation.4.19}{}}
+\newlabel{eq:alloc-sde@cref}{{[equation][19][]19}{[1][12][]12}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Scheduling Optimality}{13}{subsection.4.4}\protected@file@percent }
+\newlabel{sec:scheduling-optimality}{{4.4}{13}{Scheduling Optimality}{subsection.4.4}{}}
+\newlabel{sec:scheduling-optimality@cref}{{[subsection][4][4]4.4}{[1][12][]13}}
+\newlabel{eq:alloc}{{20}{13}{Scheduling Optimality}{equation.4.20}{}}
+\newlabel{eq:alloc@cref}{{[equation][20][]20}{[1][12][]13}}
+\newlabel{prop:offline}{{4.6}{13}{Offline optimality under independence}{theorem.4.6}{}}
+\newlabel{prop:offline@cref}{{[proposition][6][4]4.6}{[1][13][]13}}
+\newlabel{prop:online}{{4.8}{13}{Online adaptation under prompt dependence}{theorem.4.8}{}}
+\newlabel{prop:online@cref}{{[proposition][8][4]4.8}{[1][13][]13}}
+\newlabel{eq:jensen-gap}{{21}{13}{Online adaptation under prompt dependence}{Item.4}{}}
+\newlabel{eq:jensen-gap@cref}{{[equation][21][]21}{[1][13][]13}}
+\newlabel{eq:marginal-decomp}{{22}{13}{Online adaptation under prompt dependence}{Item.5}{}}
+\newlabel{eq:marginal-decomp@cref}{{[equation][22][]22}{[1][13][]13}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Online stopping decision in the $(\sigma _t, a_K')$ plane. The variance threshold (vertical dashed) and gain threshold (horizontal dashed) partition the space into four regions. Stopping is triggered only when \emph  {both} conditions are met (shaded region), corresponding to the conjunction in \cref  {prop:online}(ii). The hyperbola $\sigma _t\cdot a_K'=\lambda ^*$ shows the true optimality boundary; the rectangular approximation is conservative by design.}}{14}{figure.caption.11}\protected@file@percent }
+\newlabel{fig:stopping}{{2}{14}{Online stopping decision in the $(\sigma _t, a_K')$ plane. The variance threshold (vertical dashed) and gain threshold (horizontal dashed) partition the space into four regions. Stopping is triggered only when \emph {both} conditions are met (shaded region), corresponding to the conjunction in \cref {prop:online}(ii). The hyperbola $\sigma _t\cdot a_K'=\lambda ^*$ shows the true optimality boundary; the rectangular approximation is conservative by design}{figure.caption.11}{}}
+\newlabel{fig:stopping@cref}{{[figure][2][]2}{[1][14][]14}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Numerical Experiments}{14}{section.5}\protected@file@percent }
+\newlabel{sec:experiments}{{5}{14}{Numerical Experiments}{section.5}{}}
+\newlabel{sec:experiments@cref}{{[section][5][]5}{[1][14][]14}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Experimental Setting}{14}{subsection.5.1}\protected@file@percent }
+\newlabel{sec:exp-setting}{{5.1}{14}{Experimental Setting}{subsection.5.1}{}}
+\newlabel{sec:exp-setting@cref}{{[subsection][1][5]5.1}{[1][14][]14}}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces SD results across different NFE budgets.}}{15}{table.caption.12}\protected@file@percent }
+\newlabel{tab:sd_budget}{{1}{15}{SD results across different NFE budgets}{table.caption.12}{}}
+\newlabel{tab:sd_budget@cref}{{[table][1][]1}{[1][15][]15}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Stable Diffusion: Scaling with NFE}{15}{subsection.5.2}\protected@file@percent }
+\newlabel{sec:exp-sd-scaling}{{5.2}{15}{Stable Diffusion: Scaling with NFE}{subsection.5.2}{}}
+\newlabel{sec:exp-sd-scaling@cref}{{[subsection][2][5]5.2}{[1][15][]15}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}EDM: Scaling with NFE}{15}{subsection.5.3}\protected@file@percent }
+\newlabel{sec:exp-edm-scaling}{{5.3}{15}{EDM: Scaling with NFE}{subsection.5.3}{}}
+\newlabel{sec:exp-edm-scaling@cref}{{[subsection][3][5]5.3}{[1][15][]15}}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces EDM results across different NFE budgets.}}{16}{table.caption.13}\protected@file@percent }
+\newlabel{tab:edm_budget}{{2}{16}{EDM results across different NFE budgets}{table.caption.13}{}}
+\newlabel{tab:edm_budget@cref}{{[table][2][]2}{[1][15][]16}}
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Stable Diffusion results under fixed NFE $=400$. \textbf  {Naive} uses uniform per-step allocation. \textbf  {GAINS} uses offline profiling plus online control. \textbf  {Offline Only} removes online control and uses only offline allocation.}}{16}{table.caption.14}\protected@file@percent }
+\newlabel{tab:sd_400_ablation}{{3}{16}{Stable Diffusion results under fixed NFE $=400$. \textbf {Naive} uses uniform per-step allocation. \textbf {GAINS} uses offline profiling plus online control. \textbf {Offline Only} removes online control and uses only offline allocation}{table.caption.14}{}}
+\newlabel{tab:sd_400_ablation@cref}{{[table][3][]3}{[1][16][]16}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Ablation: Offline Allocation vs.\ Offline+Online Control}{16}{subsection.5.4}\protected@file@percent }
+\newlabel{sec:exp-ablation-offline-online}{{5.4}{16}{Ablation: Offline Allocation vs.\ Offline+Online Control}{subsection.5.4}{}}
+\newlabel{sec:exp-ablation-offline-online@cref}{{[subsection][4][5]5.4}{[1][16][]16}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.5}Larger Prompt Set Evaluation}{16}{subsection.5.5}\protected@file@percent }
+\newlabel{sec:exp-larger-prompts}{{5.5}{16}{Larger Prompt Set Evaluation}{subsection.5.5}{}}
+\newlabel{sec:exp-larger-prompts@cref}{{[subsection][5][5]5.5}{[1][16][]16}}
+\citation{dockhorn2024stochastic}
+\citation{kim2025rbf}
+\citation{dockhorn2024stochastic}
+\citation{dockhorn2024stochastic}
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Larger prompt set evaluation. We use 20 prompts, each repeated 10 times. Baseline corresponds to the uniform allocation method; GAINS is the proposed global scheduler.}}{17}{table.caption.15}\protected@file@percent }
+\newlabel{tab:larger_prompt_exp}{{4}{17}{Larger prompt set evaluation. We use 20 prompts, each repeated 10 times. Baseline corresponds to the uniform allocation method; GAINS is the proposed global scheduler}{table.caption.15}{}}
+\newlabel{tab:larger_prompt_exp@cref}{{[table][4][]4}{[1][16][]17}}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Global scheduling combined with different local search operators. Left block uses uniform allocation; right block uses GAINS. B: Brightness, C: Compressibility.}}{17}{table.caption.16}\protected@file@percent }
+\newlabel{tab:local_search_combo}{{5}{17}{Global scheduling combined with different local search operators. Left block uses uniform allocation; right block uses GAINS. B: Brightness, C: Compressibility}{table.caption.16}{}}
+\newlabel{tab:local_search_combo@cref}{{[table][5][]5}{[1][16][]17}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.6}Compatibility with Different Local Search Operators}{17}{subsection.5.6}\protected@file@percent }
+\newlabel{sec:exp-local-operator}{{5.6}{17}{Compatibility with Different Local Search Operators}{subsection.5.6}{}}
+\newlabel{sec:exp-local-operator@cref}{{[subsection][6][5]5.6}{[1][16][]17}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.7}Applicability to Flow-based Models}{17}{subsection.5.7}\protected@file@percent }
+\newlabel{sec:exp-flow}{{5.7}{17}{Applicability to Flow-based Models}{subsection.5.7}{}}
+\newlabel{sec:exp-flow@cref}{{[subsection][7][5]5.7}{[1][17][]17}}
+\@writefile{toc}{\contentsline {section}{\numberline {6}Conclusion}{17}{section.6}\protected@file@percent }
+\newlabel{sec:conclusion}{{6}{17}{Conclusion}{section.6}{}}
+\newlabel{sec:conclusion@cref}{{[section][6][]6}{[1][17][]17}}
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Flow-based model results. Stochasticity is introduced via noise injection~\citep  {dockhorn2024stochastic}, after which GAINS allocates search compute non-uniformly across timesteps.}}{18}{table.caption.17}\protected@file@percent }
+\newlabel{tab:flow_results}{{6}{18}{Flow-based model results. Stochasticity is introduced via noise injection~\citep {dockhorn2024stochastic}, after which GAINS allocates search compute non-uniformly across timesteps}{table.caption.17}{}}
+\newlabel{tab:flow_results@cref}{{[table][6][]6}{[1][17][]18}}
+\@writefile{toc}{\contentsline {paragraph}{Operational guidelines.}{18}{section*.18}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Limitations.}{18}{section*.19}\protected@file@percent }
+\bibstyle{plainnat}
+\bibdata{main}
+\bibcite{ttsnap2025}{{1}{2025}{{Anonymous}}{{}}}
+\bibcite{lam2025importance}{{2}{2025}{{Aolaritei et~al.}}{{Aolaritei, Van~Parys, Lam, and Jordan}}}
+\bibcite{black2023training}{{3}{2023}{{Black et~al.}}{{Black, Janner, Du, Kostrikov, and Levine}}}
+\bibcite{cao2024comparative}{{4}{2024}{{Cao et~al.}}{{}}}
+\bibcite{chen2000simulation}{{5}{2000}{{Chen et~al.}}{{Chen, Lin, Y{\"u}cesan, and Chick}}}
+\bibcite{dockhorn2024stochastic}{{6}{2024}{{Dockhorn et~al.}}{{Dockhorn, Vahdat, and Kreis}}}
+\bibcite{eyring2025hypernetworks}{{7}{2025}{{Eyring et~al.}}{{Eyring, Karthik, Dosovitskiy, Ruiz, and Akata}}}
+\bibcite{fan2024reinforcement}{{8}{2024}{{Fan et~al.}}{{Fan, Watkins, Du, Liu, Ryu, Boutilier, Abbeel, Ghavamzadeh, Lee, and Lee}}}
+\bibcite{gao2024reward}{{9}{2024}{{Gao et~al.}}{{Gao, Zha, and Zhou}}}
+\bibcite{ho2020denoising}{{10}{2020}{{Ho et~al.}}{{Ho, Jain, and Abbeel}}}
+\bibcite{ibaraki1988resource}{{11}{1988}{{Ibaraki and Katoh}}{{}}}
+\bibcite{zhou2024jumpdiffusion}{{12}{2024}{{Jia and Zhou}}{{}}}
+\bibcite{kim2025rbf}{{13}{2025{}}{{Kim et~al.}}{{Kim, Yoon, Hwang, and Sung}}}
+\bibcite{kim2025psi}{{14}{2025{}}{{Kim et~al.}}{{}}}
+\bibcite{lee2025abcd}{{15}{2025}{{Lee et~al.}}{{Lee, Bao, Yoon, Lee, Kim, Bengio, and Ahn}}}
+\bibcite{lipman2023flow}{{16}{2023}{{Lipman et~al.}}{{Lipman, Chen, Ben-Hamu, Nickel, and Le}}}
+\bibcite{liu2023flow}{{17}{2023}{{Liu et~al.}}{{Liu, Gong, and Liu}}}
+\bibcite{ma2024inference}{{18}{2025}{{Ma et~al.}}{{Ma, Goldstein, Albergo, Berner, and Vanden-Eijnden}}}
+\bibcite{qi2024noises}{{19}{2024}{{Qi et~al.}}{{Qi, Bai, Xiong, and Xie}}}
+\bibcite{ramesh2025nts}{{20}{2025}{{Ramesh and Mardani}}{{}}}
+\bibcite{singhal2025fk}{{21}{2025}{{Singhal et~al.}}{{Singhal, Horvitz, Teehan, Ren, Yu, McKeown, and Ranganath}}}
+\bibcite{song2019generative}{{22}{2019}{{Song and Ermon}}{{}}}
+\bibcite{song2021scorebased}{{23}{2021}{{Song et~al.}}{{Song, Sohl-Dickstein, Kingma, Kumar, Ermon, and Poole}}}
+\bibcite{sundaresha2025vt}{{24}{2025}{{Sundaresha et~al.}}{{Sundaresha, Haridas, Appia, and Varshney}}}
+\bibcite{tang2024contractive}{{25}{2024}{{Tang and Zhao}}{{}}}
+\bibcite{tang2024sde}{{26}{2025}{{Tang and Zhao}}{{}}}
+\bibcite{tang2024dno}{{27}{2024}{{Tang et~al.}}{{Tang, Peng, Tang, Hong, Wang, and Chang}}}
+\bibcite{ye2025tpdm}{{28}{2025}{{Ye et~al.}}{{Ye, Zheng, Cao, and Zhuo}}}
+\bibcite{yeh2025demons}{{29}{2025}{{Yeh et~al.}}{{Yeh, Lee, and Chen}}}
+\bibcite{zhang2025adadiff}{{30}{2025{}}{{Zhang et~al.}}{{Zhang, Wu, Xing, Shao, and Jiang}}}
+\bibcite{zhang2025tscend}{{31}{2025{}}{{Zhang et~al.}}{{Zhang, Pan, Feng, and Wu}}}
+\bibcite{zhang2025classical}{{32}{2025{}}{{Zhang et~al.}}{{Zhang, Lin, Ye, Zou, Ma, Liang, and Du}}}
+\bibcite{zhou2025golden}{{33}{2025}{{Zhou et~al.}}{{Zhou, Shao, Bai, Zhang, Xu, Han, and Xie}}}
+\citation{ramesh2025nts}
+\@writefile{toc}{\contentsline {section}{\numberline {A}A General MDP Formulation of Noise Trajectory Search}{21}{appendix.A}\protected@file@percent }
+\newlabel{sec:mdp}{{A}{21}{A General MDP Formulation of Noise Trajectory Search}{appendix.A}{}}
+\newlabel{sec:mdp@cref}{{[appendix][1][2147483647]A}{[1][21][]21}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.1}State Space}{21}{subsection.A.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.2}Action Space}{22}{subsection.A.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Search actions $\mathcal  {A}_{\text  {search}}$.}{22}{section*.21}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Verify actions $\mathcal  {A}_{\text  {verify}}$.}{22}{section*.22}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Move actions $\mathcal  {A}_{\text  {move}}$.}{22}{section*.23}\protected@file@percent }
+\citation{ma2024inference}
+\citation{ramesh2025nts}
+\citation{tang2024dno}
+\citation{kim2025rbf}
+\citation{zhang2025tscend}
+\citation{lee2025abcd}
+\citation{zhang2025classical}
+\citation{singhal2025fk}
+\citation{sundaresha2025vt}
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Existing inference-time search methods as policies in the noise-trajectory-search MDP. $\mathcal  {A}_{\text  {used}}$: action types employed; Schedule: how per-step budget is determined.}}{23}{table.caption.24}\protected@file@percent }
+\newlabel{tab:mdp_policies}{{7}{23}{Existing inference-time search methods as policies in the noise-trajectory-search MDP. $\mathcal {A}_{\text {used}}$: action types employed; Schedule: how per-step budget is determined}{table.caption.24}{}}
+\newlabel{tab:mdp_policies@cref}{{[table][7][2147483647]7}{[1][23][]23}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.3}Transition Dynamics}{23}{subsection.A.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.4}Reward}{23}{subsection.A.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.5}Existing Methods as MDP Policies}{23}{subsection.A.5}\protected@file@percent }
+\newlabel{sec:mdp-policies}{{A.5}{23}{Existing Methods as MDP Policies}{subsection.A.5}{}}
+\newlabel{sec:mdp-policies@cref}{{[subappendix][5][2147483647,1]A.5}{[1][23][]23}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.6}Main-Text Formulation as a Special Case}{24}{subsection.A.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {B}Proofs of Theoretical Results}{24}{appendix.B}\protected@file@percent }
+\newlabel{sec:proofs}{{B}{24}{Proofs of Theoretical Results}{appendix.B}{}}
+\newlabel{sec:proofs@cref}{{[appendix][2][2147483647]B}{[1][24][]24}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.1}Proof of \cref  {prop:offline}}{24}{subsection.B.1}\protected@file@percent }
+\newlabel{sec:proof-offline}{{B.1}{24}{Proof of \texorpdfstring {\cref {prop:offline}}{Proposition (Offline)}}{subsection.B.1}{}}
+\newlabel{sec:proof-offline@cref}{{[subappendix][1][2147483647,2]B.1}{[1][24][]24}}
+\@writefile{toc}{\contentsline {paragraph}{Part~(i): prompt-independence.}{24}{section*.25}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Part~(ii): water-filling monotonicity.}{25}{section*.26}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Part~(iii): strict suboptimality of uniform allocation.}{25}{section*.27}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.2}Proof of \cref  {prop:online}}{25}{subsection.B.2}\protected@file@percent }
+\newlabel{sec:proof-online}{{B.2}{25}{Proof of \texorpdfstring {\cref {prop:online}}{Proposition (Online)}}{subsection.B.2}{}}
+\newlabel{sec:proof-online@cref}{{[subappendix][2][2147483647,2]B.2}{[1][25][]25}}
+\@writefile{toc}{\contentsline {paragraph}{Part~(i): convexity and Jensen gap.}{25}{section*.28}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Part~(ii): dual-threshold stopping.}{26}{section*.29}\protected@file@percent }
+\gdef \@abspage@last{26}

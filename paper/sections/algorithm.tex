@@ -1,0 +1,508 @@
+% ============================================================
+% §4 The GAINS Algorithm and Theoretical Analysis
+% §4.1 Offline scheduling
+% §4.2 Online control
+% §4.3 SDE foundations (derives location-scale from Taylor expansion)
+% §4.4 Scheduling optimality (water-filling + Jensen gap, now as corollaries)
+% ============================================================
+\section{The GAINS Algorithm}
+\label{sec:algorithm}
+
+GAINS schedules noise trajectory search at two granularities:
+offline coarse allocation (\cref{sec:offline}) sets per-timestep budgets from
+a small calibration run, and online control (\cref{sec:online}) adapts those
+budgets per prompt.
+\cref{sec:sde-foundations} derives the theoretical structure that underlies
+both stages, and \cref{sec:scheduling-optimality} establishes optimality
+properties of the resulting allocation.
+
+% -----------------------------------------------------------
+\subsection{Offline Coarse Time Scheduling}
+\label{sec:offline}
+
+We consider the common setting where the sampler maintains \emph{a single latent and a single noise}
+$(x_t, \varepsilon_t)$ at each timestep $t$, but performs \emph{multiple local search
+iterations} before committing to $x_{t-1}$.
+Under this restriction, the global scheduling problem reduces to a sequence of
+\emph{per-timestep decisions}: at each $t$, given the history of search so far
+and the remaining budget, should we continue local search at this timestep,
+or stop and move on to $t-1$?
+
+An inherent difficulty arises: when deciding at timestep $t$, we do not know:
+(1)~the potential improvement that additional search at $t$ could still bring,
+and (2)~the potential improvement that could be obtained by saving NFE and
+spending it on later timesteps.
+The scheduling strategy below addresses both aspects from complementary
+angles.
+
+For each model and dataset, we first run \emph{offline} profiling on a
+small set of prompts or images.
+We execute noise search with a simple local operator $\mathcal{L}_t$ and a uniform,
+relatively large iteration count at every timestep, logging verifier
+scores after each iteration.
+From these logs we compute, for each timestep $t$, the
+average score gain from local search and its variability across examples.
+Aggregating over many runs reveals which segments of the
+denoising trajectory respond most to noise refinement and
+are therefore most ``valuable'' to search.
+Offline profiling reveals a clear model-dependent pattern:
+for Stable Diffusion (SD), gains concentrate on early timesteps,
+whereas for EDM they cluster in a contiguous middle segment.
+
+We then partition timesteps into a small number of groups,
+e.g., a \emph{high-value} region and a \emph{low-value} region, assigning a
+larger share of the total NFE budget to the high-value region.
+Within each region, we derive a coarse per-step budget $\{K_t\}$ (more
+iterations in high-value steps, fewer in low-value steps).
+The resulting schedule, tailored to the model and dataset but fixed across
+prompts, captures \emph{where search matters most}.
+
+% -----------------------------------------------------------
+\subsection{Online Fine-Grained Scheduling}
+\label{sec:online}
+
+At test time, an \emph{online} controller refines how the
+pre-assigned budget $\{K_t\}$ is spent on each prompt.
+At timestep $t$, local search runs up to $K_t$ iterations, but the
+controller can stop early or, within a small window, modulate how
+aggressively to spend the budget.
+
+The controller monitors two statistics from local search
+at timestep $t$:
+(i)~the \emph{score gain} of local search, and
+(ii)~the \emph{score variance} across candidates within this step.
+Let $s_t^{(j)}$ be the best verifier score at step $t$ after $j$ local search
+iterations, and let $\{s_{t,\text{cand}}^{(j,i)}\}_i$ denote the scores of all
+candidate noises evaluated in iteration $j$.
+We define the incremental gain
+\begin{equation}
+  g_t^{(j)} = s_t^{(j)} - s_t^{(j-1)}
+  \label{eq:gain-increment}
+\end{equation}
+and the per-iteration variance
+\begin{equation}
+  \operatorname{Var}_t^{(j)} = \operatorname{Var}_i\bigl(s_{t,\text{cand}}^{(j,i)}\bigr).
+  \label{eq:var-iteration}
+\end{equation}
+Here $g_t^{(j)}$ measures whether search still finds
+better noises at step $t$, while $\operatorname{Var}_t^{(j)}$ reflects the
+verifier's sensitivity to noise perturbations at this timestep.
+
+The online policy follows a simple rule:
+if recent gains $g_t^{(j)}$ remain positive and score variance
+$\operatorname{Var}_t^{(j)}$ is large, the timestep is both important
+and unsaturated, so local search continues to budget $K_t$ (or a small upper margin).
+Conversely, when gains diminish (recent $g_t^{(j)}$ near
+zero or negative) and candidate variance is small, local
+search at this timestep is exhausted and further NFE is better reserved
+for subsequent timesteps; the controller stops early and advances to $t-1$.
+As a further safeguard, whenever an iteration produces a negative gain
+($g_t^{(j)} < 0$), the controller reverts the noise pivot to the
+previous best candidate rather than accepting a worse solution.
+This \emph{revert-on-negative} rule ensures that local search at any
+timestep is monotonically non-decreasing in verifier score.
+All decisions rely solely on statistics observed up to step
+$t$, with no access to future timesteps.
+To match realized compute exactly to the prescribed total NFE budget,
+we reconcile over-/under-spending from adaptive stopping:
+extra NFE consumed in the high-value region is offset by allocating
+additional iterations to the first few low-value steps, while any NFE deficit
+is corrected by trimming iterations from the last low-value steps.
+
+\paragraph{Overall procedure.}
+A sampling run draws initial noise $x_T \sim \mathcal{N}(0, I)$ and
+reads the coarse per-step budget $\{K_t\}$ from the offline schedule.
+For $t = T, \dots, 1$, the local search operator
+$\mathcal{L}_t$ explores around $x_t$ while the online controller
+monitors gains $\{g_t^{(j)}\}$ and variances
+$\{\operatorname{Var}_t^{(j)}\}$ to decide whether to continue or stop,
+subject to budget $K_t$.
+The chosen noise at step $t$ feeds into the base sampler
+$F_\theta$ to produce $x_{t-1}$, and the process repeats until $x_0$.
+Under a fixed NFE budget, this two-level scheduling concentrates
+computation on timesteps that are both globally and instance-wise valuable,
+avoiding wasted search where noise perturbations barely affect
+the verifier.
+\cref{alg:offline_online_budget} gives the complete procedure.
+
+\begin{algorithm}[t]
+\caption{GAINS: Global Adaptive Inference-time Noise Scheduling}
+\label{alg:offline_online_budget}
+\begin{algorithmic}[1]
+\STATE \textbf{Input:} timesteps $\{t_T,\dots,t_1\}$, total budget $B$, offline allocation $\{K_t\}$ ($\sum_t K_t=B$),
+slack $\delta$, gain window $W_g$, threshold coefs $(\beta_g,\beta_\sigma)$, black-box $\textsc{LocalIter}(t)$.
+\STATE \textbf{Output:} realized per-step iterations $\{\widehat K_t\}$.
+
+\STATE $R \leftarrow B$; \quad $\mathcal{H}_g\leftarrow\emptyset$ (historical gains); \quad $\mathcal{H}_\sigma\leftarrow\emptyset$ (historical variances).
+\FOR{$t=T,T\!-\!1,\dots,1$}
+    \STATE $K \leftarrow \min(K_t, R)$; \quad $K_{\max}\leftarrow \min(K+\delta, R)$; \quad $j_{\text{watch}}\leftarrow \max(1, K-\delta)$.
+    \STATE $s^{(0)} \leftarrow -\infty$; \quad $\mathcal{H}\leftarrow\emptyset$ (recent gains); \quad $\widehat K_t \leftarrow 0$.
+    \FOR{$j=1,2,\dots,K_{\max}$}
+        \STATE $(s^{(j)}, \sigma^{(j)}) \leftarrow \textsc{LocalIter}(t)$
+        \IF{$s^{(j)} < s^{(j-1)}$}
+            \STATE $s^{(j)} \leftarrow s^{(j-1)}$ \hfill \COMMENT{revert-on-negative: keep previous best}
+        \ENDIF
+        \STATE $g^{(j)} \leftarrow s^{(j)} - s^{(j-1)}$; push $g^{(j)}$ into $\mathcal{H}$ and keep last $W_g$.
+        \STATE $\widetilde g^{(j)} \leftarrow \mathrm{Mean}(\mathcal{H})$.
+        \STATE $\widehat K_t \leftarrow \widehat K_t + 1$; \quad $R \leftarrow R - 1$.
+        \IF{$R=0$} \STATE \textbf{break} \ENDIF
+        \IF{$j \ge j_{\text{watch}}$ \AND $|\mathcal{H}_g|>0$ \AND $|\mathcal{H}_\sigma|>0$}
+            \STATE $g_{\mathrm{th}}\leftarrow \beta_g \cdot \mathrm{Mean}(\mathcal{H}_g)$;\quad
+                   $\sigma_{\mathrm{th}}\leftarrow \beta_\sigma \cdot \mathrm{Mean}(\mathcal{H}_\sigma)$.
+            \IF{$\widetilde g^{(j)} < g_{\mathrm{th}}$ \AND $\sigma^{(j)} < \sigma_{\mathrm{th}}$}
+                \STATE \textbf{break}
+            \ENDIF
+        \ENDIF
+    \ENDFOR
+    \STATE append $\mathrm{Mean}(\mathcal{H})$ to $\mathcal{H}_g$; append $\sigma^{(\widehat K_t)}$ to $\mathcal{H}_\sigma$.
+\ENDFOR
+\STATE \textbf{return} $\{\widehat K_t\}$.
+\end{algorithmic}
+\end{algorithm}
+
+% -----------------------------------------------------------
+\subsection{SDE Foundations for the Score Distribution}
+\label{sec:sde-foundations}
+
+Both stages of GAINS rely on the per-step score
+distribution $\mathcal{D}_t$ exhibiting location-scale structure.
+We derive this structure from first principles by connecting
+noise search to the underlying diffusion SDE.
+
+The reverse-time SDE in Euler form with step size $h$ and diffusion
+coefficient $g_t$ reads:
+\begin{equation}
+  X_{t-h} \;=\; X_t + b_t(X_t, c)\,h + g_t\sqrt{h}\,\xi,
+  \qquad \xi \sim \mathcal{N}(0, I),
+  \label{eq:euler-sde}
+\end{equation}
+where $b_t(X_t, c)$ denotes the drift (determined by the learned score network)
+and $g_t\sqrt{h}\,\xi$ the stochastic perturbation that noise search
+operates on.
+The \emph{verifier score function}
+$\Psi_t(x; c) := v(D_\theta(x, t{-}h); c)$
+maps a latent $x$ to the verifier score of its denoised prediction,
+so the score from one noise candidate equals
+\begin{equation}
+  S_t \;:=\; \Psi_t(X_{t-h};\, c).
+  \label{eq:score-from-sde}
+\end{equation}
+Let $\bar{X}_{t-h} := X_t + b_t(X_t, c)\,h$ denote the deterministic Euler
+point, the latent that would result without noise injection.
+
+\begin{assumption}[Verifier smoothness]
+\label{asm:smooth}
+The composed verifier score function
+$\Psi_t(\cdot\,; c) \in C^2(\mathbb{R}^d)$, and there exists a constant
+$L_t < \infty$ such that
+$\|\nabla^2 \Psi_t(x; c)\|_{\mathrm{op}} \le L_t$
+for all $x$ in a neighborhood of the line segment between $\bar{X}_{t-h}$
+and $X_{t-h}$, almost surely.
+\end{assumption}
+
+\begin{proposition}[Score Taylor expansion]
+\label{prop:taylor}
+Under \cref{asm:smooth}, conditional on $(X_t, c)$,
+\begin{equation}
+  S_t \;=\; \Psi_t(\bar{X}_{t-h};\, c)
+        \;+\; g_t\sqrt{h}\,
+              \bigl\langle \nabla\Psi_t(\bar{X}_{t-h};\, c),\, \xi \bigr\rangle
+        \;+\; R_t,
+  \label{eq:taylor-score}
+\end{equation}
+where the remainder satisfies
+$|R_t| \le \tfrac{1}{2}\,L_t\,g_t^2\,h\,\|\xi\|^2$ almost surely,
+and hence
+$\mathbb{E}[\,|R_t|\mid X_t, c\,] \le \tfrac{1}{2}\,L_t\,g_t^2\,h\,d$.
+\end{proposition}
+
+\begin{proof}
+By construction,
+$X_{t-h} = \bar{X}_{t-h} + g_t\sqrt{h}\,\xi$.
+A second-order Taylor expansion of $\Psi_t(\cdot\,; c)$ around
+$\bar{X}_{t-h}$ gives
+\[
+  \Psi_t(X_{t-h}; c)
+  = \Psi_t(\bar{X}_{t-h}; c)
+    + \bigl\langle \nabla\Psi_t(\bar{X}_{t-h}; c),\,
+        X_{t-h} - \bar{X}_{t-h} \bigr\rangle
+    + R_t,
+\]
+where
+$R_t = \tfrac{1}{2}(X_{t-h} - \bar{X}_{t-h})^\top
+  \nabla^2\Psi_t(\widetilde{X}; c)\,
+  (X_{t-h} - \bar{X}_{t-h})$
+for some $\widetilde{X}$ on the segment joining $\bar{X}_{t-h}$ and $X_{t-h}$.
+Substituting $X_{t-h} - \bar{X}_{t-h} = g_t\sqrt{h}\,\xi$ yields
+\eqref{eq:taylor-score}.
+The remainder bound follows from
+$|R_t| \le \tfrac{1}{2}\|\nabla^2\Psi_t(\widetilde{X}; c)\|_{\mathrm{op}}
+  \,\|g_t\sqrt{h}\,\xi\|^2
+  \le \tfrac{1}{2}L_t\,g_t^2\,h\,\|\xi\|^2$.
+Taking conditional expectations and using
+$\mathbb{E}[\|\xi\|^2] = d$ completes the proof.
+\end{proof}
+
+\cref{prop:taylor} decomposes each candidate score into a deterministic
+baseline $\Psi_t(\bar{X}_{t-h}; c)$, a Gaussian linear term with variance
+governed by $g_t\sqrt{h}\,\|\nabla\Psi_t\|$, and a higher-order remainder
+that vanishes as $h$ shrinks.
+This decomposition yields a location-scale characterization.
+
+\begin{theorem}[Location-scale structure of per-step scores]
+\label{thm:loc-scale}
+Define
+\begin{equation}
+  \mu_t \;:=\; \Psi_t(\bar{X}_{t-h};\, c),
+  \qquad
+  \sigma_t \;:=\; g_t\sqrt{h}\,\|\nabla\Psi_t(\bar{X}_{t-h};\, c)\|.
+  \label{eq:mu-sigma-sde}
+\end{equation}
+Then, conditional on $(X_t, c)$:
+\begin{enumerate}
+\item[\textbf{(i)}]
+  There exists $Z_t \sim \mathcal{N}(0,1)$ such that
+  $S_t = \mu_t + \sigma_t\,Z_t + R_t$.
+\item[\textbf{(ii)}]
+  As $g_t\sqrt{h} \to 0$,
+  \begin{equation}
+    \operatorname{Var}(S_t \mid X_t, c)
+    \;=\; \sigma_t^2 + O(g_t^3\,h^{3/2}).
+    \label{eq:var-approx}
+  \end{equation}
+\item[\textbf{(iii)}]
+  Let $S_t^{(1)}, \ldots, S_t^{(K)}$ be $K$ i.i.d.\ copies of $S_t$
+  generated by i.i.d.\ noise draws $\xi_1, \ldots, \xi_K$.
+  Then
+  \begin{equation}
+    G_t(K)
+    \;:=\; \mathbb{E}\Bigl[\max_{1 \le k \le K} S_t^{(k)}
+           \,\Big|\, X_t, c\Bigr] - \mu_t
+    \;=\; \sigma_t\,a_K + O_K(g_t^2\,h),
+    \label{eq:gain-sde}
+  \end{equation}
+  where $a_K := \mathbb{E}[\max(Z_1, \ldots, Z_K)]$ with
+  $Z_k \stackrel{\mathrm{iid}}{\sim} \mathcal{N}(0,1)$.
+  In particular,
+  \begin{equation}
+    G_t(K) \;=\; g_t\sqrt{h}\,\|\nabla\Psi_t(\bar{X}_{t-h};\, c)\|\,a_K
+              \;+\; O_K(g_t^2\,h).
+    \label{eq:gain-explicit}
+  \end{equation}
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+For part~(i), when $\|\nabla\Psi_t(\bar{X}_{t-h}; c)\| > 0$, write
+$\langle \nabla\Psi_t, \xi \rangle
+= \|\nabla\Psi_t\|\,Z_t$
+where $Z_t := \langle \nabla\Psi_t / \|\nabla\Psi_t\|, \xi \rangle$.
+Since $\nabla\Psi_t / \|\nabla\Psi_t\|$ is a fixed unit vector conditional on
+$(X_t, c)$ and $\xi \sim \mathcal{N}(0, I)$, the projection $Z_t$ is standard
+normal: $Z_t \sim \mathcal{N}(0,1)$.
+(When $\nabla\Psi_t(\bar{X}_{t-h}; c) = 0$, we have $\sigma_t = 0$ and the
+linear term vanishes; the result holds trivially with $Z_t$ defined
+arbitrarily.)
+
+For part~(ii), expand
+$\operatorname{Var}(S_t \mid X_t, c)
+= \operatorname{Var}(\sigma_t Z_t + R_t)
+= \sigma_t^2 + 2\,\operatorname{Cov}(\sigma_t Z_t, R_t) + \operatorname{Var}(R_t)$.
+For the cross-term, note that $\sigma_t Z_t$ is of order $g_t\sqrt{h}$
+and $R_t$ is of order $g_t^2 h$ (by \cref{prop:taylor}), so
+$\operatorname{Cov}(\sigma_t Z_t, R_t) = O(g_t^3 h^{3/2})$.
+For $\operatorname{Var}(R_t)$: since $|R_t| \le \tfrac{1}{2}L_t g_t^2 h \|\xi\|^2$,
+we have $\operatorname{Var}(R_t) \le \mathbb{E}[R_t^2]
+\le \tfrac{1}{4}L_t^2 g_t^4 h^2 \,\mathbb{E}[\|\xi\|^4]
+= O(g_t^4 h^2)$,
+which is dominated by the cross-term for small $g_t\sqrt{h}$.
+
+For part (iii), write
+$S_t^{(k)} = \mu_t + \sigma_t Z_k + R_t^{(k)}$
+for each candidate $k$.
+Then
+$\max_k S_t^{(k)} = \mu_t + \max_k (\sigma_t Z_k + R_t^{(k)})$.
+Using the elementary inequality
+$|\max_k (a_k + b_k) - \max_k a_k| \le \max_k |b_k|$,
+we obtain
+$|\max_k S_t^{(k)} - (\mu_t + \sigma_t \max_k Z_k)|
+\le \max_k |R_t^{(k)}|$.
+Since $\max_k |R_t^{(k)}| \le \sum_k |R_t^{(k)}|$,
+taking conditional expectations gives
+$\mathbb{E}[\max_k |R_t^{(k)}| \mid X_t, c]
+\le K \cdot \tfrac{1}{2} L_t g_t^2 h\,d$.
+Therefore
+$G_t(K) = \sigma_t\,a_K + O_K(g_t^2 h)$,
+where the implicit constant in $O_K(\cdot)$ depends on $K$, the
+dimension~$d$, and the Hessian bound~$L_t$ from \cref{asm:smooth}, but not
+on the diffusion coefficient $g_t$ or the verifier gradient
+$\nabla\Psi_t$.
+Substituting $\sigma_t = g_t\sqrt{h}\,\|\nabla\Psi_t(\bar{X}_{t-h}; c)\|$
+yields~\eqref{eq:gain-explicit}.
+\end{proof}
+
+\begin{remark}
+\cref{thm:loc-scale} identifies the precise quantities governing timestep
+sensitivity:
+$\sigma_t = g_t\sqrt{h}\,\|\nabla\Psi_t(\bar{X}_{t-h}; c)\|$
+multiplies the diffusion coefficient $g_t$, the step size
+$\sqrt{h}$, and the verifier gradient norm at the
+deterministic Euler point.
+Timesteps with large $g_t$ (strong noise injection) or large
+$\|\nabla\Psi_t\|$ (steep verifier landscape) benefit most from noise
+search, explaining the non-uniform sensitivity patterns observed in offline profiling.
+\end{remark}
+
+\begin{corollary}[SDE-based approximate allocation]
+\label{cor:sde-alloc}
+Under \cref{asm:smooth}, with step size $h$ and diffusion
+coefficients $\{g_t\}_{t=1}^T$, for any fixed budget allocation
+$\{K_t\}_{t=1}^T$,
+\begin{equation}
+  \sum_{t=1}^{T} G_t(K_t)
+  \;=\; \sum_{t=1}^{T} g_t\sqrt{h}\,
+        \|\nabla\Psi_t(\bar{X}_{t-h}; c)\|\,a_{K_t}
+  \;+\; \sum_{t=1}^{T} O_{K_t}(g_t^2\,h).
+  \label{eq:aggregate-gain}
+\end{equation}
+Dropping the second-order remainder reduces the offline allocation problem
+to
+\begin{equation}
+  \max_{\{K_t\}_{t=1}^T:\;\sum_t K_t = B}\;
+  \sum_{t=1}^{T} g_t\sqrt{h}\,
+  \|\nabla\Psi_t(\bar{X}_{t-h}; c)\|\,a_{K_t}.
+  \label{eq:alloc-sde}
+\end{equation}
+\end{corollary}
+
+Problem~\eqref{eq:alloc-sde} is a concave resource allocation (each
+$a_{K_t}$ grows concavely in $K_t$) with
+per-step weights $\sigma_t = g_t\sqrt{h}\,\|\nabla\Psi_t\|$.
+It recovers the abstract formulation~\eqref{eq:alloc} in
+\cref{sec:scheduling-optimality} below, now with an explicit,
+SDE-derived expression for the per-step sensitivity $\sigma_t$.
+
+% -----------------------------------------------------------
+\subsection{Scheduling Optimality}
+\label{sec:scheduling-optimality}
+
+\cref{thm:loc-scale} enables a sharp characterization of the optimal
+budget allocation.
+Because the gain factorizes as
+$G_t(K) = \sigma_t\,a_K + O_K(g_t^2 h)$ (\cref{thm:loc-scale}(iii)),
+global scheduling reduces, up to controlled remainders, to
+\begin{equation}
+  \max_{K_1,\dots,K_T}\;\sum_{t=1}^{T}\sigma_t\,a_{K_t}
+  \quad\text{s.t.}\;\sum_{t=1}^{T}K_t=B,\;K_t\ge 1.
+  \label{eq:alloc}
+\end{equation}
+
+\begin{proposition}[Offline optimality under independence]
+\label{prop:offline}
+Suppose $\sigma_t$ does not depend on the prompt or search history
+(i.e., $\sigma_t = \sigma_t$ for all $c, x_t$).
+Then:
+\begin{enumerate}
+\item[\textbf{(i)}]
+  Problem~\eqref{eq:alloc} decomposes across prompts: any optimal
+  allocation $\{K_t^*\}$ is simultaneously optimal for every instance.
+\item[\textbf{(ii)}]
+  The optimal allocation equalizes marginal gains:
+  $\sigma_t\,a_{K_t^*}' = \lambda^*$ for all~$t$ with $K_t^* > 1$,
+  where $\lambda^*$ is the shadow price of the budget constraint.
+  Consequently, $K_t^*$ is increasing in~$\sigma_t$ (water-filling).
+\item[\textbf{(iii)}]
+  $\sum_t \sigma_t\,a_{K_t^*} > \sum_t \sigma_t\,a_{B/T}$ whenever
+  $\{\sigma_t\}$ are not all equal, and the gap grows with the
+  dispersion of~$\{\sigma_t\}$.
+\end{enumerate}
+\end{proposition}
+
+\begin{remark}
+\cref{prop:offline} justifies offline profiling.
+Part~(i) guarantees that under the independence condition, a single fixed
+allocation optimizes every prompt simultaneously, so profiling on a small calibration
+set generalizes.
+Part~(ii) reveals \emph{water-filling} structure: timesteps with larger
+$\sigma_t = g_t\sqrt{h}\,\|\nabla\Psi_t\|$ (where noise perturbations
+shift the verifier score most) receive proportionally more budget.
+Part~(iii) quantifies the non-uniform advantage: the more
+heterogeneous the per-step sensitivities, the larger the gain
+over uniform scheduling.
+\end{remark}
+
+\begin{proposition}[Online adaptation under prompt dependence]
+\label{prop:online}
+Suppose $\sigma_t = \sigma_t(c, x_t)$ varies with the prompt and search
+history.
+Define the oracle value
+$V^*(\boldsymbol{\sigma})=\max_{\{K_t\}:\sum_t K_t=B}
+\sum_t\sigma_t\,a_{K_t}$
+for variance profile $\boldsymbol{\sigma}=(\sigma_1,\dots,\sigma_T)$.
+Then:
+\begin{enumerate}
+\item[\textbf{(i)}]
+  $V^*$ is convex in $\boldsymbol{\sigma}$.
+  The expected regret of any fixed allocation satisfies
+  \begin{equation}
+    \mathbb{E}_{\boldsymbol{\sigma}}\!\bigl[V^*(\boldsymbol{\sigma})\bigr]
+    \;-\; V^*\!\bigl(\bar{\boldsymbol{\sigma}}\bigr) \;\ge\; 0,
+    \label{eq:jensen-gap}
+  \end{equation}
+  where $\bar{\boldsymbol{\sigma}}=\mathbb{E}[\boldsymbol{\sigma}]$,
+  with equality iff $\boldsymbol{\sigma}$ is constant across instances.
+\item[\textbf{(ii)}]
+  The marginal gain factorizes as
+  \begin{equation}
+    G_t'(K) \;=\; \underbrace{\sigma_t}_{\text{sensitivity}}
+    \;\cdot\; \underbrace{a_K'}_{\text{exhaustion}}.
+    \label{eq:marginal-decomp}
+  \end{equation}
+  The optimal stopping condition is $G_t'(K)\le\lambda^*$.
+  The running mean $\bar{g}$ satisfies
+  $\bar{g}\ge\tfrac{1}{|\mathcal{H}_g|}\sum_s G_s'(\hat{K}_s)$
+  by concavity, so $\beta_g\bar{g}$ estimates~$\lambda^*$.
+  The gain condition $\widetilde{g}_t^{(j)}<\beta_g\bar{g}$ tests the
+  product $\sigma_t\,a_K'\le\lambda^*$; the variance condition
+  $\hat{\sigma}_t^{(j)}<\beta_\sigma\bar{\sigma}$ independently tests
+  $\sigma_t\le\bar{\sigma}$.
+  Requiring both conditions prevents premature stopping at
+  high-value timesteps.
+\end{enumerate}
+\end{proposition}
+
+\begin{remark}
+\cref{prop:online} motivates the online controller.
+Part~(i) shows that $V^*$, as a pointwise maximum of linear functions, is convex in the variance
+profile, so by Jensen's
+inequality any fixed allocation tuned to the population mean
+$\bar{\boldsymbol{\sigma}}$ incurs a gap
+(\cref{eq:jensen-gap}) growing with cross-instance variability
+of~$\boldsymbol{\sigma}$.
+Part~(ii) decomposes the marginal gain~\eqref{eq:marginal-decomp}
+into two factors, each monitored by a separate
+threshold in the online controller.
+Low gain with high variance ($a_K'$ small, $\sigma_t$ large) signals
+a responsive but exhausted timestep where a lucky draw may still yield a large jump, so stopping is
+premature.
+Moderate gain with low variance ($a_K'$ moderate, $\sigma_t$ small)
+signals inherent insensitivity where gains plateau
+regardless, yet search remains productive at this iteration count.
+Only when \emph{both} factors are small is stopping unambiguously
+justified, as the two-threshold diagram in \cref{fig:stopping} shows.
+\end{remark}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.75\linewidth]{figures/fig_stopping_decision.pdf}
+\caption{Online stopping decision in the $(\sigma_t, a_K')$ plane.
+The variance threshold (vertical dashed) and gain threshold (horizontal dashed)
+partition the space into four regions.
+Stopping is triggered only when \emph{both} conditions are met (shaded region),
+corresponding to the conjunction in \cref{prop:online}(ii).
+The hyperbola $\sigma_t\cdot a_K'=\lambda^*$ shows the true optimality boundary;
+the rectangular approximation is conservative by design.}
+\label{fig:stopping}
+\end{figure}
+
+The proofs of \cref{prop:offline,prop:online} are given in \cref{sec:proofs}.
