@@ -107,64 +107,81 @@ By Jensen's inequality,
 Since $\mathcal{K}$ is finite (integer allocations), $V^*$ is the
 maximum of finitely many linear functions, hence convex and
 piecewise-linear.
-Equality holds iff the optimizer
-$\{K_t^*(\boldsymbol{\sigma})\}$ is constant a.s., i.e.,
-$\boldsymbol{\sigma}(c,x)=\bar{\boldsymbol{\sigma}}$ a.s.
+Equality holds whenever there exists an allocation
+$K^\dagger\in\mathcal{K}$ such that
+$V^*(\boldsymbol{\sigma})=\sum_t \sigma_t a_{K_t^\dagger}$ almost
+surely on the support of $\boldsymbol{\sigma}$.
+In particular, a constant variance profile is a sufficient special case.
 
 \paragraph{Part~(ii): dual-threshold stopping.}
 Under the location-scale model~\eqref{eq:gain-sde},
-$G_t(K)=\sigma_t\,a_K$ yields the \emph{marginal gain}: the
-additional value from one more search iteration at timestep~$t$:
 \[
-  G_t'(K)=\sigma_t\cdot a_K'.
+  \Delta_t(K)
+  := G_t(K+1)-G_t(K)
+  = \sigma_t\,(a_{K+1}-a_K) + O_{K,d,L_t}(g_t^2 h)
 \]
-Because $a_K$ is $t$-independent, this marginal gain separates into
-a timestep-specific sensitivity~$\sigma_t$ and a universal
-exhaustion curve~$a_K'$; this separation is what allows the two
+gives the \emph{discrete marginal gain}: the additional value from one
+more search iteration at timestep~$t$.
+The leading term separates into
+\[
+  \sigma_t\cdot \Delta a_K,
+  \qquad
+  \Delta a_K:=a_{K+1}-a_K .
+\]
+Because $a_K$ is $t$-independent, this marginal gain separates into a
+timestep-specific sensitivity~$\sigma_t$ and a universal exhaustion
+sequence~$\Delta a_K$; this separation is what allows the two
 thresholds below to monitor each factor independently.
 
 Next, characterize the optimal stopping rule.
-Search at timestep $t$ should stop when $G_t'(K)\le\lambda^*$, where
+Search at timestep $t$ should stop when $\Delta_t(K)\le\lambda^*$, where
 $\lambda^*$ is the shadow price of the budget constraint.
 For each completed step $s$, define the \emph{average realized gain}
-$\bar{g}_s=G_s(\hat{K}_s)/(\hat{K}_s - 1)$.
-Since $G_s$ is concave with $G_s(1)=0$
-(a single candidate yields no gain), the chord from
-$(1,0)$ to $(\hat{K}_s, G_s(\hat{K}_s))$ lies above the tangent:
 \[
   \bar{g}_s
-  =\frac{G_s(\hat{K}_s)-G_s(1)}{\hat{K}_s-1}
-  \ge G_s'(\hat{K}_s)
-  \qquad\text{(chord}\;\ge\;\text{tangent)}.
+  := \frac{G_s(\hat{K}_s)-G_s(1)}{\hat{K}_s - 1}
+  = \frac{1}{\hat{K}_s-1}
+    \sum_{k=1}^{\hat{K}_s-1}\Delta_s(k).
+\]
+Concavity of $G_s$ implies that the discrete marginals
+$\Delta_s(k)$ are non-increasing in~$k$, so the average dominates the
+last active marginal:
+\[
+  \bar{g}_s
+  \ge \Delta_s(\hat{K}_s-1).
 \]
 Averaging over the gain-history window $\mathcal{H}_g$:
 \[
   \bar{g}
   =\frac{1}{|\mathcal{H}_g|}\sum_s\bar{g}_s
   \;\ge\;
-  \frac{1}{|\mathcal{H}_g|}\sum_s G_s'(\hat{K}_s).
+  \frac{1}{|\mathcal{H}_g|}\sum_s \Delta_s(\hat{K}_s-1).
 \]
 If the realized allocations $\{\hat{K}_s\}$ coincide with the optimal
 solution of~\eqref{eq:alloc}, then
-$G_s'(\hat{K}_s)=\lambda^*$ for every active $s$ (by \cref{prop:offline}(ii)),
-giving $\bar{g}\ge\lambda^*$.
+$\Delta_s(\hat{K}_s-1)\ge\lambda^*\ge \Delta_s(\hat{K}_s)$ for every
+active $s$ by the discrete KKT conditions for separable concave
+allocation, giving $\bar{g}\ge\lambda^*$.
 In practice $\{\hat{K}_s\}$ are determined online and need not be
 exactly optimal, so $\beta_g\bar{g}$ ($\beta_g\in(0,1)$) serves as a
 conservative, adaptive estimate of $\lambda^*$.
 
 Finally, explain why both thresholds are needed.
 The gain threshold $\widetilde{g}_t^{(j)}<\beta_g\bar{g}$ tests the
-product $\sigma_t\,a_K'\le\lambda^*$; the variance threshold
-$\hat{\sigma}_t^{(j)}<\beta_\sigma\bar{\sigma}$ independently tests
-$\sigma_t\le\bar{\sigma}$.
+leading-order product $\sigma_t\,\Delta a_K$ against the
+shadow-price scale~$\lambda^*$.
+By \cref{thm:loc-scale}(ii), the conditional score variance obeys
+$\operatorname{Var}(S_t\mid X_t,c)=\sigma_t^2+O_d(g_t^3 h^{3/2})$, so a
+low empirical within-timestep score variance is a natural proxy for low
+sensitivity, but not an exact test of $\sigma_t$.
 Requiring both conditions before stopping avoids
 premature termination at high-value timesteps under estimation noise.
 If only the gain threshold is checked, a timestep with high
-$\sigma_t$ but temporarily low $a_K'$ (exhaustion from a few
+$\sigma_t$ but temporarily low $\Delta a_K$ (exhaustion from a few
 unlucky draws) would be abandoned even though a single additional
 candidate could yield a large jump.
-Conversely, if only the variance threshold is checked, a low-$\sigma_t$
-timestep would be abandoned even when its $a_K'$ is still large and
+Conversely, if only the variance threshold proxy is checked, a low-$\sigma_t$
+timestep would be abandoned even when its $\Delta a_K$ is still large and
 the search has not yet diminished.
 The conjunction ensures that stopping occurs only when both the
 timestep's intrinsic sensitivity and its remaining search potential

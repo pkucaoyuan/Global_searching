@@ -1,81 +1,50 @@
 # Changelog: Where to Search (GAINS)
 
-**Last Updated**: 2026-03-21
+**Last Updated**: 2026-03-23
 
 ---
 
-## 2026-03-21 — §4.5 General Local Search Theory + Verify-Proof + Refine-Theory + Polish
+## 2026-03-23 - Theory Alignment Pass (uniform-ball local perturbation + proof tightening)
 
-- **polish-paper** (2 rounds, 7 modifications, converged):
-  - VERB_STRENGTHEN (2): "develops"→"extends", "enables"→"permits"
-  - COMPRESS (3): intro (-1 sentence), Jensen remark (-2 lines), crossover remark (-1 line)
-  - FLOW (2): causal restructuring in scheduling intro; parallel structure in crossover remark
-  - No AI words, no zombie nouns, no passive voice, no S-V gap issues detected
-  - Compilation: 32 pages, 0 errors, 0 warnings
+- Replaced the Gaussian exploitation model in Sec 4.5 with the code-aligned
+  uniform-ball perturbation model
+  $\xi_{\mathrm{new}}=\xi^*+RU$,
+  $R\sim\mathrm{Unif}[0,\lambda\sqrt d]$,
+  $U\sim\mathrm{Unif}(\mathbb{S}^{d-1})$.
+- Introduced the exact linearized local-perturbation constant
+  $c_d(\lambda)=\frac{\lambda\sqrt d}{4\sqrt{\pi}}
+  \frac{\Gamma(d/2)}{\Gamma((d+1)/2)}$
+  and replaced the old $\eta/\sqrt{2\pi}$ formulas throughout theory.
+- Updated the Sec 4.5 operator table and crossover proposition so the
+  RS/LP comparison is stated only for the linearized regime, with the
+  large-budget full-problem discussion downgraded to a remark.
+- Tightened the location-scale proofs in Sec 4.3:
+  covariance now uses an explicit Cauchy--Schwarz bound and Gaussian
+  fourth moments, and gain remainders are written as
+  $O_{K,d,L_t}(g_t^2 h)$.
+- Tightened the online theory in Sec 4.4 and Appendix B:
+  Jensen equality now requires a common optimal allocation on the support
+  of $\boldsymbol{\sigma}$, and the stopping proof now uses discrete
+  marginals / average marginals instead of the old $G(1)=0$ shortcut.
+- Clarified that the controller's variance statistic is an empirical
+  proxy for low sensitivity, not an exact test of the theoretical
+  $\sigma_t$ parameter.
 
-- **refine-theory** (2 iterations, 11 issues fixed):
-  - Fixed "three assumptions" → "four assumptions" count
-  - Fixed intro "satisfying (A3)" → "satisfying Assumption 4.X"
-  - Replaced informal "(const depending on η,τ)" with proper prose
-  - Improved ε-greedy (A2) concavity argument (both marginals non-increasing)
-  - Clarified Jensen gap curvature mechanism (sharper allocation switching)
-  - Added measure-zero justification for ZO (A1) strict monotonicity
-  - Qualified crossover $o(1)$ with "$d/\eta\to\infty$" limit
-  - Weakened cor:offline-general Part (ii)/(iii) to match concavity level
-  - Added $K_t \ge 1$ constraint to eq:alloc-general and eq:oracle-general
-  - Fixed "(A1)--(A3)" → "(A1)--(A4)" in body text and table caption
-  - Compilation: 32 pages, 0 errors, 0 warnings
+## 2026-03-21 - General Local Search Theory Expansion
 
-- **New section**: §4.5 Extension to General Local Search Operators (general_local_search.tex)
-  - Assumption (A1–A4): strict monotonicity, concavity, sensitivity scaling, rotational equivariance
-  - Theorem (General Gain Factorization): $G_t^{\mathcal{L}}(K) = \sigma_t \phi_K + O_K(g_t^2 h)$
-  - Corollary (Offline Water-Filling, General): extends prop:offline to general operators
-  - Corollary (Online Jensen Gap, General): extends prop:online to general operators
-  - Proposition (Crossover): ZO vs RS crossover at $K^* = \tilde{\Theta}(d/\eta)$
-  - 4 Examples: Random search, ε-greedy, Zero-order, Langevin MCMC
-  - Summary table (tab:phi-summary)
-- **verify-proof Round 3** (3 final issues fixed):
-  - Weakened (A2) from strict concavity to concavity (ZO has linear $\phi_K = \eta K/d$)
-  - Fixed table caption: (A1)--(A3) → (A1)--(A4)
-  - Fixed prop:crossover Part(ii): removed false $\sqrt{d}$ saturation claim
-  - Added degenerate LP note to cor:offline-general for linear $\phi_K$
-- **verify-proof Rounds 1-2** (10 issues found, all fixed):
-  - Added (A4) rotational equivariance (was hidden assumption in proof)
-  - (A1) strengthened to strict monotonicity (needed by prop:offline)
-  - Fixed remainder bound: $O(g_t^2 h)$ → $O_K(g_t^2 h)$ throughout
-  - Fixed ZO example: removed incorrect $\sqrt{d}$ cap, derived exact $\phi_K = \eta K/d$
-  - Fixed Langevin (A3) verification: clarified steady-state mean argument
-  - Removed all `\approx` from mathematical statements (4 instances)
-- **Compilation**: 31 pages, 0 errors, 0 warnings
+- Added Sec 4.5 to extend the scheduling theory from pure random search
+  to a broader class of local search operators.
+- Introduced the abstract assumptions (A1)--(A4), the general gain
+  factorization theorem, and the offline / online corollaries.
+- Performed multiple proof-tightening and paper-polish rounds; see git
+  history for the detailed intermediate log.
 
-## 2026-03-17 — OR Style Polish + Consistency Fix
+## 2026-03-17 - OR Style Polish + Consistency Fix
 
-- **Polish Round 1**: 131 modifications across 9 files
-  - VERB_STRENGTHEN (15), COMPRESS (24), META_REMOVE (6), NAMED_ATTRIBUTION (5)
-  - NO_POINTER_CHAIN (5), PROOF_SIGNPOST (6), PROOF_FLOW (2), MANAGERIAL_POINT (1)
-- **Consistency fixes** (3 critical):
-  - `\cref{sec:method-global}` → `\cref{sec:framework}` (broken ref → "??")
-  - Jensen gap "recovers" → "can partially recover" (overstatement)
-  - $\sigma_t$ footnote disambiguation (SGM noise vs score variance)
-- **OR terminology**: "baseline" → "benchmark method" / "uniform allocation" (15 occurrences)
-- **Compilation**: 24 pages, 0 errors, 0 warnings
+- Polished the paper toward an OR-journal style and fixed several
+  cross-reference and terminology inconsistencies.
 
-## 2026-03-17 — Literature Acquisition (5 papers)
+## 2026-03-16 - Paper State Initialization + OR Restructure
 
-- **Downloaded + summarized** (arXiv source + SUMMARY_*.md):
-  - Gao, Zha, Zhou (2024) — Reward-Directed Diffusion via q-Learning
-  - Tang, Zhao (2024/2025) — Score-based Diffusion via SDEs (Tutorial)
-  - Tang, Zhao (2024) — Contractive DPMs
-  - Jia, Zhou (2024) — RL for Jump-Diffusions
-  - Aolaritei, Van Parys, Lam, Jordan (2025) — Optimal Importance Sampling
-- **9 BibTeX entries** added to main.bib
-- **"Connections to OR" paragraph** added in §1.1
-
-## 2026-03-16 — Paper State Initialization + OR Restructure
-
-- **Created** paper_state/ with 10 state docs
-- **Restructured** from ML conference (5 sections) to OR journal (6 sections + 2 appendices)
-- **New sections**: abstract.tex, preliminaries.tex (3 Definitions), framework.tex
-- **Expanded**: introduction (OR motivation + §1.1 Related Lit), conclusion (operational guidelines + limitations + future)
-- **OR style guide** extracted from OPRE reference paper (102-page PDF)
-- **Removed**: related_work.tex, methodology.tex, method_*.tex (content preserved in new structure)
+- Created `paper_state/` and restructured the paper into the current OR
+  framing with updated section layout.

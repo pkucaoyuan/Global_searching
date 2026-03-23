@@ -209,7 +209,7 @@ Then, conditional on $(X_t, c)$:
   As $g_t\sqrt{h} \to 0$,
   \begin{equation}
     \operatorname{Var}(S_t \mid X_t, c)
-    \;=\; \sigma_t^2 + O(g_t^3\,h^{3/2}).
+    \;=\; \sigma_t^2 + O_d(g_t^3\,h^{3/2}).
     \label{eq:var-approx}
   \end{equation}
 \item[\textbf{(iii)}]
@@ -220,7 +220,7 @@ Then, conditional on $(X_t, c)$:
     G_t(K)
     \;:=\; \mathbb{E}\Bigl[\max_{1 \le k \le K} S_t^{(k)}
            \,\Big|\, X_t, c\Bigr] - \mu_t
-    \;=\; \sigma_t\,a_K + O_K(g_t^2\,h),
+    \;=\; \sigma_t\,a_K + O_{K,d,L_t}(g_t^2\,h),
     \label{eq:gain-sde}
   \end{equation}
   where $a_K := \mathbb{E}[\max(Z_1, \ldots, Z_K)]$ with
@@ -228,7 +228,7 @@ Then, conditional on $(X_t, c)$:
   In particular,
   \begin{equation}
     G_t(K) \;=\; g_t\sqrt{h}\,\|\nabla\Psi_t(\bar{X}_{t-h};\, c)\|\,a_K
-              \;+\; O_K(g_t^2\,h).
+              \;+\; O_{K,d,L_t}(g_t^2\,h).
     \label{eq:gain-explicit}
   \end{equation}
 \end{enumerate}
@@ -250,14 +250,38 @@ For part~(ii), expand
 $\operatorname{Var}(S_t \mid X_t, c)
 = \operatorname{Var}(\sigma_t Z_t + R_t)
 = \sigma_t^2 + 2\,\operatorname{Cov}(\sigma_t Z_t, R_t) + \operatorname{Var}(R_t)$.
-For the cross-term, note that $\sigma_t Z_t$ is of order $g_t\sqrt{h}$
-and $R_t$ is of order $g_t^2 h$ (by \cref{prop:taylor}), so
-$\operatorname{Cov}(\sigma_t Z_t, R_t) = O(g_t^3 h^{3/2})$.
-For $\operatorname{Var}(R_t)$: since $|R_t| \le \tfrac{1}{2}L_t g_t^2 h \|\xi\|^2$,
-we have $\operatorname{Var}(R_t) \le \mathbb{E}[R_t^2]
-\le \tfrac{1}{4}L_t^2 g_t^4 h^2 \,\mathbb{E}[\|\xi\|^4]
-= O(g_t^4 h^2)$,
-which is dominated by the cross-term for small $g_t\sqrt{h}$.
+By Cauchy--Schwarz,
+\[
+  |\operatorname{Cov}(\sigma_t Z_t, R_t)|
+  \le \sqrt{\operatorname{Var}(\sigma_t Z_t)}\,
+      \sqrt{\operatorname{Var}(R_t)}
+  \le \sigma_t\,\sqrt{\mathbb{E}[R_t^2]}.
+\]
+Using \cref{prop:taylor},
+$|R_t| \le \tfrac{1}{2}L_t g_t^2 h \|\xi\|^2$, hence
+\[
+  \mathbb{E}[R_t^2 \mid X_t, c]
+  \le \tfrac{1}{4}L_t^2 g_t^4 h^2\,\mathbb{E}[\|\xi\|^4]
+  = \tfrac{1}{4}L_t^2 g_t^4 h^2\,d(d+2),
+\]
+because $\xi\sim\mathcal{N}(0,I)$ implies
+$\mathbb{E}[\|\xi\|^4]=d(d+2)$.
+Therefore
+\[
+  |\operatorname{Cov}(\sigma_t Z_t, R_t)|
+  \le \tfrac{1}{2}L_t\sqrt{d(d+2)}\,\sigma_t g_t^2 h
+  = O_d(g_t^3 h^{3/2}),
+\]
+with the implicit constant depending on the conditional local geometry
+through $L_t$ and $\|\nabla\Psi_t\|$.
+Likewise,
+\[
+  \operatorname{Var}(R_t)
+  \le \mathbb{E}[R_t^2]
+  \le \tfrac{1}{4}L_t^2 g_t^4 h^2\,d(d+2)
+  = O_d(g_t^4 h^2),
+\]
+which is lower order than the covariance term as $g_t\sqrt{h}\to 0$.
 
 For part (iii), write
 $S_t^{(k)} = \mu_t + \sigma_t Z_k + R_t^{(k)}$
@@ -274,8 +298,8 @@ taking conditional expectations gives
 $\mathbb{E}[\max_k |R_t^{(k)}| \mid X_t, c]
 \le K \cdot \tfrac{1}{2} L_t g_t^2 h\,d$.
 Therefore
-$G_t(K) = \sigma_t\,a_K + O_K(g_t^2 h)$,
-where the implicit constant in $O_K(\cdot)$ depends on $K$, the
+$G_t(K) = \sigma_t\,a_K + O_{K,d,L_t}(g_t^2 h)$,
+where the implicit constant in $O_{K,d,L_t}(\cdot)$ depends on $K$, the
 dimension~$d$, and the Hessian bound~$L_t$ from \cref{asm:smooth}, but not
 on the diffusion coefficient $g_t$ or the verifier gradient
 $\nabla\Psi_t$.
@@ -304,7 +328,7 @@ $\{K_t\}_{t=1}^T$,
   \sum_{t=1}^{T} G_t(K_t)
   \;=\; \sum_{t=1}^{T} g_t\sqrt{h}\,
         \|\nabla\Psi_t(\bar{X}_{t-h}; c)\|\,a_{K_t}
-  \;+\; \sum_{t=1}^{T} O_{K_t}(g_t^2\,h).
+  \;+\; \sum_{t=1}^{T} O_{K_t,d,L_t}(g_t^2\,h).
   \label{eq:aggregate-gain}
 \end{equation}
 Dropping the second-order remainder reduces the offline allocation problem
@@ -370,22 +394,31 @@ Then:
     \label{eq:jensen-gap}
   \end{equation}
   where $\bar{\boldsymbol{\sigma}}=\mathbb{E}[\boldsymbol{\sigma}]$,
-  with equality iff $\boldsymbol{\sigma}$ is constant across instances.
+  with equality whenever the same allocation is optimal almost surely on
+  the support of $\boldsymbol{\sigma}$.
 \item[\textbf{(ii)}]
-  The marginal gain factorizes as
+  For integer budgets, the one-step marginal gain obeys
   \begin{equation}
-    G_t'(K) \;=\; \underbrace{\sigma_t}_{\text{sensitivity}}
-    \;\cdot\; \underbrace{a_K'}_{\text{exhaustion}}.
+    \Delta_t(K)
+    \;:=\;
+    G_t(K{+}1)-G_t(K)
+    \;=\;
+    \underbrace{\sigma_t}_{\text{sensitivity}}
+    \;\cdot\; \underbrace{\Delta a_K}_{\text{exhaustion}}
+    \;+\; O_{K,d,L_t}(g_t^2 h),
+    \qquad
+    \Delta a_K:=a_{K+1}-a_K .
     \label{eq:marginal-decomp}
   \end{equation}
-  The optimal stopping condition is $G_t'(K)\le\lambda^*$.
-  The running mean $\bar{g}$ satisfies
-  $\bar{g}\ge\tfrac{1}{|\mathcal{H}_g|}\sum_s G_s'(\hat{K}_s)$
-  by concavity, so $\beta_g\bar{g}$ estimates~$\lambda^*$.
+  The optimal stopping condition is $\Delta_t(K)\le\lambda^*$.
+  The running mean $\bar{g}$ upper-bounds the active discrete marginals
+  up to the same $O_{K,d,L_t}(g_t^2 h)$ remainder, so
+  $\beta_g\bar{g}$ serves as an adaptive estimate of~$\lambda^*$.
   The gain condition $\widetilde{g}_t^{(j)}<\beta_g\bar{g}$ tests the
-  product $\sigma_t\,a_K'\le\lambda^*$; the variance condition
-  $\hat{\sigma}_t^{(j)}<\beta_\sigma\bar{\sigma}$ independently tests
-  $\sigma_t\le\bar{\sigma}$.
+  leading-order product $\sigma_t\,\Delta a_K$ against the
+  shadow-price scale~$\lambda^*$; the
+  variance condition is an empirical proxy for low sensitivity rather
+  than an exact test of $\sigma_t$.
   Requiring both conditions prevents premature stopping at
   high-value timesteps.
 \end{enumerate}
@@ -399,15 +432,22 @@ inequality any fixed allocation tuned to the population mean
 $\bar{\boldsymbol{\sigma}}$ incurs a gap
 (\cref{eq:jensen-gap}) growing with cross-instance variability
 of~$\boldsymbol{\sigma}$.
+Equality holds whenever the same allocation remains optimal across the
+support of $\boldsymbol{\sigma}$; a constant profile is only a
+sufficient special case.
 Part~(ii) decomposes the marginal gain~\eqref{eq:marginal-decomp}
 into two factors, each monitored by a separate
 threshold in the online controller.
-Low gain with high variance ($a_K'$ small, $\sigma_t$ large) signals
+Low gain with high variance ($\Delta a_K$ small, $\sigma_t$ large) signals
 a responsive but exhausted timestep where a lucky draw may still yield a large jump, so stopping is
 premature.
-Moderate gain with low variance ($a_K'$ moderate, $\sigma_t$ small)
+Moderate gain with low variance ($\Delta a_K$ moderate, $\sigma_t$ small)
 signals inherent insensitivity where gains plateau
 regardless, yet search remains productive at this iteration count.
+The variance statistic used by the controller should therefore be read
+as a proxy for the latent sensitivity $\sigma_t$, justified by the
+location-scale variance approximation in \cref{thm:loc-scale}(ii),
+rather than as an exact measurement of~$\sigma_t$ itself.
 Only when \emph{both} factors are small is stopping unambiguously
 justified, as the two-threshold diagram in \cref{fig:stopping} shows.
 \end{remark}
@@ -433,12 +473,12 @@ A local search operator $\mathcal{L}$ satisfies:
   \begin{equation}
     G_t^{\mathcal{L}}(K)
     \;=\; \sigma_t\,\phi_K^{\mathcal{L}}
-    \;+\; O_K(g_t^2\,h),
+    \;+\; O_{K,d,L_t}(g_t^2\,h),
     \label{eq:sensitivity-scaling}
   \end{equation}
   where $\phi_K^{\mathcal{L}}\ge 0$ depends on the operator
   $\mathcal{L}$ and the budget $K$ but \emph{not} on the
-  timestep~$t$, and the implicit constant in $O_K(\cdot)$ may
+  timestep~$t$, and the implicit constant in $O_{K,d,L_t}(\cdot)$ may
   depend on $K$, $d$, and $L_t$.
 \item[\textbf{(A4)}]
   \emph{Rotational equivariance.}\;
@@ -472,7 +512,8 @@ optimization depends on the search method and budget but not on the
 direction~$u$ or the scaling factor~$\sigma_t$, beyond a
 multiplicative factor.
 \textbf{(A4)} holds for all three operators below, since each uses
-only isotropic primitives ($\mathcal{N}(0,I)$ draws); it ensures that the
+only isotropic primitives (Gaussian exploration draws and
+uniform-direction local perturbations); it ensures that the
 projected gain $\mathbb{E}[\max_j\langle u,\xi^{(j)}\rangle]$ does
 not depend on the direction~$u$.
 \end{remark}
@@ -487,11 +528,11 @@ iterations at timestep~$t$ satisfies
   G_t^{\mathcal{L}}(K)
   \;=\;
   \sigma_t\,\phi_K^{\mathcal{L}}
-  + O_K(g_t^2\,h),
+  + O_{K,d,L_t}(g_t^2\,h),
   \label{eq:general-gain-factorization}
 \end{equation}
 where $\sigma_t=g_t\sqrt{h}\,\|\nabla\Psi_t(\bar{X}_{t-h};c)\|$
-and the implicit constant in $O_K(\cdot)$ depends on $K$, $d$,
+and the implicit constant in $O_{K,d,L_t}(\cdot)$ depends on $K$, $d$,
 and $L_t$ but not on $g_t$ or $\nabla\Psi_t$.
 The sequence $\phi_K^{\mathcal{L}}$ is strictly increasing for
 $K\ge 1$ (by~A1), has non-accelerating marginal gains (by~A2),
@@ -515,7 +556,7 @@ into~\eqref{eq:gain-general} gives
   &= \sigma_t\,\mathbb{E}\Bigl[
        \max_{0\le j\le K}\langle u_t,\xi^{(j)}\rangle
      \,\Big|\,X_t,c\Bigr]
-     + O_K(g_t^2 h),
+     + O_{K,d,L_t}(g_t^2 h),
 \end{align*}
 where the second equality uses the elementary inequality
 $|\max_j(a_j+b_j)-\max_j a_j|\le\max_j|b_j|$
@@ -523,7 +564,7 @@ $|\max_j(a_j+b_j)-\max_j a_j|\le\max_j|b_j|$
 to factor $\sigma_t$ out of the max, and the remainder bound
 $\mathbb{E}[\max_{0\le j\le K}|R_t(\xi^{(j)})|]
 \le\tfrac{1}{2}L_t g_t^2 h\,\mathbb{E}[\max_{0\le j\le K}\|\xi^{(j)}\|^2]$.
-The subscript~$K$ in $O_K(\cdot)$ reflects that the constant depends on
+The subscript in $O_{K,d,L_t}(\cdot)$ reflects that the constant depends on
 $\mathbb{E}[\max_j\|\xi^{(j)}\|^2]$, which may grow with~$K$ for
 operators whose iterates accumulate drift.
 
@@ -531,6 +572,14 @@ By~(A4), the joint distribution of $\{\xi^{(j)}\}$ is rotationally
 equivariant.
 Hence, for any fixed unit vector $u_t$, the projected iterates
 $\{\langle u_t,\xi^{(j)}\rangle\}$ have the same distribution as
+$\{\langle e_1,Q\xi^{(j)}\rangle\}$ for any orthogonal $Q$ satisfying
+$Qu_t=e_1$.
+By~(A4), the rotated process $\{Q\xi^{(j)}\}$ has the same law as the
+operator started from $Q\xi^{(0)}$; because
+$\xi^{(0)}\sim\mathcal{N}(0,I)$, the initialization is itself
+rotationally invariant, so $Q\xi^{(0)}\stackrel{d}{=}\xi^{(0)}$.
+Therefore the full iterate sequence has the same law after rotation, and
+hence $\{\langle u_t,\xi^{(j)}\rangle\}$ has the same distribution as
 $\{\langle e_1,\xi^{(j)}\rangle\}$ (where $e_1$ is any fixed
 coordinate direction).
 Therefore the expected projected gain
@@ -560,10 +609,12 @@ has the same structure as \cref{prop:offline}:
   The optimal allocation $\{K_t^*\}$ is simultaneously optimal for
   every instance.
 \item[\textup{(ii)}]
-  $K_t^*$ is non-decreasing in~$\sigma_t$.
-  When $\phi_K$ is strictly concave, $K_t^*$ is strictly
-  increasing (water-filling); when $\phi_K$ is linear, the
-  solution concentrates all budget on $\arg\max_t\sigma_t$.
+  There exists an optimal allocation that is non-decreasing
+  in~$\sigma_t$.
+  When $\phi_K$ is strictly concave, the active timesteps satisfy
+  the strict water-filling ordering.
+  When $\phi_K$ is linear, every optimizer concentrates the
+  allocable budget on $\arg\max_t\sigma_t$.
 \item[\textup{(iii)}]
   Non-uniform allocation weakly dominates uniform; the
   dominance is strict whenever $\{\sigma_t\}$ are not all equal
@@ -572,20 +623,20 @@ has the same structure as \cref{prop:offline}:
 \end{corollary}
 
 \begin{proof}
-The proof of \cref{prop:offline} (\cref{sec:proof-offline}) relies on
-three properties of the gain function $a_K$:
-(a)~marginal gains $a_{K+1}-a_K$ are non-increasing,
-(b)~$a_K$ is $t$-independent,
-and (c)~$a_K' > 0$.
-By \cref{thm:general-gain}, $\phi_K^{\mathcal{L}}$ inherits all
-three: non-accelerating marginals from~(A2), $t$-independence
-from~(A3) and~(A4), and $(\phi_K^{\mathcal{L}})'>0$ from~(A1).
-(When $\phi_K$ is linear, as for local perturbation, the
-allocation problem degenerates to a linear program assigning
-all budget to $\arg\max_t\sigma_t$; this is a valid extreme
-case of water-filling.)
-Substituting $\phi_K^{\mathcal{L}}$ for $a_K$ throughout the proof
-yields the result.
+The proof splits by curvature.
+Because \cref{thm:general-gain} gives a common, $t$-independent gain
+sequence $\phi_K^{\mathcal{L}}$ with non-accelerating marginals, the
+discrete exchange argument from \cref{prop:offline} still shows that an
+optimal allocation can be chosen monotone in~$\sigma_t$ and that moving
+budget from a lower-$\sigma_t$ timestep to a higher-$\sigma_t$ timestep
+never hurts, establishing parts~(i) and~(iii) at the weak level.
+When $\phi_K$ is strictly concave, the KKT argument in
+\cref{sec:proof-offline} applies verbatim with $\phi_K$ in place of $a_K$,
+yielding the strict water-filling ordering among active timesteps.
+When $\phi_K$ is linear, say $\phi_K=\alpha K$ with $\alpha>0$,
+\eqref{eq:alloc-general} becomes a linear program
+$\alpha\sum_t \sigma_t K_t$, so every optimizer assigns all budget beyond
+the mandatory floor $K_t\ge 1$ to $\arg\max_t \sigma_t$.
 \end{proof}
 
 \begin{corollary}[Online Jensen gap and dual-threshold stopping for general operators]
@@ -611,18 +662,26 @@ Then:
     V_{\mathcal{L}}^*\!\bigl(\bar{\boldsymbol{\sigma}}\bigr),
     \label{eq:jensen-general}
   \end{equation}
-  with equality iff $\boldsymbol{\sigma}$ is constant across instances.
+  with equality whenever the same allocation is optimal almost surely on
+  the support of $\boldsymbol{\sigma}$.
 \item[\textup{(ii)}]
-  The marginal gain factorizes as
+  For integer budgets, the one-step marginal gain satisfies
   \begin{equation}
-    \frac{\partial}{\partial K}\,G_t^{\mathcal{L}}(K)
+    \Delta_t^{\mathcal{L}}(K)
+    \;:=\;
+    G_t^{\mathcal{L}}(K{+}1)-G_t^{\mathcal{L}}(K)
     \;=\;
-    \sigma_t\cdot(\phi_K^{\mathcal{L}})'.
+    \sigma_t\cdot\Delta\phi_K^{\mathcal{L}}
+    + O_{K,d,L_t}(g_t^2 h),
+    \qquad
+    \Delta\phi_K^{\mathcal{L}}:=\phi_{K+1}^{\mathcal{L}}-\phi_K^{\mathcal{L}}.
     \label{eq:marginal-general}
   \end{equation}
   The dual-threshold stopping rule of \cref{alg:offline_online_budget}
-  remains valid: stop when both $\sigma_t$ is small (sensitivity low)
-  and $(\phi_K^{\mathcal{L}})'$ is small (search exhausted).
+  remains valid at the level of a proxy control law: stop when both the
+  estimated marginal gain is small and the empirical within-timestep
+  score variance is low, indicating low exhaustion-adjusted gain and a
+  low sensitivity proxy.
 \end{enumerate}
 \end{corollary}
 
@@ -636,20 +695,21 @@ Jensen's inequality gives~\eqref{eq:jensen-general}.
 This argument is identical to \cref{sec:proof-online} and uses
 \emph{no} property of $\phi_K^{\mathcal{L}}$ beyond non-negativity.
 
-For part~(ii): the factorization~\eqref{eq:marginal-general} follows
-directly from~\eqref{eq:general-gain-factorization}.
+For part~(ii): the factorization~\eqref{eq:marginal-general} follows by
+taking first differences in~\eqref{eq:general-gain-factorization}.
 The dual-threshold logic of \cref{prop:online}(ii) relies solely on
-the product structure of the marginal gain and the
-non-accelerating property of $\phi_K^{\mathcal{L}}$ (which
-guarantees that the chord $\bar{g}_s\ge G_s'(\hat{K}_s)$);
-both hold under (A1)--(A4).
+the product structure of the marginal gain, the non-accelerating
+property of $\phi_K^{\mathcal{L}}$, and the location-scale variance
+proxy from \cref{thm:loc-scale}(ii); all three persist under
+(A1)--(A4).
 \end{proof}
 
 \begin{remark}[Jensen gap magnitude and operator efficiency]
 \label{rmk:jensen-curvature}
 The Jensen gap~\eqref{eq:jensen-general} inherits the curvature of
 $\phi_K^{\mathcal{L}}$.
-Faster-growing $\phi_K$ (e.g., local perturbation with linear growth)
+Faster-growing $\phi_K$ (e.g., local perturbation with
+$\phi_K^{(\mathrm{LP})}=c_d(\lambda)K$ in the linearized regime)
 sharpens the switching between allocation regimes as
 $\boldsymbol{\sigma}$ varies, enlarging the gap:
 \emph{online adaptation is more valuable for more efficient
@@ -676,7 +736,7 @@ $\langle u,\xi_k\rangle$ are i.i.d.\ $\mathcal{N}(0,1)$, so
 \textbf{(A2):}~$a_K$ is concave
 (\citealt{david2003order}, Ch.~4).
 \textbf{(A3):}~By \cref{thm:loc-scale}(iii),
-$G_t(K)=\sigma_t\,a_K+O_K(g_t^2 h)$; the gain sequence
+$G_t(K)=\sigma_t\,a_K+O_{K,d,L_t}(g_t^2 h)$; the gain sequence
 $a_K\sim\sqrt{2\log K}$ is $t$-independent.
 \textbf{(A4):}~i.i.d.\ $\mathcal{N}(0,I)$ draws are
 rotationally invariant.
@@ -687,9 +747,10 @@ rotationally invariant.
 Starting from $\xi^{(0)}\sim\mathcal{N}(0,I)$, each iteration
 draws $\xi_{\mathrm{new}}\sim\mathcal{N}(0,I)$ with probability
 $\epsilon$ (explore), or sets
-$\xi_{\mathrm{new}}=\xi^*+\eta\zeta$,
-$\zeta\sim\mathcal{N}(0,I)$ (exploit by perturbing the current best
-$\xi^*$), and updates $\xi^*$ if the new candidate is better.
+$\xi_{\mathrm{new}}=\xi^*+RU$ (exploit by perturbing the current best
+$\xi^*$), where $U$ is uniform on the unit sphere $\mathbb{S}^{d-1}$ and
+$R\sim\mathrm{Unif}[0,\lambda\sqrt d]$, and updates $\xi^*$ if the new
+candidate is better.
 In the linearized regime, the objective
 $f(\xi)=\langle u,\xi\rangle$ is linear, and:
 \begin{itemize}
@@ -698,11 +759,22 @@ $f(\xi)=\langle u,\xi\rangle$ is linear, and:
     coordinate $\langle u,\xi\rangle$, contributing a gain of
     $a_{\lceil\epsilon K\rceil}$.
   \item \emph{Exploitation steps} ($\approx(1{-}\epsilon)K$):
-    each perturbs the current best in the direction $u$ by
-    $\eta\langle u,\zeta\rangle\sim\mathcal{N}(0,\eta^2)$.
-    On a linear objective, this is a random walk with positive drift
-    (accept-reject filter), contributing additional gain
-    beyond the exploration component.
+    each perturbs the current best in the projected direction by
+    $R\langle u,U\rangle$.
+    The accepted increment is $(R\langle u,U\rangle)_+$, whose
+    expectation is the uniform-ball drift constant
+    \begin{equation}
+      c_d(\lambda)
+      \;:=\;
+      \mathbb{E}\bigl[(R\langle u,U\rangle)_+\bigr]
+      \;=\;
+      \frac{\lambda\sqrt d}{4\sqrt{\pi}}\,
+      \frac{\Gamma(d/2)}{\Gamma((d+1)/2)}.
+      \label{eq:uniform-ball-drift}
+    \end{equation}
+    Thus exploitation adds a linear-in-$K$ drift beyond the
+    exploration component, although we retain only the robust lower
+    bound below.
 \end{itemize}
 Therefore
 \begin{equation}
@@ -711,7 +783,7 @@ Therefore
   \label{eq:phi-epsgreedy-lb}
 \end{equation}
 with equality when exploitation steps add no improvement
-(e.g., when $\eta\to 0$).
+(e.g., when $\lambda\to 0$).
 In the other extreme, when $\epsilon=1$ the operator
 reduces to random search and $\phi_K^{(1)}=a_K$.
 
@@ -733,18 +805,18 @@ The marginal gain of the $(K{+}1)$-th iteration is
 With probability $\epsilon$ this iteration explores
 (draws $Z_{\mathrm{new}}\sim\mathcal{N}(0,1)$ independent of $M_K$),
 and with probability $1{-}\epsilon$ it exploits
-(perturbs the incumbent by
-$\eta\langle u,\zeta\rangle\sim\mathcal{N}(0,\eta^2)$).
+(perturbs the incumbent by $R\langle u,U\rangle$).
 In both cases, the candidate is accepted only when it exceeds~$M_K$.
 For exploration, the candidate $Z_{\mathrm{new}}\sim\mathcal{N}(0,1)$
 is independent of history, so
 $\mathbb{E}[\max(0,Z_{\mathrm{new}}-M_K)]$ is non-increasing
 in~$M_K$ (and hence in~$K$), because the tail probability
 $P(Z_{\mathrm{new}}>m)$ decreases in~$m$.
-For exploitation, the overshoot $\max(0,\eta\langle u,\zeta\rangle)$
+For exploitation, the overshoot $(R\langle u,U\rangle)_+$
 does not depend on~$M_K$ at all (the perturbation is added to
-the incumbent and accepted only if positive), yielding a
-constant marginal $\eta\,\mathbb{E}[\max(0,Z)]=\eta/\sqrt{2\pi}$.
+the incumbent and accepted only if its projected increment is positive),
+yielding the constant marginal $c_d(\lambda)$ from
+\eqref{eq:uniform-ball-drift}.
 Therefore
 $\Delta_K = \epsilon\cdot(\text{non-increasing in }K)
 + (1{-}\epsilon)\cdot(\text{constant})$,
@@ -755,14 +827,13 @@ so $\phi_K^{(\epsilon)}$ satisfies~(A2).
 reduces to optimizing $\langle u,\xi\rangle$.
 Both the exploration draw $\langle u,\xi_{\mathrm{new}}\rangle
 \sim\mathcal{N}(0,1)$ and the exploitation perturbation
-$\eta\langle u,\zeta\rangle\sim\mathcal{N}(0,\eta^2)$ depend
-on the direction~$u$ only through a one-dimensional projection,
-whose distribution is $u$-independent by isotropy of
-$\mathcal{N}(0,I)$.
+$R\langle u,U\rangle$ depend on the direction~$u$ only through a
+one-dimensional projection, whose distribution is $u$-independent by
+the isotropy of the Gaussian draw and of the sphere-uniform direction.
 Hence $\phi_K^{(\epsilon)}$ does not depend on the timestep~$t$.
 
-\textbf{(A4):}~Both primitives ($\mathcal{N}(0,I)$ draws for explore,
-$\mathcal{N}(0,I)$ perturbations for exploit) are
+\textbf{(A4):}~Both primitives (Gaussian draws for explore,
+sphere-uniform directions with scalar radii for exploit) are
 rotationally invariant.
 The accept-reject comparison uses
 $\langle u,\xi\rangle$, which satisfies
@@ -775,115 +846,118 @@ orthogonal~$Q$, so the full operator is rotationally equivariant.
 This operator is the pure-exploitation limit of the $\epsilon$-greedy
 operator in \cref{ex:eps-greedy}: each iteration perturbs the
 current best $\xi^*$ by a random direction
-$\zeta\sim\mathcal{N}(0,I)$, setting
-$\xi_{\mathrm{new}}=\xi^*+\eta\zeta$, and updates $\xi^*$ if the
+$U\sim\mathrm{Unif}(\mathbb{S}^{d-1})$ and a random radius
+$R\sim\mathrm{Unif}[0,\lambda\sqrt d]$, setting
+$\xi_{\mathrm{new}}=\xi^*+RU$, and updates $\xi^*$ if the
 new candidate scores higher.
 In the linearized regime, the projected coordinate of the
 incumbent evolves by accept-reject: the perturbation
-$\eta\langle u,\zeta\rangle\sim\mathcal{N}(0,\eta^2)$ is
+$R\langle u,U\rangle$ is
 accepted when $\langle u,\xi_{\mathrm{new}}\rangle
->\langle u,\xi^*\rangle$, i.e., when $\langle u,\zeta\rangle>0$.
+>\langle u,\xi^*\rangle$, i.e., when $\langle u,U\rangle>0$.
 Because the acceptance event is independent of the current
 value of the incumbent, each iteration adds a constant expected
 improvement
 \begin{equation}
   \phi_{K+1}^{(\mathrm{LP})}-\phi_K^{(\mathrm{LP})}
   \;=\;
-  \eta\,\mathbb{E}\bigl[\max(0,Z)\bigr]
-  \;=\;
-  \frac{\eta}{\sqrt{2\pi}},
-  \qquad Z\sim\mathcal{N}(0,1),
+  c_d(\lambda),
   \label{eq:phi-lp-marginal}
 \end{equation}
 giving
 \begin{equation}
   \phi_K^{(\mathrm{LP})}
   \;=\;
-  \frac{\eta\,K}{\sqrt{2\pi}}.
+  c_d(\lambda)\,K.
   \label{eq:phi-lp-exact}
 \end{equation}
+Equivalently, if one parameterizes the perturbation by the radius cap
+$\eta:=\lambda\sqrt d$, then
+\[
+  c_d(\eta)
+  \;=\;
+  \frac{\eta}{4\sqrt{\pi}}\,
+  \frac{\Gamma(d/2)}{\Gamma((d+1)/2)}.
+\]
 
 \textbf{(A1):}~Each perturbation has probability
-$P(\langle u,\zeta\rangle>0)=\tfrac{1}{2}>0$ of improving the
+$P(\langle u,U\rangle>0)=\tfrac{1}{2}>0$ of improving the
 incumbent, so $\phi_K$ is strictly increasing.
 
 \textbf{(A2):}~In the linearized regime the marginal
 gain~\eqref{eq:phi-lp-marginal} is constant (hence bounded
 and non-increasing), satisfying~(A2).
-In the full problem, the quadratic remainder
-$R_t(\xi)=O(g_t^2 h\|\xi\|^2)$ penalizes large incumbent norms,
-reducing the acceptance probability as $K$ grows and making the
-marginal strictly decreasing.
+Outside the linearized regime, curvature effects perturb this exact
+constant-marginal picture; the abstract theory uses
+\eqref{eq:phi-lp-exact} only as the leading-order gain sequence.
 
 \textbf{(A3):}~The perturbation
-$\eta\langle u,\zeta\rangle\sim\mathcal{N}(0,\eta^2)$ is a
-one-dimensional projection of $\mathcal{N}(0,I)$, whose
-distribution does not depend on~$u$ or the timestep~$t$.
+$R\langle u,U\rangle$ is a one-dimensional projection of a
+uniform-ball perturbation, whose distribution does not depend on~$u$
+or the timestep~$t$.
 Hence $\phi_K^{(\mathrm{LP})}$ is $t$-independent.
 
-\textbf{(A4):}~The perturbation $\zeta\sim\mathcal{N}(0,I)$ is
+\textbf{(A4):}~The perturbation $RU$ is
 rotationally invariant, and the accept-reject comparison depends
 on $\langle u,\xi\rangle$ which satisfies
 $\langle Qu,Q\xi\rangle=\langle u,\xi\rangle$ for any
 orthogonal~$Q$.
 \end{example}
 
-\begin{proposition}[Crossover between random search and local perturbation]
+\begin{proposition}[Asymptotic crossover scale between random search and local perturbation]
 \label{prop:crossover}
 In the linearized regime, random search achieves
 $\phi_K^{\mathrm{RS}}\sim\sqrt{2\log K}$,
 while local perturbation achieves
-$\phi_K^{(\mathrm{LP})}= \eta K/\sqrt{2\pi}$
+$\phi_K^{(\mathrm{LP})}= c_d(\lambda)K$
 (\cref{eq:phi-lp-exact}).
-There exists a crossover budget
+Balancing the two growth laws yields a crossover scale
 \begin{equation}
-  K^*\;=\;\tilde{\Theta}\!\bigl(\sqrt{2\pi}/\eta\bigr)
+  K^*\;=\;\tilde{\Theta}\!\bigl(c_d(\lambda)^{-1}\bigr)
+  \;=\;\tilde{\Theta}(\lambda^{-1})
   \label{eq:crossover}
 \end{equation}
-(where $\tilde{\Theta}$ suppresses logarithmic factors)
-such that:
-\begin{enumerate}
-\item[\textup{(i)}]
-  For $K\ll K^*$:
-  $\phi_K^{(\mathrm{LP})}=\eta K/\sqrt{2\pi}>\sqrt{2\log K}
-  =\phi_K^{\mathrm{RS}}$,
-  so local perturbation dominates.
-\item[\textup{(ii)}]
-  For $K\gg K^*$:
-  both gains continue to grow, but the quadratic remainder
-  $R_t(\xi)=O(g_t^2 h\|\xi^{(K)}\|^2)$ in the full (non-linearized)
-  problem increasingly penalizes local perturbation's drifted
-  iterates, so the effective gains of both operators are bounded.
-\end{enumerate}
+\noindent
+where the final equivalence holds for fixed~$d$.
+Thus budgets of order $K^*$ mark the regime in which the logarithmic
+random-search gain and the linear local-perturbation gain are of the
+same magnitude.
 \end{proposition}
 
 \begin{proof}
 The crossover occurs at the unique solution of
-$\eta K/\sqrt{2\pi}=\sqrt{2\log K}$.
-Since $\eta K/\sqrt{2\pi}$ grows linearly and $\sqrt{2\log K}$
-grows logarithmically, there exists a unique crossing point.
-Substituting $K=\sqrt{2\pi}\sqrt{2\log K}/\eta$ and
+$c_d(\lambda)K=\sqrt{2\log K}$.
+Since $c_d(\lambda)K$ grows linearly and $\sqrt{2\log K}$
+grows logarithmically, the balance point satisfies
+$K=\sqrt{2\log K}/c_d(\lambda)$.
+Substituting this relation once and
 iterating once gives
-$K^*=\sqrt{2\pi}\sqrt{2\log(\sqrt{2\pi}/\eta)}/\eta
-\cdot(1+o(1))$ as $1/\eta\to\infty$, which is
-$\tilde{\Theta}(\sqrt{2\pi}/\eta)$.
-Below this crossover, the linear growth $\eta K/\sqrt{2\pi}$
-of local perturbation exceeds the logarithmic growth
-$\sqrt{2\log K}$ of random search.
-Above it, local perturbation continues to grow linearly in the
-linearized regime, but the quadratic remainder
-$R_t(\xi)=O(g_t^2 h\|\xi^{(K)}\|^2)$ in the full problem
-increasingly penalizes the drifted iterates, effectively
-bounding the achievable gain for both operators.
+$K^*=c_d(\lambda)^{-1}\sqrt{2\log(c_d(\lambda)^{-1})}\cdot(1+o(1))$
+as $c_d(\lambda)\to 0$, which is
+$\tilde{\Theta}(c_d(\lambda)^{-1})$.
+For fixed dimension~$d$, the Gamma-ratio in
+\eqref{eq:uniform-ball-drift} is constant, so
+$c_d(\lambda)=\Theta(\lambda)$ and hence
+$K^*=\tilde{\Theta}(\lambda^{-1})$.
 \end{proof}
+
+\begin{remark}[Full-problem caveat for crossover]
+\label{rmk:crossover-full}
+\cref{prop:crossover} compares only the linearized gain models.
+In the full nonlinear objective, the remainder
+$R_t(\xi)=O(g_t^2 h\|\xi\|^2)$ couples performance to the
+operator-dependent iterate norms, so any large-budget ordering beyond
+the crossover scale becomes problem dependent and is best treated as an
+implementation-level heuristic rather than a theorem.
+\end{remark}
 
 \begin{remark}[Operator selection as part of scheduling]
 \label{rmk:operator-selection}
 \cref{prop:crossover} implies that the optimal operator choice
-depends on the per-step budget $K_t$: high-value timesteps receiving
-concentrated budget benefit from local perturbation's linear
-initial growth,
-while low-value timesteps see negligible difference between operators.
+depends on the per-step budget $K_t$: as $K_t$ approaches the crossover
+scale, the linear-growth local perturbation operator becomes relatively
+more attractive, while smaller budgets remain well served by pure random
+search.
 Extending the scheduling decision to include operator selection is a
 natural next step; the MDP formulation of \cref{sec:mdp} already
 accommodates this as a richer action space.
