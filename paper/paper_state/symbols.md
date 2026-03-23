@@ -60,6 +60,20 @@
 | $W_g$ | Gain history window size | Alg 1 | Recent gains to average |
 | $R$ | Remaining budget | Alg 1 | $R \leftarrow B$ initially |
 
+## General Local Search (§4.5)
+
+| Symbol | Meaning | Introduced | Context |
+|--------|---------|------------|---------|
+| $G_t^{\mathcal{L}}(K)$ | Expected gain from $K$ iterations of operator $\mathcal{L}$ | Eq (§4.5) | Generalizes $G_t(K)$ |
+| $\phi_K^{\mathcal{L}}$ | Operator-specific gain sequence | Eq (§4.5) | $G_t = \sigma_t \phi_K + O_K(g_t^2 h)$ |
+| $\phi_K^{\mathrm{RS}}$ | Random search gain: $a_K$ | Ex 4.7 | Recovers original |
+| $\phi_K^{(\epsilon)}$ | $\epsilon$-greedy gain: $\ge a_{\lceil\epsilon K\rceil}$ | Ex 4.8 | Lower bound |
+| $\phi_K^{(\mathrm{ZO})}$ | Zero-order gain: $\eta K/d$ | Ex 4.9 | Exact (linearized) |
+| $\phi_K^{(\mathrm{Lan})}$ | Langevin gain: $(1-e^{-cK})/\tau$ | Ex 4.10 | Asymptotic |
+| $V_{\mathcal{L}}^*(\boldsymbol{\sigma})$ | Generalized oracle value | Cor (§4.5) | Extends $V^*$ |
+| $K^*$ | ZO/RS crossover budget | Prop (§4.5) | $\tilde{\Theta}(d/\eta)$ |
+| $c_{\mathrm{mix}}$ | Langevin mixing constant | Ex 4.10 | Discretization-dependent |
+
 ## MDP Formulation (Appendix A)
 
 | Symbol | Meaning | Introduced | Context |

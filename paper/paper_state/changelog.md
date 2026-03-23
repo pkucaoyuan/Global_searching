@@ -1,8 +1,52 @@
 # Changelog: Where to Search (GAINS)
 
-**Last Updated**: 2026-03-17
+**Last Updated**: 2026-03-21
 
 ---
+
+## 2026-03-21 — §4.5 General Local Search Theory + Verify-Proof + Refine-Theory + Polish
+
+- **polish-paper** (2 rounds, 7 modifications, converged):
+  - VERB_STRENGTHEN (2): "develops"→"extends", "enables"→"permits"
+  - COMPRESS (3): intro (-1 sentence), Jensen remark (-2 lines), crossover remark (-1 line)
+  - FLOW (2): causal restructuring in scheduling intro; parallel structure in crossover remark
+  - No AI words, no zombie nouns, no passive voice, no S-V gap issues detected
+  - Compilation: 32 pages, 0 errors, 0 warnings
+
+- **refine-theory** (2 iterations, 11 issues fixed):
+  - Fixed "three assumptions" → "four assumptions" count
+  - Fixed intro "satisfying (A3)" → "satisfying Assumption 4.X"
+  - Replaced informal "(const depending on η,τ)" with proper prose
+  - Improved ε-greedy (A2) concavity argument (both marginals non-increasing)
+  - Clarified Jensen gap curvature mechanism (sharper allocation switching)
+  - Added measure-zero justification for ZO (A1) strict monotonicity
+  - Qualified crossover $o(1)$ with "$d/\eta\to\infty$" limit
+  - Weakened cor:offline-general Part (ii)/(iii) to match concavity level
+  - Added $K_t \ge 1$ constraint to eq:alloc-general and eq:oracle-general
+  - Fixed "(A1)--(A3)" → "(A1)--(A4)" in body text and table caption
+  - Compilation: 32 pages, 0 errors, 0 warnings
+
+- **New section**: §4.5 Extension to General Local Search Operators (general_local_search.tex)
+  - Assumption (A1–A4): strict monotonicity, concavity, sensitivity scaling, rotational equivariance
+  - Theorem (General Gain Factorization): $G_t^{\mathcal{L}}(K) = \sigma_t \phi_K + O_K(g_t^2 h)$
+  - Corollary (Offline Water-Filling, General): extends prop:offline to general operators
+  - Corollary (Online Jensen Gap, General): extends prop:online to general operators
+  - Proposition (Crossover): ZO vs RS crossover at $K^* = \tilde{\Theta}(d/\eta)$
+  - 4 Examples: Random search, ε-greedy, Zero-order, Langevin MCMC
+  - Summary table (tab:phi-summary)
+- **verify-proof Round 3** (3 final issues fixed):
+  - Weakened (A2) from strict concavity to concavity (ZO has linear $\phi_K = \eta K/d$)
+  - Fixed table caption: (A1)--(A3) → (A1)--(A4)
+  - Fixed prop:crossover Part(ii): removed false $\sqrt{d}$ saturation claim
+  - Added degenerate LP note to cor:offline-general for linear $\phi_K$
+- **verify-proof Rounds 1-2** (10 issues found, all fixed):
+  - Added (A4) rotational equivariance (was hidden assumption in proof)
+  - (A1) strengthened to strict monotonicity (needed by prop:offline)
+  - Fixed remainder bound: $O(g_t^2 h)$ → $O_K(g_t^2 h)$ throughout
+  - Fixed ZO example: removed incorrect $\sqrt{d}$ cap, derived exact $\phi_K = \eta K/d$
+  - Fixed Langevin (A3) verification: clarified steady-state mean argument
+  - Removed all `\approx` from mathematical statements (4 instances)
+- **Compilation**: 31 pages, 0 errors, 0 warnings
 
 ## 2026-03-17 — OR Style Polish + Consistency Fix
 

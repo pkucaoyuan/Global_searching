@@ -1,0 +1,895 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+\usepackage{amsmath,amssymb,mathtools,amsthm}
+\usepackage[capitalize,noabbrev]{cleveref}
+\crefname{assumption}{Assumption}{Assumptions}
+\usepackage[numbers,sort&compress]{natbib}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  citecolor=blue,
+  urlcolor=blue
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% THEOREMS (OR-style: section-numbered)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\newtheorem{example}[theorem]{Example}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\title{Leveraging Inference-Time Compute for Diffusion Models via Global Scheduling of Denoising Trajectories}
+\author{Anonymous Author(s)}
+\date{}
+
+% === Theory Extract: auto-generated, do not edit ===
+\usepackage{xcolor}
+\definecolor{srcgray}{gray}{0.5}
+\newcommand{\srcfile}[1]{\hfill{\tiny\color{srcgray}[\detokenize{#1}]}}
+
+\title{Theory Extract: GAINS}
+\author{Auto-generated from main paper}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+\newpage
+
+% ============================================
+% Stub labels for cross-references to main paper
+% (equations, figures, algorithms, sections)
+% ============================================
+\section*{Cross-Reference Stubs}
+{\small The following items are referenced by the
+theory but defined in the main paper.}
+\medskip
+
+% Stub algorithm from algorithm.tex
+\begin{algorithm}[h]\caption{See main paper.}\label{alg:offline_online_budget}\end{algorithm}
+% Stub equation from algorithm.tex
+\begin{equation} \text{(see main paper)} \label{eq:alloc} \end{equation}
+% Stub equation from preliminaries.tex
+\begin{equation} \text{(see main paper)} \label{eq:ddpm-reverse} \end{equation}
+% Stub equation from general_local_search.tex
+\begin{equation} \text{(see main paper)} \label{eq:gain-general} \end{equation}
+% Stub equation from preliminaries.tex
+\begin{equation} \text{(see main paper)} \label{eq:sgm-langevin} \end{equation}
+% Stub figure from algorithm.tex
+\begin{figure}[h]\centering\caption{See main paper.}\label{fig:stopping}\end{figure}
+% Stub section from framework.tex
+\subsection{(See main paper)} \label{sec:framework}
+% Stub section from appendix_mdp.tex
+\subsection{(See main paper)} \label{sec:mdp}
+% Stub section from appendix_proofs.tex
+\subsection{(See main paper)} \label{sec:proof-offline}
+% Stub section from appendix_proofs.tex
+\subsection{(See main paper)} \label{sec:proof-online}
+\newpage
+
+\section{Preliminaries}
+\srcfile{preliminaries.tex}
+
+\begin{remark}
+Both DDPM and SGM traverse $T$ discrete timesteps.
+At each step, the transition from $\mathbf{x}_t$ to $\mathbf{x}_{t-1}$ depends
+on a stochastic noise variable (the injected $\boldsymbol{\varepsilon}$ in
+\eqref{eq:ddpm-reverse} or the Langevin noise in~\eqref{eq:sgm-langevin}).
+This shared structure underpins the transition abstraction
+in \cref{sec:framework}.
+\end{remark}
+
+\begin{definition}[Noise Trajectory Search Problem]
+\label{def:nts}
+Given a pretrained diffusion model with transition function
+$F_\theta$, a conditioning signal $c$, a verifier $v(\cdot, c)$, and a total
+compute budget of $B$ function evaluations (NFE), the \emph{noise trajectory
+search problem} is to find a sequence of noise variables
+$\{\varepsilon_t^*\}_{t=1}^T$ that maximizes the verifier score of the final
+generated sample:
+\begin{equation}
+  \max_{\{\varepsilon_t\}_{t=1}^T}\;
+  v\!\bigl(x_0(\varepsilon_1, \ldots, \varepsilon_T),\, c\bigr)
+  \quad \text{subject to} \quad
+  \text{total NFE} \leq B.
+  \label{eq:nts-problem}
+\end{equation}
+\end{definition}
+
+\begin{definition}[Verifier]
+\label{def:verifier}
+A \emph{verifier} $v : \mathcal{X} \times \mathcal{C} \to \mathbb{R}$ scores a
+generated sample $x_0$ against its conditioning signal $c$, returning a scalar
+quality measure.
+The verifier is fixed and not trained during search.
+Examples include perceptual quality metrics, task-specific reward functions,
+and domain-specific performance measures.
+\end{definition}
+
+\begin{definition}[Function Evaluation Budget]
+\label{def:nfe}
+A single \emph{function evaluation} (NFE) corresponds to one forward pass
+through the denoising network.
+The budget $B$ caps how many forward passes the sampler may
+perform when generating a single sample.
+Standard diffusion sampling consumes exactly $T$ NFE (one per timestep);
+noise trajectory search spends the remaining $B - T$ NFE on local noise
+refinement.
+\end{definition}
+
+\section{GAINS Algorithm and Theory}
+\srcfile{algorithm.tex}
+
+\begin{assumption}[Verifier smoothness]
+\label{asm:smooth}
+The composed verifier score function
+$\Psi_t(\cdot\,; c) \in C^2(\mathbb{R}^d)$, and there exists a constant
+$L_t < \infty$ such that
+$\|\nabla^2 \Psi_t(x; c)\|_{\mathrm{op}} \le L_t$
+for all $x$ in a neighborhood of the line segment between $\bar{X}_{t-h}$
+and $X_{t-h}$, almost surely.
+\end{assumption}
+
+\begin{proposition}[Score Taylor expansion]
+\label{prop:taylor}
+Under \cref{asm:smooth}, conditional on $(X_t, c)$,
+\begin{equation}
+  S_t \;=\; \Psi_t(\bar{X}_{t-h};\, c)
+        \;+\; g_t\sqrt{h}\,
+              \bigl\langle \nabla\Psi_t(\bar{X}_{t-h};\, c),\, \xi \bigr\rangle
+        \;+\; R_t,
+  \label{eq:taylor-score}
+\end{equation}
+where the remainder satisfies
+$|R_t| \le \tfrac{1}{2}\,L_t\,g_t^2\,h\,\|\xi\|^2$ almost surely,
+and hence
+$\mathbb{E}[\,|R_t|\mid X_t, c\,] \le \tfrac{1}{2}\,L_t\,g_t^2\,h\,d$.
+\end{proposition}
+
+\begin{proof}
+By construction,
+$X_{t-h} = \bar{X}_{t-h} + g_t\sqrt{h}\,\xi$.
+A second-order Taylor expansion of $\Psi_t(\cdot\,; c)$ around
+$\bar{X}_{t-h}$ gives
+\[
+  \Psi_t(X_{t-h}; c)
+  = \Psi_t(\bar{X}_{t-h}; c)
+    + \bigl\langle \nabla\Psi_t(\bar{X}_{t-h}; c),\,
+        X_{t-h} - \bar{X}_{t-h} \bigr\rangle
+    + R_t,
+\]
+where
+$R_t = \tfrac{1}{2}(X_{t-h} - \bar{X}_{t-h})^\top
+  \nabla^2\Psi_t(\widetilde{X}; c)\,
+  (X_{t-h} - \bar{X}_{t-h})$
+for some $\widetilde{X}$ on the segment joining $\bar{X}_{t-h}$ and $X_{t-h}$.
+Substituting $X_{t-h} - \bar{X}_{t-h} = g_t\sqrt{h}\,\xi$ yields
+\eqref{eq:taylor-score}.
+The remainder bound follows from
+$|R_t| \le \tfrac{1}{2}\|\nabla^2\Psi_t(\widetilde{X}; c)\|_{\mathrm{op}}
+  \,\|g_t\sqrt{h}\,\xi\|^2
+  \le \tfrac{1}{2}L_t\,g_t^2\,h\,\|\xi\|^2$.
+Taking conditional expectations and using
+$\mathbb{E}[\|\xi\|^2] = d$ completes the proof.
+\end{proof}
+
+\begin{theorem}[Location-scale structure of per-step scores]
+\label{thm:loc-scale}
+Define
+\begin{equation}
+  \mu_t \;:=\; \Psi_t(\bar{X}_{t-h};\, c),
+  \qquad
+  \sigma_t \;:=\; g_t\sqrt{h}\,\|\nabla\Psi_t(\bar{X}_{t-h};\, c)\|.
+  \label{eq:mu-sigma-sde}
+\end{equation}
+Then, conditional on $(X_t, c)$:
+\begin{enumerate}
+\item[\textbf{(i)}]
+  There exists $Z_t \sim \mathcal{N}(0,1)$ such that
+  $S_t = \mu_t + \sigma_t\,Z_t + R_t$.
+\item[\textbf{(ii)}]
+  As $g_t\sqrt{h} \to 0$,
+  \begin{equation}
+    \operatorname{Var}(S_t \mid X_t, c)
+    \;=\; \sigma_t^2 + O(g_t^3\,h^{3/2}).
+    \label{eq:var-approx}
+  \end{equation}
+\item[\textbf{(iii)}]
+  Let $S_t^{(1)}, \ldots, S_t^{(K)}$ be $K$ i.i.d.\ copies of $S_t$
+  generated by i.i.d.\ noise draws $\xi_1, \ldots, \xi_K$.
+  Then
+  \begin{equation}
+    G_t(K)
+    \;:=\; \mathbb{E}\Bigl[\max_{1 \le k \le K} S_t^{(k)}
+           \,\Big|\, X_t, c\Bigr] - \mu_t
+    \;=\; \sigma_t\,a_K + O_K(g_t^2\,h),
+    \label{eq:gain-sde}
+  \end{equation}
+  where $a_K := \mathbb{E}[\max(Z_1, \ldots, Z_K)]$ with
+  $Z_k \stackrel{\mathrm{iid}}{\sim} \mathcal{N}(0,1)$.
+  In particular,
+  \begin{equation}
+    G_t(K) \;=\; g_t\sqrt{h}\,\|\nabla\Psi_t(\bar{X}_{t-h};\, c)\|\,a_K
+              \;+\; O_K(g_t^2\,h).
+    \label{eq:gain-explicit}
+  \end{equation}
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+For part~(i), when $\|\nabla\Psi_t(\bar{X}_{t-h}; c)\| > 0$, write
+$\langle \nabla\Psi_t, \xi \rangle
+= \|\nabla\Psi_t\|\,Z_t$
+where $Z_t := \langle \nabla\Psi_t / \|\nabla\Psi_t\|, \xi \rangle$.
+Since $\nabla\Psi_t / \|\nabla\Psi_t\|$ is a fixed unit vector conditional on
+$(X_t, c)$ and $\xi \sim \mathcal{N}(0, I)$, the projection $Z_t$ is standard
+normal: $Z_t \sim \mathcal{N}(0,1)$.
+(When $\nabla\Psi_t(\bar{X}_{t-h}; c) = 0$, we have $\sigma_t = 0$ and the
+linear term vanishes; the result holds trivially with $Z_t$ defined
+arbitrarily.)
+
+For part~(ii), expand
+$\operatorname{Var}(S_t \mid X_t, c)
+= \operatorname{Var}(\sigma_t Z_t + R_t)
+= \sigma_t^2 + 2\,\operatorname{Cov}(\sigma_t Z_t, R_t) + \operatorname{Var}(R_t)$.
+For the cross-term, note that $\sigma_t Z_t$ is of order $g_t\sqrt{h}$
+and $R_t$ is of order $g_t^2 h$ (by \cref{prop:taylor}), so
+$\operatorname{Cov}(\sigma_t Z_t, R_t) = O(g_t^3 h^{3/2})$.
+For $\operatorname{Var}(R_t)$: since $|R_t| \le \tfrac{1}{2}L_t g_t^2 h \|\xi\|^2$,
+we have $\operatorname{Var}(R_t) \le \mathbb{E}[R_t^2]
+\le \tfrac{1}{4}L_t^2 g_t^4 h^2 \,\mathbb{E}[\|\xi\|^4]
+= O(g_t^4 h^2)$,
+which is dominated by the cross-term for small $g_t\sqrt{h}$.
+
+For part (iii), write
+$S_t^{(k)} = \mu_t + \sigma_t Z_k + R_t^{(k)}$
+for each candidate $k$.
+Then
+$\max_k S_t^{(k)} = \mu_t + \max_k (\sigma_t Z_k + R_t^{(k)})$.
+Using the elementary inequality
+$|\max_k (a_k + b_k) - \max_k a_k| \le \max_k |b_k|$,
+we obtain
+$|\max_k S_t^{(k)} - (\mu_t + \sigma_t \max_k Z_k)|
+\le \max_k |R_t^{(k)}|$.
+Since $\max_k |R_t^{(k)}| \le \sum_k |R_t^{(k)}|$,
+taking conditional expectations gives
+$\mathbb{E}[\max_k |R_t^{(k)}| \mid X_t, c]
+\le K \cdot \tfrac{1}{2} L_t g_t^2 h\,d$.
+Therefore
+$G_t(K) = \sigma_t\,a_K + O_K(g_t^2 h)$,
+where the implicit constant in $O_K(\cdot)$ depends on $K$, the
+dimension~$d$, and the Hessian bound~$L_t$ from \cref{asm:smooth}, but not
+on the diffusion coefficient $g_t$ or the verifier gradient
+$\nabla\Psi_t$.
+Substituting $\sigma_t = g_t\sqrt{h}\,\|\nabla\Psi_t(\bar{X}_{t-h}; c)\|$
+yields~\eqref{eq:gain-explicit}.
+\end{proof}
+
+\begin{remark}
+\cref{thm:loc-scale} identifies the precise quantities governing timestep
+sensitivity:
+$\sigma_t = g_t\sqrt{h}\,\|\nabla\Psi_t(\bar{X}_{t-h}; c)\|$
+multiplies the diffusion coefficient $g_t$, the step size
+$\sqrt{h}$, and the verifier gradient norm at the
+deterministic Euler point.
+Timesteps with large $g_t$ (strong noise injection) or large
+$\|\nabla\Psi_t\|$ (steep verifier landscape) benefit most from noise
+search, explaining the non-uniform sensitivity patterns observed in offline profiling.
+\end{remark}
+
+\begin{corollary}[SDE-based approximate allocation]
+\label{cor:sde-alloc}
+Under \cref{asm:smooth}, with step size $h$ and diffusion
+coefficients $\{g_t\}_{t=1}^T$, for any fixed budget allocation
+$\{K_t\}_{t=1}^T$,
+\begin{equation}
+  \sum_{t=1}^{T} G_t(K_t)
+  \;=\; \sum_{t=1}^{T} g_t\sqrt{h}\,
+        \|\nabla\Psi_t(\bar{X}_{t-h}; c)\|\,a_{K_t}
+  \;+\; \sum_{t=1}^{T} O_{K_t}(g_t^2\,h).
+  \label{eq:aggregate-gain}
+\end{equation}
+Dropping the second-order remainder reduces the offline allocation problem
+to
+\begin{equation}
+  \max_{\{K_t\}_{t=1}^T:\;\sum_t K_t = B}\;
+  \sum_{t=1}^{T} g_t\sqrt{h}\,
+  \|\nabla\Psi_t(\bar{X}_{t-h}; c)\|\,a_{K_t}.
+  \label{eq:alloc-sde}
+\end{equation}
+\end{corollary}
+
+\begin{proposition}[Offline optimality under independence]
+\label{prop:offline}
+Suppose $\sigma_t$ does not depend on the prompt or search history
+(i.e., $\sigma_t = \sigma_t$ for all $c, x_t$).
+Then:
+\begin{enumerate}
+\item[\textbf{(i)}]
+  Problem~\eqref{eq:alloc} decomposes across prompts: any optimal
+  allocation $\{K_t^*\}$ is simultaneously optimal for every instance.
+\item[\textbf{(ii)}]
+  The optimal allocation equalizes marginal gains:
+  $\sigma_t\,a_{K_t^*}' = \lambda^*$ for all~$t$ with $K_t^* > 1$,
+  where $\lambda^*$ is the shadow price of the budget constraint.
+  Consequently, $K_t^*$ is increasing in~$\sigma_t$ (water-filling).
+\item[\textbf{(iii)}]
+  $\sum_t \sigma_t\,a_{K_t^*} > \sum_t \sigma_t\,a_{B/T}$ whenever
+  $\{\sigma_t\}$ are not all equal, and the gap grows with the
+  dispersion of~$\{\sigma_t\}$.
+\end{enumerate}
+\end{proposition}
+
+\begin{remark}
+\cref{prop:offline} justifies offline profiling.
+Part~(i) guarantees that under the independence condition, a single fixed
+allocation optimizes every prompt simultaneously, so profiling on a small calibration
+set generalizes.
+Part~(ii) reveals \emph{water-filling} structure: timesteps with larger
+$\sigma_t = g_t\sqrt{h}\,\|\nabla\Psi_t\|$ (where noise perturbations
+shift the verifier score most) receive proportionally more budget.
+Part~(iii) quantifies the non-uniform advantage: the more
+heterogeneous the per-step sensitivities, the larger the gain
+over uniform scheduling.
+\end{remark}
+
+\begin{proposition}[Online adaptation under prompt dependence]
+\label{prop:online}
+Suppose $\sigma_t = \sigma_t(c, x_t)$ varies with the prompt and search
+history.
+Define the oracle value
+$V^*(\boldsymbol{\sigma})=\max_{\{K_t\}:\sum_t K_t=B}
+\sum_t\sigma_t\,a_{K_t}$
+for variance profile $\boldsymbol{\sigma}=(\sigma_1,\dots,\sigma_T)$.
+Then:
+\begin{enumerate}
+\item[\textbf{(i)}]
+  $V^*$ is convex in $\boldsymbol{\sigma}$.
+  The expected regret of any fixed allocation satisfies
+  \begin{equation}
+    \mathbb{E}_{\boldsymbol{\sigma}}\!\bigl[V^*(\boldsymbol{\sigma})\bigr]
+    \;-\; V^*\!\bigl(\bar{\boldsymbol{\sigma}}\bigr) \;\ge\; 0,
+    \label{eq:jensen-gap}
+  \end{equation}
+  where $\bar{\boldsymbol{\sigma}}=\mathbb{E}[\boldsymbol{\sigma}]$,
+  with equality iff $\boldsymbol{\sigma}$ is constant across instances.
+\item[\textbf{(ii)}]
+  The marginal gain factorizes as
+  \begin{equation}
+    G_t'(K) \;=\; \underbrace{\sigma_t}_{\text{sensitivity}}
+    \;\cdot\; \underbrace{a_K'}_{\text{exhaustion}}.
+    \label{eq:marginal-decomp}
+  \end{equation}
+  The optimal stopping condition is $G_t'(K)\le\lambda^*$.
+  The running mean $\bar{g}$ satisfies
+  $\bar{g}\ge\tfrac{1}{|\mathcal{H}_g|}\sum_s G_s'(\hat{K}_s)$
+  by concavity, so $\beta_g\bar{g}$ estimates~$\lambda^*$.
+  The gain condition $\widetilde{g}_t^{(j)}<\beta_g\bar{g}$ tests the
+  product $\sigma_t\,a_K'\le\lambda^*$; the variance condition
+  $\hat{\sigma}_t^{(j)}<\beta_\sigma\bar{\sigma}$ independently tests
+  $\sigma_t\le\bar{\sigma}$.
+  Requiring both conditions prevents premature stopping at
+  high-value timesteps.
+\end{enumerate}
+\end{proposition}
+
+\begin{remark}
+\cref{prop:online} motivates the online controller.
+Part~(i) shows that $V^*$, as a pointwise maximum of linear functions, is convex in the variance
+profile, so by Jensen's
+inequality any fixed allocation tuned to the population mean
+$\bar{\boldsymbol{\sigma}}$ incurs a gap
+(\cref{eq:jensen-gap}) growing with cross-instance variability
+of~$\boldsymbol{\sigma}$.
+Part~(ii) decomposes the marginal gain~\eqref{eq:marginal-decomp}
+into two factors, each monitored by a separate
+threshold in the online controller.
+Low gain with high variance ($a_K'$ small, $\sigma_t$ large) signals
+a responsive but exhausted timestep where a lucky draw may still yield a large jump, so stopping is
+premature.
+Moderate gain with low variance ($a_K'$ moderate, $\sigma_t$ small)
+signals inherent insensitivity where gains plateau
+regardless, yet search remains productive at this iteration count.
+Only when \emph{both} factors are small is stopping unambiguously
+justified, as the two-threshold diagram in \cref{fig:stopping} shows.
+\end{remark}
+
+\section{General Local Search Operators}
+\srcfile{general_local_search.tex}
+
+\begin{assumption}[Local search regularity]
+\label{asm:local-search}
+A local search operator $\mathcal{L}$ satisfies:
+\begin{enumerate}
+\item[\textbf{(A1)}]
+  \emph{Strict monotone improvement.}\;
+  $G_t^{\mathcal{L}}(K)$ is strictly increasing in~$K$ for $K\ge 1$.
+\item[\textbf{(A2)}]
+  \emph{Diminishing returns.}\;
+  $G_t^{\mathcal{L}}(K{+}1)-G_t^{\mathcal{L}}(K)$ is bounded above
+  by a non-increasing sequence, i.e., the marginal gains do not
+  accelerate.
+\item[\textbf{(A3)}]
+  \emph{Sensitivity scaling.}\;
+  In the linearized regime ($g_t\sqrt{h}\to 0$),
+  \begin{equation}
+    G_t^{\mathcal{L}}(K)
+    \;=\; \sigma_t\,\phi_K^{\mathcal{L}}
+    \;+\; O_K(g_t^2\,h),
+    \label{eq:sensitivity-scaling}
+  \end{equation}
+  where $\phi_K^{\mathcal{L}}\ge 0$ depends on the operator
+  $\mathcal{L}$ and the budget $K$ but \emph{not} on the
+  timestep~$t$, and the implicit constant in $O_K(\cdot)$ may
+  depend on $K$, $d$, and $L_t$.
+\item[\textbf{(A4)}]
+  \emph{Rotational equivariance.}\;
+  For any orthogonal matrix $Q\in\mathbb{R}^{d\times d}$, the joint
+  distribution of $\{Q\xi^{(j)}\}_{j\ge 0}$ under $\mathcal{L}$
+  equals that of the iterates produced by $\mathcal{L}$ starting
+  from $Q\xi^{(0)}$.
+\end{enumerate}
+\end{assumption}
+
+\begin{remark}[Grounding of assumptions]
+\label{rmk:grounding}
+Each assumption captures a natural property of practical operators.
+\textbf{(A1)} holds whenever the operator
+maintains a running best-so-far (a ``keep best'' wrapper) and each
+iteration has a positive probability of improving the incumbent.
+\textbf{(A2)} reflects the general principle that the first
+few iterations are most productive: for random search this follows from
+order-statistic theory ($a_K$ is concave;
+\citealt{david2003order}, Ch.~4); for gradient-based methods it
+follows from convergence on smooth objectives; for MCMC it follows from
+mixing-time arguments.
+\textbf{(A3)} arises because, in the small-noise regime,
+$\Psi_t(\bar{X}_{t-h}+g_t\sqrt{h}\,\xi;c)
+= \mu_t+\sigma_t\langle u_t,\xi\rangle + O(g_t^2 h)$
+where $u_t:=\nabla\Psi_t/\|\nabla\Psi_t\|$ is a fixed unit vector
+(\cref{prop:taylor}).
+Any local search on $\xi$ therefore reduces to optimizing a linear
+function $f(\xi)=\langle u,\xi\rangle$, and the gain from this
+optimization depends on the search method and budget but not on the
+direction~$u$ or the scaling factor~$\sigma_t$, beyond a
+multiplicative factor.
+\textbf{(A4)} holds for all three operators below, since each uses
+only isotropic primitives ($\mathcal{N}(0,I)$ draws); it ensures that the
+projected gain $\mathbb{E}[\max_j\langle u,\xi^{(j)}\rangle]$ does
+not depend on the direction~$u$.
+\end{remark}
+
+\begin{theorem}[General gain factorization]
+\label{thm:general-gain}
+Under \cref{asm:smooth,asm:local-search}, for any local search operator
+$\mathcal{L}$ with operator-specific gain sequence
+$\{\phi_K^{\mathcal{L}}\}_{K\ge 0}$, the expected gain from $K$
+iterations at timestep~$t$ satisfies
+\begin{equation}
+  G_t^{\mathcal{L}}(K)
+  \;=\;
+  \sigma_t\,\phi_K^{\mathcal{L}}
+  + O_K(g_t^2\,h),
+  \label{eq:general-gain-factorization}
+\end{equation}
+where $\sigma_t=g_t\sqrt{h}\,\|\nabla\Psi_t(\bar{X}_{t-h};c)\|$
+and the implicit constant in $O_K(\cdot)$ depends on $K$, $d$,
+and $L_t$ but not on $g_t$ or $\nabla\Psi_t$.
+The sequence $\phi_K^{\mathcal{L}}$ is strictly increasing for
+$K\ge 1$ (by~A1), has non-accelerating marginal gains (by~A2),
+and satisfies $\phi_0^{\mathcal{L}}=0$.
+\end{theorem}
+
+\begin{proof}
+By \cref{prop:taylor},
+$\Psi_t(\bar{X}_{t-h}+g_t\sqrt{h}\,\xi;c)
+=\mu_t+\sigma_t\langle u_t,\xi\rangle+R_t(\xi)$,
+where $u_t=\nabla\Psi_t(\bar{X}_{t-h};c)/\|\nabla\Psi_t(\bar{X}_{t-h};c)\|$
+and $|R_t(\xi)|\le\tfrac{1}{2}L_t g_t^2 h\|\xi\|^2$.
+Since $\mu_t$ is constant across iterates, substituting
+into~\eqref{eq:gain-general} gives
+\begin{align*}
+  G_t^{\mathcal{L}}(K)
+  &= \mathbb{E}\Bigl[
+       \max_{0\le j\le K}
+       \bigl(\sigma_t\langle u_t,\xi^{(j)}\rangle + R_t(\xi^{(j)})\bigr)
+     \,\Big|\,X_t,c\Bigr] \\
+  &= \sigma_t\,\mathbb{E}\Bigl[
+       \max_{0\le j\le K}\langle u_t,\xi^{(j)}\rangle
+     \,\Big|\,X_t,c\Bigr]
+     + O_K(g_t^2 h),
+\end{align*}
+where the second equality uses the elementary inequality
+$|\max_j(a_j+b_j)-\max_j a_j|\le\max_j|b_j|$
+(as in \cref{thm:loc-scale}(iii)), the non-negativity $\sigma_t\ge 0$
+to factor $\sigma_t$ out of the max, and the remainder bound
+$\mathbb{E}[\max_{0\le j\le K}|R_t(\xi^{(j)})|]
+\le\tfrac{1}{2}L_t g_t^2 h\,\mathbb{E}[\max_{0\le j\le K}\|\xi^{(j)}\|^2]$.
+The subscript~$K$ in $O_K(\cdot)$ reflects that the constant depends on
+$\mathbb{E}[\max_j\|\xi^{(j)}\|^2]$, which may grow with~$K$ for
+operators whose iterates accumulate drift.
+
+By~(A4), the joint distribution of $\{\xi^{(j)}\}$ is rotationally
+equivariant.
+Hence, for any fixed unit vector $u_t$, the projected iterates
+$\{\langle u_t,\xi^{(j)}\rangle\}$ have the same distribution as
+$\{\langle e_1,\xi^{(j)}\rangle\}$ (where $e_1$ is any fixed
+coordinate direction).
+Therefore the expected projected gain
+$\mathbb{E}[\max_{0\le j\le K}\langle u_t,\xi^{(j)}\rangle]$
+depends on $\mathcal{L}$ and $K$ only; we denote it
+$\phi_K^{\mathcal{L}}$.
+Strict monotonicity of $\phi_K^{\mathcal{L}}$
+follows from~(A1), non-accelerating marginals from~(A2),
+and $\phi_0^{\mathcal{L}}=0$ since
+$\mathbb{E}[\langle u,\xi^{(0)}\rangle]=0$ for
+$\xi^{(0)}\sim\mathcal{N}(0,I)$.
+\end{proof}
+
+\begin{corollary}[Offline water-filling for general operators]
+\label{cor:offline-general}
+Under the conditions of \cref{thm:general-gain}, with
+prompt-independent~$\sigma_t$,
+the allocation problem
+\begin{equation}
+  \max_{\{K_t\}:\,\sum_t K_t=B,\;K_t\ge 1}\;
+  \sum_{t=1}^{T}\sigma_t\,\phi_{K_t}^{\mathcal{L}}
+  \label{eq:alloc-general}
+\end{equation}
+has the same structure as \cref{prop:offline}:
+\begin{enumerate}
+\item[\textup{(i)}]
+  The optimal allocation $\{K_t^*\}$ is simultaneously optimal for
+  every instance.
+\item[\textup{(ii)}]
+  $K_t^*$ is non-decreasing in~$\sigma_t$.
+  When $\phi_K$ is strictly concave, $K_t^*$ is strictly
+  increasing (water-filling); when $\phi_K$ is linear, the
+  solution concentrates all budget on $\arg\max_t\sigma_t$.
+\item[\textup{(iii)}]
+  Non-uniform allocation weakly dominates uniform; the
+  dominance is strict whenever $\{\sigma_t\}$ are not all equal
+  and $\phi_K$ is strictly concave.
+\end{enumerate}
+\end{corollary}
+
+\begin{proof}
+The proof of \cref{prop:offline} (\cref{sec:proof-offline}) relies on
+three properties of the gain function $a_K$:
+(a)~marginal gains $a_{K+1}-a_K$ are non-increasing,
+(b)~$a_K$ is $t$-independent,
+and (c)~$a_K' > 0$.
+By \cref{thm:general-gain}, $\phi_K^{\mathcal{L}}$ inherits all
+three: non-accelerating marginals from~(A2), $t$-independence
+from~(A3) and~(A4), and $(\phi_K^{\mathcal{L}})'>0$ from~(A1).
+(When $\phi_K$ is linear, as for local perturbation, the
+allocation problem degenerates to a linear program assigning
+all budget to $\arg\max_t\sigma_t$; this is a valid extreme
+case of water-filling.)
+Substituting $\phi_K^{\mathcal{L}}$ for $a_K$ throughout the proof
+yields the result.
+\end{proof}
+
+\begin{corollary}[Online Jensen gap and dual-threshold stopping for general operators]
+\label{cor:online-general}
+Under the conditions of \cref{thm:general-gain}, with
+prompt-dependent $\sigma_t=\sigma_t(c,x_t)$,
+define the generalized oracle
+\begin{equation}
+  V_{\mathcal{L}}^*(\boldsymbol{\sigma})
+  \;=\;
+  \max_{\{K_t\}:\,\sum_t K_t=B,\;K_t\ge 1}\;
+  \sum_{t=1}^{T}\sigma_t\,\phi_{K_t}^{\mathcal{L}}.
+  \label{eq:oracle-general}
+\end{equation}
+Then:
+\begin{enumerate}
+\item[\textup{(i)}]
+  $V_{\mathcal{L}}^*$ is convex in $\boldsymbol{\sigma}$, and
+  \begin{equation}
+    \mathbb{E}_{\boldsymbol{\sigma}}\!
+    \bigl[V_{\mathcal{L}}^*(\boldsymbol{\sigma})\bigr]
+    \;\ge\;
+    V_{\mathcal{L}}^*\!\bigl(\bar{\boldsymbol{\sigma}}\bigr),
+    \label{eq:jensen-general}
+  \end{equation}
+  with equality iff $\boldsymbol{\sigma}$ is constant across instances.
+\item[\textup{(ii)}]
+  The marginal gain factorizes as
+  \begin{equation}
+    \frac{\partial}{\partial K}\,G_t^{\mathcal{L}}(K)
+    \;=\;
+    \sigma_t\cdot(\phi_K^{\mathcal{L}})'.
+    \label{eq:marginal-general}
+  \end{equation}
+  The dual-threshold stopping rule of \cref{alg:offline_online_budget}
+  remains valid: stop when both $\sigma_t$ is small (sensitivity low)
+  and $(\phi_K^{\mathcal{L}})'$ is small (search exhausted).
+\end{enumerate}
+\end{corollary}
+
+\begin{proof}
+For part~(i): for each fixed allocation $\{K_t\}$, the map
+$\boldsymbol{\sigma}\mapsto\sum_t\sigma_t\,\phi_{K_t}^{\mathcal{L}}$
+is linear.
+$V_{\mathcal{L}}^*$ is the pointwise maximum of finitely many
+linear functions, hence convex.
+Jensen's inequality gives~\eqref{eq:jensen-general}.
+This argument is identical to \cref{sec:proof-online} and uses
+\emph{no} property of $\phi_K^{\mathcal{L}}$ beyond non-negativity.
+
+For part~(ii): the factorization~\eqref{eq:marginal-general} follows
+directly from~\eqref{eq:general-gain-factorization}.
+The dual-threshold logic of \cref{prop:online}(ii) relies solely on
+the product structure of the marginal gain and the
+non-accelerating property of $\phi_K^{\mathcal{L}}$ (which
+guarantees that the chord $\bar{g}_s\ge G_s'(\hat{K}_s)$);
+both hold under (A1)--(A4).
+\end{proof}
+
+\begin{remark}[Jensen gap magnitude and operator efficiency]
+\label{rmk:jensen-curvature}
+The Jensen gap~\eqref{eq:jensen-general} inherits the curvature of
+$\phi_K^{\mathcal{L}}$.
+Faster-growing $\phi_K$ (e.g., local perturbation with linear growth)
+sharpens the switching between allocation regimes as
+$\boldsymbol{\sigma}$ varies, enlarging the gap:
+\emph{online adaptation is more valuable for more efficient
+operators}.
+For pure random search ($\phi_K=a_K\sim\sqrt{2\log K}$), the slow
+growth yields a smaller gap and less benefit from online
+scheduling.
+\end{remark}
+
+\begin{example}[Random search]
+\label{ex:random-search}
+The operator draws $K$ i.i.d.\ $\xi_k\sim\mathcal{N}(0,I)$
+and keeps the best.
+In the linearized regime, the projected scores
+$\langle u,\xi_k\rangle$ are i.i.d.\ $\mathcal{N}(0,1)$, so
+\begin{equation}
+  \phi_K^{\mathrm{RS}} = a_K
+  := \mathbb{E}\bigl[\max(Z_1,\ldots,Z_K)\bigr],
+  \qquad Z_k\stackrel{\mathrm{iid}}{\sim}\mathcal{N}(0,1).
+  \label{eq:phi-rs}
+\end{equation}
+\textbf{(A1):}~The running maximum is strictly increasing for $K\ge 2$
+(a fresh draw has positive probability of exceeding the current max).
+\textbf{(A2):}~$a_K$ is concave
+(\citealt{david2003order}, Ch.~4).
+\textbf{(A3):}~By \cref{thm:loc-scale}(iii),
+$G_t(K)=\sigma_t\,a_K+O_K(g_t^2 h)$; the gain sequence
+$a_K\sim\sqrt{2\log K}$ is $t$-independent.
+\textbf{(A4):}~i.i.d.\ $\mathcal{N}(0,I)$ draws are
+rotationally invariant.
+\end{example}
+
+\begin{example}[$\epsilon$-greedy search]
+\label{ex:eps-greedy}
+Starting from $\xi^{(0)}\sim\mathcal{N}(0,I)$, each iteration
+draws $\xi_{\mathrm{new}}\sim\mathcal{N}(0,I)$ with probability
+$\epsilon$ (explore), or sets
+$\xi_{\mathrm{new}}=\xi^*+\eta\zeta$,
+$\zeta\sim\mathcal{N}(0,I)$ (exploit by perturbing the current best
+$\xi^*$), and updates $\xi^*$ if the new candidate is better.
+In the linearized regime, the objective
+$f(\xi)=\langle u,\xi\rangle$ is linear, and:
+\begin{itemize}
+  \item \emph{Exploration steps} ($\approx\epsilon K$ in expectation):
+    each is an i.i.d.\ draw from $\mathcal{N}(0,1)$ in the projected
+    coordinate $\langle u,\xi\rangle$, contributing a gain of
+    $a_{\lceil\epsilon K\rceil}$.
+  \item \emph{Exploitation steps} ($\approx(1{-}\epsilon)K$):
+    each perturbs the current best in the direction $u$ by
+    $\eta\langle u,\zeta\rangle\sim\mathcal{N}(0,\eta^2)$.
+    On a linear objective, this is a random walk with positive drift
+    (accept-reject filter), contributing additional gain
+    beyond the exploration component.
+\end{itemize}
+Therefore
+\begin{equation}
+  \phi_K^{(\epsilon)}
+  \;\ge\; a_{\lceil\epsilon K\rceil},
+  \label{eq:phi-epsgreedy-lb}
+\end{equation}
+with equality when exploitation steps add no improvement
+(e.g., when $\eta\to 0$).
+In the other extreme, when $\epsilon=1$ the operator
+reduces to random search and $\phi_K^{(1)}=a_K$.
+
+\textbf{(A1):}~Each iteration has probability $\epsilon>0$ of being
+an exploration step that draws a fresh
+$Z_{\mathrm{new}}\sim\mathcal{N}(0,1)$ in the projected coordinate.
+Because $\mathcal{N}(0,1)$ has unbounded support,
+$P(Z_{\mathrm{new}}>\max_{0\le j\le K}\langle u,\xi^{(j)}\rangle)>0$,
+so $\phi_{K+1}^{(\epsilon)}>\phi_K^{(\epsilon)}$ for all~$K\ge 0$.
+
+\textbf{(A2):}~Let $M_K=\max_{0\le j\le K}\langle u,\xi^{(j)}\rangle$
+denote the running best after $K$ iterations.
+The marginal gain of the $(K{+}1)$-th iteration is
+\[
+  \Delta_K
+  := \phi_{K+1}^{(\epsilon)}-\phi_K^{(\epsilon)}
+  = \mathbb{E}\bigl[\max(0,\,\langle u,\xi^{(K+1)}\rangle - M_K)\bigr].
+\]
+With probability $\epsilon$ this iteration explores
+(draws $Z_{\mathrm{new}}\sim\mathcal{N}(0,1)$ independent of $M_K$),
+and with probability $1{-}\epsilon$ it exploits
+(perturbs the incumbent by
+$\eta\langle u,\zeta\rangle\sim\mathcal{N}(0,\eta^2)$).
+In both cases, the candidate is accepted only when it exceeds~$M_K$.
+For exploration, the candidate $Z_{\mathrm{new}}\sim\mathcal{N}(0,1)$
+is independent of history, so
+$\mathbb{E}[\max(0,Z_{\mathrm{new}}-M_K)]$ is non-increasing
+in~$M_K$ (and hence in~$K$), because the tail probability
+$P(Z_{\mathrm{new}}>m)$ decreases in~$m$.
+For exploitation, the overshoot $\max(0,\eta\langle u,\zeta\rangle)$
+does not depend on~$M_K$ at all (the perturbation is added to
+the incumbent and accepted only if positive), yielding a
+constant marginal $\eta\,\mathbb{E}[\max(0,Z)]=\eta/\sqrt{2\pi}$.
+Therefore
+$\Delta_K = \epsilon\cdot(\text{non-increasing in }K)
++ (1{-}\epsilon)\cdot(\text{constant})$,
+which is non-increasing in~$K$,
+so $\phi_K^{(\epsilon)}$ satisfies~(A2).
+
+\textbf{(A3):}~In the linearized regime the projected problem
+reduces to optimizing $\langle u,\xi\rangle$.
+Both the exploration draw $\langle u,\xi_{\mathrm{new}}\rangle
+\sim\mathcal{N}(0,1)$ and the exploitation perturbation
+$\eta\langle u,\zeta\rangle\sim\mathcal{N}(0,\eta^2)$ depend
+on the direction~$u$ only through a one-dimensional projection,
+whose distribution is $u$-independent by isotropy of
+$\mathcal{N}(0,I)$.
+Hence $\phi_K^{(\epsilon)}$ does not depend on the timestep~$t$.
+
+\textbf{(A4):}~Both primitives ($\mathcal{N}(0,I)$ draws for explore,
+$\mathcal{N}(0,I)$ perturbations for exploit) are
+rotationally invariant.
+The accept-reject comparison uses
+$\langle u,\xi\rangle$, which satisfies
+$\langle Qu,Q\xi\rangle=\langle u,\xi\rangle$ for any
+orthogonal~$Q$, so the full operator is rotationally equivariant.
+\end{example}
+
+\begin{example}[Local perturbation search ($\epsilon$-greedy with $\epsilon=0$)]
+\label{ex:local-perturbation}
+This operator is the pure-exploitation limit of the $\epsilon$-greedy
+operator in \cref{ex:eps-greedy}: each iteration perturbs the
+current best $\xi^*$ by a random direction
+$\zeta\sim\mathcal{N}(0,I)$, setting
+$\xi_{\mathrm{new}}=\xi^*+\eta\zeta$, and updates $\xi^*$ if the
+new candidate scores higher.
+In the linearized regime, the projected coordinate of the
+incumbent evolves by accept-reject: the perturbation
+$\eta\langle u,\zeta\rangle\sim\mathcal{N}(0,\eta^2)$ is
+accepted when $\langle u,\xi_{\mathrm{new}}\rangle
+>\langle u,\xi^*\rangle$, i.e., when $\langle u,\zeta\rangle>0$.
+Because the acceptance event is independent of the current
+value of the incumbent, each iteration adds a constant expected
+improvement
+\begin{equation}
+  \phi_{K+1}^{(\mathrm{LP})}-\phi_K^{(\mathrm{LP})}
+  \;=\;
+  \eta\,\mathbb{E}\bigl[\max(0,Z)\bigr]
+  \;=\;
+  \frac{\eta}{\sqrt{2\pi}},
+  \qquad Z\sim\mathcal{N}(0,1),
+  \label{eq:phi-lp-marginal}
+\end{equation}
+giving
+\begin{equation}
+  \phi_K^{(\mathrm{LP})}
+  \;=\;
+  \frac{\eta\,K}{\sqrt{2\pi}}.
+  \label{eq:phi-lp-exact}
+\end{equation}
+
+\textbf{(A1):}~Each perturbation has probability
+$P(\langle u,\zeta\rangle>0)=\tfrac{1}{2}>0$ of improving the
+incumbent, so $\phi_K$ is strictly increasing.
+
+\textbf{(A2):}~In the linearized regime the marginal
+gain~\eqref{eq:phi-lp-marginal} is constant (hence bounded
+and non-increasing), satisfying~(A2).
+In the full problem, the quadratic remainder
+$R_t(\xi)=O(g_t^2 h\|\xi\|^2)$ penalizes large incumbent norms,
+reducing the acceptance probability as $K$ grows and making the
+marginal strictly decreasing.
+
+\textbf{(A3):}~The perturbation
+$\eta\langle u,\zeta\rangle\sim\mathcal{N}(0,\eta^2)$ is a
+one-dimensional projection of $\mathcal{N}(0,I)$, whose
+distribution does not depend on~$u$ or the timestep~$t$.
+Hence $\phi_K^{(\mathrm{LP})}$ is $t$-independent.
+
+\textbf{(A4):}~The perturbation $\zeta\sim\mathcal{N}(0,I)$ is
+rotationally invariant, and the accept-reject comparison depends
+on $\langle u,\xi\rangle$ which satisfies
+$\langle Qu,Q\xi\rangle=\langle u,\xi\rangle$ for any
+orthogonal~$Q$.
+\end{example}
+
+\begin{proposition}[Crossover between random search and local perturbation]
+\label{prop:crossover}
+In the linearized regime, random search achieves
+$\phi_K^{\mathrm{RS}}\sim\sqrt{2\log K}$,
+while local perturbation achieves
+$\phi_K^{(\mathrm{LP})}= \eta K/\sqrt{2\pi}$
+(\cref{eq:phi-lp-exact}).
+There exists a crossover budget
+\begin{equation}
+  K^*\;=\;\tilde{\Theta}\!\bigl(\sqrt{2\pi}/\eta\bigr)
+  \label{eq:crossover}
+\end{equation}
+(where $\tilde{\Theta}$ suppresses logarithmic factors)
+such that:
+\begin{enumerate}
+\item[\textup{(i)}]
+  For $K\ll K^*$:
+  $\phi_K^{(\mathrm{LP})}=\eta K/\sqrt{2\pi}>\sqrt{2\log K}
+  =\phi_K^{\mathrm{RS}}$,
+  so local perturbation dominates.
+\item[\textup{(ii)}]
+  For $K\gg K^*$:
+  both gains continue to grow, but the quadratic remainder
+  $R_t(\xi)=O(g_t^2 h\|\xi^{(K)}\|^2)$ in the full (non-linearized)
+  problem increasingly penalizes local perturbation's drifted
+  iterates, so the effective gains of both operators are bounded.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+The crossover occurs at the unique solution of
+$\eta K/\sqrt{2\pi}=\sqrt{2\log K}$.
+Since $\eta K/\sqrt{2\pi}$ grows linearly and $\sqrt{2\log K}$
+grows logarithmically, there exists a unique crossing point.
+Substituting $K=\sqrt{2\pi}\sqrt{2\log K}/\eta$ and
+iterating once gives
+$K^*=\sqrt{2\pi}\sqrt{2\log(\sqrt{2\pi}/\eta)}/\eta
+\cdot(1+o(1))$ as $1/\eta\to\infty$, which is
+$\tilde{\Theta}(\sqrt{2\pi}/\eta)$.
+Below this crossover, the linear growth $\eta K/\sqrt{2\pi}$
+of local perturbation exceeds the logarithmic growth
+$\sqrt{2\log K}$ of random search.
+Above it, local perturbation continues to grow linearly in the
+linearized regime, but the quadratic remainder
+$R_t(\xi)=O(g_t^2 h\|\xi^{(K)}\|^2)$ in the full problem
+increasingly penalizes the drifted iterates, effectively
+bounding the achievable gain for both operators.
+\end{proof}
+
+\begin{remark}[Operator selection as part of scheduling]
+\label{rmk:operator-selection}
+\cref{prop:crossover} implies that the optimal operator choice
+depends on the per-step budget $K_t$: high-value timesteps receiving
+concentrated budget benefit from local perturbation's linear
+initial growth,
+while low-value timesteps see negligible difference between operators.
+Extending the scheduling decision to include operator selection is a
+natural next step; the MDP formulation of \cref{sec:mdp} already
+accommodates this as a richer action space.
+\end{remark}
+
+\bibliographystyle{plainnat}
+\bibliography{main}
+
+\end{document}

@@ -1,6 +1,6 @@
 # Results Registry: Where to Search (GAINS)
 
-**Last Updated**: 2026-03-20
+**Last Updated**: 2026-03-21
 
 ---
 
@@ -44,6 +44,35 @@
   - (i) $V^*$ convex; Jensen gap $\ge 0$ for any fixed allocation
   - (ii) Marginal gain = $\sigma_t \cdot a_K'$; dual-threshold justified
 - **Verified**: ✅ (2026-03-20)
+
+### Assumption 2 (Local Search Regularity) — `asm:local-search`
+- **Location**: §4.5 (general_local_search.tex)
+- **Statement**: (A1) strict monotone improvement, (A2) diminishing returns (concavity), (A3) sensitivity scaling $G_t = \sigma_t \phi_K + O_K(g_t^2 h)$, (A4) rotational equivariance
+- **Used by**: Theorem (General Gain), Cor (Offline General), Cor (Online General)
+
+### Theorem (General Gain Factorization) — `thm:general-gain`
+- **Location**: §4.5 (general_local_search.tex), proof inline
+- **Statement**: Under asm:smooth + asm:local-search: $G_t^{\mathcal{L}}(K) = \sigma_t \phi_K^{\mathcal{L}} + O_K(g_t^2 h)$, with $\phi_K$ strictly increasing, concave, $\phi_0=0$
+- **Depends on**: asm:smooth, asm:local-search, prop:taylor
+- **Verified**: ✅ (2026-03-21, re-verified) — (A2) weakened to concavity for ZO compatibility; (A4) isotropy explicit; remainder $O_K$; crossover Part(ii) corrected
+
+### Corollary (Offline Water-Filling, General) — `cor:offline-general`
+- **Location**: §4.5 (general_local_search.tex), proof inline
+- **Statement**: prop:offline holds with $\phi_K$ replacing $a_K$: water-filling (non-decreasing $K_t^*$ in $\sigma_t$; strictly increasing when $\phi_K$ strictly concave; bang-bang when linear)
+- **Depends on**: thm:general-gain, prop:offline
+- **Verified**: ✅ (2026-03-21)
+
+### Corollary (Online Jensen Gap, General) — `cor:online-general`
+- **Location**: §4.5 (general_local_search.tex), proof inline
+- **Statement**: (i) $V^*_{\mathcal{L}}$ convex, Jensen gap holds; (ii) marginal = $\sigma_t (\phi_K)'$, dual-threshold valid
+- **Depends on**: thm:general-gain, prop:online
+- **Verified**: ✅ (2026-03-21)
+
+### Proposition (Crossover) — `prop:crossover`
+- **Location**: §4.5 (general_local_search.tex), proof inline
+- **Statement**: ZO vs RS crossover at $K^* = \tilde{\Theta}(d/\eta)$; ZO dominates for small $K$
+- **Depends on**: ex:random-search, ex:zero-order
+- **Verified**: ✅ (2026-03-21, re-verified) — Part(ii) corrected: removed false $\sqrt{d}$ saturation claim, replaced with remainder-based argument
 
 ---
 

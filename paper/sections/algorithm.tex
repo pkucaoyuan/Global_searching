@@ -12,9 +12,16 @@ GAINS schedules noise trajectory search at two granularities:
 offline coarse allocation (\cref{sec:offline}) sets per-timestep budgets from
 a small calibration run, and online control (\cref{sec:online}) adapts those
 budgets per prompt.
-\cref{sec:sde-foundations} derives the theoretical structure that underlies
-both stages, and \cref{sec:scheduling-optimality} establishes optimality
-properties of the resulting allocation.
+The theoretical analysis proceeds in two stages.
+\cref{sec:sde-foundations,sec:scheduling-optimality} treat the
+\emph{special case} where the local operator is pure random search
+(i.i.d.\ noise draws), deriving a gain factorization
+$G_t(K)=\sigma_t\,a_K$ and its scheduling consequences
+(water-filling, Jensen gap).
+\cref{sec:general-local-search} then \emph{generalizes} these results
+to an abstract class of local search operators satisfying four regularity
+conditions, covering the $\epsilon$-greedy and local perturbation methods
+used in our experiments.
 
 % -----------------------------------------------------------
 \subsection{Offline Coarse Time Scheduling}
@@ -166,8 +173,11 @@ slack $\delta$, gain window $W_g$, threshold coefs $(\beta_g,\beta_\sigma)$, bla
 
 Both stages of GAINS rely on the per-step score
 distribution $\mathcal{D}_t$ exhibiting location-scale structure.
-We derive this structure from first principles by connecting
-noise search to the underlying diffusion SDE.
+We first derive this structure for the special case of
+\emph{pure random search} (i.i.d.\ noise draws), where the
+analysis reduces to Gaussian order statistics.
+The extension to general operators appears in
+\cref{sec:general-local-search}.
 
 The reverse-time SDE in Euler form with step size $h$ and diffusion
 coefficient $g_t$ reads:
@@ -386,8 +396,8 @@ SDE-derived expression for the per-step sensitivity $\sigma_t$.
 \subsection{Scheduling Optimality}
 \label{sec:scheduling-optimality}
 
-\cref{thm:loc-scale} enables a sharp characterization of the optimal
-budget allocation.
+Under pure random search, \cref{thm:loc-scale} enables a sharp
+characterization of the optimal budget allocation.
 Because the gain factorizes as
 $G_t(K) = \sigma_t\,a_K + O_K(g_t^2 h)$ (\cref{thm:loc-scale}(iii)),
 global scheduling reduces, up to controlled remainders, to
