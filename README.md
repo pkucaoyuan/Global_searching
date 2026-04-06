@@ -12,54 +12,38 @@ We formalize this as a **budget allocation problem**: given *B* total function e
 Global_searching/
 ├── README.md
 ├── code_repos/
-│   └── diffusion-tts/          # Reference implementation (Ramesh & Mardani, 2025)
-│       ├── edm/                # EDM backbone (class-conditional generation)
-│       ├── sd/                 # Stable Diffusion backbone (text-to-image)
-│       ├── flux/               # Flow model experiments
-│       ├── paper/              # Original paper source
-│       └── main.py             # Unified entry point
-├── src/                        # Our implementation
-│   ├── search/                 # Search algorithms
-│   │   ├── global_search.py    # Global scheduler (budget allocation across steps)
-│   │   ├── local_search.py     # Local search (within-step noise optimization)
-│   │   ├── diffusion_tts_search.py  # Integration with diffusion-tts backends
-│   │   └── base_search.py      # Abstract search interface
-│   ├── models/                 # Model wrappers
-│   │   ├── edm_model.py        # EDM model interface
-│   │   └── base_model.py       # Abstract model interface
-│   ├── verifiers/              # Quality scoring (verifiers)
-│   │   ├── scorer_verifier.py  # Score-based verifier (CLIP, ImageReward, etc.)
-│   │   ├── classifier_verifier.py  # Classifier-based verifier
-│   │   └── base_verifier.py    # Abstract verifier interface
-│   ├── evaluation/             # Evaluation metrics (FID, IS)
-│   │   └── metrics.py
-│   ├── pipeline/               # End-to-end sampling pipeline
-│   │   └── sampling_pipeline.py
-│   └── utils/                  # Configuration and utilities
-│       ├── config.py
-│       └── nfe_counter.py      # NFE budget tracking
-├── scripts/                    # Experiment scripts
-│   ├── run_diffusion_tts_experiment.py  # Main experiment runner
-│   ├── run_pipeline.py         # Pipeline runner
-│   ├── run_baseline.py         # Baseline comparison
-│   ├── download_models.sh      # Model download helper
-│   └── download_classifiers.py # Classifier download helper
-├── configs/                    # Experiment configurations (YAML)
-│   ├── cifar10_baseline.yaml
-│   └── imagenet64_diffusion_tts.yaml
-└── paper/                      # Paper source (LaTeX)
-    ├── main.tex                # Main document
-    ├── main.bib                # Bibliography
-    ├── sections/               # Paper sections
+│   └── diffusion-tts/              # Main codebase (forked from Ramesh & Mardani, 2025)
+│       ├── main.py                 # Unified entry point for all backends
+│       ├── edm/                    # EDM backbone (class-conditional generation)
+│       │   ├── main.py             # EDM sampling & search
+│       │   ├���─ generate.py         # Image generation
+│       │   ├── scorers.py          # Quality scoring (ImageNet classifier, etc.)
+│       │   ├── dnnlib/             # Deep learning utilities
+│       │   └── torch_utils/        # PyTorch utilities
+│       ├── sd/                     # Stable Diffusion backbone (text-to-image)
+│       │   ├── main.py             # SD sampling & search
+│       │   ├── scorers.py          # Quality scoring (CLIP, brightness, etc.)
+│       │   └── diffusers/          # Diffusers integration
+│       ├── flux/                   # Flow model experiments
+│       │   ├── flow_experiment.py  # Flow-based search experiments
+│       │   ├── real_flow_experiment.py
+│       │   ├── stochastic_flow_scheduler.py
+│       │   └── scorers.py
+│       ├── paper/                  # Original paper source
+│       └── docs/                   # Documentation
+└── paper/                          # Our paper source (LaTeX)
+    ├── main.tex                    # Main document
+    ├── main.bib                    # Bibliography
+    ├── sections/                   # Paper sections
     │   ├── introduction.tex
     │   ├── preliminaries.tex
-    │   ├── framework.tex       # Two-level framework
-    │   ├── algorithm.tex       # GAINS algorithm + theory
-    │   ├── general_local_search.tex  # General local search extension
+    │   ├── framework.tex           # Two-level framework
+    │   ├── algorithm.tex           # GAINS algorithm + theory
+    ��   ├── general_local_search.tex
     │   ├── experiments.tex
     │   ├── conclusion.tex
-    │   ├── appendix_mdp.tex    # MDP formulation
-    │   └── appendix_proofs.tex # Proof details
+    │   ├── appendix_mdp.tex        # MDP formulation
+    │   └── appendix_proofs.tex     # Proof details
     ├── figures/
     └── literature/
 ```
@@ -77,7 +61,7 @@ Global_searching/
 ## Quick Start
 
 ```bash
-# Clone with submodule
+# Clone the repo
 git clone https://github.com/pkucaoyuan/Global_searching.git
 cd Global_searching
 
@@ -85,14 +69,14 @@ cd Global_searching
 conda env create -f code_repos/diffusion-tts/environment.yml -n diffusion-tts
 conda activate diffusion-tts
 
-# Run experiment (EDM + global search)
-python scripts/run_diffusion_tts_experiment.py \
-    --backend edm \
-    --scorer imagenet \
-    --method eps_greedy \
-    --search_budget 100
+# Run experiment (EDM + epsilon-greedy search)
+cd code_repos/diffusion-tts
+python main.py --backend edm --scorer imagenet --method eps_greedy
+
+# Run experiment (Stable Diffusion + zero-order search)
+python main.py --backend sd --scorer clip --method zero_order --prompt "A beautiful landscape"
 ```
 
 ## Reference
 
-This project builds on the Noise Trajectory Search framework by [Ramesh & Mardani (2025)](https://arxiv.org/abs/2506.03164). The `code_repos/diffusion-tts/` directory contains their reference implementation.
+This project builds on the Noise Trajectory Search framework by [Ramesh & Mardani (2025)](https://arxiv.org/abs/2506.03164). The `code_repos/diffusion-tts/` directory contains their reference implementation with our modifications.
