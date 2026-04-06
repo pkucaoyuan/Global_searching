@@ -11,7 +11,7 @@ The preceding analysis
 (\cref{sec:sde-foundations,sec:scheduling-optimality}) establishes the
 gain factorization $G_t(K)=\sigma_t\,a_K$ and its scheduling
 consequences for the special case of pure random search.
-The key structural insight, however, is that the scheduling results
+The scheduling results, however,
 depend only on three properties of the gain sequence:
 monotonicity, non-accelerating marginals, and $t$-independence.
 Any local search operator sharing these properties inherits
@@ -25,6 +25,7 @@ four regularity conditions.
 \subsubsection{Abstract Local Search Framework}
 \label{sec:abstract-ls}
 
+% THEORY-SETTING-BEGIN{abstract-local-search}
 A local search operator $\mathcal{L}$ at timestep~$t$ produces iterates
 $\xi^{(0)},\xi^{(1)},\ldots,\xi^{(K)}$ in $\mathbb{R}^d$,
 starting from an initial draw $\xi^{(0)}\sim\mathcal{N}(0,I)$.
@@ -40,7 +41,8 @@ The \emph{gain} from $K$ iterations is
   \label{eq:gain-general}
 \end{equation}
 where $\mu_t=\Psi_t(\bar{X}_{t-h};c)$ as before.
-The following four assumptions suffice for all subsequent results.
+% THEORY-SETTING-END{abstract-local-search}
+Four regularity conditions on the local operator suffice for all subsequent results.
 
 \begin{assumption}[Local search regularity]
 \label{asm:local-search}
@@ -111,6 +113,7 @@ not depend on the direction~$u$.
 
 The location-scale gain decomposition of \cref{thm:loc-scale}(iii)
 extends to any operator satisfying \cref{asm:local-search}.
+The key insight is that any operator whose gain separates multiplicatively from the timestep sensitivity inherits the same scheduling structure, yielding a common factorization for all allocation results.
 
 \begin{theorem}[General gain factorization]
 \label{thm:general-gain}
@@ -187,6 +190,19 @@ $\mathbb{E}[\langle u,\xi^{(0)}\rangle]=0$ for
 $\xi^{(0)}\sim\mathcal{N}(0,I)$.
 \end{proof}
 
+\begin{remark}[Sensitivity-gain separation]
+\label{rmk:separation}
+\cref{thm:general-gain} establishes the \emph{sensitivity-gain separation}: the
+timestep-dependent factor~$\sigma_t$ and the operator-dependent gain
+sequence~$\phi_K^{\mathcal{L}}$ decouple multiplicatively.
+Consequently, the global scheduler needs only the per-step sensitivity
+profile $\{\sigma_t\}_{t=1}^T$, which is common to all operators,
+and does not require knowledge of the internal workings of~$\mathcal{L}$.
+Conversely, an operator designer can optimize the gain sequence
+$\phi_K^{\mathcal{L}}$ independently of the scheduling policy.
+This modularity underpins the two-level design of GAINS.
+\end{remark}
+
 % -----------------------------------------------------------
 \subsubsection{Scheduling Optimality for General Operators}
 \label{sec:general-scheduling}
@@ -242,6 +258,21 @@ When $\phi_K$ is linear, say $\phi_K=\alpha K$ with $\alpha>0$,
 $\alpha\sum_t \sigma_t K_t$, so every optimizer assigns all budget beyond
 the mandatory floor $K_t\ge 1$ to $\arg\max_t \sigma_t$.
 \end{proof}
+
+\begin{remark}[Curvature dichotomy in optimal scheduling]
+\label{rmk:curvature}
+The structure of the optimal allocation depends qualitatively on the
+curvature of~$\phi_K^{\mathcal{L}}$.
+When $\phi_K$ is strictly concave (e.g., random search, where
+$\phi_K = a_K \sim \sqrt{2\log K}$), the optimal schedule
+distributes budget smoothly across timesteps via water-filling.
+When $\phi_K$ is linear (e.g., local perturbation in the linearized
+regime, where $\phi_K^{(\mathrm{LP})} = c_d(\lambda)\,K$), every
+optimizer concentrates the allocable budget on~$\arg\max_t \sigma_t$.
+The choice of local search operator therefore influences not only the
+per-step gain rate but also the \emph{shape} of the optimal global schedule
+(cf.\ \cref{tab:phi-summary}).
+\end{remark}
 
 \begin{corollary}[Online Jensen gap and dual-threshold stopping for general operators]
 \label{cor:online-general}
@@ -327,7 +358,7 @@ scheduling.
 \subsubsection{Operator-Specific Gain Sequences}
 \label{sec:operator-gain}
 
-We now derive $\phi_K^{\mathcal{L}}$ for each practical operator and
+For each practical operator we derive $\phi_K^{\mathcal{L}}$ and
 verify that (A1)--(A4) hold.
 In each case, ``linearized regime'' refers to
 $g_t\sqrt{h}\to 0$, where the score function is effectively
@@ -565,6 +596,7 @@ while local perturbation achieves
 $\phi_K^{(\mathrm{LP})}= c_d(\lambda)K$
 (\cref{eq:phi-lp-exact}).
 Balancing the two growth laws yields a crossover scale
+(where $\tilde{\Theta}$ suppresses polylogarithmic factors)
 \begin{equation}
   K^*\;=\;\tilde{\Theta}\!\bigl(c_d(\lambda)^{-1}\bigr)
   \;=\;\tilde{\Theta}(\lambda^{-1})

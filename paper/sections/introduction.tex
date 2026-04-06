@@ -19,62 +19,66 @@ stochastic simulation; see
 \citet{song2019generative}, \citet{ho2020denoising}, the comparative survey
 by \citet{cao2024comparative}, and the rigorous SDE-based treatment
 by \citet{tang2024sde}.
-As simulation tools, diffusion models combine stable training, strong mode
-coverage, and flexibility for both unconditional and conditional
-generation, properties especially valuable in operations research and
-management science, where realistic scenario generation from learned
-distributions supports downstream optimization, risk assessment, and policy
-evaluation.
+Because every sample is produced by a sequential stochastic process with
+controllable randomness, diffusion models are natural candidates for
+computational problems where output quality can be traded against sampling
+cost, a tradeoff central to simulation optimization and sequential resource
+allocation.
 
-% --- Problem: inference-time compute allocation ---
-While most progress in diffusion models has targeted training objectives and
-model architectures, an emerging line of work demonstrates that
-\emph{inference-time scaling}, allocating additional computation at test time
-without retraining, sharply improves sample quality under a fixed model.
-Test-time techniques such as noise search, trajectory refinement, and
-verifier-guided sampling yield substantial gains over plain diffusion sampling
-when additional compute is available~\citep{ma2024inference,ramesh2025nts}.
-
-Every diffusion-family model, whether a DDPM, a score-based SDE, or a
-flow-matching ODE, generates samples by traversing a discrete trajectory of
-$T$ timesteps.
-Inference-time compute enters this trajectory in two fundamentally different
-ways:
-(i)~\emph{lengthening the trajectory} by increasing $T$ (more denoising steps),
-which yields quickly diminishing returns, and
+% --- Generation cost and test-time scaling ---
+The quality-cost tradeoff takes a concrete form: generating each sample
+requires $T$ sequential denoising steps, each costing one forward pass
+through the neural network (we call each pass a \emph{function evaluation},
+NFE), and recent work shows that spending more than the standard $T$~NFE
+per sample can improve quality without changing the trained
+model~\citep{ma2024inference,ramesh2025nts}.
+This idea, known as \emph{inference-time scaling}, opens a
+resource-allocation question: how should the extra NFE be distributed
+across the $T$ denoising steps?
+The extra budget can enter the trajectory in two ways:
+(i)~\emph{lengthening the trajectory} by increasing $T$, which yields quickly
+diminishing returns, and
 (ii)~\emph{searching within each timestep} by evaluating multiple noise
-candidates and selecting the one that maximizes a quality metric.
-The second axis is the focus of this paper: under a fixed budget of function
-evaluations (NFE), how should per-timestep search effort be allocated across the
-trajectory?
+candidates and keeping the one that scores highest on a quality metric.
+
+% --- Local search and the verifier ---
+The second strategy is the more promising one.
+At each denoising step, the model draws a random noise variable that
+determines the next latent state; by drawing several candidates and
+selecting the best according to a quality metric (a \emph{verifier},
+such as an image--text alignment score or a learned reward model),
+one obtains a better sample at the cost of additional NFE.
+Existing methods apply this local noise search with increasing
+sophistication: $\epsilon$-greedy
+exploration~\citep{ramesh2025nts}, zero-order noise
+optimization~\citep{tang2024dno}, and particle-based
+refinement~\citep{kim2025rbf}.
 
 % --- Gap: uniform allocation ---
-Existing inference-time methods waste computation by distributing search budget
-uniformly across denoising steps, ignoring that different steps differ
-dramatically in their sensitivity to noise perturbations.
-Most approaches either (i)~allocate the same number of search iterations to
-every timestep, or (ii)~hard-code search to a fixed window of steps
-(e.g., only the initial noise or a predetermined middle segment).
-Refining noise at high-sensitivity steps yields large downstream quality
-improvements, while the same computation at low-sensitivity steps has negligible
-effect.
+Most of these methods, however, distribute the search budget uniformly
+across denoising steps or hard-code it to a fixed window (e.g., only
+the initial noise or a predetermined middle segment), ignoring that
+replacing a noise draw with a better candidate improves quality far more at
+some steps than at others.
+Refining noise at steps with high sensitivity yields large quality
+improvements, while the same computation at steps with low sensitivity has
+negligible effect.
+This leaves a fundamental question unanswered: given a fixed total
+NFE budget, \emph{where along the trajectory} should search
+concentrate?
 
 % --- Our approach ---
-In this work, we study \emph{where to search} along the diffusion trajectory.
-We formalize inference-time noise refinement as a \emph{noise trajectory search}
-problem under a fixed number of function evaluations, and ask how to
-\emph{globally schedule} search computation across timesteps.
-The key insight is that effective inference-time scaling requires reasoning at
-two distinct levels: \emph{local} decisions about how to search for better noise
-at a given timestep, and \emph{global} decisions about how to distribute
-computation across the entire denoising process.
-While prior work has explored increasingly sophisticated local search operators,
-global per-step compute allocation has only recently received attention, with
-concurrent work proposing either uniform allocation with implicit
-adaptation~\citep{ramesh2025nts} or purely reactive online
-reallocation~\citep{kim2025rbf}.
+This is a computational budget-allocation problem: given $B$ total NFE
+across $T$ sequential denoising steps, find the allocation that maximizes
+output quality.
+We formalize the question as a \emph{noise trajectory search} problem
+and decompose it into two levels: \emph{local} decisions about how to
+search for better noise at a given timestep, and \emph{global} decisions
+about how to distribute the search budget across the trajectory.
+While prior work has focused on increasingly sophisticated local search
+operators, principled global allocation remains largely open.
 
-To address this gap, we propose a unified two-level framework for noise
+To address this gap, we develop a unified two-level framework for noise
 trajectory search in diffusion models.
 At the local level, a broad family of existing noise refinement methods reduces
 to a generic local search operator applied at a single timestep.
@@ -90,9 +94,9 @@ a global scheduling algorithm that combines \emph{offline profiling} with
 \emph{online control}.
 Offline, GAINS profiles verifier sensitivity across timesteps to obtain a coarse
 compute allocation tailored to the model and dataset.
-Online, GAINS adjusts per-step search using instance-level feedback (score
-gains and variance), stopping early on unproductive steps and reallocating
-computation to productive ones.
+Online, GAINS adjusts the search at each step using the verifier score
+improvement and candidate variance observed so far, stopping
+early on unproductive steps and reallocating saved budget to later ones.
 The controller operates causally (no access to future timesteps) and respects a
 strict NFE budget.
 
@@ -124,8 +128,8 @@ principled allocation: optimal offline budgeting follows a water-filling
 structure (\cref{prop:offline}), and any fixed allocation incurs a Jensen gap
 that online adaptation can partially recover (\cref{prop:online}).
 
-4.~We evaluate GAINS on both text-to-image (Stable Diffusion) and
-class-conditional (EDM) generation, as well as flow-based models,
+4.~We evaluate GAINS on text-to-image (Stable Diffusion),
+class-conditional (EDM; \citealt{karras2022elucidating}), and flow-based generation,
 showing consistent improvements over existing inference-time methods under
 identical NFE budgets.
 GAINS matches or exceeds the uniform-allocation benchmark with 20--50\% fewer function
@@ -138,92 +142,38 @@ model families (\cref{sec:experiments}).
 \subsection{Related Literature}
 \label{sec:related-lit}
 
-\paragraph{Inference-time scaling for diffusion models.}
-Inference-time scaling improves sample quality by spending additional
-computation at test time without retraining~\citep{ma2024inference,ramesh2025nts}.
-\citet{ma2024inference} systematize this direction by proposing a framework
-organized around two design axes, the \emph{verifier} (any external quality
-metric) and the \emph{search algorithm} (best-of-$N$, zero-order search, or
-path search), but apply each algorithm with a fixed, per-timestep-uniform
-strategy and do not learn which timesteps benefit most from search.
-GAINS extends this line by focusing on the complementary question of
-\emph{how to allocate} search compute across the trajectory.
-
-\paragraph{Noise search and trajectory refinement.}
-Several methods perform local search over noise variables during diffusion
-sampling.
-Noise quality varies markedly across timesteps and samples:
-\citet{qi2024noises} show that not all initial noises suit generation equally
-and propose noise selection via inversion stability, while
-\citet{zhou2025golden} learn a noise prompt network that transforms random
-Gaussian noise into ``golden noise'' optimized for text--image alignment.
-These results motivate per-step noise refinement at inference time.
-Best-of-$N$ methods sample multiple full trajectories and select the best final
-output, but do not refine noise within a trajectory~\citep{ma2024inference}.
-\citet{tang2024dno} formulate noise refinement as continuous optimization
-(Direct Noise Optimization), applying gradient- or zero-order updates at every
-timestep, again with uniform per-step effort.
-\citet{ramesh2025nts} cast diffusion as an MDP and relax it to a sequence of
-independent contextual bandits, proposing an $\epsilon$-greedy algorithm that
-implicitly adapts exploration vs.\ exploitation across timesteps; they note
-in an appendix that varying $K_t$ across timesteps can reduce NFE by half
-with minimal quality loss, but leave the design of an adaptive $K_t$ scheduler
-as future work.
-\citet{kim2025rbf} introduce Rollover Budget Forcing (RBF), which rolls over
-unused per-step budget to subsequent timesteps, a purely online, reactive
-mechanism without prior knowledge of timestep importance.
-RBF is developed and validated exclusively on flow models (FLUX),
-relying on ODE-to-SDE conversion for particle sampling; its applicability
-to DDPM or SDE-based diffusion models remains unvalidated.
-\citet{zhang2025tscend} propose T-SCEND, a two-phase strategy that
-applies best-of-$N$ in early steps and MCTS in late steps; however, the
-phase split is fixed and hand-designed rather than data-driven.
-More recently, \citet{zhang2025classical} combine local Langevin MCMC with
-global tree search (BFS/DFS) for inference-time control, and
-\citet{lee2025abcd} introduce Adaptive Bi-directional Cyclic Diffusion (ABCD),
-which dynamically adjusts exploration depth per instance.
-\citet{ttsnap2025} propose TTSnap, which prunes low-quality noise candidates
-early without full denoising, reallocating saved compute to explore more
-candidates; however, this operates at the \emph{candidate} level within a
-single timestep rather than scheduling budget \emph{across} timesteps.
-In the particle-based setting, \citet{singhal2025fk} introduce a Feynman-Kac
-steering framework that allocates non-uniform particle budgets across denoising
-stages, and \citet{kim2025psi} propose $\Psi$-Sampler for SMC-based
-inference-time alignment with improved initial particle sampling.
-\citet{eyring2025hypernetworks} take an orthogonal approach by amortizing
-noise search into a learned Noise Hypernetwork, replacing test-time
-optimization with a single forward pass.
-While these concurrent methods introduce various forms of non-uniform
-allocation, they are either purely reactive (RBF, ABCD), use fixed phase
-splits (T-SCEND), operate at the candidate rather than timestep level (TTSnap),
-or use SMC resampling rather than search-based allocation (FK Steering,
-$\Psi$-Sampler).
-GAINS explicitly combines \emph{offline profiling}, learning which
-timesteps are inherently more amenable to search, with \emph{online
-control} that adapts per-step effort to each prompt, achieving non-uniform
-budget allocation with strict NFE guarantees.
-
-\paragraph{Adaptive compute allocation.}
-Adaptive computation has been studied extensively in other domains, such as early
-exiting in neural networks, adaptive depth inference, and budgeted optimization.
-In diffusion models, \citet{zhang2025adadiff} propose AdaDiff for adaptive
-denoising step selection conditioned on input complexity,
-\citet{ye2025tpdm} learn a per-instance time prediction module via RL that
-decides which timesteps to visit (adapting the \emph{schedule} rather than the
-per-step \emph{search budget}), and
-\citet{yeh2025demons} introduce Sampling Demons, a training-free alignment
-method that reweights per-step noise importance to steer generation toward
-high-reward regions.
-These techniques, however, primarily modify the base sampler or noise
-distribution rather than allocating additional \emph{search} computation
-across timesteps.
-\citet{sundaresha2025vt} propose the Verifier-Threshold method for more
-efficient non-uniform NFE allocation, demonstrating 2--4$\times$ speedups
-over RBF; however, their approach is also purely online and does not use
-offline profiling.
-GAINS is complementary to sampler design: it keeps the underlying sampler
-fixed and schedules inference-time search around it, combining a learned offline
-allocation with online gain-and-variance feedback.
+\paragraph{Inference-time noise search.}
+A growing body of work improves diffusion sample quality by refining noise
+variables at generation time.
+Early approaches select among multiple full
+trajectories~\citep{ma2024inference} or optimize noise via gradient- or
+zero-order updates at every
+timestep~\citep{tang2024dno,qi2024noises,zhou2025golden}.
+More recent methods introduce richer local search operators:
+$\epsilon$-greedy
+exploration~\citep{ramesh2025nts}, rollover budget
+forcing~\citep{kim2025rbf}, two-phase best-of-$N$/MCTS
+splits~\citep{zhang2025tscend}, adaptive cyclic
+diffusion~\citep{lee2025abcd}, candidate
+pruning~\citep{ttsnap2025}, Langevin MCMC with tree
+search~\citep{zhang2025classical}, and amortized noise
+prediction~\citep{eyring2025hypernetworks}.
+In the particle-based setting, Feynman-Kac steering~\citep{singhal2025fk}
+and SMC-based alignment~\citep{kim2025psi} allocate non-uniform particle
+budgets across denoising stages.
+Adaptive compute methods such as
+AdaDiff~\citep{zhang2025adadiff}, learned timestep
+prediction~\citep{ye2025tpdm}, noise
+reweighting~\citep{yeh2025demons}, and the Verifier-Threshold
+method~\citep{sundaresha2025vt} also modify per-step effort, though they
+primarily adapt the base sampler rather than scheduling additional search
+compute.
+These methods primarily design or improve the \emph{local} search operator
+applied within each timestep; the question of \emph{how much} budget
+each timestep should receive has received comparatively less attention.
+GAINS addresses this allocation question, combining
+offline sensitivity profiling with online feedback control to distribute
+a fixed NFE budget non-uniformly across the trajectory.
 
 \paragraph{Resource allocation and simulation optimization.}
 Allocating a fixed computational budget across sequential stages to maximize
@@ -237,19 +187,26 @@ optimization, where a sampling budget is distributed across alternatives to
 identify the best~\citep{chen2000simulation}.
 \citet{lam2025importance} study a structurally similar problem in stochastic
 optimization, jointly optimizing decision variables and importance sampling
-distributions via a single-loop algorithm that achieves oracle-matching
-variance despite circular dependence between the two.
+distributions under circular dependence.
+We build on this classical framework by deriving a gain factorization
+(\cref{thm:loc-scale}) tailored to the diffusion setting, which reduces
+the allocation problem to a tractable water-filling form.
 
 \paragraph{Theoretical foundations of diffusion models.}
-Several recent theoretical advances inform the design of GAINS.
+Several recent theoretical results provide useful context.
 \citet{gao2024reward} develop a continuous-time RL framework for
-reward-directed score-based diffusion, showing that the optimal exploration
-policy is Gaussian with time-varying variance, a structure consistent with the
-location-scale assumption underlying our analysis.
+reward-directed diffusion and show that the optimal exploration
+policy has time-varying variance, a structure consistent with the
+location-scale model we adopt.
 \citet{tang2024contractive} characterize a per-timestep error sensitivity
-function $u(t)$ governing how score estimation errors propagate through the
-backward process; this function provides a theoretical proxy for the per-step
-variance profile $\{\sigma_t\}$ that drives our water-filling allocation.
+function governing how score estimation errors propagate through the backward
+process; their sensitivity function is conceptually related to the profile
+$\{\sigma_t\}$ in our analysis, though it captures estimation error
+rather than verifier score sensitivity.
 \citet{zhou2024jumpdiffusion} extend continuous-time RL to jump-diffusion
-processes with martingale-based q-learning, a framework that connects to our
-MDP formulation in \cref{sec:mdp}.
+processes, a modeling framework that connects to the MDP formulation
+in \cref{sec:mdp}.
+Our work complements these analyses by focusing on the budget allocation
+problem: we show that per-step gains decompose into a sensitivity factor
+and a sample-size effect, and use this structure to characterize optimal
+scheduling.

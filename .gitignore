@@ -59,10 +59,22 @@ tensorboard/
 *.log
 .DS_Store
 
-# 敏感/大文件
+# Large files
 *.pdf
 *.vtt
-.claude/settings.local.json
+
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+# Claude Code config
+.claude/
 
 # Jupyter Notebook
 .ipynb_checkpoints/

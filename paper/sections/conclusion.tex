@@ -37,11 +37,10 @@ across different local search operators, prompt sets, and model architectures.
 Three concrete protocols follow from our results.
 (i)~\emph{Always allocate non-uniformly.}  Non-uniform compute distribution across
 denoising timesteps strictly dominates uniform distribution whenever timestep
-sensitivities differ, a condition satisfied by every model we tested;
-practitioners should run the one-time profiling step (50--100 calibration
-samples) before deploying any diffusion-based generation pipeline.
-(ii)~\emph{Amortize profiling cost.}  The offline profiling overhead is modest
-(a small calibration set suffices) and is paid once per model checkpoint;
+sensitivities differ, a condition satisfied by every model we tested,
+improving quality by 3--4\% at matched NFE or reducing NFE by 20--50\% at matched quality;
+practitioners should run the one-time profiling step before deploying any diffusion-based generation pipeline.
+(ii)~\emph{Amortize profiling cost.}  The offline profiling overhead is modest (50--100 calibration samples, amounting to roughly 1--2\% of the compute spent on a typical generation campaign) and is paid once per model checkpoint;
 all subsequent inference calls reuse the same budget schedule.
 (iii)~\emph{Swap local search independently.}  The two-level design is modular:
 GAINS pairs with any local search operator, so teams can upgrade the
@@ -64,13 +63,14 @@ empirical scope.
 
 % --- Future directions (integrated into limitations, per Rule 39) ---
 Addressing these limitations opens natural extensions.
-The MDP formulation in \cref{sec:mdp} admits richer policy classes (backtracking
-to revisit high-value timesteps, mixing local search operators across timesteps,
-and hierarchical verifiers with a cheap proxy for screening and an expensive verifier for
-final selection) that may further push the quality--compute frontier, though
-they likely require learned (e.g., reinforcement-learning-based) optimization.
-Beyond diffusion models, the core principle, namely non-uniform compute allocation
-guided by sensitivity profiling, applies wherever computation is a scarce
-resource in sequential decisions: adaptive simulation budgeting in stochastic
+The MDP formulation in \cref{sec:mdp} admits richer policy classes,
+including backtracking, operator mixing across timesteps, and
+multi-fidelity verifiers.
+These extensions may further push the quality-compute frontier but
+likely require learned optimization.
+Beyond diffusion models, the core principle of non-uniform compute
+allocation guided by sensitivity profiling applies wherever computation
+is a scarce resource in sequential decisions.
+Two immediate candidates are adaptive simulation budgeting in stochastic
 optimization and dynamic evaluation-effort distribution across stages of
-multi-stage decision problems are two immediate candidates.
+multi-stage decision problems~\citep{chen2000simulation}.

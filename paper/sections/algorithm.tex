@@ -15,13 +15,12 @@ budgets per prompt.
 The theoretical analysis proceeds in two stages.
 \cref{sec:sde-foundations,sec:scheduling-optimality} treat the
 \emph{special case} where the local operator is pure random search
-(i.i.d.\ noise draws), deriving a gain factorization
-$G_t(K)=\sigma_t\,a_K$ and its scheduling consequences
-(water-filling, Jensen gap).
+(i.i.d.\ noise draws), showing that the expected gain from $K$ candidates
+at timestep $t$ factorizes into a per-timestep sensitivity and a
+sample-size effect, and deriving the resulting optimal allocation.
 \cref{sec:general-local-search} then \emph{generalizes} these results
-to an abstract class of local search operators satisfying four regularity
-conditions, covering the $\epsilon$-greedy and local perturbation methods
-used in our experiments.
+to a broad class of local search operators, covering the $\epsilon$-greedy
+and local perturbation methods used in our experiments.
 
 % -----------------------------------------------------------
 \subsection{Offline Coarse Time Scheduling}
@@ -93,7 +92,7 @@ and the per-iteration variance
 \end{equation}
 Here $g_t^{(j)}$ measures whether search still finds
 better noises at step $t$, while $\operatorname{Var}_t^{(j)}$ reflects the
-verifier's sensitivity to noise perturbations at this timestep.
+verifier's sensitivity to noise changes at this timestep.
 
 The online policy follows a simple rule:
 if recent gains $g_t^{(j)}$ remain positive and score variance
@@ -128,8 +127,8 @@ The chosen noise at step $t$ feeds into the base sampler
 $F_\theta$ to produce $x_{t-1}$, and the process repeats until $x_0$.
 Under a fixed NFE budget, this two-level scheduling concentrates
 computation on timesteps that are both globally and instance-wise valuable,
-avoiding wasted search where noise perturbations barely affect
-the verifier.
+avoiding wasted search where changing the noise barely affects
+the verifier score.
 \cref{alg:offline_online_budget} gives the complete procedure.
 
 \begin{algorithm}[t]
@@ -179,8 +178,11 @@ analysis reduces to Gaussian order statistics.
 The extension to general operators appears in
 \cref{sec:general-local-search}.
 
-The reverse-time SDE in Euler form with step size $h$ and diffusion
-coefficient $g_t$ reads:
+% THEORY-SETTING-BEGIN{sde-foundations}
+The DDPM backward process in \cref{eq:ddpm-reverse} can be written as
+a discretized reverse-time SDE; we work with this continuous-time form
+for generality.
+In Euler form with step size $h$ and diffusion coefficient $g_t$, it reads:
 \begin{equation}
   X_{t-h} \;=\; X_t + b_t(X_t, c)\,h + g_t\sqrt{h}\,\xi,
   \qquad \xi \sim \mathcal{N}(0, I),
@@ -190,7 +192,7 @@ where $b_t(X_t, c)$ denotes the drift (determined by the learned score network)
 and $g_t\sqrt{h}\,\xi$ the stochastic perturbation that noise search
 operates on.
 The \emph{verifier score function}
-$\Psi_t(x; c) := v(D_\theta(x, t{-}h); c)$
+$\Psi_t(x; c) := v(D_\theta(x, t{-}h, c);\, c)$
 maps a latent $x$ to the verifier score of its denoised prediction,
 so the score from one noise candidate equals
 \begin{equation}
@@ -199,6 +201,7 @@ so the score from one noise candidate equals
 \end{equation}
 Let $\bar{X}_{t-h} := X_t + b_t(X_t, c)\,h$ denote the deterministic Euler
 point, the latent that would result without noise injection.
+% THEORY-SETTING-END{sde-foundations}
 
 \begin{assumption}[Verifier smoothness]
 \label{asm:smooth}
@@ -209,6 +212,15 @@ $\|\nabla^2 \Psi_t(x; c)\|_{\mathrm{op}} \le L_t$
 for all $x$ in a neighborhood of the line segment between $\bar{X}_{t-h}$
 and $X_{t-h}$, almost surely.
 \end{assumption}
+
+\begin{remark}
+The $C^2$ smoothness of~$\Psi_t$ requires that both the denoising
+network~$D_\theta$ and the verifier~$v$ are twice differentiable,
+which holds for standard smooth activations (e.g., GELU, softplus).
+The per-timestep Hessian bound~$L_t$ is typically larger at early
+timesteps, where the verifier score function has more curvature, and
+smaller at late timesteps, where denoised predictions are nearly converged.
+\end{remark}
 
 \begin{proposition}[Score Taylor expansion]
 \label{prop:taylor}
@@ -258,6 +270,7 @@ baseline $\Psi_t(\bar{X}_{t-h}; c)$, a Gaussian linear term with variance
 governed by $g_t\sqrt{h}\,\|\nabla\Psi_t\|$, and a higher-order remainder
 that vanishes as $h$ shrinks.
 This decomposition yields a location-scale characterization.
+Informally, the score variance at each timestep is governed by the product of three interpretable quantities: the diffusion coefficient~$g_t$, the discretization step~$\sqrt{h}$, and the local gradient norm~$\|\nabla\Psi_t\|$.
 
 \begin{theorem}[Location-scale structure of per-step scores]
 \label{thm:loc-scale}
@@ -375,15 +388,15 @@ Substituting $\sigma_t = g_t\sqrt{h}\,\|\nabla\Psi_t(\bar{X}_{t-h}; c)\|$
 yields~\eqref{eq:gain-explicit}.
 \end{proof}
 
-\begin{remark}
+\begin{remark}[Sensitivity-scaling mechanism]
 \cref{thm:loc-scale} identifies the precise quantities governing timestep
-sensitivity:
+sensitivity through what we call the \emph{sensitivity-scaling mechanism}:
 $\sigma_t = g_t\sqrt{h}\,\|\nabla\Psi_t(\bar{X}_{t-h}; c)\|$
 multiplies the diffusion coefficient $g_t$, the step size
 $\sqrt{h}$, and the verifier gradient norm at the
 deterministic Euler point.
 Timesteps with large $g_t$ (strong noise injection) or large
-$\|\nabla\Psi_t\|$ (steep verifier landscape) benefit most from noise
+$\|\nabla\Psi_t\|$ (large verifier gradient) benefit most from noise
 search, explaining the non-uniform sensitivity patterns observed in offline profiling.
 \end{remark}
 
@@ -409,12 +422,14 @@ to
 \end{equation}
 \end{corollary}
 
+\begin{remark}
 Problem~\eqref{eq:alloc-sde} is a concave resource allocation (each
 $a_{K_t}$ grows concavely in $K_t$) with
 per-step weights $\sigma_t = g_t\sqrt{h}\,\|\nabla\Psi_t\|$.
 It recovers the abstract formulation~\eqref{eq:alloc} in
 \cref{sec:scheduling-optimality} below, now with an explicit,
 SDE-derived expression for the per-step sensitivity $\sigma_t$.
+\end{remark}
 
 % -----------------------------------------------------------
 \subsection{Scheduling Optimality}
@@ -433,8 +448,8 @@ global scheduling reduces, up to controlled remainders, to
 
 \begin{proposition}[Offline optimality under independence]
 \label{prop:offline}
-Suppose $\sigma_t$ does not depend on the prompt or search history
-(i.e., $\sigma_t = \sigma_t$ for all $c, x_t$).
+Suppose $\sigma_t$ depends only on the timestep index~$t$, not on the
+prompt or search history.
 Then:
 \begin{enumerate}
 \item[\textbf{(i)}]
@@ -442,8 +457,9 @@ Then:
   allocation $\{K_t^*\}$ is simultaneously optimal for every instance.
 \item[\textbf{(ii)}]
   The optimal allocation equalizes marginal gains:
-  $\sigma_t\,a_{K_t^*}' = \lambda^*$ for all~$t$ with $K_t^* > 1$,
-  where $\lambda^*$ is the shadow price of the budget constraint.
+  $\sigma_t\,\Delta a_{K_t^*} = \lambda^*$ for all~$t$ with $K_t^* > 1$,
+  where $\Delta a_K := a_{K+1}-a_K$ and $\lambda^*$ is the shadow price of
+  the budget constraint.
   Consequently, $K_t^*$ is increasing in~$\sigma_t$ (water-filling).
 \item[\textbf{(iii)}]
   $\sum_t \sigma_t\,a_{K_t^*} > \sum_t \sigma_t\,a_{B/T}$ whenever
@@ -458,8 +474,9 @@ Part~(i) guarantees that under the independence condition, a single fixed
 allocation optimizes every prompt simultaneously, so profiling on a small calibration
 set generalizes.
 Part~(ii) reveals \emph{water-filling} structure: timesteps with larger
-$\sigma_t = g_t\sqrt{h}\,\|\nabla\Psi_t\|$ (where noise perturbations
-shift the verifier score most) receive proportionally more budget.
+$\sigma_t = g_t\sqrt{h}\,\|\nabla\Psi_t\|$ (where replacing one noise
+candidate with another shifts the verifier score most) receive
+proportionally more budget.
 Part~(iii) quantifies the non-uniform advantage: the more
 heterogeneous the per-step sensitivities, the larger the gain
 over uniform scheduling.
@@ -545,14 +562,14 @@ justified, as the two-threshold diagram in \cref{fig:stopping} shows.
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.75\linewidth]{figures/fig_stopping_decision.pdf}
-\caption{Idealized online stopping decision in the $(\sigma_t, a_K')$ plane.
+\caption{Idealized online stopping decision in the $(\sigma_t, \Delta a_K)$ plane.
 The gain threshold (horizontal dashed) tracks exhaustion, while the
 vertical threshold should be read as an empirical-variance proxy for
-low sensitivity rather than an exact test of $\sigma_t$.
-partition the space into four regions.
+low sensitivity rather than an exact test of $\sigma_t$,
+partitioning the space into four regions.
 Stopping is triggered only when \emph{both} conditions are met (shaded region),
 corresponding to the conjunction in \cref{prop:online}(ii).
-The hyperbola $\sigma_t\cdot a_K'=\lambda^*$ shows the true optimality boundary;
+The hyperbola $\sigma_t\cdot \Delta a_K=\lambda^*$ shows the true optimality boundary;
 the rectangular proxy is conservative by design.}
 \label{fig:stopping}
 \end{figure}

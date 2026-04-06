@@ -8,7 +8,7 @@
 We cast noise trajectory search as a two-level optimization problem.
 A general transition abstraction covers all diffusion-family models;
 the local search operator and global scheduler serve as its two components.
-We conclude by showing how existing methods arise as special cases.
+Finally, we show how existing methods arise as special cases.
 
 % -----------------------------------------------------------
 \subsection{A General Transition Abstraction}
@@ -29,9 +29,9 @@ The final step yields $x_0$, which the verifier $v(x_0, c)$ then scores.
 \paragraph{Applicability across model families.}
 The transition in \cref{eq:transition} is deliberately model-agnostic.
 For \emph{stochastic samplers} such as DDPM and SDE-based
-models~\citep{ho2020denoising,song2021scorebased}, $\varepsilon_t$ is the
-variance noise already present in sampling; searching over
-$\varepsilon_t$ therefore extends the base sampler naturally.
+models~\citep{ho2020denoising,song2021scorebased}, $\varepsilon_t$ is the injected Gaussian noise already present in
+sampling; searching over $\varepsilon_t$ therefore extends the base
+sampler naturally.
 For \emph{deterministic samplers} such as flow-matching ODE
 solvers~\citep{lipman2023flow,liu2023flow}, the transition is nominally
 noise-free.
@@ -63,7 +63,7 @@ and distributes per-step budgets $\{K_t\}$ across the denoising trajectory.
 At each timestep, the \emph{local search operator}~$\mathcal{L}_t$ (bottom)
 evaluates $K_t$ noise candidates and selects the best one.
 Bars above each step depict the non-uniform allocation:
-timesteps where noise perturbations matter more receive larger budgets.}
+timesteps where replacing the noise candidate yields larger quality gains receive bigger budgets.}
 \label{fig:architecture}
 \end{figure}
 
@@ -85,9 +85,9 @@ prediction in a single network pass:
   \hat{x}_0^{(k)} = D_\theta(x_{t-1}^{(k)},\, t\!-\!1,\, c),
   \label{eq:x0_prediction}
 \end{equation}
-where $D_\theta$ denotes Tweedie's denoising estimate~\citep{song2021scorebased},
-i.e., an intermediate network output that maps any noisy latent to a
-clean-data estimate.
+where $D_\theta$ is a one-step denoising formula that maps any noisy latent
+to a clean-data estimate (a standard operation in diffusion
+sampling~\citep{song2021scorebased}).
 The verifier then scores this prediction:
 \begin{equation}
   s^{(k)} = v\!\bigl(\hat{x}_0^{(k)},\, c\bigr).
@@ -155,6 +155,6 @@ inference-time search strategies:
 \end{itemize}
 The remainder of the paper focuses on a particular, practically
 important family of methods, for which we develop a new global scheduler.
-A more general MDP formulation that subsumes the above and accommodates richer
-action spaces (multiple verifier types, backtracking) is presented in
-\cref{sec:mdp}.
+\cref{sec:mdp} presents a more general MDP formulation that subsumes the
+above and accommodates richer action spaces (multiple verifier types,
+backtracking).

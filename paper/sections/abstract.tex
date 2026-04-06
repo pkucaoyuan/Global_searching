@@ -4,36 +4,22 @@
 \begin{abstract}
 Diffusion models generate samples by traversing a denoising trajectory,
 a sequence of noise-reduction steps that progressively transforms random noise
-into data from the target distribution.
-Allocating additional computation along this trajectory at inference time,
-without retraining, can substantially improve the quality of the generated
-samples.
-However, existing methods distribute this computational budget uniformly or
-with fixed heuristics across denoising steps, ignoring that different steps
-differ markedly in their sensitivity to noise perturbations.
-We formalize inference-time noise refinement as a two-level optimization
-problem: a \emph{local} operator searches for better noise at a chosen
-timestep, while a \emph{global} scheduler allocates per-timestep search
-iterations under a strict budget of function evaluations.
-Standard diffusion sampling, best-of-$N$
-selection, and recent noise search methods emerge as special cases with fixed or
-heuristic scheduling policies.
-We propose \textbf{GAINS} (Global Adaptive Inference-time Noise Scheduling),
-which combines offline sensitivity profiling with online
-feedback control: offline analysis assigns a coarse per-step budget based on
-estimated timestep importance, and an online controller applies windowed early
-stopping driven by observed score gains and candidate variance, while enforcing
-the exact compute budget.
-Via a Taylor expansion of the verifier score along the diffusion SDE, we
-derive a location-scale decomposition of per-step scores and obtain an explicit
-formula for timestep sensitivity in terms of the diffusion coefficient and
-the verifier gradient.
-Under this structure, optimal allocation follows a water-filling rule
-favoring high-sensitivity timesteps, and online adaptation can partially
-recover a Jensen gap that any fixed allocation necessarily incurs.
-On Stable Diffusion, EDM, and flow-based models, GAINS matches the uniform-allocation benchmark
-with 20--50\% fewer function evaluations, and exceeds it at equal
-budgets.
+into data of the target distribution.
+Once diffusion models are pre-trained and deployed into inference, i.e.\ using
+compute to run the model and generate data samples, a practical question is how
+to use a given compute budget to generate higher quality data samples.
+Standard approaches allocate compute uniformly across the denoising steps,
+but this is wasteful: early steps that determine global structure benefit more
+from additional compute than late steps that refine local details.
+We formalize this as a budget allocation problem: given $B$ total function
+evaluations across $T$ denoising steps, find the allocation that
+maximizes sample quality.
+We prove that the optimal allocation follows
+a water-filling rule that concentrates compute on steps where additional
+refinement yields the largest quality gains.
+On Stable Diffusion, EDM, and flow-based models, our method achieves
+20--50\% budget reduction while maintaining the same quality as
+uniform-allocation benchmarks, and consistently exceeds them at equal budget.
 \end{abstract}
 
 \noindent\textit{Key words}: diffusion models; inference-time scaling; computational budget allocation; noise trajectory search; global scheduling; resource allocation; sequential decision making

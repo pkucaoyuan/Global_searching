@@ -67,12 +67,6 @@ theory but defined in the main paper.}
 \begin{algorithm}[h]\caption{See main paper.}\label{alg:offline_online_budget}\end{algorithm}
 % Stub equation from algorithm.tex
 \begin{equation} \text{(see main paper)} \label{eq:alloc} \end{equation}
-% Stub equation from preliminaries.tex
-\begin{equation} \text{(see main paper)} \label{eq:ddpm-reverse} \end{equation}
-% Stub equation from general_local_search.tex
-\begin{equation} \text{(see main paper)} \label{eq:gain-general} \end{equation}
-% Stub equation from preliminaries.tex
-\begin{equation} \text{(see main paper)} \label{eq:sgm-langevin} \end{equation}
 % Stub figure from algorithm.tex
 \begin{figure}[h]\centering\caption{See main paper.}\label{fig:stopping}\end{figure}
 % Stub section from framework.tex
@@ -83,10 +77,76 @@ theory but defined in the main paper.}
 \subsection{(See main paper)} \label{sec:proof-offline}
 % Stub section from appendix_proofs.tex
 \subsection{(See main paper)} \label{sec:proof-online}
+% Stub section from algorithm.tex
+\subsection{(See main paper)} \label{sec:scheduling-optimality}
+% Stub: tab:phi-summary from general_local_search.tex
+\label{tab:phi-summary}
 \newpage
 
 \section{Preliminaries}
 \srcfile{preliminaries.tex}
+
+\paragraph{Diffusion Model Formulations.}
+\subsubsection{The DDPM Formulation.}
+The Denoising Diffusion Probabilistic Modeling (DDPM) formulation
+\citep{ho2020denoising} couples two Markov processes: a forward process
+($t = 1$ to $T$) that perturbs data with increasing Gaussian
+noise, and a backward process ($t = T$ to $1$) that converts noise back
+to data.
+Given a data distribution $\mathbf{x}_0 \sim q_{\mathrm{data}}(\mathbf{x}_0)$,
+the forward process progressively injects noise via
+\begin{equation}
+  q(\mathbf{x}_t \mid \mathbf{x}_{t-1})
+  = \mathcal{N}\bigl(\mathbf{x}_t;\, \sqrt{1 - \beta_t}\,\mathbf{x}_{t-1},\,
+    \beta_t \mathbf{I}\bigr),
+  \label{eq:ddpm-forward}
+\end{equation}
+where $\beta_t \in (0,1)$ are fixed hyperparameters.
+Setting $\alpha_t = 1 - \beta_t$ and
+$\bar{\alpha}_t = \prod_{s=0}^{t}\alpha_s$, we can express the noisy sample at
+any timestep directly as
+\begin{equation}
+  \mathbf{x}_t
+  = \sqrt{\bar{\alpha}_t}\,\mathbf{x}_0
+    + \sqrt{1 - \bar{\alpha}_t}\,\boldsymbol{\varepsilon},
+  \qquad \boldsymbol{\varepsilon} \sim \mathcal{N}(\mathbf{0}, \mathbf{I}).
+  \label{eq:ddpm-xt}
+\end{equation}
+A neural network
+$\boldsymbol{\varepsilon}_\theta(\mathbf{x}_t, t)$ trained to predict the noise
+parameterizes the backward process; samples emerge by iterating
+\begin{equation}
+  \mathbf{x}_{t-1}
+  = \frac{1}{\sqrt{1 - \beta_t}}
+    \biggl(\mathbf{x}_t - \frac{\beta_t}{\sqrt{1 - \bar{\alpha}_t}}\,
+    \boldsymbol{\varepsilon}_\theta(\mathbf{x}_t, t)\biggr)
+    + \sigma_t\,\boldsymbol{\varepsilon},
+  \label{eq:ddpm-reverse}
+\end{equation}
+from $\mathbf{x}_T \sim \mathcal{N}(\mathbf{0}, \mathbf{I})$ down to
+$\mathbf{x}_0$.
+
+\subsubsection{The SGM Formulation.}
+The Score-based Generative Model (SGM) formulation~\citep{song2019generative}
+builds on the score function
+$s(\mathbf{x}) = \nabla_\mathbf{x} \log q(\mathbf{x})$,
+i.e., the gradient of the log-density.
+Data are perturbed at different noise levels:
+$\tilde{\mathbf{x}}_t = \mathbf{x}_0 + \varsigma_t\boldsymbol{\varepsilon}$
+for $0 < \varsigma_1 < \varsigma_2 < \cdots < \varsigma_T$.
+A neural network
+$\mathbf{s}_\theta(\tilde{\mathbf{x}}_t, \varsigma_t)$ approximates
+the score at each noise level.
+Annealed Langevin dynamics then generate samples: for each level
+$t = T, T{-}1, \ldots, 1$, the sampler iterates
+\begin{equation}
+  \mathbf{x}_{(i)}
+  = \mathbf{x}_{(i-1)}
+    + \delta_i\,\nabla_\mathbf{x}\log q(\mathbf{x}_{(i-1)})
+    + \sqrt{2\delta_i}\,\boldsymbol{\varepsilon}_i,
+  \label{eq:sgm-langevin}
+\end{equation}
+starting from a prior distribution $\mathbf{x}_{(0)} \sim \pi$.
 
 \begin{remark}
 Both DDPM and SGM traverse $T$ discrete timesteps.
@@ -114,6 +174,16 @@ generated sample:
 \end{equation}
 \end{definition}
 
+\begin{remark}
+The noise trajectory search problem is a sequential budget-allocation
+problem: the noise~$\varepsilon_t$ at timestep~$t$ shapes the
+latent~$x_{t-1}$, which in turn determines which noises are effective
+at subsequent steps.
+This sequential dependence distinguishes the problem from a standard
+resource-allocation formulation and motivates the two-level
+decomposition introduced in \cref{sec:framework}.
+\end{remark}
+
 \begin{definition}[Verifier]
 \label{def:verifier}
 A \emph{verifier} $v : \mathcal{X} \times \mathcal{C} \to \mathbb{R}$ scores a
@@ -123,6 +193,14 @@ The verifier is fixed and not trained during search.
 Examples include perceptual quality metrics, task-specific reward functions,
 and domain-specific performance measures.
 \end{definition}
+
+\begin{remark}
+The verifier is treated as a black box throughout; our results hold
+for any bounded, query-efficient quality measure.
+In operations-research applications, the verifier could be a
+simulation-fidelity metric, a constraint-satisfaction indicator, or a
+downstream optimization objective.
+\end{remark}
 
 \begin{definition}[Function Evaluation Budget]
 \label{def:nfe}
@@ -135,8 +213,40 @@ noise trajectory search spends the remaining $B - T$ NFE on local noise
 refinement.
 \end{definition}
 
+\begin{remark}
+The NFE budget is analogous to a computational budget in simulation
+optimization: each function evaluation corresponds to one forward pass
+through the denoising network, which is the dominant cost in diffusion
+sampling.
+Standard sampling consumes exactly~$T$ evaluations; noise trajectory
+search allocates the remaining~$B - T$ evaluations to local
+refinement.
+\end{remark}
+
 \section{GAINS Algorithm and Theory}
 \srcfile{algorithm.tex}
+
+\paragraph{Reverse SDE and Score Function.}
+The reverse-time SDE in Euler form with step size $h$ and diffusion
+coefficient $g_t$ reads:
+\begin{equation}
+  X_{t-h} \;=\; X_t + b_t(X_t, c)\,h + g_t\sqrt{h}\,\xi,
+  \qquad \xi \sim \mathcal{N}(0, I),
+  \label{eq:euler-sde}
+\end{equation}
+where $b_t(X_t, c)$ denotes the drift (determined by the learned score network)
+and $g_t\sqrt{h}\,\xi$ the stochastic perturbation that noise search
+operates on.
+The \emph{verifier score function}
+$\Psi_t(x; c) := v(D_\theta(x, t{-}h); c)$
+maps a latent $x$ to the verifier score of its denoised prediction,
+so the score from one noise candidate equals
+\begin{equation}
+  S_t \;:=\; \Psi_t(X_{t-h};\, c).
+  \label{eq:score-from-sde}
+\end{equation}
+Let $\bar{X}_{t-h} := X_t + b_t(X_t, c)\,h$ denote the deterministic Euler
+point, the latent that would result without noise injection.
 
 \begin{assumption}[Verifier smoothness]
 \label{asm:smooth}
@@ -147,6 +257,15 @@ $\|\nabla^2 \Psi_t(x; c)\|_{\mathrm{op}} \le L_t$
 for all $x$ in a neighborhood of the line segment between $\bar{X}_{t-h}$
 and $X_{t-h}$, almost surely.
 \end{assumption}
+
+\begin{remark}
+The $C^2$ smoothness of~$\Psi_t$ requires that both the denoising
+network~$D_\theta$ and the verifier~$v$ are twice differentiable,
+which holds for standard smooth activations (e.g., GELU, softplus).
+The per-timestep Hessian bound~$L_t$ is typically larger at early
+timesteps, where the verifier landscape is rougher, and smaller at
+late timesteps, where denoised predictions are nearly converged.
+\end{remark}
 
 \begin{proposition}[Score Taylor expansion]
 \label{prop:taylor}
@@ -307,9 +426,9 @@ Substituting $\sigma_t = g_t\sqrt{h}\,\|\nabla\Psi_t(\bar{X}_{t-h}; c)\|$
 yields~\eqref{eq:gain-explicit}.
 \end{proof}
 
-\begin{remark}
+\begin{remark}[Sensitivity-scaling mechanism]
 \cref{thm:loc-scale} identifies the precise quantities governing timestep
-sensitivity:
+sensitivity through what we call the \emph{sensitivity-scaling mechanism}:
 $\sigma_t = g_t\sqrt{h}\,\|\nabla\Psi_t(\bar{X}_{t-h}; c)\|$
 multiplies the diffusion coefficient $g_t$, the step size
 $\sqrt{h}$, and the verifier gradient norm at the
@@ -340,6 +459,15 @@ to
   \label{eq:alloc-sde}
 \end{equation}
 \end{corollary}
+
+\begin{remark}
+Problem~\eqref{eq:alloc-sde} is a concave resource allocation (each
+$a_{K_t}$ grows concavely in $K_t$) with
+per-step weights $\sigma_t = g_t\sqrt{h}\,\|\nabla\Psi_t\|$.
+It recovers the abstract formulation~\eqref{eq:alloc} in
+\cref{sec:scheduling-optimality} below, now with an explicit,
+SDE-derived expression for the per-step sensitivity $\sigma_t$.
+\end{remark}
 
 \begin{proposition}[Offline optimality under independence]
 \label{prop:offline}
@@ -454,6 +582,23 @@ justified, as the two-threshold diagram in \cref{fig:stopping} shows.
 
 \section{General Local Search Operators}
 \srcfile{general_local_search.tex}
+
+\paragraph{Abstract Local Search and Gain Definition.}
+A local search operator $\mathcal{L}$ at timestep~$t$ produces iterates
+$\xi^{(0)},\xi^{(1)},\ldots,\xi^{(K)}$ in $\mathbb{R}^d$,
+starting from an initial draw $\xi^{(0)}\sim\mathcal{N}(0,I)$.
+The \emph{gain} from $K$ iterations is
+\begin{equation}
+  G_t^{\mathcal{L}}(K)
+  \;:=\;
+  \mathbb{E}\!\Bigl[
+    \max_{0\le j\le K}
+    \Psi_t\!\bigl(\bar{X}_{t-h}+g_t\sqrt{h}\,\xi^{(j)};\,c\bigr)
+  \,\Big|\, X_t,c\Bigr]
+  -\mu_t,
+  \label{eq:gain-general}
+\end{equation}
+where $\mu_t=\Psi_t(\bar{X}_{t-h};c)$ as before.
 
 \begin{assumption}[Local search regularity]
 \label{asm:local-search}
@@ -593,6 +738,19 @@ $\mathbb{E}[\langle u,\xi^{(0)}\rangle]=0$ for
 $\xi^{(0)}\sim\mathcal{N}(0,I)$.
 \end{proof}
 
+\begin{remark}[Sensitivity-gain separation]
+\label{rmk:separation}
+\cref{thm:general-gain} establishes the \emph{sensitivity-gain separation}: the
+timestep-dependent factor~$\sigma_t$ and the operator-dependent gain
+sequence~$\phi_K^{\mathcal{L}}$ decouple multiplicatively.
+Consequently, the global scheduler needs only the per-step sensitivity
+profile $\{\sigma_t\}_{t=1}^T$, which is common to all operators,
+and does not require knowledge of the internal workings of~$\mathcal{L}$.
+Conversely, an operator designer can optimize the gain sequence
+$\phi_K^{\mathcal{L}}$ independently of the scheduling policy.
+This modularity underpins the two-level design of GAINS.
+\end{remark}
+
 \begin{corollary}[Offline water-filling for general operators]
 \label{cor:offline-general}
 Under the conditions of \cref{thm:general-gain}, with
@@ -638,6 +796,21 @@ When $\phi_K$ is linear, say $\phi_K=\alpha K$ with $\alpha>0$,
 $\alpha\sum_t \sigma_t K_t$, so every optimizer assigns all budget beyond
 the mandatory floor $K_t\ge 1$ to $\arg\max_t \sigma_t$.
 \end{proof}
+
+\begin{remark}[Curvature dichotomy in optimal scheduling]
+\label{rmk:curvature}
+The structure of the optimal allocation depends qualitatively on the
+curvature of~$\phi_K^{\mathcal{L}}$.
+When $\phi_K$ is strictly concave (e.g., random search, where
+$\phi_K = a_K \sim \sqrt{2\log K}$), the optimal schedule
+distributes budget smoothly across timesteps via water-filling.
+When $\phi_K$ is linear (e.g., local perturbation in the linearized
+regime, where $\phi_K^{(\mathrm{LP})} = c_d(\lambda)\,K$), every
+optimizer concentrates the allocable budget on~$\arg\max_t \sigma_t$.
+The choice of local search operator therefore influences not only the
+per-step gain rate but also the \emph{shape} of the optimal global schedule
+(cf.\ \cref{tab:phi-summary}).
+\end{remark}
 
 \begin{corollary}[Online Jensen gap and dual-threshold stopping for general operators]
 \label{cor:online-general}

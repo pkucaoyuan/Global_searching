@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 """
-Extract all theorem-like environments from paper .tex files and compile
-a standalone theory document. Content is verbatim identical to the
-main paper — no modification.
+Extract all theorem-like environments AND marked setting blocks from
+paper .tex files and compile a standalone theory document.
+Content is verbatim identical to the main paper — no modification.
+
+Setting blocks are marked in source files with:
+    % THEORY-SETTING-BEGIN{tag}
+    ... content ...
+    % THEORY-SETTING-END{tag}
 
 Usage:
     python extract_theory.py              # auto-detect from main.tex
@@ -24,6 +29,19 @@ THEORY_ENVS = [
 ]
 # Also extract proofs that follow theorem-like environments
 PROOF_ENV = "proof"
+
+# Setting block marker pattern
+SETTING_PATTERN = re.compile(
+    r"% THEORY-SETTING-BEGIN\{([^}]+)\}\n(.*?)% THEORY-SETTING-END\{\1\}",
+    re.DOTALL,
+)
+
+# Human-readable titles for setting blocks
+SETTING_TITLES = {
+    "diffusion-models": "Diffusion Model Formulations",
+    "sde-foundations": "Reverse SDE and Score Function",
+    "abstract-local-search": "Abstract Local Search and Gain Definition",
+}
 
 # Regex for \begin{env}...\end{env} including nested braces
 def build_env_pattern(env_name):
@@ -49,6 +67,25 @@ def resolve_inputs(main_text):
         files.append(PAPER_DIR / path)
     return files
 
+def extract_setting_blocks(tex_content, source_file):
+    """Extract all THEORY-SETTING-BEGIN/END marked blocks."""
+    blocks = []
+    for m in SETTING_PATTERN.finditer(tex_content):
+        tag = m.group(1)
+        content = m.group(2).strip()
+        title = SETTING_TITLES.get(tag, tag.replace("-", " ").title())
+        blocks.append({
+            "env": "setting",
+            "tag": tag,
+            "title": title,
+            "text": content,
+            "source": source_file.name,
+            "pos": m.start(),
+        })
+    blocks.sort(key=lambda x: x["pos"])
+    return blocks
+
+
 def extract_blocks(tex_content, source_file):
     """Extract all theorem-like environments and their following proofs."""
     blocks = []
@@ -72,7 +109,8 @@ def extract_blocks(tex_content, source_file):
     env_matches.sort(key=lambda x: x[0])
 
     for start, end, env, text in env_matches:
-        block = {"env": env, "text": text, "source": source_file.name}
+        block = {"env": env, "text": text, "source": source_file.name,
+                 "pos": start}
 
         # Check if a proof follows (within 200 chars of whitespace/comments)
         after = tex_content[end:]
@@ -195,6 +233,13 @@ def generate_theory_doc(preamble, all_blocks, section_map,
             lines.append(f"\\srcfile{{{src}}}")
             lines.append("")
 
+        # Setting blocks get a paragraph header
+        if block["env"] == "setting":
+            lines.append(f"\\paragraph{{{block['title']}.}}")
+            lines.append(block["text"])
+            lines.append("")
+            continue
+
         # Output the environment verbatim
         lines.append(block["text"])
         lines.append("")
@@ -240,15 +285,23 @@ def main():
     # Extract from each file
     all_blocks = []
     files_with_theory = []
+    setting_count = 0
     for f in input_files:
         if not f.exists():
             print(f"  [skip] {f.name} (not found)")
             continue
         content = f.read_text(encoding="utf-8")
-        blocks = extract_blocks(content, f)
-        if blocks:
-            all_blocks.extend(blocks)
-            files_with_theory.append(f.name)
+        # Extract both setting blocks and theorem environments
+        settings = extract_setting_blocks(content, f)
+        theorems = extract_blocks(content, f)
+        # Merge by position within the file
+        file_blocks = settings + theorems
+        file_blocks.sort(key=lambda x: x["pos"])
+        if file_blocks:
+            all_blocks.extend(file_blocks)
+            if f.name not in files_with_theory:
+                files_with_theory.append(f.name)
+        setting_count += len(settings)
 
     # Summary
     env_counts = {}
@@ -256,10 +309,11 @@ def main():
         env_counts[b["env"]] = env_counts.get(b["env"], 0) + 1
     proof_count = sum(1 for b in all_blocks if "proof" in b)
 
-    print(f"Extracted {len(all_blocks)} theory blocks from {len(files_with_theory)} files:")
+    print(f"Extracted {len(all_blocks)} blocks from {len(files_with_theory)} files:")
     for env, count in sorted(env_counts.items()):
         print(f"  {env}: {count}")
     print(f"  proofs attached: {proof_count}")
+    print(f"  setting blocks: {setting_count}")
     print(f"  source files: {', '.join(files_with_theory)}")
 
     # Collect all labels from the full paper

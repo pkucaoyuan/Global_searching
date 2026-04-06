@@ -47,14 +47,14 @@
 
 ### Assumption 2 (Local Search Regularity) — `asm:local-search`
 - **Location**: §4.5 (general_local_search.tex)
-- **Statement**: (A1) strict monotone improvement, (A2) diminishing returns (concavity), (A3) sensitivity scaling $G_t = \sigma_t \phi_K + O_K(g_t^2 h)$, (A4) rotational equivariance
+- **Statement**: (A1) strict monotone improvement, (A2) non-accelerating marginals (marginals bounded above by non-increasing sequence), (A3) sensitivity scaling $G_t^{\mathcal{L}} = \sigma_t \phi_K^{\mathcal{L}} + O_{K,d,L_t}(g_t^2 h)$, (A4) rotational equivariance
 - **Used by**: Theorem (General Gain), Cor (Offline General), Cor (Online General)
 
 ### Theorem (General Gain Factorization) — `thm:general-gain`
 - **Location**: §4.5 (general_local_search.tex), proof inline
-- **Statement**: Under asm:smooth + asm:local-search: $G_t^{\mathcal{L}}(K) = \sigma_t \phi_K^{\mathcal{L}} + O_K(g_t^2 h)$, with $\phi_K$ strictly increasing, concave, $\phi_0=0$
+- **Statement**: Under asm:smooth + asm:local-search: $G_t^{\mathcal{L}}(K) = \sigma_t \phi_K^{\mathcal{L}} + O_{K,d,L_t}(g_t^2 h)$, with $\phi_K$ strictly increasing, non-accelerating marginals, $\phi_0=0$
 - **Depends on**: asm:smooth, asm:local-search, prop:taylor
-- **Verified**: ✅ (2026-03-21, re-verified) — (A2) weakened to concavity for ZO compatibility; (A4) isotropy explicit; remainder $O_K$; crossover Part(ii) corrected
+- **Verified**: ✅ (2026-03-23, uniform-ball alignment) — (A4) argument fully explicit; remainder $O_{K,d,L_t}$; operators updated to uniform-ball model
 
 ### Corollary (Offline Water-Filling, General) — `cor:offline-general`
 - **Location**: §4.5 (general_local_search.tex), proof inline
@@ -70,9 +70,9 @@
 
 ### Proposition (Crossover) — `prop:crossover`
 - **Location**: §4.5 (general_local_search.tex), proof inline
-- **Statement**: ZO vs RS crossover at $K^* = \tilde{\Theta}(d/\eta)$; ZO dominates for small $K$
-- **Depends on**: ex:random-search, ex:zero-order
-- **Verified**: ✅ (2026-03-21, re-verified) — Part(ii) corrected: removed false $\sqrt{d}$ saturation claim, replaced with remainder-based argument
+- **Statement**: ZO (LP) vs RS crossover at $K^* = \tilde{\Theta}(c_d(\lambda)^{-1}) = \tilde{\Theta}(\lambda^{-1})$ (for fixed $d$); ZO dominates for small $K$
+- **Depends on**: ex:random-search, ex:local-perturbation
+- **Verified**: ✅ (2026-03-23, re-verified) — Updated to uniform-ball model: $c_d(\lambda)=\frac{\lambda\sqrt{d}}{4\sqrt{\pi}}\frac{\Gamma(d/2)}{\Gamma((d+1)/2)}$; old $\tilde\Theta(d/\eta)$ formula removed; `rmk:crossover-full` added for full-problem caveat
 
 ---
 

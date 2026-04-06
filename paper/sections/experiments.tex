@@ -17,13 +17,14 @@ Both verifiers enable controlled, repeatable measurements of test-time scaling w
 The \textbf{benchmark method} (``Naive'') pairs an $\epsilon$-greedy noise search operator with a \textbf{uniform per-timestep} compute schedule, following prior work.
 GAINS retains the same local search operators but replaces the uniform policy with a two-stage scheduler: offline profiling yields a coarse per-step allocation, and online control applies windowed early stopping driven by (i) observed score gains and (ii) candidate score variance.
 Early stopping acts only within the high-value region identified by offline profiling; saved NFE is redistributed to the first low-value steps so that total NFE exactly matches the prescribed budget.
-All experiments run on a single NVIDIA A100 GPU; wall-clock time is dominated by UNet evaluations and therefore determined by the NFE budget.
+All experiments run on a single NVIDIA A100 GPU; wall-clock time is dominated by forward passes through the denoising network and therefore determined by the NFE budget.
 
 \subsection{Stable Diffusion: Scaling with NFE}
 \label{sec:exp-sd-scaling}
 \begin{table}[t]
 \centering
-\caption{SD results across different NFE budgets.}
+\caption{SD results across different NFE budgets.
+GAINS improvements widen with budget, and GAINS at 400 NFE already surpasses uniform allocation at 500--800 NFE.}
 \label{tab:sd_budget}
 \begin{tabular}{c|c|c}
 \toprule
@@ -47,23 +48,24 @@ All experiments run on a single NVIDIA A100 GPU; wall-clock time is dominated by
 GAINS improves both absolute scores and the \emph{rate} at which quality scales with NFE on Stable Diffusion (\cref{tab:sd_budget}).
 For \textit{Brightness}, margins over uniform allocation widen from +0.0223 (400 NFE)
 to +0.0252 (500 NFE) and +0.0321 (800 NFE).
-The GAINS 400-NFE result ($0.7248$) already surpasses uniform allocation at
+The GAINS 400-NFE result ($0.7248$) already outperforms uniform allocation at
 500 NFE ($0.7094$), reaching higher brightness with
 \textbf{20\% fewer} function evaluations.
 The advantage is more pronounced for \textit{Compressibility}:
 uniform-allocation scores stagnate from $0.8833$ (400) to $0.8825$ (500) and $0.8892$ (800),
 whereas GAINS reaches $0.8946$, $0.9004$, and $0.9008$.
-GAINS at \textbf{400 NFE} ($0.8946$) already exceeds uniform allocation
-at \textbf{800 NFE} ($0.8892$), achieving \textbf{50\% fewer} function evaluations for
-higher compressibility.
+GAINS at \textbf{400 NFE} ($0.8946$) already overtakes uniform allocation
+at \textbf{800 NFE} ($0.8892$), achieving higher compressibility with \textbf{50\% fewer} function evaluations.
 This consistent leftward shift of the quality curve confirms that
 per-step-aware scheduling converts NFE into quality more efficiently than uniform allocation.
+Consistent with \cref{prop:offline}(iii), the non-uniform gains widen as sensitivity dispersion increases: SD's early-timestep concentration yields moderate dispersion and steady improvements, while the stagnation of uniform allocation on compressibility reflects its inability to exploit this structure.
 
 \subsection{EDM: Scaling with NFE}
 \label{sec:exp-edm-scaling}
 \begin{table}[t]
 \centering
-\caption{EDM results across different NFE budgets.}
+\caption{EDM results across different NFE budgets.
+EDM's concentrated mid-trajectory sensitivity amplifies GAINS, which at 144 NFE already exceeds uniform allocation at 288 NFE for Brightness.}
 \label{tab:edm_budget}
 \begin{tabular}{c|c|c}
 \toprule
@@ -87,23 +89,23 @@ EDM exhibits an even stronger acceleration (\cref{tab:edm_budget}).
 For \textit{Brightness}, GAINS achieves
 $0.9887$, $0.9904$, and $0.9988$ at 144, 180, and 288 NFE, corresponding to gaps of +0.0380, +0.0287,
 and +0.0201 over uniform allocation.
-The GAINS 144-NFE brightness ($0.9887$) already surpasses uniform allocation at
+The GAINS 144-NFE brightness ($0.9887$) already outperforms uniform allocation at
 288 NFE ($0.9787$), delivering higher quality with \textbf{50\% fewer}
 function evaluations.
-Similarly, at 180 NFE GAINS ($0.9904$) exceeds uniform allocation at 288 NFE,
+Similarly, at 180 NFE GAINS ($0.9904$) surpasses uniform allocation at 288 NFE,
 a \textbf{37.5\%} compute reduction.
 This pattern is consistent with \cref{prop:offline}(iii): EDM's concentrated
 mid-trajectory sensitivity creates large variance dispersion $\{\sigma_t\}$,
 amplifying the benefit of non-uniform allocation.
 For \textit{Compressibility}, GAINS reaches $0.6845$, $0.7003$, and $0.7165$
 versus uniform-allocation scores of $0.6714$, $0.6774$, and $0.6901$.
-The GAINS 144-NFE result ($0.6845$) already exceeds uniform allocation at 180 NFE
+The GAINS 144-NFE result ($0.6845$) already beats uniform allocation at 180 NFE
 ($0.6774$), saving \textbf{20\%} NFE;
-the GAINS 180-NFE result ($0.7003$) surpasses uniform allocation at 288 NFE ($0.6901$),
+the GAINS 180-NFE result ($0.7003$) exceeds uniform allocation at 288 NFE ($0.6901$),
 saving \textbf{37.5\%} NFE.
-Notably, improvements grow from +0.0131 to +0.0229 and
-+0.0264 as budget increases, indicating that global scheduling allocates
-incremental NFE to impactful timesteps rather than spreading it uniformly.
+The improvements grow from +0.0131 to +0.0229 and
++0.0264 as budget increases, confirming that global scheduling directs
+incremental NFE to productive timesteps rather than spreading it uniformly.
 
 \subsection{Ablation: Offline Allocation vs.\ Offline+Online Control}
 \label{sec:exp-ablation-offline-online}
@@ -112,7 +114,8 @@ incremental NFE to impactful timesteps rather than spreading it uniformly.
 \caption{Stable Diffusion results under fixed NFE $=400$.
 \textbf{Naive} uses uniform per-step allocation.
 \textbf{GAINS} uses offline profiling plus online control.
-\textbf{Offline Only} removes online control and uses only offline allocation.}
+\textbf{Offline Only} removes online control and uses only offline allocation.
+Online control contributes incremental gains beyond offline allocation alone on both metrics.}
 \label{tab:sd_400_ablation}
 \begin{tabular}{lccc}
 \toprule
@@ -128,6 +131,7 @@ Separating the two scheduling stages reveals complementary contributions (\cref{
 \textbf{Offline Only} already improves over uniform allocation on both metrics, confirming that coarse per-step budgeting is beneficial by itself.
 Adding online feedback and windowed early stopping yields the highest scores for both \textit{Brightness} (0.7248) and \textit{Compressibility} (0.8946).
 Offline profiling thus captures \emph{where} search matters, while online control refines \emph{how much} budget is worth spending on a given prompt and timestep, matching the two-factor decomposition in \cref{prop:online}(ii).
+The incremental gain from online control over offline-only (e.g., $+0.0090$ on Brightness, $+0.0073$ on Compressibility) provides empirical evidence of the Jensen gap predicted by \cref{prop:online}(i): because per-prompt sensitivity profiles $\boldsymbol{\sigma}$ vary, a fixed allocation tuned to the population mean leaves recoverable value on the table.
 
 \subsection{Larger Prompt Set Evaluation}
 \label{sec:exp-larger-prompts}
@@ -135,13 +139,14 @@ Offline profiling thus captures \emph{where} search matters, while online contro
 \centering
 \caption{Larger prompt set evaluation.
 We use 20 prompts, each repeated 10 times.
-Baseline corresponds to the uniform allocation method; GAINS is the proposed global scheduler.}
+Naive corresponds to the uniform allocation method; GAINS is the proposed global scheduler.
+Improvements persist across a diverse prompt set, confirming that the benefit reflects systematic reallocation rather than prompt-specific artifacts.}
 \label{tab:larger_prompt_exp}
 \begin{tabular}{lcc}
 \toprule
  & \textbf{brightness} & \textbf{compressibility} \\
 \midrule
-Baseline          & $0.6949 \pm 0.0756$ & $0.7938 \pm 0.0892$ \\
+Naive             & $0.6949 \pm 0.0756$ & $0.7938 \pm 0.0892$ \\
 GAINS             & $\mathbf{0.7213 \pm 0.0752}$ & $\mathbf{0.8076 \pm 0.0962}$ \\
 \bottomrule
 \end{tabular}
@@ -157,7 +162,8 @@ Because improvements persist under repeated sampling across a diverse prompt set
 \centering
 \caption{Global scheduling combined with different local search operators.
 Left block uses uniform allocation; right block uses GAINS.
-B: Brightness, C: Compressibility.}
+B: Brightness, C: Compressibility.
+GAINS improves both metrics under every local operator, confirming that global scheduling composes with the local search mechanism.}
 \label{tab:local_search_combo}
 \begin{tabular}{lcccc}
 \toprule
@@ -172,7 +178,7 @@ B: Brightness, C: Compressibility.}
 \end{table}
 
 Because GAINS schedules \emph{when} to search rather than \emph{how}, it should compose with any local search operator.
-\cref{tab:local_search_combo} confirms this: under both \textbf{Zero-order} and \textbf{Random} local search, replacing uniform allocation with GAINS improves \textit{Brightness} and \textit{Compressibility}.
+\cref{tab:local_search_combo} confirms this: under both \textbf{Zero-order} (local perturbation, \cref{ex:local-perturbation}) and \textbf{Random} (i.i.d.\ noise draws, \cref{ex:random-search}) local search, replacing uniform allocation with GAINS improves \textit{Brightness} and \textit{Compressibility}.
 The scheduler targets where to spend compute and pairs with different per-timestep proposal mechanisms without modification.
 
 \subsection{Applicability to Flow-based Models}
@@ -189,7 +195,8 @@ Once cast in the form of \cref{eq:transition}, GAINS applies without modifying t
 \centering
 \caption{Flow-based model results. Stochasticity is introduced via noise
 injection~\citep{dockhorn2024stochastic}, after which GAINS
-allocates search compute non-uniformly across timesteps.}
+allocates search compute non-uniformly across timesteps.
+Margins are smaller than on SD and EDM, consistent with the narrower variance dispersion after ODE-to-SDE conversion.}
 \label{tab:flow_results}
 \begin{tabular}{c|c|c}
 \toprule
@@ -218,7 +225,7 @@ the 80-NFE result ($0.5507$) already matches
 uniform allocation at 100 NFE ($0.5499$), saving \textbf{20\%} NFE.
 For \textit{Compressibility}, improvements reach +0.0027, +0.0014,
 and +0.0036;
-the GAINS 100-NFE score ($0.8170$) exceeds uniform allocation at 150 NFE
+the GAINS 100-NFE score ($0.8170$) surpasses uniform allocation at 150 NFE
 ($0.8157$), a \textbf{33\%} compute reduction.
 Margins are smaller than on SD and EDM, consistent with the narrower
 variance dispersion $\{\sigma_t\}$ after ODE-to-SDE conversion

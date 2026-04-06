@@ -31,18 +31,18 @@ which yields the first-order and complementary-slackness conditions
   \qquad
   \mu_t^*(K_t^*-1)=0.
 \]
-If $K_t^*>1$ then $\mu_t^*=0$ and $G_t'(K_t^*)=\lambda^*$.
-Substituting $G_t'(K)=\sigma_t\,a_K'$:
+If $K_t^*>1$ then $\mu_t^*=0$ and the discrete marginal gain equals the
+shadow price: $\sigma_t\,\Delta a_{K_t^*}=\lambda^*$.
+Hence
 \[
-  \sigma_t\,a_{K_t^*}' = \lambda^*
-  \quad\Longrightarrow\quad
-  a_{K_t^*}' = \frac{\lambda^*}{\sigma_t}.
+  \Delta a_{K_t^*} = \frac{\lambda^*}{\sigma_t}.
 \]
 Because the location-scale assumption makes $a_K$ the \emph{same}
 function for every~$t$, the right-hand side pins $K_t^*$ on a single
-strictly decreasing curve $a_K'$.
+strictly decreasing sequence $\Delta a_K$.
 Hence $\sigma_{t_1}>\sigma_{t_2}$
-implies $a_{K_{t_1}^*}' < a_{K_{t_2}^*}'$, hence $K_{t_1}^*>K_{t_2}^*$.
+implies $\Delta a_{K_{t_1}^*} < \Delta a_{K_{t_2}^*}$, hence
+$K_{t_1}^*>K_{t_2}^*$.
 (If the shape of $\mathcal{D}_t$ varied with~$t$, each timestep would
 have its own curve $a_{K,t}'$ and this monotonicity would not follow
 from $\sigma_{t_1}>\sigma_{t_2}$ alone.)

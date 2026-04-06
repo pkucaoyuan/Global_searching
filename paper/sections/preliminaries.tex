@@ -17,6 +17,7 @@ data.
 We briefly review the two most common formulations, as our framework applies to
 both.
 
+% THEORY-SETTING-BEGIN{diffusion-models}
 \subsubsection{The DDPM Formulation.}
 The Denoising Diffusion Probabilistic Modeling (DDPM) formulation
 \citep{ho2020denoising} couples two Markov processes: a forward process
@@ -58,14 +59,15 @@ $\mathbf{x}_0$.
 
 \subsubsection{The SGM Formulation.}
 The Score-based Generative Model (SGM) formulation~\citep{song2019generative}
-builds on the score function
-$s(\mathbf{x}) = \nabla_\mathbf{x} \log q(\mathbf{x})$,
-i.e., the gradient of the log-density.
+builds on the \emph{score} (not to be confused with the verifier score
+in \cref{def:verifier}),
+defined as $s(\mathbf{x}) = \nabla_\mathbf{x} \log q(\mathbf{x})$,
+the gradient of the log-density.
 Data are perturbed at different noise levels:
-$\tilde{\mathbf{x}}_t = \mathbf{x}_0 + \sigma_t\boldsymbol{\varepsilon}$
-for $0 < \sigma_1 < \sigma_2 < \cdots < \sigma_T$.
+$\tilde{\mathbf{x}}_t = \mathbf{x}_0 + \varsigma_t\boldsymbol{\varepsilon}$
+for $0 < \varsigma_1 < \varsigma_2 < \cdots < \varsigma_T$.
 A neural network
-$\mathbf{s}_\theta(\tilde{\mathbf{x}}_t, \sigma_t)$ approximates
+$\mathbf{s}_\theta(\tilde{\mathbf{x}}_t, \varsigma_t)$ approximates
 the score at each noise level.
 Annealed Langevin dynamics then generate samples: for each level
 $t = T, T{-}1, \ldots, 1$, the sampler iterates
@@ -77,6 +79,7 @@ $t = T, T{-}1, \ldots, 1$, the sampler iterates
   \label{eq:sgm-langevin}
 \end{equation}
 starting from a prior distribution $\mathbf{x}_{(0)} \sim \pi$.
+% THEORY-SETTING-END{diffusion-models}
 
 \begin{remark}
 Both DDPM and SGM traverse $T$ discrete timesteps.
@@ -108,9 +111,12 @@ generated sample:
 \end{equation}
 \end{definition}
 
-The core difficulty is sequential: the noise
-$\varepsilon_t$ at timestep $t$ shapes the latent $x_{t-1}$, which in turn
-determines which noises are effective at subsequent steps.
+The core difficulty is sequential: the noise $\varepsilon_t$ at timestep $t$
+shapes the latent $x_{t-1}$, which in turn determines which noises are
+effective at subsequent steps.
+This sequential dependence distinguishes the problem from a standard
+resource-allocation formulation and motivates the two-level decomposition
+introduced in \cref{sec:framework}.
 Because the budget $B$ must be respected globally, the problem further requires
 allocating computation across timesteps.
 
@@ -124,13 +130,23 @@ Examples include perceptual quality metrics, task-specific reward functions,
 and domain-specific performance measures.
 \end{definition}
 
+\begin{remark}
+The verifier is treated as a black box throughout; our results hold
+for any bounded, query-efficient quality measure.
+In operations-research applications, the verifier could be a
+simulation-fidelity metric, a constraint-satisfaction indicator, or a
+downstream optimization objective.
+\end{remark}
+
 \begin{definition}[Function Evaluation Budget]
 \label{def:nfe}
 A single \emph{function evaluation} (NFE) corresponds to one forward pass
-through the denoising network.
+through the denoising network, the dominant cost in diffusion sampling.
 The budget $B$ caps how many forward passes the sampler may
 perform when generating a single sample.
 Standard diffusion sampling consumes exactly $T$ NFE (one per timestep);
 noise trajectory search spends the remaining $B - T$ NFE on local noise
 refinement.
+The NFE budget is analogous to a computational budget in simulation
+optimization~\citep{chen2000simulation}.
 \end{definition}
