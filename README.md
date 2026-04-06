@@ -58,6 +58,23 @@ Global_searching/
 
 **Theoretical Guarantees.** We prove optimality of the water-filling allocation under a concave marginal gain model, and extend the theory to general local search operators (uniform-ball search, Gaussian perturbation, zeroth-order optimization).
 
+## Core Implementation
+
+The global search logic is implemented inside `code_repos/diffusion-tts/edm/main.py` (~1500 lines), which contains all sampling methods and the budget scheduling mechanism:
+
+| Code Location | Description |
+|---|---|
+| `edm/main.py` L26-34 | `SamplingMethod` enum: `NAIVE`, `ZERO_ORDER`, `EPS_GREEDY`, `EPS_GREEDY_1`, `EPS_GREEDY_ONLINE`, `MCTS`, `BEAM_SEARCH` |
+| `edm/main.py` L36-61 | `SamplingParams`: search hyperparameters including budget scheduler params (`extra_budget`, `tau0`, `alpha`, `probe_M`) |
+| `edm/main.py` L733-975 | **`EPS_GREEDY` / `EPS_GREEDY_1`**: per-step local search with fixed K allocation (uniform budget) |
+| `edm/main.py` L1163-1417 | **`EPS_GREEDY_ONLINE`**: global scheduling — dynamic budget allocation with probe-based gain estimation, early stopping, and threshold decay |
+| `edm/scorers.py` | Verifier implementations (ImageNet classifier, compressibility) |
+| `sd/main.py` | Stable Diffusion backend (dispatches to same search methods) |
+| `sd/scorers.py` | SD verifiers (CLIP, brightness, compressibility) |
+| `flux/flow_experiment.py` | Flow model extension (`FlowNoiseSearch` class) |
+
+**Key mechanism** (`EPS_GREEDY_ONLINE`): at each denoising step, the scheduler decides how many local search iterations to run based on remaining budget and estimated marginal gain. It uses `probe_M` candidate noises to estimate per-step gain, compares against a decaying threshold `tau(t)`, and stops early when gains fall below the threshold — implementing the water-filling allocation from the paper.
+
 ## Quick Start
 
 ```bash
