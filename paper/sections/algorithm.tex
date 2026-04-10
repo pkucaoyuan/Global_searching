@@ -179,16 +179,16 @@ The extension to general operators appears in
 \cref{sec:general-local-search}.
 
 % THEORY-SETTING-BEGIN{sde-foundations}
-The DDPM backward process in \cref{eq:ddpm-reverse} can be written as
+The backward denoising process (\cref{eq:ddpm-reverse}) can be written as
 a discretized reverse-time SDE; we work with this continuous-time form
 for generality.
-In Euler form with step size $h$ and diffusion coefficient $g_t$, it reads:
+In Euler--Maruyama form with step size $h$ and diffusion coefficient $g_t$, it reads:
 \begin{equation}
   X_{t-h} \;=\; X_t + b_t(X_t, c)\,h + g_t\sqrt{h}\,\xi,
   \qquad \xi \sim \mathcal{N}(0, I),
   \label{eq:euler-sde}
 \end{equation}
-where $b_t(X_t, c)$ denotes the drift (determined by the learned score network)
+where $b_t(X_t, c)$ denotes the drift (determined by the learned denoising network)
 and $g_t\sqrt{h}\,\xi$ the stochastic perturbation that noise search
 operates on.
 The \emph{verifier score function}
@@ -216,7 +216,7 @@ and $X_{t-h}$, almost surely.
 \begin{remark}
 The $C^2$ smoothness of~$\Psi_t$ requires that both the denoising
 network~$D_\theta$ and the verifier~$v$ are twice differentiable,
-which holds for standard smooth activations (e.g., GELU, softplus).
+which holds for neural networks with standard smooth activation functions.
 The per-timestep Hessian bound~$L_t$ is typically larger at early
 timesteps, where the verifier score function has more curvature, and
 smaller at late timesteps, where denoised predictions are nearly converged.

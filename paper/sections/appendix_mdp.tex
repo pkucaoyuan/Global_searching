@@ -79,13 +79,13 @@ $\hat{x}_0$) using a verifier, without modifying the latent.
 \begin{itemize}
   \item \textsc{VerifyLight}: apply a verifier that operates on the
     already-computed $\hat{x}_0$ without additional denoising-network
-    calls (e.g., JPEG compressibility, pixel statistics, CLIP score,
-    or an aesthetic predictor).  Consumes 0~NFE (though the external
+    calls (e.g., JPEG compressibility, pixel statistics, or a
+    lightweight image-quality scorer).  Consumes 0~NFE (though the external
     model itself has non-zero cost).
   \item \textsc{VerifyHeavy}: run additional denoising-network
     forward passes to obtain a more accurate $\hat{x}_0$ estimate
     (e.g., multi-step rollout from $x_t$ instead of a single-step
-    Tweedie prediction) before scoring.  Consumes $\ge 1$~NFE.
+    denoising estimate) before scoring.  Consumes $\ge 1$~NFE.
 \end{itemize}
 Both verify actions append new scores to $\mathcal{H}_t$
 but leave $x_t$ unchanged.

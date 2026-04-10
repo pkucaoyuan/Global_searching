@@ -46,7 +46,7 @@ The second strategy is the more promising one.
 At each denoising step, the model draws a random noise variable that
 determines the next latent state; by drawing several candidates and
 selecting the best according to a quality metric (a \emph{verifier},
-such as an image--text alignment score or a learned reward model),
+such as an image-quality scorer),
 one obtains a better sample at the cost of additional NFE.
 Existing methods apply this local noise search with increasing
 sophistication: $\epsilon$-greedy
@@ -105,7 +105,7 @@ We make the following contributions.
 
 1.~We introduce a unified \emph{two-level view} of noise trajectory search that
 separates local noise refinement from global timestep scheduling.
-This abstraction covers both stochastic (DDPM/SDE) and deterministic (flow/ODE)
+This abstraction covers both stochastic and deterministic
 samplers, providing a common language in which existing inference-time search
 methods reduce to special cases of scheduling policies (\cref{sec:framework}).
 
@@ -129,7 +129,7 @@ structure (\cref{prop:offline}), and any fixed allocation incurs a Jensen gap
 that online adaptation can partially recover (\cref{prop:online}).
 
 4.~We evaluate GAINS on text-to-image (Stable Diffusion),
-class-conditional (EDM; \citealt{karras2022elucidating}), and flow-based generation,
+class-conditional (EDM, a score-based model; \citealt{karras2022elucidating}), and flow-based generation,
 showing consistent improvements over existing inference-time methods under
 identical NFE budgets.
 GAINS matches or exceeds the uniform-allocation benchmark with 20--50\% fewer function

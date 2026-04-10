@@ -35,10 +35,8 @@ sampler naturally.
 For \emph{deterministic samplers} such as flow-matching ODE
 solvers~\citep{lipman2023flow,liu2023flow}, the transition is nominally
 noise-free.
-Yet stochasticity can be injected at selected timesteps, by converting the ODE
-into a family of SDEs sharing the same marginal
-distributions~\citep{dockhorn2024stochastic}, or by adding controlled
-perturbations for exploration~\citep{kim2025rbf,black2023training,fan2024reinforcement}.
+Yet stochasticity can be injected at selected timesteps
+by adding controlled random perturbations~\citep{dockhorn2024stochastic,kim2025rbf,black2023training,fan2024reinforcement}.
 Either way, sampling takes the form of
 \cref{eq:transition}, so our framework applies to any diffusion-family
 model.
@@ -148,7 +146,7 @@ inference-time search strategies:
   scheduler that spends all compute on full trajectories, performing only
   a single global selection; no local search occurs.
   \item \textbf{Noise-trajectory and tree-style search.}
-  Methods that iteratively refine a noise pivot or expand/prune partial
+  Methods that iteratively refine the current noise candidate or expand/prune partial
   trajectories choose specific
   forms of $\mathcal{L}_t$ paired with hard-coded $\mathcal{G}$ policies that
   fix which timesteps receive search and how budget splits across time.
