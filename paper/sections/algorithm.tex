@@ -559,6 +559,244 @@ Only when \emph{both} factors are small is stopping unambiguously
 justified, as the two-threshold diagram in \cref{fig:stopping} shows.
 \end{remark}
 
+\begin{remark}[Path dependence and the linearized regime]
+\label{rmk:path-dependence}
+The water-filling results (\cref{prop:offline,cor:offline-general})
+treat $\sigma_t$ as a fixed, exogenous profile.
+In practice, $\sigma_t=g_t\sqrt{h}\,\|\nabla\Psi_t(\bar{X}_{t-h};c)\|$
+depends on the latent $x_t$, which itself depends on the noise
+selected at earlier timesteps $t+1,t+2,\ldots,T$.
+Allocating more search budget to step~$t+1$ yields a better noise
+candidate, shifts $x_t$, and thereby perturbs $\sigma_t$.
+We now argue that this perturbation is absorbed into the existing
+$O(g_t^2 h)$ remainder, so the water-filling structure remains valid
+in the linearized regime.
+
+At step~$t+1$, searching $K_{t+1}$ candidates shifts the selected
+noise from a single random draw~$\xi$ to the best-of-$K_{t+1}$
+draw~$\xi^*$.
+By \cref{thm:loc-scale}(iii), the expected gain in the projected
+coordinate is $\sigma_{t+1}\,a_{K_{t+1}}$, so the selected noise
+deviates from a random draw by $O(g_{t+1}\sqrt{h}\,a_{K_{t+1}})$ in
+norm.
+This deviation propagates to~$x_t$ and perturbs
+$\bar{X}_{t-h}=x_t+b_t h$ by the same order.
+The resulting change in $\sigma_t$ is
+\[
+  |\Delta\sigma_t|
+  \;\le\;
+  g_t\sqrt{h}\,\|\nabla^2\Psi_t\|_{\mathrm{op}}\,
+  O\bigl(g_{t+1}\sqrt{h}\,a_{K_{t+1}}\bigr)
+  \;=\;
+  O\bigl(L_t\,g_t\,g_{t+1}\,h\,a_{K_{t+1}}\bigr),
+\]
+where $L_t$ is the Hessian bound from \cref{asm:smooth}.
+For bounded per-step budgets ($K_{t+1}\le B$, so
+$a_{K_{t+1}}=O(\sqrt{\log B})$), this is $O(g_t^2\,h)$ up to
+logarithmic factors, which is the same order as the remainder already
+present in \cref{thm:loc-scale}(iii).
+Therefore, the path dependence introduced by noise selection does not
+change the leading-order factorization
+$G_t(K)=\sigma_t\,\phi_K^{\mathcal{L}}+O(g_t^2\,h)$; it is
+captured by the existing remainder term.
+The water-filling allocation computed from the profiled
+$\{\sigma_t\}$ is optimal up to the same $O(g_t^2 h)$ accuracy,
+regardless of how the search at other timesteps modifies the
+latent trajectory.
+\end{remark}
+
+Combining the path-dependence argument with the Jensen gap, we can
+decompose the total suboptimality of GAINS relative to the
+Bellman-optimal MDP policy.
+
+\begin{proposition}[Regret decomposition]
+\label{prop:regret-decomp}
+Let $V_{\mathrm{MDP}}^*$ denote the value of the Bellman-optimal
+policy for the sequential allocation MDP (defined in
+\cref{sec:mdp}), let $V_{\mathrm{GAINS}}$ denote the value
+achieved by GAINS, and let
+$V^*(\boldsymbol{\sigma})=\max_{\sum K_t=B}\sum_t\sigma_t\,\phi_{K_t}$
+be the static oracle value for the true sensitivity profile.
+Then the per-instance regret decomposes as
+\begin{equation}
+  V_{\mathrm{MDP}}^*
+  - V_{\mathrm{GAINS}}
+  \;=\;
+  \underbrace{V_{\mathrm{MDP}}^*
+  - V^*(\boldsymbol{\sigma})}_{\text{(dynamic gap)}}
+  \;+\;
+  \underbrace{V^*(\boldsymbol{\sigma})
+  - V^*(\hat{\boldsymbol{\sigma}})}_{\text{(profiling error)}}
+  \;+\;
+  \underbrace{V^*(\hat{\boldsymbol{\sigma}})
+  - V_{\mathrm{GAINS}}}_{\text{(online adjustment)}}.
+  \label{eq:regret-decomp}
+\end{equation}
+Each term is bounded as follows:
+\begin{enumerate}
+\item[\textbf{(i)}]
+  $|V_{\mathrm{MDP}}^* - V^*(\boldsymbol{\sigma})|
+  = O(g_t^2\,h\cdot T)$.
+  The MDP oracle can exploit path dependence
+  (searching well at step~$t{+}1$ shifts $\sigma_t$),
+  while the static oracle treats $\boldsymbol{\sigma}$ as fixed.
+  By \cref{rmk:path-dependence}, this coupling enters at
+  $O(g_t^2 h)$ per timestep, so the gap between the two
+  oracles is $O(g_t^2 h\cdot T)$ in the linearized regime.
+\item[\textbf{(ii)}]
+  $|V^*(\boldsymbol{\sigma})-V^*(\hat{\boldsymbol{\sigma}})|
+  = O(g_t^2\,h\cdot T)$.
+  Since $V^*$ is Lipschitz in~$\boldsymbol{\sigma}$
+  (with constant $\max_K\phi_K$) and
+  $|\sigma_t-\hat\sigma_t|=O(g_t^2 h)$ by path dependence,
+  the profiling error is at the same order.
+\item[\textbf{(iii)}]
+  The online adjustment term measures how much GAINS's
+  per-instance adaptation improves upon the offline allocation.
+  A full characterization requires analyzing the estimation
+  quality of the gain and variance signals used by the
+  stopping rule, which we leave to future work.
+  The ablation in \cref{tab:sd_400_ablation} provides empirical
+  evidence that the online controller consistently improves
+  upon the offline-only allocation on every metric tested.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+The decomposition is a telescoping identity.
+Bound~(i): the static oracle $V^*(\boldsymbol{\sigma})$ optimizes
+over all allocations $\{K_t\}$ with the \emph{fixed} profile
+$\boldsymbol{\sigma}$.
+The MDP oracle chooses $K_t$ sequentially and can steer
+$\sigma_{t-1}$ by selecting noise at step~$t$, but this steering
+effect is $O(g_t^2 h)$ per step by
+\cref{rmk:path-dependence}, so $|V_{\mathrm{MDP}}^*-V^*|
+= O(g_t^2 h\cdot T)$.
+Bound~(ii): $V^*$ is the pointwise maximum of linear functions in
+$\boldsymbol{\sigma}$; each function has coefficients in
+$[\phi_1,\phi_B]$, so $|V^*(\boldsymbol{\sigma})-
+V^*(\hat{\boldsymbol{\sigma}})| \le
+\phi_B\,\|\boldsymbol{\sigma}-\hat{\boldsymbol{\sigma}}\|_1
+= O(\phi_B\cdot g_t^2 h\cdot T)$.
+Bound~(iii): characterizing Term~(iii) requires a
+dynamic-programming analysis of the stopping rule and its
+interaction with the gain and variance estimates.
+We defer this to future work and provide empirical
+support in \cref{tab:sd_400_ablation}.
+\end{proof}
+
+\begin{remark}[Interpreting the decomposition]
+\label{rmk:regret-decomp}
+In the linearized regime ($g_t\sqrt{h}\to 0$),
+Terms~(i) and~(ii) vanish at rate $O(g_t^2 h)$,
+so the dominant question is how much of the Jensen gap
+(\cref{prop:online}(i)) the online controller can recover
+through Term~(iii).
+The next corollary quantifies this gap, giving an explicit
+formula for the \emph{potential} value of per-instance adaptation.
+\end{remark}
+
+The next corollary quantifies the Jensen gap, giving an explicit
+formula for how much online adaptation can recover.
+
+\begin{corollary}[Value of online adaptation]
+\label{cor:jensen-value}
+Under the continuous relaxation with $\phi\in C^2$ strictly concave,
+suppose $\sigma_1,\ldots,\sigma_T$ are independent across instances
+with means $\bar\sigma_t$ and variances~$\nu_t^2$.
+Let $K_t^*=K_t^*(\bar{\boldsymbol{\sigma}})$ denote the offline
+allocation at the mean profile, and define
+$\gamma_t := \bar\sigma_t\,|\phi''(K_t^*)|>0$.
+Then the Jensen gap admits the second-order characterization
+\begin{equation}
+  \mathbb{E}\!\bigl[V^*(\boldsymbol{\sigma})\bigr]
+  -V^*(\bar{\boldsymbol{\sigma}})
+  \;=\;
+  \frac{1}{2}\,
+  \sum_{t=1}^T
+  \frac{[\phi'(K_t^*)]^2}{\gamma_t}
+  \cdot
+  \frac{\sum_{s\ne t}\gamma_s^{-1}}{\sum_{s}\gamma_s^{-1}}
+  \;\nu_t^2
+  \;+\; O\!\Bigl(\sum_t\mathbb{E}\bigl[|\sigma_t-\bar\sigma_t|^3
+  \bigr]\Bigr).
+  \label{eq:jensen-value}
+\end{equation}
+When all timesteps share the same mean sensitivity
+($\bar\sigma_t=\bar\sigma$, so $K_t^*=B/T$ and
+$\gamma_t=\gamma$ for all~$t$),
+the leading term reduces to
+\begin{equation}
+  \frac{(T{-}1)\,[\phi'(B/T)]^2}{2\,T\,\bar\sigma\,|\phi''(B/T)|}
+  \;\sum_{t=1}^T \nu_t^2.
+  \label{eq:jensen-value-symmetric}
+\end{equation}
+\end{corollary}
+
+\begin{proof}
+Under the continuous relaxation, $V^*$ is $C^2$ in
+$\boldsymbol{\sigma}$ whenever the optimal allocation is unique
+and satisfies strict complementarity
+\citep[Thm.~4.24]{bonnans2000perturbation}.
+By the envelope theorem, $\partial V^*/\partial\sigma_t=\phi(K_t^*)$.
+The Hessian diagonal entry is
+\[
+  H_{tt}
+  :=
+  \frac{\partial^2 V^*}{\partial\sigma_t^2}
+  =
+  \frac{[\phi'(K_t^*)]^2}{\gamma_t}
+  \cdot
+  \frac{\sum_{s\ne t}\gamma_s^{-1}}
+       {\sum_{s=1}^T \gamma_s^{-1}},
+\]
+obtained by differentiating the KKT system
+$\sigma_t\phi'(K_t^*)=\lambda^*$, $\sum_t K_t^*=B$ with respect
+to~$\sigma_t$.
+A second-order Taylor expansion of $V^*$ around
+$\bar{\boldsymbol{\sigma}}$ gives
+\[
+  V^*(\boldsymbol{\sigma})
+  =
+  V^*(\bar{\boldsymbol{\sigma}})
+  + \sum_t \phi(K_t^*)\,(\sigma_t-\bar\sigma_t)
+  + \frac{1}{2}\sum_{t,s} H_{ts}\,
+    (\sigma_t-\bar\sigma_t)(\sigma_s-\bar\sigma_s)
+  + O\!\bigl(\|\boldsymbol{\sigma}-\bar{\boldsymbol{\sigma}}\|^3
+  \bigr).
+\]
+Taking expectations: the linear term vanishes
+($\mathbb{E}[\sigma_t-\bar\sigma_t]=0$).
+For independent $\sigma_t$, the cross terms
+$H_{ts}\,\mathbb{E}[(\sigma_t-\bar\sigma_t)(\sigma_s-\bar\sigma_s)]
+= H_{ts}\cdot 0 = 0$ for $t\ne s$.
+The diagonal terms contribute
+$\frac{1}{2}\sum_t H_{tt}\,\nu_t^2$,
+yielding~\eqref{eq:jensen-value}.
+In the symmetric case ($\gamma_t=\gamma$ for all~$t$),
+$\sum_{s\ne t}\gamma_s^{-1}/\sum_s\gamma_s^{-1}=(T{-}1)/T$
+exactly, giving~\eqref{eq:jensen-value-symmetric}.
+\end{proof}
+
+\begin{remark}[Practical interpretation]
+\label{rmk:jensen-value}
+\cref{cor:jensen-value} shows that the value of per-instance
+adaptation is governed by three factors:
+(i)~$\sum_t\nu_t^2$, the total cross-instance sensitivity variance
+(more variable prompts $\Rightarrow$ more value from adaptation);
+(ii)~$[\phi'(K_t^*)]^2/\gamma_t$, the ratio of marginal gain
+squared to curvature at each timestep (steps where the objective is
+steep but gently curving benefit most from reallocation);
+(iii)~$(\sum_{s\ne t}\gamma_s^{-1})/(\sum_s\gamma_s^{-1})$,
+a coupling factor reflecting how the budget constraint links
+timesteps (approaching $(T{-}1)/T$ in the symmetric case).
+Practitioners can estimate $\nu_t^2$ from the same calibration
+data used for offline profiling:
+if $\sum_t\nu_t^2$ is large relative to the offline gain
+$V^*(\bar{\boldsymbol{\sigma}})$, the online controller is
+worth deploying.
+\end{remark}
+
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.75\linewidth]{figures/fig_stopping_decision.pdf}

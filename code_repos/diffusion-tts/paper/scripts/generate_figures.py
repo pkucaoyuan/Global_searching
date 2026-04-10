@@ -53,9 +53,9 @@ def fig_stopping_decision():
     ak_vals = lam_star / sig_vals
     mask = ak_vals < 0.98
     ax.plot(sig_vals[mask], ak_vals[mask], color='#757575', lw=1.5, zorder=2)
-    # Label the hyperbola
-    ax.text(0.72, 0.22, r'$\sigma_t \cdot a_K^\prime = \lambda^*$',
-            fontsize=9, color='#757575', rotation=-18, ha='center')
+    # Label the hyperbola — place along right portion where curve is flat
+    ax.text(0.78, 0.25, r'$\sigma_t \cdot a_K^\prime = \lambda^*$',
+            fontsize=9, color='#757575', rotation=-12, ha='center')
 
     # ── Region labels ──
     # Bottom-left: STOP
@@ -70,10 +70,10 @@ def fig_stopping_decision():
     ax.text(sig_th/2, (1+ak_th)/2 - 0.07, 'insensitive, but\nsearch still productive',
             fontsize=7.5, ha='center', va='center', color='#1976d2', zorder=5)
 
-    # Bottom-right: Continue
-    ax.text((1+sig_th)/2, ak_th/2 + 0.04, 'Continue', fontsize=11, fontweight='bold',
+    # Bottom-right: Continue — shift down to avoid hyperbola curve
+    ax.text((1+sig_th)/2, ak_th/2 - 0.02, 'Continue', fontsize=11, fontweight='bold',
             ha='center', va='center', color='#c62828', zorder=5)
-    ax.text((1+sig_th)/2, ak_th/2 - 0.07, 'responsive but exhausted;\nlucky draw still possible',
+    ax.text((1+sig_th)/2, ak_th/2 - 0.13, 'responsive but exhausted;\nlucky draw still possible',
             fontsize=7.5, ha='center', va='center', color='#d32f2f', zorder=5)
 
     # Top-right: Continue
@@ -157,11 +157,11 @@ def fig_architecture():
                               facecolor=c_bar, edgecolor=c_bar_edge,
                               lw=0.8, alpha=0.8)
         ax.add_patch(bar)
-        ax.text(xp, bar_bottom + bh + 0.08, kl, fontsize=8, ha='center',
+        ax.text(xp, bar_bottom + bh + 0.15, kl, fontsize=8, ha='center',
                 va='bottom', color=c_global)
 
-        # Dashed arrow from global down to bar
-        ax.annotate('', xy=(xp, bar_bottom + bh), xytext=(xp, 3.15),
+        # Dashed arrow from global down to above K label
+        ax.annotate('', xy=(xp, bar_bottom + bh + 0.35), xytext=(xp, 3.15),
                     arrowprops=dict(arrowstyle='->', color=c_global,
                                     lw=1.0, ls='--', alpha=0.5))
 
