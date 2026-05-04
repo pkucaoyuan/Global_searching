@@ -1,0 +1,84 @@
+\section{Proofs}
+\label{sec:proofs}
+
+\subsection{Proof of \texorpdfstring{\cref{thm:loc-scale}}{Theorem (Location-scale)}}
+\label{sec:proof-loc-scale}
+
+\paragraph{Setup.}
+By construction, $X_{t-h} = \bar{X}_{t-h} + g_t\sqrt{h}\,\xi$ with $\xi\sim\mathcal{N}(0,I)$. A second-order Taylor expansion of $\Psi_t(\cdot;c)$ around $\bar{X}_{t-h}$ gives
+\[
+  \Psi_t(X_{t-h}; c) = \Psi_t(\bar{X}_{t-h}; c) + \langle \nabla\Psi_t(\bar{X}_{t-h}; c), X_{t-h} - \bar{X}_{t-h}\rangle + R_t,
+\]
+where $R_t = \tfrac{1}{2}(X_{t-h}-\bar{X}_{t-h})^\top \nabla^2\Psi_t(\widetilde{X}; c)(X_{t-h}-\bar{X}_{t-h})$ for some $\widetilde{X}$ on the segment. Substituting $X_{t-h}-\bar{X}_{t-h} = g_t\sqrt{h}\,\xi$ and using \cref{asm:smooth} gives $|R_t|\le\tfrac{1}{2}L_t g_t^2 h\|\xi\|^2$ a.s.
+
+\paragraph{Part (i).}
+When $\|\nabla\Psi_t(\bar{X}_{t-h};c)\|>0$, write $\langle\nabla\Psi_t,\xi\rangle = \|\nabla\Psi_t\|\,Z_t$ where $Z_t := \langle\nabla\Psi_t/\|\nabla\Psi_t\|,\xi\rangle$. Since $\nabla\Psi_t/\|\nabla\Psi_t\|$ is a fixed unit vector conditional on $(X_t,c)$ and $\xi\sim\mathcal{N}(0,I)$, $Z_t\sim\mathcal{N}(0,1)$. (When $\nabla\Psi_t = 0$, $\sigma_t=0$ and the result is trivial.)
+
+\paragraph{Part (ii).}
+$\mathrm{Var}(S_t\mid X_t,c) = \mathrm{Var}(\sigma_t Z_t + R_t) = \sigma_t^2 + 2\,\mathrm{Cov}(\sigma_t Z_t, R_t) + \mathrm{Var}(R_t)$. By Cauchy--Schwarz, $|\mathrm{Cov}(\sigma_t Z_t,R_t)|\le\sigma_t\sqrt{\mathbb{E}[R_t^2]}$. Using $|R_t|\le\tfrac{1}{2}L_t g_t^2 h\|\xi\|^2$ and $\mathbb{E}[\|\xi\|^4]=d(d+2)$, we get $\mathbb{E}[R_t^2]\le\tfrac{1}{4}L_t^2 g_t^4 h^2 d(d+2)$, hence $|\mathrm{Cov}|\le\tfrac{1}{2}L_t\sqrt{d(d+2)}\sigma_t g_t^2 h = O_d(g_t^3 h^{3/2})$ and $\mathrm{Var}(R_t) = O_d(g_t^4 h^2)$, lower order than the covariance term.
+
+\paragraph{Part (iii).}
+Write $S_t^{(k)} = \mu_t + \sigma_t Z_k + R_t^{(k)}$ for each candidate. Using $|\max_k(a_k+b_k)-\max_k a_k|\le\max_k|b_k|$,
+\[
+\bigl|\max_k S_t^{(k)} - (\mu_t + \sigma_t \max_k Z_k)\bigr| \le \max_k |R_t^{(k)}| \le \sum_k |R_t^{(k)}|.
+\]
+Taking conditional expectations: $\mathbb{E}[\max_k|R_t^{(k)}|\mid X_t,c]\le K\cdot\tfrac{1}{2}L_t g_t^2 h\, d$, hence $G_t(K) = \sigma_t a_K + O_{K,d,L_t}(g_t^2 h)$. \qed
+
+\subsection{Proof of \texorpdfstring{\cref{thm:offline}}{Theorem (Offline optimality)}}
+\label{sec:proof-offline}
+
+\paragraph{Part (i).}
+Under prompt-independence, $G_t(K_t)$ depends only on $(t,K_t)$, so $\sum_t G_t(K_t)$ is the same function of $\{K_t\}$ for every $(c,x_t)$; any $\{K_t^*\}$ solving \cref{eq:alloc} is simultaneously optimal.
+
+\paragraph{Part (ii): water-filling monotonicity.}
+Treating $K$ as continuous, $G_t(K) = \sigma_t a_K$ is strictly concave (since $a_K$ is strictly concave for the Gaussian case~\citep{david2003order}). Writing the Lagrangian of \cref{eq:alloc} as $\mathcal{L} = \sum_t G_t(K_t) - \lambda(\sum_t K_t - B) + \sum_t\mu_t(K_t - 1)$, KKT gives $G_t'(K_t^*) = \lambda^* - \mu_t^*$, $\mu_t^*\ge 0$, $\mu_t^*(K_t^*-1)=0$. If $K_t^*>1$ then $\mu_t^*=0$ and $\sigma_t\Delta a_{K_t^*}=\lambda^*$, hence $\Delta a_{K_t^*}=\lambda^*/\sigma_t$. Because $a_K$ is the same function for every $t$ (location-scale), $\sigma_{t_1}>\sigma_{t_2}\Rightarrow\Delta a_{K_{t_1}^*}<\Delta a_{K_{t_2}^*}\Rightarrow K_{t_1}^*>K_{t_2}^*$.
+
+\paragraph{Part (iii): strict suboptimality of uniform.}
+At $K_t\equiv B/T$, the marginal gains $G_t'(B/T)=\sigma_t a_{B/T}'$ differ whenever any $\sigma_{t_1}\ne\sigma_{t_2}$, violating KKT. The budget-neutral perturbation $K_{t_1}=B/T+\epsilon$, $K_{t_2}=B/T-\epsilon$ yields $\epsilon(\sigma_{t_1}-\sigma_{t_2})a_{B/T}' + O(\epsilon^2) > 0$ for small $\epsilon>0$, so uniform is non-stationary; concavity over the convex constraint set then gives strict suboptimality. \qed
+
+\subsection{Proof of \texorpdfstring{\cref{lem:lower}}{Lemma (Regret lower bound)}}
+\label{sec:proof-lower}
+
+Fix any adaptive policy. We construct two instances; both share identical first $B$ rounds, with $\mathcal{D}_t = \delta_{1/2}$ (a Dirac mass at reward $1/2$) for $t=1,\ldots,B$. Allocating one unit at any of these rounds yields deterministic reward $1/2$.
+
+For the remaining $B$ rounds ($t = B+1,\ldots,2B$), consider two continuations:
+\[
+\text{Instance A: } \mathcal{D}_t = \delta_0, \qquad \text{Instance B: } \mathcal{D}_t = \delta_1.
+\]
+Let $S = \mathbb{E}[\sum_{t=1}^B K_t]$ denote the expected budget spent in the first $B$ rounds. Since the first $B$ rounds are identical, $S$ is the same in both instances.
+
+In Instance A, last $B$ rounds yield zero reward. The offline benchmark spends all $B$ units in the first $B$ rounds, achieving total reward $B/2$. The learner achieves expected reward $S/2$, giving regret $R_T \ge B/2 - S/2$.
+
+In Instance B, last $B$ rounds yield reward 1. The offline benchmark spends all $B$ units in the last $B$ rounds, achieving total reward $B$. The learner spends $S$ in the first $B$ rounds (reward $S/2$) and at most $B-S$ in the last $B$ rounds (reward $B-S$), totaling at most $S/2 + (B-S) = B - S/2$. Hence $R_T \ge B - (B - S/2) = S/2$.
+
+Therefore for any adaptive policy, $R_T \ge \max\{(B-S)/2, S/2\} \ge B/4 = \Omega(T)$. \qed
+
+\subsection{Proof of \texorpdfstring{\cref{thm:regret-upper}}{Theorem (Regret upper bound for GAINS)}}
+\label{sec:proof-regret-upper}
+
+Let $V^*(\boldsymbol\sigma) := \max_{\sum K_t=B,K_t\ge 1}\sum_t \sigma_t a_{K_t}$ be the static oracle value for the true sensitivity profile and $\hat{\boldsymbol\sigma}$ the profiled sensitivity. The regret decomposes as
+\begin{equation}
+V_{\mathrm{MDP}}^* - V_{\textsc{GAINS}} = \underbrace{V_{\mathrm{MDP}}^* - V^*(\boldsymbol\sigma)}_{\text{(dynamic gap)}} + \underbrace{V^*(\boldsymbol\sigma) - V^*(\hat{\boldsymbol\sigma})}_{\text{(profiling error)}} + \underbrace{V^*(\hat{\boldsymbol\sigma}) - V_{\textsc{GAINS}}}_{\text{(online adjustment)}}.
+\label{eq:regret-decomp-app}
+\end{equation}
+We bound each term.
+
+\paragraph{(i) Dynamic gap: $|V_{\mathrm{MDP}}^* - V^*(\boldsymbol\sigma)| = O(g_t^2 h\cdot T)$.}
+The static oracle treats $\boldsymbol\sigma$ as fixed; the MDP oracle can steer $\sigma_{t-1}$ by selecting noise at step $t$. At step $t+1$, searching $K_{t+1}$ candidates shifts the selected noise from a single random draw to the best-of-$K_{t+1}$ draw; by \cref{thm:loc-scale}\textup{(iii)}, this deviation is $O(g_{t+1}\sqrt{h}\,a_{K_{t+1}})$ in norm. Propagating to $x_t$ and perturbing $\bar X_{t-h}$ by the same order, the resulting change in $\sigma_t$ is
+\[
+|\Delta\sigma_t| \le g_t\sqrt{h}\,\|\nabla^2\Psi_t\|_{\mathrm{op}}\,O(g_{t+1}\sqrt{h}\,a_{K_{t+1}}) = O(L_t\,g_t\,g_{t+1}\,h\,a_{K_{t+1}}).
+\]
+For bounded budgets $K_{t+1}\le B$ (so $a_{K_{t+1}} = O(\sqrt{\log B})$), this is $O(g_t^2 h)$ up to logarithmic factors, the same order as the existing remainder in \cref{thm:loc-scale}\textup{(iii)}. Summing over $T$ steps yields $O(g_t^2 h\cdot T)$.
+
+\paragraph{(ii) Profiling error: $|V^*(\boldsymbol\sigma) - V^*(\hat{\boldsymbol\sigma})| = O(g_t^2 h\cdot T)$.}
+$V^*$ is the pointwise maximum of linear functions in $\boldsymbol\sigma$ with coefficients in $[a_1, a_B]$, hence Lipschitz in $\boldsymbol\sigma$ with constant $a_B$. By the path-dependence argument above, $|\sigma_t - \hat\sigma_t| = O(g_t^2 h)$, so $|V^*(\boldsymbol\sigma) - V^*(\hat{\boldsymbol\sigma})|\le a_B\|\boldsymbol\sigma - \hat{\boldsymbol\sigma}\|_1 = O(a_B\cdot g_t^2 h\cdot T)$.
+
+\paragraph{(iii) Online adjustment: empirically bounded.}
+The online controller targets the Jensen gap $\mathbb{E}_{\boldsymbol\sigma}[V^*(\boldsymbol\sigma)] - V^*(\bar{\boldsymbol\sigma})\ge 0$ (\cref{rmk:online-value}). For independent $\sigma_t$ with means $\bar\sigma_t$ and variances $\nu_t^2$, a second-order Taylor expansion of $V^*$ around $\bar{\boldsymbol\sigma}$ gives
+\[
+\mathbb{E}[V^*(\boldsymbol\sigma)] - V^*(\bar{\boldsymbol\sigma}) = \frac{1}{2}\sum_{t=1}^T \frac{[\phi'(K_t^*)]^2}{\gamma_t}\cdot\frac{\sum_{s\ne t}\gamma_s^{-1}}{\sum_s \gamma_s^{-1}}\,\nu_t^2 + O\Bigl(\sum_t\mathbb{E}[|\sigma_t-\bar\sigma_t|^3]\Bigr),
+\]
+where $\gamma_t := \bar\sigma_t|\phi''(K_t^*)|$. A full characterization of how much the controller recovers requires a dynamic-programming analysis of the stopping rule, which we leave to future work; the ablation in \cref{tab:sd_400_ablation} provides empirical evidence that online control consistently improves upon offline-only on every metric.
+
+\paragraph{Combining.}
+Terms (i) and (ii) are each $O(g_t^2 h\cdot T)$; term (iii) is non-negative and bounded by the Jensen gap. Hence $V_{\mathrm{MDP}}^* - V_{\textsc{GAINS}} = O(g_t^2 h\cdot T)$, matching the lower bound in \cref{lem:lower} up to the SDE linearization scale. \qed

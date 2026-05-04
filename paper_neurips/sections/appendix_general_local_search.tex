@@ -1,0 +1,181 @@
+\section{Extension to General Local Search Operators}
+\label{sec:appendix-general}
+
+The analysis in \cref{sec:theory} treats the special case where the local operator is pure random search (i.i.d.\ noise draws). The scheduling results, however, depend only on three properties of the gain sequence: monotonicity, non-accelerating marginals, and $t$-independence. Any local search operator sharing these properties inherits the same water-filling and Jensen-gap guarantees. This appendix formalizes this observation, extending the theory to $\epsilon$-greedy exploration and local perturbation search.
+
+\subsection{Abstract Local Search Framework}
+
+A local search operator $\mathcal{L}$ at timestep $t$ produces iterates $\xi^{(0)},\xi^{(1)},\ldots,\xi^{(K)}$ in $\mathbb{R}^d$, starting from $\xi^{(0)}\sim\mathcal{N}(0,I)$. The gain from $K$ iterations is
+\begin{equation}
+G_t^{\mathcal{L}}(K) := \mathbb{E}\!\Bigl[\max_{0\le j\le K}\Psi_t(\bar X_{t-h} + g_t\sqrt{h}\,\xi^{(j)};c)\,\Big|\,X_t,c\Bigr] - \mu_t.
+\label{eq:gain-general-app}
+\end{equation}
+
+\begin{assumption}[Local search regularity]
+\label{asm:local-search}
+$\mathcal{L}$ satisfies:
+\textup{(A1)} Strict monotone improvement: $G_t^{\mathcal{L}}(K)$ is strictly increasing in $K$.
+\textup{(A2)} Diminishing returns: $G_t^{\mathcal{L}}(K{+}1)-G_t^{\mathcal{L}}(K)$ is non-increasing in $K$.
+\textup{(A3)} Sensitivity scaling: in the linearized regime ($g_t\sqrt{h}\to 0$),
+\begin{equation}
+G_t^{\mathcal{L}}(K) = \sigma_t\,\phi_K^{\mathcal{L}} + O_{K,d,L_t}(g_t^2 h),
+\label{eq:sensitivity-scaling}
+\end{equation}
+where $\phi_K^{\mathcal{L}}\ge 0$ depends on $\mathcal{L}$ and $K$ but not on $t$.
+\textup{(A4)} Rotational equivariance: for any orthogonal $Q\in\mathbb{R}^{d\times d}$, the joint distribution of $\{Q\xi^{(j)}\}$ under $\mathcal{L}$ equals that of iterates from $\mathcal{L}$ starting from $Q\xi^{(0)}$.
+\end{assumption}
+
+\subsection{General Gain Factorization and Scheduling}
+
+\begin{theorem}[General gain factorization]
+\label{thm:general-gain}
+Under \cref{asm:smooth,asm:local-search}, for any local search operator $\mathcal{L}$ with gain sequence $\{\phi_K^{\mathcal{L}}\}$,
+\begin{equation}
+G_t^{\mathcal{L}}(K) = \sigma_t\,\phi_K^{\mathcal{L}} + O_{K,d,L_t}(g_t^2 h),
+\label{eq:general-gain-factorization}
+\end{equation}
+where $\sigma_t = g_t\sqrt{h}\,\|\nabla\Psi_t(\bar X_{t-h};c)\|$. The sequence $\phi_K^{\mathcal{L}}$ is strictly increasing for $K\ge 1$ (by A1), has non-accelerating marginals (by A2), and satisfies $\phi_0^{\mathcal{L}}=0$.
+\end{theorem}
+
+\begin{proof}
+By \cref{thm:loc-scale}, $\Psi_t(\bar X_{t-h}+g_t\sqrt{h}\xi;c) = \mu_t + \sigma_t\langle u_t,\xi\rangle + R_t(\xi)$ with $u_t = \nabla\Psi_t/\|\nabla\Psi_t\|$ and $|R_t(\xi)|\le\tfrac{1}{2}L_t g_t^2 h\|\xi\|^2$. Substituting into \cref{eq:gain-general-app} and using $|\max_j(a_j+b_j)-\max_j a_j|\le\max_j|b_j|$ gives
+\[
+G_t^{\mathcal{L}}(K) = \sigma_t\,\mathbb{E}[\max_j\langle u_t,\xi^{(j)}\rangle] + O_{K,d,L_t}(g_t^2 h).
+\]
+By A4 (rotational equivariance) and the rotational invariance of $\xi^{(0)}\sim\mathcal{N}(0,I)$, the projected iterates $\{\langle u_t,\xi^{(j)}\rangle\}$ have the same distribution as $\{\langle e_1,\xi^{(j)}\rangle\}$ for any fixed coordinate direction. Hence $\mathbb{E}[\max_j\langle u_t,\xi^{(j)}\rangle]$ depends on $\mathcal{L}$ and $K$ only; denote it $\phi_K^{\mathcal{L}}$. Properties of $\phi_K^{\mathcal{L}}$ follow from A1, A2, and $\mathbb{E}[\langle u,\xi^{(0)}\rangle]=0$.
+\end{proof}
+
+\paragraph{Sensitivity-gain separation.}
+\cref{thm:general-gain} establishes that the timestep-dependent factor $\sigma_t$ and the operator-dependent gain $\phi_K^{\mathcal{L}}$ decouple multiplicatively. The global scheduler needs only $\{\sigma_t\}$, common to all operators; the operator designer can optimize $\phi_K^{\mathcal{L}}$ independently of the scheduling policy. This modularity underpins the two-level design of \textsc{GAINS}.
+
+\begin{corollary}[Offline water-filling for general operators]
+\label{cor:offline-general}
+Under \cref{thm:general-gain} with prompt-independent $\sigma_t$, the allocation problem $\max\sum_t\sigma_t\phi_{K_t}^{\mathcal{L}}$ s.t.\ $\sum K_t = B$, $K_t\ge 1$ has the same structure as \cref{thm:offline}: the optimal allocation is non-decreasing in $\sigma_t$; when $\phi_K$ is strictly concave the active timesteps satisfy strict water-filling; when $\phi_K$ is linear, every optimizer concentrates the allocable budget on $\arg\max_t\sigma_t$.
+\end{corollary}
+
+The proof splits by curvature. For strict concavity, the KKT argument from \cref{sec:proof-offline} applies verbatim with $\phi_K$ in place of $a_K$. For linear $\phi_K=\alpha K$, the LP $\alpha\sum_t\sigma_t K_t$ assigns all budget beyond the floor $K_t\ge 1$ to $\arg\max_t\sigma_t$.
+
+\subsection{Operator-Specific Gain Sequences}
+
+\begin{example}[Random search]
+The operator draws $K$ i.i.d.\ $\xi_k\sim\mathcal{N}(0,I)$ and keeps the best. In the linearized regime, the projected scores $\langle u,\xi_k\rangle$ are i.i.d.\ $\mathcal{N}(0,1)$, so $\phi_K^{\mathrm{RS}} = a_K = \mathbb{E}[\max(Z_1,\ldots,Z_K)]$. (A1)--(A4) follow from order-statistic theory and isotropy of Gaussians.
+\end{example}
+
+\begin{example}[$\epsilon$-greedy search]
+Starting from $\xi^{(0)}\sim\mathcal{N}(0,I)$, each iteration draws $\xi_{\mathrm{new}}\sim\mathcal{N}(0,I)$ with probability $\epsilon$ (explore), or sets $\xi_{\mathrm{new}}=\xi^*+RU$ (exploit by perturbing the current best $\xi^*$), where $U\sim\text{Unif}(\mathbb{S}^{d-1})$ and $R\sim\text{Unif}[0,\lambda\sqrt d]$. In the linearized regime, exploration steps contribute gain $a_{\lceil\epsilon K\rceil}$; exploitation steps add an expected increment $c_d(\lambda) := \frac{\lambda\sqrt d}{4\sqrt\pi}\frac{\Gamma(d/2)}{\Gamma((d+1)/2)}$ per step. Hence $\phi_K^{(\epsilon)}\ge a_{\lceil\epsilon K\rceil}$, with equality when exploitation adds nothing ($\lambda\to 0$).
+\end{example}
+
+\begin{example}[Local perturbation ($\epsilon$-greedy with $\epsilon=0$)]
+The pure-exploitation limit: each iteration perturbs the current best by $RU$ with $U\sim\text{Unif}(\mathbb{S}^{d-1})$, $R\sim\text{Unif}[0,\lambda\sqrt d]$. In the linearized regime each iteration adds constant expected improvement $c_d(\lambda)$, giving $\phi_K^{(\mathrm{LP})} = c_d(\lambda)\,K$.
+\end{example}
+
+\begin{table}[t]
+\centering
+\caption{Summary of operator-specific gain sequences $\phi_K^{\mathcal{L}}$ in the linearized regime.}
+\label{tab:phi-summary}
+\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+Operator $\mathcal{L}$ & $\phi_K^{\mathcal{L}}$ (linearized) & Growth rate & Regime note \\
+\midrule
+Random search & $a_K\sim\sqrt{2\log K}$ & $O(\sqrt{\log K})$ & Exact \\
+$\epsilon$-greedy & $\ge a_{\lceil\epsilon K\rceil}$ & $\Omega(\sqrt{\log K})$ & Lower bound \\
+Local perturbation ($\epsilon{=}0$) & $c_d(\lambda)K$ & $O(K)$ & Exact (linearized) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{proposition}[Asymptotic crossover]
+\label{prop:crossover}
+In the linearized regime, balancing $\phi_K^{\mathrm{RS}}\sim\sqrt{2\log K}$ against $\phi_K^{(\mathrm{LP})}=c_d(\lambda)K$ gives a crossover scale $K^* = \tilde\Theta(c_d(\lambda)^{-1}) = \tilde\Theta(\lambda^{-1})$ for fixed $d$.
+\end{proposition}
+
+The proof equates the two growth laws and iterates once. \cref{prop:crossover} implies that the optimal operator choice depends on the per-step budget: as $K_t$ approaches the crossover scale, the linear-growth local perturbation operator becomes more attractive; smaller budgets remain well served by random search.
+
+\section{Additional Experiments}
+\label{sec:appendix-experiments}
+
+This appendix reports the ablation, prompt-set generalization, and operator-compatibility experiments referenced in \cref{sec:experiments}.
+
+\paragraph{Ablation: offline vs.\ offline+online.}
+\cref{tab:sd_400_ablation} separates the two scheduling stages on Stable Diffusion at fixed NFE $=400$. Offline-only already improves over uniform on both metrics, confirming that coarse per-step budgeting is beneficial by itself. Adding online feedback yields the highest scores. Offline profiling captures \emph{where} search matters; online control refines \emph{how much} budget is worth spending per prompt and step. The incremental gain from online over offline-only ($+0.0090$ Brightness, $+0.0073$ Compressibility) provides empirical evidence of the Jensen gap (\cref{rmk:online-value}).
+
+\begin{table}[h]
+\centering
+\caption{Stable Diffusion at fixed NFE $=400$. \textbf{Naive}: uniform; \textbf{GAINS}: offline + online; \textbf{Offline Only}: only offline allocation.}
+\label{tab:sd_400_ablation}
+\small
+\begin{tabular}{lccc}
+\toprule
+\textbf{Metric} & \textbf{Naive} & \textbf{GAINS} & \textbf{Offline Only} \\
+\midrule
+Brightness & $0.7025\pm0.047$ & $\mathbf{0.7248\pm0.056}$ & $0.7158\pm0.065$ \\
+Compressibility & $0.8833\pm0.017$ & $\mathbf{0.8946\pm0.016}$ & $0.8873\pm0.018$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Larger prompt set.}
+A fixed offline profile might overfit to a narrow calibration set. We test generalization with 20 prompts $\times$ 10 repeats (\cref{tab:larger_prompt_exp}). \textsc{GAINS} raises Brightness from 0.6949 to 0.7213 and Compressibility from 0.7938 to 0.8076. Improvements persist, indicating systematic compute reallocation rather than prompt-specific artifacts.
+
+\begin{table}[h]
+\centering
+\caption{Larger prompt set: 20 prompts, 10 repeats each.}
+\label{tab:larger_prompt_exp}
+\small
+\begin{tabular}{lcc}
+\toprule
+& \textbf{Brightness} & \textbf{Compressibility} \\
+\midrule
+Naive & $0.6949\pm0.076$ & $0.7938\pm0.089$ \\
+\textsc{GAINS} & $\mathbf{0.7213\pm0.075}$ & $\mathbf{0.8076\pm0.096}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Compatibility with local operators.}
+Because \textsc{GAINS} schedules \emph{when} to search rather than \emph{how}, it should compose with any local operator. \cref{tab:local_search_combo} confirms this: under both \textbf{Zero-order} (local perturbation) and \textbf{Random} (i.i.d.) local search, replacing uniform with \textsc{GAINS} improves both metrics.
+
+\begin{table}[h]
+\centering
+\caption{Global scheduling combined with different local operators. B: Brightness, C: Compressibility.}
+\label{tab:local_search_combo}
+\small
+\begin{tabular}{lcccc}
+\toprule
+& \multicolumn{2}{c}{\textbf{Naive}} & \multicolumn{2}{c}{\textbf{GAINS}} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5}
+\textbf{Metric} & \textbf{Zero-order} & \textbf{Random} & \textbf{Zero-order} & \textbf{Random} \\
+\midrule
+\textbf{B} & $0.4920\pm0.072$ & $0.7382\pm0.039$ & $\mathbf{0.5080\pm0.075}$ & $\mathbf{0.7457\pm0.045}$ \\
+\textbf{C} & $0.5727\pm0.066$ & $0.8417\pm0.027$ & $\mathbf{0.5832\pm0.061}$ & $\mathbf{0.8454\pm0.025}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Flow-based models.}
+\cref{tab:flow_results} reports flow-based model results across 80, 100, 150 NFE. Margins are smaller than on SD/EDM, consistent with the narrower variance dispersion after ODE-to-SDE conversion (\cref{thm:offline}\textup{(iii)}). The 80-NFE Brightness already matches uniform at 100 NFE (saving 20\%); the 100-NFE Compressibility surpasses uniform at 150 NFE (saving 33\%). \textsc{GAINS} also reduces run-to-run standard deviations (e.g., from $0.0058$ to $0.0046$ for Compressibility at 150 NFE).
+
+\begin{table}[h]
+\centering
+\caption{Flow-based model results. Stochasticity injected following~\citep{dockhorn2024stochastic}.}
+\label{tab:flow_results}
+\small
+\begin{tabular}{c|c|c}
+\toprule
+\textbf{NFE} & \textbf{Naive} & \textbf{GAINS} \\
+\midrule
+\multicolumn{3}{c}{\textit{Brightness}} \\
+\midrule
+80 & $0.5492\pm0.003$ & $\mathbf{0.5507\pm0.003}$ \\
+100 & $0.5499\pm0.003$ & $\mathbf{0.5519\pm0.003}$ \\
+150 & $0.5515\pm0.004$ & $\mathbf{0.5526\pm0.003}$ \\
+\midrule
+\multicolumn{3}{c}{\textit{Compressibility}} \\
+\midrule
+80 & $0.8135\pm0.005$ & $\mathbf{0.8162\pm0.003}$ \\
+100 & $0.8156\pm0.004$ & $\mathbf{0.8170\pm0.006}$ \\
+150 & $0.8157\pm0.006$ & $\mathbf{0.8193\pm0.005}$ \\
+\bottomrule
+\end{tabular}
+\end{table}

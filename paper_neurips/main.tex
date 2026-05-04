@@ -1,0 +1,85 @@
+\documentclass{article}
+
+% NeurIPS 2026 submission style (replace with `final` for camera-ready)
+\usepackage{neurips_2026}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{amsmath,amssymb,mathtools,amsthm}
+\usepackage[capitalize,noabbrev]{cleveref}
+
+\crefname{assumption}{Assumption}{Assumptions}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  citecolor=blue,
+  urlcolor=blue
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Theorems
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\newtheorem{example}[theorem]{Example}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\title{Leveraging Inference-Time Compute for Diffusion Models via Global Scheduling of Denoising Trajectories}
+
+% NeurIPS anonymous submission
+\author{%
+  Anonymous Author(s)\\
+  Affiliation\\
+  Address\\
+  \texttt{email}%
+}
+
+\begin{document}
+
+\maketitle
+
+\input{sections/abstract}
+
+\input{sections/introduction}
+
+\input{sections/preliminaries}
+
+\input{sections/framework}
+
+\input{sections/algorithm}
+
+\input{sections/experiments}
+
+\input{sections/conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{main}
+
+\appendix
+
+\input{sections/appendix_mdp}
+
+\input{sections/appendix_proofs}
+
+\input{sections/appendix_general_local_search}
+
+\end{document}

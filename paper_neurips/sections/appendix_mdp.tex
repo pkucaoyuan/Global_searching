@@ -1,0 +1,49 @@
+\section{General MDP Formulation of Noise Trajectory Search}
+\label{sec:mdp}
+
+The two-level framework in \cref{sec:framework} restricts the scheduler to forward-only traversal with a fixed local operator. This appendix presents a more general Markov decision process (MDP) that supports richer action spaces (multiple verifier types, backtracking, operator mixing) and supplies a unified language for classifying prior work. \citet{ramesh2025nts} first cast diffusion sampling as an MDP with state $(c, x_t, t)$ and terminal reward $r(x_0, c)$, then relaxed it to independent contextual bandits for tractability. We extend this in four respects: state includes the search history $\mathcal{H}_t$ and remaining budget $R$; the action space is partitioned into Search, Verify, and Move categories; the reward admits composite objectives; and we classify ten existing methods as special-case policies.
+
+\paragraph{State space.}
+At each decision epoch the agent observes $s = (c, t, x_t, \mathcal{H}_t, R)$, where $c$ is the conditioning signal, $t\in\{1,\dots,T\}$ the trajectory position, $x_t$ the current latent, $\mathcal{H}_t$ the search history (past verifier scores, candidate noises, actions), and $R\in\{0,\dots,B\}$ the remaining NFE. The initial state is $s_0=(c, T, x_T, \emptyset, B)$ with $x_T\sim\mathcal{N}(0,I)$; the episode terminates when $t=0$ or $R=0$.
+
+\paragraph{Action space.}
+$\mathcal{A}(s) = \mathcal{A}_{\text{search}}\cup\mathcal{A}_{\text{verify}}\cup\mathcal{A}_{\text{move}}$.
+\begin{itemize}\setlength\itemsep{1pt}
+  \item \emph{Search} ($\mathcal{A}_{\text{search}}$): one iteration of a local search operator at $t$. Variants include \textsc{RandomSearch} (sample $\varepsilon_t\sim\mathcal{N}(0,I)$, keep if better), \textsc{EpsGreedy} (with prob.\ $\epsilon$ explore, else exploit by perturbation), \textsc{ZeroOrder} (zero-order gradient estimate), and \textsc{Langevin} (one Langevin MCMC step in noise space). Cost: 1 NFE.
+  \item \emph{Verify} ($\mathcal{A}_{\text{verify}}$): evaluate $x_t$ or its predicted clean output $\hat x_0$ without modifying the latent. \textsc{VerifyLight} uses the already-computed $\hat x_0$ (e.g., JPEG compressibility, pixel statistics, lightweight image-quality scorer) at 0 NFE; \textsc{VerifyHeavy} runs additional denoising-network passes for a more accurate $\hat x_0$ estimate at $\ge 1$ NFE.
+  \item \emph{Move} ($\mathcal{A}_{\text{move}}$): \textsc{Forward} ($x_{t-1}=F_\theta(x_t,t,c,\varepsilon_t^*)$, advance to $t-1$, 1 NFE) or \textsc{Backtrack} (return to $t+1$, retain history at $t$, 0 NFE).
+\end{itemize}
+
+\paragraph{Transition dynamics and reward.}
+After \textsc{Search}: $t,x_t$ unchanged, $\mathcal{H}_t$ augmented, $R\!\to\!R-1$. After \textsc{Forward}: $t\!\to\!t-1$, $x_{t-1}=F_\theta(\cdots)$, $R\!\to\!R-1$. \textsc{Backtrack}: $t\!\to\!t+1$, $x_{t+1}$ restored, $\mathcal{H}$ retained. The reward is the terminal verifier score $r(s_{\text{terminal}})=v(x_0,c)$ (composite verifiers $v=\alpha v_1 + \beta v_2$ are admissible). The objective is $\max_\pi \mathbb{E}[v(x_0,c)]$ subject to $R\ge 0$.
+
+\paragraph{Existing methods as MDP policies.}
+\cref{tab:mdp_policies} classifies prior methods. Three structural patterns emerge: (i)~\emph{No method uses heavy/light verifier selection;} adaptively choosing verifier granularity could improve the quality--compute tradeoff. (ii)~\emph{Backtracking is rare;} only ABCD and tree methods revisit earlier timesteps. (iii)~\emph{Operator selection is static;} every listed method commits to a single operator type for the entire trajectory.
+
+\begin{table}[t]
+\centering
+\caption{Existing inference-time search methods as policies in the noise-trajectory-search MDP. $\mathcal{A}_{\text{used}}$: action types employed; Schedule: how per-step budget is determined.}
+\label{tab:mdp_policies}
+\small
+\begin{tabular}{lccl}
+\toprule
+\textbf{Method} & $\mathcal{A}_{\text{used}}$ & \textbf{Backtrack?} & \textbf{Schedule} \\
+\midrule
+Plain sampling & \textsc{Fwd} & No & $K_t=1\,\forall t$ \\
+Best-of-$N$~\citep{ma2024inference} & \textsc{Fwd} & No & $N$ full trajectories \\
+$\epsilon$-Greedy~\citep{ramesh2025nts} & \textsc{EpsG, Fwd} & No & Uniform $K_t=K$ \\
+DNO~\citep{tang2024dno} & \textsc{Zero, Fwd} & No & Uniform $K_t=K$ \\
+RBF~\citep{kim2025rbf} & \textsc{Rand, Fwd} & No & Online rollover \\
+T-SCEND~\citep{zhang2025tscend} & \textsc{Rand, Fwd} & No & Fixed 2-phase \\
+ABCD~\citep{lee2025abcd} & \textsc{Rand, Fwd} & Yes & Online adaptive \\
+Tree/BFS~\citep{zhang2025classical} & \textsc{Lang, Fwd} & Yes & Tree expansion \\
+FK Steering~\citep{singhal2025fk} & \textsc{Rand, Fwd} & No & Non-uniform (SMC) \\
+VT~\citep{sundaresha2025vt} & \textsc{Rand, Fwd} & No & Online threshold \\
+\midrule
+\textbf{\textsc{GAINS}} (this work) & \textsc{Any, Fwd} & No & Offline + online \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Main-text formulation as a special case.}
+The two-level framework of \cref{sec:framework} and \textsc{GAINS} (\cref{alg:gains}) correspond to a restricted policy class: no backtracking, single search operator, single verifier, and a factored budget where total $B$ is pre-partitioned by offline profiling and adjusted online within slack $\delta$. In MDP terms, the policy's dependence on $\mathcal{H}_t$ is restricted to two sufficient statistics: running mean gain $\bar g$ and running mean variance $\bar\sigma$. Relaxing these restrictions yields richer policy classes within the same MDP that may further improve the quality--compute frontier but likely require learned (e.g., RL-based) optimization.

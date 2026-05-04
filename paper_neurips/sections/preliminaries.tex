@@ -1,0 +1,40 @@
+\section{Preliminaries and Problem Setting}
+\label{sec:preliminaries}
+
+\paragraph{Diffusion models (DDPM and SGM).}
+The Denoising Diffusion Probabilistic Modeling (DDPM) formulation~\citep{ho2020denoising} couples a forward process that perturbs data with Gaussian noise and a backward process that converts noise back to data. Setting $\alpha_t = 1-\beta_t$ and $\bar{\alpha}_t = \prod_{s=1}^{t}\alpha_s$ for fixed noise schedule $\beta_t\in(0,1)$, samples emerge by iterating
+\begin{equation}
+  \mathbf{x}_{t-1}
+  = \tfrac{1}{\sqrt{1 - \beta_t}}\!\left(\mathbf{x}_t - \tfrac{\beta_t}{\sqrt{1 - \bar{\alpha}_t}}\,\boldsymbol{\varepsilon}_\theta(\mathbf{x}_t, t)\right) + \sigma_t\,\boldsymbol{\varepsilon},
+  \qquad \boldsymbol{\varepsilon}\sim\mathcal{N}(\mathbf{0},\mathbf{I}),
+  \label{eq:ddpm-reverse}
+\end{equation}
+from $\mathbf{x}_T\sim\mathcal{N}(\mathbf{0},\mathbf{I})$ down to $\mathbf{x}_0$, where $\boldsymbol{\varepsilon}_\theta$ is a learned noise prediction network.
+
+The Score-based Generative Model (SGM) formulation~\citep{song2019generative} instead works with the \emph{score} (the gradient of the log-density, distinct from the verifier score in \cref{def:verifier}). Data are perturbed at $T$ noise levels $0 < \varsigma_1 < \varsigma_2 < \cdots < \varsigma_T$, where $\varsigma_t$ denotes the noise scale at level $t$. A network $\mathbf{s}_\theta(\tilde{\mathbf{x}}, \varsigma_t)$ approximates the score at each level. Annealed Langevin dynamics generate samples by running, at each level $t = T, T{-}1,\ldots,1$, the inner iteration
+\begin{equation}
+  \mathbf{x}_{(i)} = \mathbf{x}_{(i-1)} + \delta_i^{(t)}\,\mathbf{s}_\theta(\mathbf{x}_{(i-1)}, \varsigma_t) + \sqrt{2\delta_i^{(t)}}\,\boldsymbol{\varepsilon}_i,
+  \label{eq:sgm-langevin}
+\end{equation}
+where $\delta_i^{(t)} > 0$ is the Langevin step size for the $i$-th inner iteration at noise level $t$. We emphasize that $\varsigma_t$ (a noise level) and $\delta_i^{(t)}$ (an inner step size) are distinct objects: $\varsigma_t$ indexes the outer denoising trajectory, while $\delta_i^{(t)}$ governs the inner Langevin dynamics within a single level.
+
+Both formulations traverse $T$ discrete timesteps, with each transition driven by a stochastic noise variable. This shared structure underpins the transition abstraction in \cref{sec:framework}.
+
+\paragraph{Inference-time noise search.}
+
+\begin{definition}[Noise trajectory search problem]
+\label{def:nts}
+Given a pretrained diffusion model with transition function $F_\theta$, a conditioning signal $c$, a verifier $v(\cdot, c)$, and a total compute budget of $B$ function evaluations, find a sequence $\{\varepsilon_t^*\}_{t=1}^T$ that maximizes the verifier score of the final sample subject to total NFE $\le B$.
+\end{definition}
+
+The core difficulty is sequential: the noise $\varepsilon_t$ at timestep $t$ shapes the latent $x_{t-1}$, which determines which noises are effective at later steps. This sequential dependence motivates the two-level decomposition in \cref{sec:framework}.
+
+\begin{definition}[Verifier]
+\label{def:verifier}
+A \emph{verifier} $v : \mathcal{X} \times \mathcal{C} \to \mathbb{R}$ scores a generated sample against its conditioning signal, returning a scalar quality measure. The verifier is fixed during search and treated as a black box; results hold for any bounded, query-efficient $v$.
+\end{definition}
+
+\begin{definition}[NFE budget]
+\label{def:nfe}
+A single \emph{function evaluation} (NFE) is one forward pass through the denoising network, the dominant cost in diffusion sampling. Standard sampling consumes exactly $T$ NFE; noise trajectory search spends the remaining $B - T$ NFE on local refinement.
+\end{definition}
