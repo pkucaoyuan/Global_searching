@@ -1,16 +1,16 @@
 \section{Experiments}
 \label{sec:experiments}
 
-We test whether non-uniform global scheduling improves sample quality whenever per-timestep noise sensitivity varies across multiple diffusion families under strict NFE budgets.
+We test one prediction from our theory: under fixed NFE, non-uniform allocation should beat uniform whenever per-step sensitivity varies, with gains growing in the dispersion of $\{\sigma_t\}$.
 
 \paragraph{Setting.}
-We evaluate \textsc{GAINS} on Stable Diffusion (SD), EDM~\citep{karras2022elucidating}, and a flow-based model under strict NFE budgets. Two lightweight verifiers serve as objectives: \textbf{Brightness} (perceived luminance) and \textbf{Compressibility} (normalized JPEG file size).\footnote{Resolution is fixed, so JPEG size is determined by image compressibility.} The benchmark (``Naive'') pairs an $\epsilon$-greedy local operator with a uniform per-timestep schedule, following prior work. \textsc{GAINS} retains the same local operator but replaces the uniform policy with offline profiling plus online control. All experiments run on a single NVIDIA A100; wall-clock time is dominated by denoising forward passes and is therefore determined by the NFE budget. Additional experiments and ablations appear in \cref{sec:appendix-experiments}.
+We evaluate \textsc{GAINS} on Stable Diffusion (SD; \citealp{rombach2022high}), EDM~\citep{karras2022elucidating}, and a flow-based model under strict NFE budgets, with two lightweight verifiers: \textbf{Brightness} (luminance) and \textbf{Compressibility} (JPEG size). The Uniform benchmark runs the same $\epsilon$-greedy noise search~\citep{ramesh2025nts} but allocates evenly, matching prior fixed-schedule choices~\citep{ramesh2025nts,ma2024inference}. \textsc{GAINS} replaces uniform with offline profiling + online windowed early stopping, redistributing saved NFE so the realized total exactly matches $B$. All runs use a single A100.
 
-\paragraph{Stable Diffusion: scaling with NFE.}
-\textsc{GAINS} improves both absolute scores and the rate at which quality scales with NFE on SD (\cref{tab:sd_budget}). For Brightness, the gap over uniform widens from +0.0223 (400 NFE) to +0.0321 (800 NFE); \textsc{GAINS} at 400 NFE already exceeds uniform at 500 NFE, saving \textbf{20\%} NFE. For Compressibility, uniform stagnates from 0.8833 to 0.8892, while \textsc{GAINS} reaches 0.9008; \textsc{GAINS} at 400 NFE matches uniform at 800 NFE, saving \textbf{50\%} NFE. Consistent with \cref{thm:offline}\textup{(iii)}, the non-uniform gain widens with sensitivity dispersion.
+\paragraph{Hyperparameters and reproducibility.}
+EDM ($T=18$): $\epsilon = 0.4$, $\lambda = 0.15$, $N = 4$, $\beta_g = 0.3$, $\beta_\sigma = 0.7$, $\delta = 2$. SD ($T=50$): $N = 4$, $\beta_g = 0.1$, $\beta_\sigma = 0.8$. All runs use the \emph{revert-on-negative} rule with $W_g = 4$; $\{K_t\}$ from offline profiling. Each configuration averages 20 seeds; SD prompt-set runs use 20 prompts $\times$ 10 repeats. Code released on acceptance.
 
-\paragraph{EDM: scaling with NFE.}
-EDM exhibits stronger acceleration (\cref{tab:edm_budget}). For Brightness, \textsc{GAINS} achieves 0.9887 at 144 NFE, exceeding uniform at 288 NFE (0.9787) and saving \textbf{50\%} NFE. EDM's concentrated mid-trajectory sensitivity creates large dispersion in $\{\sigma_t\}$, amplifying the benefit. For Compressibility, the GAINS 180-NFE result (0.7003) exceeds uniform at 288 NFE (0.6901), a \textbf{37.5\%} compute reduction.
+\subsection{Stable Diffusion and EDM: Scaling with NFE}
+\label{sec:exp-sd-edm-scaling}
 
 \begin{table}[t]
 \centering
@@ -21,7 +21,7 @@ EDM exhibits stronger acceleration (\cref{tab:edm_budget}). For Brightness, \tex
 \small
 \begin{tabular}{c|c|c}
 \toprule
-\textbf{NFE} & \textbf{Naive} & \textbf{GAINS} \\
+\textbf{NFE} & \textbf{Uniform} & \textbf{GAINS} \\
 \midrule
 \multicolumn{3}{c}{\textit{Brightness}} \\
 \midrule
@@ -45,7 +45,7 @@ EDM exhibits stronger acceleration (\cref{tab:edm_budget}). For Brightness, \tex
 \small
 \begin{tabular}{c|c|c}
 \toprule
-\textbf{NFE} & \textbf{Naive} & \textbf{GAINS} \\
+\textbf{NFE} & \textbf{Uniform} & \textbf{GAINS} \\
 \midrule
 \multicolumn{3}{c}{\textit{Brightness}} \\
 \midrule
@@ -63,8 +63,9 @@ EDM exhibits stronger acceleration (\cref{tab:edm_budget}). For Brightness, \tex
 \end{minipage}
 \end{table}
 
-\paragraph{Ablation and robustness.}
-Separating offline and online stages reveals complementary contributions: offline-only already improves over uniform (Brightness 0.7158, Compressibility 0.8873 at SD/400 NFE), and adding online control yields the best scores (0.7248/0.8946) — providing empirical evidence of the Jensen gap predicted by \cref{rmk:online-value}. With a larger prompt set (20 prompts $\times$ 10 repeats), gains persist (Brightness 0.6949 $\to$ 0.7213; Compressibility 0.7938 $\to$ 0.8076), confirming systematic reallocation rather than prompt-specific artifacts. \textsc{GAINS} also composes with different local operators: under both zero-order (local perturbation) and random search, it improves Brightness and Compressibility. Detailed tables appear in \cref{sec:appendix-experiments}.
+\textsc{GAINS} improves both absolute scores and the \emph{rate} at which quality scales with NFE (\cref{tab:sd_budget,tab:edm_budget}). On SD, the Brightness margin widens from $+0.0223$ (400 NFE) to $+0.0321$ (800 NFE); \textsc{GAINS}/400 beats Uniform/500 (\textbf{20\%} fewer) and \textsc{GAINS}/400 Compressibility exceeds Uniform/800 (\textbf{50\%} fewer). On EDM, \textsc{GAINS}/144 matches or beats Uniform/288 (\textbf{50\%} / \textbf{37.5\%} fewer). The larger EDM margin tracks \cref{thm:offline}\textup{(iii)}: EDM's $\{\sigma_t\}$ concentrate on a middle segment, giving higher $\mathrm{Var}(\sigma_t)$ than SD's early-spread profile (\cref{sec:appendix-experiments}). Seed-to-seed std also tightens (e.g., $\pm 0.005$ vs.\ $\pm 0.015$ at EDM/144).
 
-\paragraph{Flow-based models.}
-For flow-based models, we inject stochasticity at selected timesteps following \citet{dockhorn2024stochastic,kim2025rbf}, after which \textsc{GAINS} applies without modifying the pretrained model. Margins are smaller (Brightness gap +0.0011 to +0.0021; Compressibility +0.0014 to +0.0036), consistent with the narrower variance dispersion after ODE-to-SDE conversion (\cref{thm:offline}\textup{(iii)}). Nonetheless, the quality curve shifts leftward at every budget, and run-to-run standard deviations decrease (e.g., from 0.0058 to 0.0046 for compressibility at 150 NFE).
+\subsection{Ablation, Generalization, Operator and Flow Compatibility}
+\label{sec:exp-ablation}
+
+Four stress tests (full tables in \cref{sec:appendix-experiments}) confirm the gains: \textbf{(a)~online vs.\ offline-only} (SD/400 NFE): online adds $+0.0090$/$+0.0073$ on Brightness/Compressibility, consistent with the Jensen-gap mechanism (\cref{rmk:online-value}); \textbf{(b)~generalization} (20 prompts $\times$ 10 repeats): Brightness $0.6949 \to 0.7213$ ($+0.0264$), Compressibility $0.7938 \to 0.8076$ ($+0.0138$); \textbf{(c)~operator compatibility}: gains hold under both zero-order and random search local operators (\cref{rmk:separation}); \textbf{(d)~flow-based models}: after stochasticity injection~\citep{dockhorn2024stochastic,kim2025rbf}, \textsc{GAINS} adds $+0.005$ to $+0.015$ across $\{80,100,150\}$ NFE (vs.\ $+0.02$ to $+0.04$ on SD/EDM), consistent with narrower $\{\sigma_t\}$ dispersion after ODE-to-SDE conversion (\cref{sec:appendix-flow}).

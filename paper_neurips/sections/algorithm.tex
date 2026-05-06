@@ -1,39 +1,39 @@
 \section{The \textsc{GAINS} Algorithm and Theoretical Analysis}
 \label{sec:algorithm}
 
-We now develop \textbf{\textsc{GAINS}} (\textbf{G}lobal \textbf{A}daptive \textbf{I}nference-time \textbf{N}oise \textbf{S}cheduling). The algorithm operates at two granularities: offline coarse allocation (\cref{sec:offline}) sets per-timestep budgets from a small calibration run, and online control (\cref{sec:online}) adapts those budgets per prompt. The theoretical analysis (\cref{sec:theory}) treats the special case where the local operator is pure random search and shows that the gain decomposes into a per-step sensitivity factor and a sample-size effect, yielding a water-filling allocation. We then prove an $\Omega(T)$ regret lower bound for adaptive policies and a matching $O(g_t^2 h\cdot T)$ upper bound for \textsc{GAINS}. Extensions to general operators ($\epsilon$-greedy, local perturbation) appear in \cref{sec:appendix-general}.
+\textbf{\textsc{GAINS}} (\textbf{G}lobal \textbf{A}daptive \textbf{I}nference-time \textbf{N}oise \textbf{S}cheduling) operates at two granularities: offline coarse allocation (\cref{sec:offline}) sets per-timestep budgets from a small calibration run; online control (\cref{sec:online}) adapts them per prompt. The theory (\cref{sec:theory}) shows the per-step gain factorizes into a sensitivity factor times a sample-size factor, giving a closed-form water-filling allocation; an $\Omega(T)$ worst-case regret lower bound motivates online adaptation. Extensions to $\epsilon$-greedy/local-perturbation operators appear in \cref{sec:appendix-general}.
 
 \subsection{Offline Coarse Time Scheduling}
 \label{sec:offline}
 
-We consider the common setting where the sampler maintains a single latent and a single noise $(x_t, \varepsilon_t)$ at each timestep but performs multiple local search iterations before committing to $x_{t-1}$. The global scheduling problem then reduces to per-timestep decisions: at each $t$, given the search history and remaining budget, should we continue local search or stop and move on?
+Offline scheduling decides, before any test-time prompt arrives, how many local-search iterations to spend at each timestep. We consider the common setting where the sampler keeps a single latent $x_t$ and a single noise sample $\varepsilon_t$ at each timestep but performs multiple local search iterations before committing to $x_{t-1}$. The global scheduling problem then reduces to per-timestep decisions: at each $t$, given the search history and remaining budget, should we continue local search or stop and move on?
 
-For each model and dataset, we run \emph{offline} profiling on a small set of prompts: we execute noise search with a uniform iteration count at every timestep and log verifier scores after each iteration. From these logs we compute, for each timestep $t$, the average score gain and its variability across examples. Aggregating reveals which segments of the trajectory respond most to noise refinement: for Stable Diffusion, gains concentrate on early timesteps; for EDM they cluster in a contiguous middle segment. We partition timesteps into a high-value region and a low-value region, assign more NFE to the high-value region, and derive a coarse per-step budget $\{K_t\}$.
+The difficulty is that, when deciding at $t$, we know neither (1) the additional improvement that further search at $t$ would bring nor (2) the improvement we forgo by spending the same NFE at later timesteps. Offline profiling addresses (1) and (2) jointly by estimating, for each timestep, how responsive the verifier score is to local search. For each model and dataset, we run a one-time profiling pass on a small calibration set: noise search executes with a uniform iteration count at every timestep, logging verifier scores after each iteration. From these logs we compute, for each $t$, the average per-iteration score gain and its variability across examples; aggregating reveals which segments of the trajectory respond most to local search. The pattern is strongly model-dependent: for Stable Diffusion, gains concentrate on early timesteps; for EDM they cluster in a contiguous middle segment (\cref{sec:appendix-experiments}). We partition timesteps into a \emph{high-value} region and a \emph{low-value} region, allocate a larger share of $B$ to the high-value region, and derive a coarse per-step budget $\{K_t\}$ (more iterations in high-value steps, fewer in low-value steps). The resulting schedule is tailored to the model and dataset but fixed across prompts; it captures \emph{where on the trajectory search matters most}.
 
 \subsection{Online Fine-Grained Scheduling}
 \label{sec:online}
 
-At test time, an online controller refines how the pre-assigned budget $\{K_t\}$ is spent on each prompt. At timestep $t$, local search runs up to $K_t$ iterations, but the controller can stop early or, within a small window, modulate spending. It monitors two statistics: the \emph{score gain} of local search and the \emph{score variance} across candidates. Letting $s_t^{(j)}$ be the best score after $j$ iterations and $\{s_{t,\text{cand}}^{(j,i)}\}_i$ the candidate scores in iteration $j$, define
+Online scheduling refines, at test time, how the offline budget $\{K_t\}$ is spent on each individual prompt. At timestep $t$, local search runs up to $K_t$ iterations, but the controller can stop early or, within a small window, shift spending across timesteps. We distinguish two scores: $\hat s_t^{(j)}$, the raw verifier score of the candidate produced in iteration $j$, and $s_t^{(j)} := \max(s_t^{(j-1)}, \hat s_t^{(j)})$, the running best after iteration $j$ (with $s_t^{(0)} := \hat s_t^{(1)}$ from the first candidate). The controller monitors two statistics: the \emph{score gain} $g_t^{(j)} := s_t^{(j)} - s_t^{(j-1)} \ge 0$ (which is $0$ exactly when iteration $j$ failed to improve), and the \emph{score variance} across the candidates seen at step $t$,
 \begin{equation}
-  g_t^{(j)} = s_t^{(j)} - s_t^{(j-1)},
-  \qquad
-  \mathrm{Var}_t^{(j)} = \mathrm{Var}_i\bigl(s_{t,\text{cand}}^{(j,i)}\bigr).
+  \mathrm{Var}_t^{(j)} := \mathrm{Var}_{i \le j}\bigl(\hat s_t^{(i)}\bigr).
 \end{equation}
-$g_t^{(j)}$ measures whether search still finds better noises, while $\mathrm{Var}_t^{(j)}$ reflects the verifier's sensitivity to noise changes. The controller stops early when both recent gains are small \emph{and} candidate variance is small; otherwise it continues. A \emph{revert-on-negative} rule keeps the previous best whenever an iteration produces $g_t^{(j)}<0$, ensuring monotone score within each step. To match realized compute exactly to the budget, over-/under-spending in the high-value region is offset against low-value steps. \cref{alg:gains} gives the procedure.
+
+The two statistics target complementary questions. The score gain $g_t^{(j)}$ asks whether the current iteration is \emph{close to its local-search optimum}: when recent $g_t^{(j)}$ approach zero, the running best has converged and additional NFE buys little. The score variance $\mathrm{Var}_t^{(j)}$ asks whether this timestep is \emph{important}: by \cref{thm:loc-scale}(ii), within-step variance equals $\sigma_t^2$ to leading order, so $\mathrm{Var}_t^{(j)}$ estimates the per-step sensitivity driving every gain in \cref{sec:theory}. Stopping early is justified only when \emph{both} are small: a small gain alone can mark a high-sensitivity step waiting for a lucky draw, and small variance alone a low-sensitivity step whose iterations still nudge the running best upward; the conjunction prevents premature stopping in either regime (\cref{fig:stopping}). The \emph{revert-on-negative} construction (running max) makes $s_t^{(j)}$ monotone, so any iteration is at worst a no-op. To match realized compute exactly to $B$, over-/under-spending from adaptive stopping in the high-value region is offset against low-value steps. \cref{alg:gains} gives the procedure.
 
 \begin{algorithm}[t]
 \caption{\textsc{GAINS}: Global Adaptive Inference-time Noise Scheduling}
 \label{alg:gains}
 \begin{algorithmic}[1]
-\STATE \textbf{Input:} timesteps $\{t_T,\dots,t_1\}$, total budget $B$, offline allocation $\{K_t\}$ ($\sum_t K_t=B$), slack $\delta$, gain window $W_g$, threshold coefs $(\beta_g,\beta_\sigma)$, black-box $\textsc{LocalIter}(t)$.
+\STATE \textbf{Input:} timesteps $\{t_T,\dots,t_1\}$, total budget $B$, offline allocation $\{K_t\}$ ($\sum_t K_t = B$), slack $\delta$, gain window $W_g$, threshold coefs $(\beta_g,\beta_\sigma)$, black-box $\textsc{LocalIter}(t)$ that returns one raw candidate score $\hat s$ and within-step variance $\sigma$.
 \STATE \textbf{Output:} realized per-step iterations $\{\widehat K_t\}$.
 \STATE $R \leftarrow B$;\ \ $\mathcal{H}_g, \mathcal{H}_\sigma\leftarrow\emptyset$ (history).
 \FOR{$t=T,T\!-\!1,\dots,1$}
-    \STATE $K \leftarrow \min(K_t, R)$;\ $K_{\max}\leftarrow \min(K+\delta, R)$;\ $j_{\text{watch}}\leftarrow \max(1, K-\delta)$;\ $s^{(0)} \leftarrow -\infty$;\ $\mathcal{H}\leftarrow\emptyset$;\ $\widehat K_t \leftarrow 0$.
-    \FOR{$j=1,\dots,K_{\max}$}
-        \STATE $(s^{(j)}, \sigma^{(j)}) \leftarrow \textsc{LocalIter}(t)$
-        \IF{$s^{(j)} < s^{(j-1)}$} \STATE $s^{(j)} \leftarrow s^{(j-1)}$ \hfill {\small\COMMENT{revert-on-negative}} \ENDIF
-        \STATE push $g^{(j)}\!\leftarrow\!s^{(j)}\!-\!s^{(j-1)}$ into $\mathcal{H}$ (keep last $W_g$);\ $\widetilde g^{(j)}\!\leftarrow\!\mathrm{Mean}(\mathcal{H})$;\ $\widehat K_t\!\leftarrow\!\widehat K_t+1$;\ $R \leftarrow R-1$.
+    \STATE $K \leftarrow \min(K_t, R)$;\ $K_{\max}\leftarrow \min(K+\delta, R)$;\ $j_{\text{watch}}\leftarrow \max(2, K-\delta)$;\ $\mathcal{H}\leftarrow\emptyset$;\ $\widehat K_t \leftarrow 0$.
+    \STATE $(\hat s^{(1)}, \sigma^{(1)}) \leftarrow \textsc{LocalIter}(t)$;\ $s^{(1)} \leftarrow \hat s^{(1)}$;\ $\widehat K_t \leftarrow 1$;\ $R \leftarrow R-1$.
+    \FOR{$j = 2,\dots,K_{\max}$}
+        \STATE $(\hat s^{(j)}, \sigma^{(j)}) \leftarrow \textsc{LocalIter}(t)$
+        \STATE $s^{(j)} \leftarrow \max(s^{(j-1)}, \hat s^{(j)})$ \hfill {\small\COMMENT{running best (revert-on-negative)}}
+        \STATE push $g^{(j)}\!\leftarrow\!s^{(j)}\!-\!s^{(j-1)} \ge 0$ into $\mathcal{H}$ (keep last $W_g$);\ $\widetilde g^{(j)}\!\leftarrow\!\mathrm{Mean}(\mathcal{H})$;\ $\widehat K_t\!\leftarrow\!\widehat K_t+1$;\ $R \leftarrow R-1$.
         \IF{$R=0$} \STATE \textbf{break} \ENDIF
         \IF{$j \ge j_{\text{watch}}$ \AND $|\mathcal{H}_g|>0$ \AND $|\mathcal{H}_\sigma|>0$ \AND $\widetilde g^{(j)} < \beta_g \mathrm{Mean}(\mathcal{H}_g)$ \AND $\sigma^{(j)} < \beta_\sigma \mathrm{Mean}(\mathcal{H}_\sigma)$}
             \STATE \textbf{break}
@@ -48,84 +48,116 @@ $g_t^{(j)}$ measures whether search still finds better noises, while $\mathrm{Va
 \subsection{Theoretical Foundations}
 \label{sec:theory}
 
-Both stages of \textsc{GAINS} rely on the per-step score distribution $\mathcal{D}_t$ exhibiting location-scale structure under the diffusion SDE. In Euler--Maruyama form with step size $h$ and diffusion coefficient $g_t$, the backward denoising process (\cref{eq:ddpm-reverse}) becomes $X_{t-h} = X_t + b_t(X_t,c)\,h + g_t\sqrt{h}\,\xi$ with $\xi\sim\mathcal{N}(0,I)$. Define the verifier score function $\Psi_t(x;c) := v(D_\theta(x, t{-}h, c);\,c)$, the score from one noise candidate $S_t := \Psi_t(X_{t-h};c)$, and the deterministic Euler point $\bar{X}_{t-h} := X_t + b_t(X_t,c)\,h$.
+We justify \textsc{GAINS} in three steps.
+(1)~A second-order Taylor expansion of the verifier score around the noiseless Euler point gives, to leading order, $S_t \approx \mu_t + \sigma_t Z_t$ with $Z_t \sim \mathcal N(0,1)$, where $\sigma_t$ is the per-step \emph{sensitivity} that governs how much one extra noise candidate is worth (\cref{thm:loc-scale}).
+(2)~When $\sigma_t$ depends only on $t$, the optimal allocation has closed-form water-filling structure (\cref{thm:offline}); the same form extends to general local operators (\cref{sec:appendix-general}).
+(3)~When $\sigma_t = \sigma_t(c, x_t)$ varies per prompt, no adaptive policy avoids worst-case regret of order $T$ (\cref{lem:lower}). On non-adversarial prompt distributions, however, a positive Jensen-inequality gap (the difference between an oracle that adapts per prompt and one tuned to the population-mean profile, defined formally in \cref{rmk:online-value}) leaves per-prompt online control valuable.\footnote{Symbol disambiguation: $g_t$ is the diffusion coefficient (below), distinct from $g_t^{(j)}$, the per-iteration score gain in \cref{sec:online}; $\sigma_t$ is the per-step sensitivity (below), distinct from $\sigma$, the within-step empirical standard deviation across iterates in \cref{alg:gains} (used as a proxy estimator, not as $\sigma_t$ itself).}
+
+\paragraph{SDE setup.}
+We treat the DDPM update~\cref{eq:ddpm-reverse} as one Euler-Maruyama step~\citep{song2021scorebased} of a reverse-time SDE:
+\begin{equation}
+  X_{t-h} = \bar X_{t-h} + g_t\sqrt h\,\xi,\quad \bar X_{t-h} := X_t + b_t(X_t,c)\,h,\quad \xi\sim\mathcal N(0,I),
+  \label{eq:em-step}
+\end{equation}
+with $h$ the integration step, $b_t$ the drift, $g_t$ the diffusion coefficient (both schedule-fixed), $\bar X_{t-h}$ the noiseless Euler point, and $\xi$ the per-step noise the local operator searches over. Let $D_\theta$ be the one-step denoiser~\citep{song2021scorebased}, $\Psi_t(x;c) := v(D_\theta(x,t{-}h,c);c)$ the verifier score on the one-step denoising, and $S_t := \Psi_t(X_{t-h};c)$. $\nabla\Psi_t$ denotes the gradient in the first argument at $\bar X_{t-h}$.
 
 \begin{assumption}[Verifier smoothness]
 \label{asm:smooth}
-$\Psi_t(\cdot\,;c)\in C^2(\mathbb{R}^d)$, and there exists $L_t<\infty$ such that $\|\nabla^2\Psi_t(x;c)\|_{\mathrm{op}}\le L_t$ for all $x$ in a neighborhood of the segment between $\bar{X}_{t-h}$ and $X_{t-h}$, almost surely.
+$\Psi_t(\cdot\,;c)\in C^2(\mathbb{R}^d)$, and there exists $L_t<\infty$ such that $\|\nabla^2\Psi_t(x;c)\|_{\mathrm{op}}\le L_t$ for all $x \in \mathbb{R}^d$.
 \end{assumption}
 
 \begin{theorem}[Location-scale structure of per-step scores]
 \label{thm:loc-scale}
 Under \cref{asm:smooth}, define $\mu_t := \Psi_t(\bar{X}_{t-h};c)$ and $\sigma_t := g_t\sqrt{h}\,\|\nabla\Psi_t(\bar{X}_{t-h};c)\|$. Conditional on $(X_t,c)$:
 \begin{enumerate}
-\item[\textup{(i)}] there exists $Z_t\sim\mathcal{N}(0,1)$ such that $S_t = \mu_t + \sigma_t Z_t + R_t$ with $|R_t|\le\tfrac{1}{2}L_t g_t^2 h\|\xi\|^2$ a.s.;
-\item[\textup{(ii)}] as $g_t\sqrt{h}\to 0$, $\mathrm{Var}(S_t\mid X_t,c) = \sigma_t^2 + O_d(g_t^3 h^{3/2})$;
-\item[\textup{(iii)}] for $K$ i.i.d.\ copies $S_t^{(1)},\ldots,S_t^{(K)}$,
+\item[\textup{(i)}] there exists $Z_t\sim\mathcal{N}(0,1)$ (the projection of $\xi$ onto the unit gradient direction $\nabla\Psi_t(\bar X_{t-h};c)/\|\nabla\Psi_t(\bar X_{t-h};c)\|$ when $\sigma_t>0$; arbitrary when $\sigma_t=0$, in which case the linear term vanishes) such that $S_t = \mu_t + \sigma_t Z_t + R_t$ with remainder $|R_t|\le\tfrac{1}{2}L_t g_t^2 h\|\xi\|^2$ a.s.\ ($Z_t$ and $R_t$ are not in general independent);
+\item[\textup{(ii)}] as $g_t\sqrt{h}\to 0$, $\mathrm{Var}(S_t\mid X_t,c) = \sigma_t^2 + O_{d, L_t, \|\nabla\Psi_t\|}(g_t^3 h^{3/2})$, where the implicit constant depends on dimension $d$, the local Hessian bound $L_t$, and the gradient norm at $\bar X_{t-h}$;
+\item[\textup{(iii)}] for $K$ i.i.d.\ noise candidates $\xi^{(k)}\stackrel{\text{iid}}\sim\mathcal N(0,I)$ at step $t$ (random search), let $S_t^{(k)}:=\Psi_t(\bar X_{t-h}+g_t\sqrt h\,\xi^{(k)};c)$. Then
 \begin{equation}
 G_t(K) := \mathbb{E}\Bigl[\max_{1\le k\le K} S_t^{(k)}\,\Big|\,X_t,c\Bigr] - \mu_t = \sigma_t\,a_K + O_{K,d,L_t}(g_t^2 h),
 \label{eq:gain-sde}
 \end{equation}
-where $a_K := \mathbb{E}[\max(Z_1,\ldots,Z_K)]$ with $Z_k\stackrel{\mathrm{iid}}{\sim}\mathcal{N}(0,1)$.
+where $a_K := \mathbb E[\max(Z_1,\ldots,Z_K)]$, $Z_k\overset{\text{iid}}\sim\mathcal N(0,1)$, with $a_K\sim\sqrt{2\log K}$.
 \end{enumerate}
 \end{theorem}
 
-The proof (in \cref{sec:proof-loc-scale}) is a second-order Taylor expansion around $\bar{X}_{t-h}$: the score decomposes into a deterministic baseline, a Gaussian linear term with variance $\sigma_t^2$, and a higher-order remainder. \cref{thm:loc-scale} identifies the precise quantities governing per-step sensitivity through the product $\sigma_t = g_t\sqrt{h}\,\|\nabla\Psi_t\|$ of diffusion coefficient, step size, and verifier gradient norm.
+The proof (\cref{sec:proof-loc-scale}) is a second-order Taylor expansion of $\Psi_t$ around $\bar{X}_{t-h}$ (\cref{prop:taylor}). The product $\sigma_t = g_t\sqrt{h}\,\|\nabla\Psi_t\|$ of diffusion coefficient, step size, and verifier gradient norm is the leading-order coefficient governing how much extra search at $t$ is worth.
 
 \paragraph{Optimal allocation: water-filling.}
-Because the gain factorizes as $G_t(K) = \sigma_t a_K + O(g_t^2 h)$, global scheduling reduces, up to controlled remainders, to
+Treating $\{\sigma_t\}$ as a fixed input and dropping the $O(g_t^2 h)$ remainder in \cref{eq:gain-sde}, summing over $t$ gives the surrogate
 \begin{equation}
-  \max_{K_1,\dots,K_T}\;\sum_{t=1}^{T}\sigma_t\,a_{K_t}
-  \quad\text{s.t.}\;\sum_{t=1}^{T}K_t=B,\;K_t\ge 1.
+  \max_{\{K_t\}_{t=1}^T}\;\sum_{t=1}^{T}\sigma_t\,a_{K_t}
+  \quad\text{s.t.}\;\sum_{t=1}^{T}K_t=B,\;K_t\in\mathbb{Z}_{\ge 1}.
   \label{eq:alloc}
 \end{equation}
+Write $\Delta a_K := a_{K+1}-a_K$ for the discrete marginal of $a_K$, and call $t$ \emph{active} at $\{K_t^*\}$ if $K_t^* > 1$.
 
 \begin{theorem}[Offline optimality under independence]
 \label{thm:offline}
-Suppose $\sigma_t$ depends only on $t$, not on prompt or search history. Then:
-\textup{(i)} \cref{eq:alloc} decomposes across prompts: any optimal $\{K_t^*\}$ is simultaneously optimal for every instance.
-\textup{(ii)} The optimal allocation equalizes marginal gains: $\sigma_t\,\Delta a_{K_t^*} = \lambda^*$ for all $t$ with $K_t^*>1$, where $\Delta a_K := a_{K+1}-a_K$ and $\lambda^*$ is the shadow price; consequently, $K_t^*$ is increasing in $\sigma_t$ (water-filling).
-\textup{(iii)} $\sum_t \sigma_t a_{K_t^*} > \sum_t \sigma_t a_{B/T}$ whenever $\{\sigma_t\}$ are not all equal, and the gap grows with the dispersion of $\{\sigma_t\}$.
+Assume $\sigma_t$ depends only on $t$ (not on $c$ or $x_t$) and the remainder $O_{K,d,L_t}(g_t^2 h)$ in \cref{thm:loc-scale}\textup{(iii)} is uniform in $(c,x_t)$. Then the optimizer $\{K_t^*\}$ of \cref{eq:alloc} satisfies:
+\begin{enumerate}
+\item[\textup{(i)}] \emph{Prompt-independence.} The same $\{K_t^*\}$ optimizes \cref{eq:alloc} for every $(c, x_t)$.
+
+\item[\textup{(ii)}] \emph{Discrete KKT sandwich.} There exists $\lambda^* \ge 0$ (the dual variable for $\sum_t K_t = B$) such that, for every active $t$,
+\begin{equation}
+  \sigma_t\,\Delta a_{K_t^* - 1} \;\ge\; \lambda^* \;\ge\; \sigma_t\,\Delta a_{K_t^*}.
+  \label{eq:kkt-sandwich}
+\end{equation}
+
+\item[\textup{(ii')}] \emph{Weak monotonicity.}
+\begin{equation}
+  \sigma_{t_1} > \sigma_{t_2} \;\Longrightarrow\; K_{t_1}^* \ge K_{t_2}^*.
+\end{equation}
+At the integer level the inequality is strict iff $\sigma_{t_1}/\sigma_{t_2} > \Delta a_{K-1}/\Delta a_K$ at the binding $K$; the continuous relaxation $\tilde a \in C^1$ of $a_K$ gives strict monotonicity unconditionally.
+
+\item[\textup{(iii)}] \emph{Dominance over uniform.} If $T \mid B$ so $K_t \equiv B/T$ is feasible,
+\begin{equation}
+  \sum_{t=1}^T \sigma_t\,a_{K_t^*} \;\ge\; \sum_{t=1}^T \sigma_t\,a_{B/T},
+  \label{eq:dominance}
+\end{equation}
+with strict inequality in the continuous relaxation whenever $B > T$ and $\sigma_{t_1}\ne\sigma_{t_2}$ for some pair (at the integer level, conditional on the gap condition in (ii')). Defining the across-timestep dispersion
+\begin{equation}
+  \mathrm{Var}(\sigma_t) := \frac{1}{T}\sum_{t=1}^T (\sigma_t - \bar\sigma)^2, \qquad \bar\sigma := \frac{1}{T}\sum_t \sigma_t,
+  \label{eq:dispersion}
+\end{equation}
+the first-order improvement along any budget-neutral pair perturbation $K_{t_1}\to B/T+\epsilon,\,K_{t_2}\to B/T-\epsilon$ is $\epsilon(\sigma_{t_1}-\sigma_{t_2})\,\tilde a'(B/T)+O(\epsilon^2)$ (we use $\mathrm{Var}(\sigma_t)$ as a summary dispersion measure, without claiming global monotonicity). The case $B=T$ forces $K_t\equiv 1$.
+\end{enumerate}
 \end{theorem}
 
-The proof (\cref{sec:proof-offline}) uses Lagrangian first-order conditions and concavity of $a_K$.
+The proof (\cref{sec:proof-offline}) is by Lagrangian first-order conditions and concavity of $a_K$. The same water-filling structure transfers to any local operator $\mathcal L$ satisfying the regularity conditions of \cref{asm:local-search}, with $a_K$ replaced by an operator-specific gain $\phi_K^{\mathcal L}$ (\cref{sec:appendix-general}).
 
-\paragraph{Regret bounds for adaptive scheduling.}
-When $\sigma_t = \sigma_t(c, x_t)$ varies with the prompt, the offline allocation is no longer optimal per-instance; an adaptive policy must trade off committing to a step versus saving budget for later. We bound the regret of adaptive policies against the offline-optimal benchmark.
+\paragraph{Regret bound for adaptive scheduling.}
+When $\sigma_t = \sigma_t(c, x_t)$ depends on the prompt, $\{K_t^*\}$ is no longer per-instance optimal. Embed the problem into an abstract sequential-allocation game: at each round $t$ the learner sees the current reward distribution $\mathcal{D}_t$ (in the diffusion problem, the law of $\sigma_t a_{K_t}$), picks $K_t \in \{0,1\}$ subject to $\sum_t K_t \le B$, and gets reward $\sim\mathcal{D}_t$ if $K_t = 1$ (else $0$). Regret is defined against the offline benchmark that knows $\mathcal{D}_1,\ldots,\mathcal{D}_T$ in advance.
 
-\begin{lemma}[Regret lower bound]
+\begin{lemma}[Regret lower bound for the sequential-allocation game]
 \label{lem:lower}
-Consider sequential budget allocation over $T$ rounds with total budget $B$. At round $t$, the learner observes only the current distribution $\mathcal{D}_t$, chooses $K_t\in\{0,1\}$ subject to $\sum_t K_t \le B$, and receives reward drawn from $\mathcal{D}_t$ (or zero if $K_t=0$). Let regret be measured against the offline benchmark that knows $\mathcal{D}_1,\ldots,\mathcal{D}_T$ in advance. Then for every adaptive policy there exists an instance with $T = 2B$ such that
+For every (possibly randomized) adaptive policy there exists an instance with $T = 2B$ such that
 \begin{equation}
-R_T \;\ge\; \Omega(T).
-\label{eq:lower}
+  \mathbb{E}[R_T] \;\ge\; \tfrac{B}{4} \;=\; \Omega(T).
+  \label{eq:lower}
 \end{equation}
 \end{lemma}
 
-The construction (\cref{sec:proof-lower}) places half the rounds at deterministic reward $1/2$ and the remaining half at one of two extremes (all zeros vs.\ all ones); without future information, any allocation incurs $\Omega(T)$ regret on at least one instance. This establishes that linear regret is unavoidable in the worst case.
-
-We now show that \textsc{GAINS} attains a matching upper bound up to leading-order remainders, at the same order as the linearization error of the SDE.
-
-\begin{theorem}[Regret upper bound for \textsc{GAINS}]
-\label{thm:regret-upper}
-Let $V_{\mathrm{MDP}}^*$ denote the value of the Bellman-optimal policy for the sequential allocation MDP (\cref{sec:mdp}) and $V_{\textsc{GAINS}}$ the value achieved by \textsc{GAINS}. Under \cref{asm:smooth} and the location-scale model, in the linearized regime $g_t\sqrt{h}\to 0$,
-\begin{equation}
-  V_{\mathrm{MDP}}^* - V_{\textsc{GAINS}} \;=\; O(g_t^2 h\cdot T),
-\label{eq:regret-upper}
-\end{equation}
-matching the lower bound \cref{eq:lower} up to the SDE linearization scale.
-\end{theorem}
-
-The proof (\cref{sec:proof-regret-upper}) decomposes the regret into a \emph{dynamic gap} (path-dependence between MDP and static oracle), a \emph{profiling error} (using $\hat{\boldsymbol\sigma}$ in place of $\boldsymbol\sigma$), and an \emph{online adjustment} term, and bounds each at $O(g_t^2 h)$ per step using the location-scale factorization.
+A diffusion policy with prompt-dependent $\sigma_t$ simulates this game by treating each step as a 0/1 commit, so $\Omega(T)$ regret transfers. The construction (\cref{sec:proof-lower}) sets $\mathcal{D}_t = \delta_{1/2}$ for $t \le B$ and either $\delta_0$ or $\delta_1$ for $t > B$, making the two instances statistically identical through round $B$. The bound applies to adversarial $\boldsymbol\sigma$; \cref{rmk:online-value} below governs the stochastic-$\boldsymbol\sigma$ regime targeted by \textsc{GAINS}.
 
 \begin{remark}[Online controller as Jensen-gap recovery]
 \label{rmk:online-value}
-When $\sigma_t = \sigma_t(c, x_t)$, the static oracle $V^*(\boldsymbol\sigma) = \max_{\sum_t K_t = B}\sum_t \sigma_t a_{K_t}$ is convex in $\boldsymbol\sigma$ as a pointwise maximum of linear functions; hence $\mathbb{E}_{\boldsymbol\sigma}[V^*(\boldsymbol\sigma)] - V^*(\bar{\boldsymbol\sigma}) \ge 0$ by Jensen. The online controller targets this Jensen gap: low gain with high candidate variance signals a responsive but exhausted step (premature to stop), while moderate gain with low variance signals inherent insensitivity (search remains productive). \cref{fig:stopping} shows the resulting two-threshold stopping rule. A second-order characterization of the gap appears in \cref{sec:appendix-general}.
+For prompt-dependent $\boldsymbol\sigma = \boldsymbol\sigma(c, x_t)$, define the static oracle value
+\begin{equation}
+  V^*(\boldsymbol\sigma) := \max_{\substack{\sum_t K_t = B\\ K_t \ge 1}}\;\sum_t \sigma_t\,a_{K_t}.
+  \label{eq:static-oracle}
+\end{equation}
+$V^*$ is convex in $\boldsymbol\sigma$ (pointwise maximum of linear functions), so by Jensen's inequality
+\begin{equation}
+  J(\boldsymbol\sigma) \;:=\; \mathbb{E}_{\boldsymbol\sigma}[V^*(\boldsymbol\sigma)] - V^*(\bar{\boldsymbol\sigma}) \;\ge\; 0,
+  \label{eq:jensen-gap}
+\end{equation}
+where $\bar{\boldsymbol\sigma} := \mathbb{E}\,\boldsymbol\sigma$. We call $J(\boldsymbol\sigma)$ the \emph{Jensen gap}: the expected gain of an oracle that allocates per prompt over one tuned to the population-mean profile. \cref{lem:lower} prevents closing $J$ in the adversarial worst case, but structured $\boldsymbol\sigma$ admits partial recovery. \textsc{GAINS} stops at step $t$ only when both the recent gain $\widetilde g^{(j)}$ and the within-step variance $\sigma^{(j)}$ are small (verifier locally insensitive \emph{and} search no longer improving); either signal alone keeps search active. \cref{fig:stopping} illustrates the rule. The convexity argument carries over to general operators (\cref{sec:appendix-general}).
 \end{remark}
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.62\linewidth]{figures/fig_stopping_decision.pdf}
-\caption{Idealized online stopping decision in the $(\sigma_t, \Delta a_K)$ plane. The horizontal threshold tracks exhaustion; the vertical threshold is an empirical-variance proxy for low sensitivity. Stopping is triggered only when \emph{both} conditions are met (shaded region). The hyperbola $\sigma_t\cdot\Delta a_K=\lambda^*$ shows the true optimality boundary; the rectangular proxy is conservative.}
+\includegraphics[width=0.45\linewidth]{figures/fig_stopping_decision.pdf}
+\caption{Online stopping decision in the $(\sigma_t, \Delta a_K)$ plane. Horizontal threshold: small recent gain; vertical threshold: small empirical variance (a sensitivity proxy). Stopping triggers only when \emph{both} fire (shaded). The hyperbola $\sigma_t\cdot\Delta a_K=\lambda^*$ is the true optimality boundary; the rectangular proxy is conservative.}
 \label{fig:stopping}
 \end{figure}

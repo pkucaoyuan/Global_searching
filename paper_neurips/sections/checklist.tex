@@ -1,0 +1,85 @@
+\section*{NeurIPS Paper Checklist}
+
+\begin{enumerate}
+
+\item {\bf Claims}
+\item[] Question: Do the main claims made in the abstract and introduction accurately reflect the paper's contributions and scope?
+\item[] Answer: \answerYes{}
+\item[] Justification: The abstract and introduction state three core contributions: (i)~the two-level framework for noise trajectory search (\cref{sec:framework}); (ii)~the \textsc{GAINS} algorithm combining offline profiling with online control (\cref{sec:algorithm}); (iii)~theoretical foundations including the location-scale gain factorization (\cref{thm:loc-scale}), offline water-filling (\cref{thm:offline}), and an $\Omega(T)$ regret lower bound (\cref{lem:lower}). All claims are supported by the formal results in \cref{sec:theory} and the experiments in \cref{sec:experiments}; the claimed 20--50\% NFE reduction matches the numbers reported in \cref{tab:sd_budget,tab:edm_budget,tab:flow_results}.
+
+\item {\bf Limitations}
+\item[] Question: Does the paper discuss the limitations of the work performed by the authors?
+\item[] Answer: \answerYes{}
+\item[] Justification: The ``Limitations and future work'' paragraph in \cref{sec:conclusion} explicitly discusses three limitations: the light-tailed location-scale assumption, prompt-stationarity of profiled sensitivities, and the use of two lightweight verifiers in our experiments.
+
+\item {\bf Theory assumptions and proofs}
+\item[] Question: For each theoretical result, does the paper provide the full set of assumptions and a complete (and correct) proof?
+\item[] Answer: \answerYes{}
+\item[] Justification: \cref{asm:smooth} (verifier smoothness) and \cref{asm:local-search} (local-search regularity) are stated formally before the theorems that depend on them. Complete proofs of \cref{thm:loc-scale}, \cref{thm:offline}, and \cref{lem:lower} appear in \cref{sec:proofs}; the full proof of the general factorization \cref{thm:general-gain} appears in \cref{sec:appendix-general}.
+
+\item {\bf Experimental result reproducibility}
+\item[] Question: Does the paper fully disclose all the information needed to reproduce the main experimental results of the paper to the extent that it affects the main claims and/or conclusions of the paper (regardless of whether the code and data are provided or not)?
+\item[] Answer: \answerYes{}
+\item[] Justification: The ``Hyperparameters and reproducibility'' paragraph in \cref{sec:experiments} lists all algorithmic hyperparameters ($\epsilon$, $\lambda$, $N$, $\beta_g$, $\beta_\sigma$, $\delta$, $W_g$) for both EDM and Stable Diffusion, along with the number of denoising steps, candidate counts, and number of seeds. \cref{alg:gains} gives the full algorithmic procedure. Pretrained models (Stable Diffusion, EDM) are publicly available; verifiers (Brightness, Compressibility) are deterministic image-quality verifiers.
+
+\item {\bf Open access to data and code}
+\item[] Question: Does the paper provide open access to the data and code, with sufficient instructions to faithfully reproduce the main experimental results, as described in supplemental material?
+\item[] Answer: \answerNo{}
+\item[] Justification: Code will be released upon acceptance (stated in \cref{sec:experiments}). Pretrained models used are publicly available. Submission-time code release was not included to preserve double-blind anonymity.
+
+\item {\bf Experimental setting/details}
+\item[] Question: Does the paper specify all the training and test details (e.g., data splits, hyperparameters, how they were chosen, type of optimizer, etc.) necessary to understand the results?
+\item[] Answer: \answerYes{}
+\item[] Justification: All experimental details appear in \cref{sec:experiments} (setting, hyperparameters, NFE budgets, seeds) and \cref{sec:appendix-experiments} (per-experiment prompt sets and configurations). No model training is involved; pretrained checkpoints are used directly.
+
+\item {\bf Experiment statistical significance}
+\item[] Question: Does the paper report error bars suitably and correctly defined or other appropriate information about the statistical significance of the experiments?
+\item[] Answer: \answerYes{}
+\item[] Justification: Every reported result includes the standard deviation across 20 independent runs, shown as $\text{mean} \pm \text{std}$ in \cref{tab:sd_budget,tab:edm_budget,tab:sd_400_ablation,tab:larger_prompt_exp,tab:local_search_combo,tab:flow_results}. The larger-prompt-set experiment uses 20 prompts with 10 repeats per prompt.
+
+\item {\bf Experiments compute resources}
+\item[] Question: For each experiment, does the paper provide sufficient information on the computer resources (type of compute workers, memory, time of execution) needed to reproduce the experiments?
+\item[] Answer: \answerYes{}
+\item[] Justification: \cref{sec:experiments} states that all experiments run on a single NVIDIA A100 GPU and that wall-clock time is dominated by forward passes through the denoising network and is therefore determined by the prescribed NFE budget.
+
+\item {\bf Code of ethics}
+\item[] Question: Does the research conducted in the paper conform, in every respect, with the NeurIPS Code of Ethics?
+\item[] Answer: \answerYes{}
+\item[] Justification: The work is a methodological contribution to inference-time compute allocation for already-published pretrained generative models, with no human subjects, no new dataset collection, and no use of personally identifiable information. It conforms to the NeurIPS Code of Ethics.
+
+\item {\bf Broader impacts}
+\item[] Question: Does the paper discuss both potential positive societal impacts and negative societal impacts of the work performed?
+\item[] Answer: \answerNA{}
+\item[] Justification: The contribution is an inference-time scheduling method that reduces compute consumption for existing pretrained diffusion models without changing their generative capabilities. It does not enable new misuse pathways beyond those already present in the underlying models (e.g., Stable Diffusion, EDM); positive impact is reduced compute and energy use during deployment.
+
+\item {\bf Safeguards}
+\item[] Question: Does the paper describe safeguards that have been put in place for responsible release of data or models that have a high risk for misuse (e.g., pretrained language models, image generators, or scraped datasets)?
+\item[] Answer: \answerNA{}
+\item[] Justification: The paper does not release new datasets or pretrained generative models. We propose an inference-time scheduling algorithm that operates on existing pretrained models without modification.
+
+\item {\bf Licenses for existing assets}
+\item[] Question: Are the creators or original owners of assets (e.g., code, data, models), used in the paper, properly credited and are the license and terms of use explicitly mentioned and properly respected?
+\item[] Answer: \answerYes{}
+\item[] Justification: All pretrained models used (Stable Diffusion, EDM, flow-matching models) are properly cited in \cref{sec:experiments,sec:related-lit}. The reference implementation we build on~\citep{ramesh2025nts} is properly cited as well. We use these assets in accordance with their respective licenses (CreativeML Open RAIL-M for Stable Diffusion; CC BY-NC-SA 4.0 for EDM).
+
+\item {\bf New assets}
+\item[] Question: Are new assets introduced in the paper well documented and is the documentation provided alongside the assets?
+\item[] Answer: \answerNA{}
+\item[] Justification: The paper does not introduce new datasets or pretrained models. The code implementing \textsc{GAINS} will be released upon acceptance with documentation of all hyperparameters and usage instructions.
+
+\item {\bf Crowdsourcing and research with human subjects}
+\item[] Question: For crowdsourcing experiments and research with human subjects, does the paper include the full text of instructions given to participants and screenshots, if applicable, as well as details about compensation (if any)?
+\item[] Answer: \answerNA{}
+\item[] Justification: The paper does not involve crowdsourcing or human-subject research. All experiments use deterministic verifiers (Brightness, Compressibility) computed directly from generated images.
+
+\item {\bf Institutional review board (IRB) approvals or equivalent for research with human subjects}
+\item[] Question: Does the paper describe potential risks incurred by study participants, whether such risks were disclosed to the subjects, and whether Institutional Review Board (IRB) approvals (or an equivalent approval/review based on the requirements of your country or institution) were obtained?
+\item[] Answer: \answerNA{}
+\item[] Justification: The paper does not involve human subjects.
+
+\item {\bf Declaration of LLM usage}
+\item[] Question: Does the paper describe the usage of LLMs if it is an important, original, or non-standard component of the core methods in this research?
+\item[] Answer: \answerNA{}
+\item[] Justification: The proposed method, \textsc{GAINS}, is an inference-time scheduling algorithm for diffusion models and does not use large language models as a component of the methodology. LLMs were used only for routine writing assistance (e.g., grammar polishing), which the NeurIPS LLM policy explicitly exempts from disclosure.
+
+\end{enumerate}

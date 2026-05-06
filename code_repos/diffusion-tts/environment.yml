@@ -2,24 +2,29 @@ name: diffusion-tts
 channels:
   - pytorch
   - nvidia
+  - conda-forge
 dependencies:
-  - python>=3.8, < 3.10  # package build failures on 3.10
+  - python=3.10
   - pip
-  - numpy>=1.20
-  - click>=8.0
-  - pillow>=8.3.1
-  - scipy>=1.7.1
-  - pytorch=1.12.1
+  - numpy>=1.23
+  - scipy>=1.10
+  - pillow>=9.0
+  - tqdm
   - psutil
   - requests
-  - tqdm
+  - click>=8.0
   - imageio
+  - matplotlib
+  - pytorch>=2.1
+  - torchvision
+  - pytorch-cuda=12.1
   - pip:
     - imageio-ffmpeg>=0.4.3
     - pyspng
     - torchmetrics
+    - diffusers>=0.27
+    - transformers>=4.35
+    - accelerate>=0.25
     - datasets
-    - transformers
-    - matplotlib
-    - torchvision
-    - accelerate
+    - sentencepiece
+    - safetensors

@@ -1,7 +1,7 @@
 \section{A Two-Level Framework for Noise Trajectory Search}
 \label{sec:framework}
 
-We cast noise trajectory search as a two-level problem: a general transition abstraction covers all diffusion-family models, on top of which a local search operator and a global scheduler serve as the two components.
+We split noise trajectory search into two components on top of a model-agnostic transition abstraction (\cref{fig:architecture}): a \emph{local search operator} $\mathcal{L}_t$ that explores noise candidates at a single timestep, and a \emph{global scheduler} $\mathcal{G}$ that decides how to spend the budget $B$ across timesteps. The two components interact only through the per-step budget $K_t$, so any local operator can be paired with any global scheduler, and we can study global allocation while reusing existing local operators.
 
 \paragraph{General transition abstraction.}
 Every diffusion-family model generates a sample by traversing $T$ discrete timesteps $t_T > t_{T-1} > \dots > t_1$. At each step the sampler applies
@@ -9,31 +9,29 @@ Every diffusion-family model generates a sample by traversing $T$ discrete times
   x_{t-1} = F_\theta(x_t, t, c, \varepsilon_t),
   \label{eq:transition}
 \end{equation}
-where $x_t$ is the latent at timestep $t$, $c$ is the conditioning signal, and $\varepsilon_t$ is a noise variable injecting stochasticity. The final step yields $x_0$, which the verifier $v(x_0, c)$ scores. The transition is deliberately model-agnostic: for stochastic samplers (DDPM, SDE) $\varepsilon_t$ is the injected Gaussian noise; for deterministic samplers (flow-matching ODE solvers~\citep{lipman2023flow,liu2023flow}) stochasticity can be injected by adding controlled random perturbations~\citep{dockhorn2024stochastic,kim2025rbf,black2023training,fan2024reinforcement}.
+where $x_t$ is the latent at timestep $t$, $c$ is the conditioning signal, and $\varepsilon_t$ is a noise variable injecting stochasticity. The final step yields $x_0$, which the verifier $v(x_0, c)$ scores. The transition is deliberately model-agnostic: for stochastic samplers (DDPM, SDE) $\varepsilon_t$ is the injected Gaussian noise; for deterministic samplers (flow-matching ODE solvers~\citep{lipman2023flow}) stochasticity can be injected by replacing a deterministic ODE step with an SDE step of matched marginal~\citep{dockhorn2024stochastic,kim2025rbf}.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.92\linewidth]{figures/fig_architecture.pdf}
+\includegraphics[width=0.78\linewidth]{figures/fig_architecture.pdf}
 \caption{Two-level view of noise trajectory search. The \emph{global scheduler}~$\mathcal{G}$ (top) receives budget~$B$ and distributes per-step budgets $\{K_t\}$ across the trajectory. At each timestep, the \emph{local search operator}~$\mathcal{L}_t$ (bottom) evaluates $K_t$ noise candidates and selects the best. Bars depict the non-uniform allocation: timesteps where replacing the noise candidate yields larger quality gains receive bigger budgets.}
 \label{fig:architecture}
 \end{figure}
 
 \paragraph{Local search operator.}
-At timestep $t$, given $(x_t, c, v, F_\theta)$ and a per-step budget, the local operator
-$\mathcal{L}_t : (x_t, c, v, F_\theta, K_t) \longrightarrow (x_{t-1}, \varepsilon_t)$
-samples $K$ noise candidates $\{\varepsilon_t^{(k)}\}_{k=1}^K$, applies the base sampler to each to obtain a clean-data prediction
+At timestep $t$, given $(x_t, c, v, F_\theta)$ and a per-step budget $K_t$, the local operator samples $K_t$ noise candidates $\{\varepsilon_t^{(k)}\}_{k=1}^{K_t}$ and applies the base sampler $F_\theta$ (one timestep advance) to each, then maps each resulting latent to a clean-data prediction $\hat x_0^{(k)}$ via the standard one-step denoiser $D_\theta$~\citep{song2021scorebased} (the denoiser predicts the final clean sample $\hat x_0$ from any intermediate noisy latent, distinct from $F_\theta$):
 \begin{equation}
   x_{t-1}^{(k)} = F_\theta(x_t, t, c, \varepsilon_t^{(k)}),
   \qquad
-  \hat{x}_0^{(k)} = D_\theta(x_{t-1}^{(k)}, t-1, c),
+  \hat{x}_0^{(k)} = D_\theta(x_{t-1}^{(k)}, t-1, c).
   \label{eq:x0_prediction}
 \end{equation}
-where $D_\theta$ is a one-step denoising formula~\citep{song2021scorebased}, and selects the candidate that maximizes the verifier score $s^{(k)} = v(\hat{x}_0^{(k)}, c)$. Each candidate costs one NFE. Many existing search procedures (zero-order perturbation, $\epsilon$-greedy exploration, particle-based refinement) instantiate this operator; we treat $\mathcal{L}_t$ abstractly as a black-box mapping from $x_t$ to $x_{t-1}$ given a per-step budget.
+We write $\mathcal{L}_t : (x_t, c, v, F_\theta, K_t) \to x_{t-1}$ for the local operator. The operator selects the candidate that maximizes the verifier score $s^{(k)} = v(\hat{x}_0^{(k)}, c)$. Each candidate costs one NFE, so the operator consumes $K_t$ NFE in total. Many existing search procedures (zero-order perturbation~\citep{tang2024dno}, $\epsilon$-greedy exploration~\citep{ramesh2025nts}, particle-based refinement~\citep{kim2025rbf}) instantiate this operator; for our purposes $\mathcal{L}_t$ is a black-box mapping from $x_t$ to $x_{t-1}$ whose only knob is the per-step budget $K_t$.
 
 \paragraph{Global scheduler.}
 The local operator decides \emph{how} to search at a given step but not \emph{where along the trajectory} to invest computation. A global scheduler
 $\mathcal{G} : \bigl(x_T, c, v, F_\theta, B, \{\mathcal{L}_t\}_{t=1}^T\bigr) \longrightarrow \bigl(x_0, \{x_t\}_{t=1}^T\bigr)$
-walks timesteps from $T$ to $1$ and at each step either invokes $\mathcal{L}_t$ (spending part of the remaining budget) or applies a single base step. This decision must be made \emph{online}: at step $t$ we cannot predict how effective search will be at later timesteps, yet computation spent now is lost forever.
+walks timesteps from $T$ to $1$, and at each step picks a per-step budget $K_t \ge 1$ subject to $\sum_t K_t \le B$: setting $K_t = 1$ applies a single base step, while $K_t > 1$ invokes $\mathcal{L}_t$ to evaluate $K_t$ noise candidates. This allocation must be made \emph{online}: at step $t$ we cannot predict how effective search will be at later timesteps, yet computation spent now is lost forever.
 
 \paragraph{Existing methods as special cases.}
-This view unifies many prior strategies: plain diffusion sampling ($\mathcal{L}_t$ trivial); best-of-$N$ random search ($\mathcal{L}_t$ at the initial noise only); noise-trajectory and tree-style search (specific $\mathcal{L}_t$ paired with hard-coded scheduling). \cref{sec:mdp} presents a more general MDP formulation that subsumes these and accommodates richer action spaces (multiple verifier types, backtracking).
+This view recovers several prior strategies as special cases. Plain diffusion sampling: $K_t = 1$ for all $t$. Best-of-$N$ random search: $K_T = N$, $K_{t<T} = 1$. Noise-trajectory and tree-style search: specific $\mathcal{L}_t$ paired with a hard-coded $\{K_t\}$. For richer action spaces (multiple verifier types, backtracking), \cref{sec:mdp} extends the formulation to a Markov decision process.

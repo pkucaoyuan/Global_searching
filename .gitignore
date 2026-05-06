@@ -99,3 +99,9 @@ tt-scale-flux/
 .pytest_cache/
 .mypy_cache/
 
+
+# Transient audit/analysis outputs
+paper_neurips/audit_reports/
+**/*.aux
+**/*.log
+**/*.out

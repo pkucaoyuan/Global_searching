@@ -5,8 +5,8 @@
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage{hyperref}
-\usepackage{url}
+\usepackage[hyphens]{url}
+\usepackage[draft]{hyperref}
 \usepackage{booktabs}
 \usepackage{amsfonts}
 \usepackage{nicefrac}
@@ -21,12 +21,8 @@
 
 \crefname{assumption}{Assumption}{Assumptions}
 
-\hypersetup{
-  colorlinks=true,
-  linkcolor=blue,
-  citecolor=blue,
-  urlcolor=blue
-}
+% hyperref loaded with [draft] to avoid pdfendlink/lineno interaction
+% (known pdfTeX bug); re-enable links for camera-ready by removing [draft].
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Theorems
@@ -71,6 +67,7 @@
 
 \input{sections/conclusion}
 
+\newpage
 \bibliographystyle{plainnat}
 \bibliography{main}
 
@@ -81,5 +78,8 @@
 \input{sections/appendix_proofs}
 
 \input{sections/appendix_general_local_search}
+
+\newpage
+\input{sections/checklist}
 
 \end{document}

@@ -1,40 +1,33 @@
 \section{Preliminaries and Problem Setting}
 \label{sec:preliminaries}
 
-\paragraph{Diffusion models (DDPM and SGM).}
-The Denoising Diffusion Probabilistic Modeling (DDPM) formulation~\citep{ho2020denoising} couples a forward process that perturbs data with Gaussian noise and a backward process that converts noise back to data. Setting $\alpha_t = 1-\beta_t$ and $\bar{\alpha}_t = \prod_{s=1}^{t}\alpha_s$ for fixed noise schedule $\beta_t\in(0,1)$, samples emerge by iterating
+We fix notation for diffusion-model sampling, define the verifier and NFE budget, and state the noise trajectory search problem.
+
+\paragraph{Diffusion models.}
+A diffusion model generates a sample in $\mathbb{R}^d$ over $T$ discrete denoising steps, indexed $t = T, T-1, \dots, 1$. Write $x_t \in \mathbb{R}^d$ for the latent at step $t$ ($x_T$ is the initial Gaussian noise, $x_0$ the final sample). The Denoising Diffusion Probabilistic Modeling (DDPM) formulation~\citep{ho2020denoising} couples a forward process that perturbs data with Gaussian noise and a backward process that converts noise back to data. Setting $\alpha_t = 1-\beta_t$ and $\bar{\alpha}_t = \prod_{s=1}^{t}\alpha_s$ for a fixed noise schedule $\beta_t\in(0,1)$, samples emerge by iterating
 \begin{equation}
-  \mathbf{x}_{t-1}
-  = \tfrac{1}{\sqrt{1 - \beta_t}}\!\left(\mathbf{x}_t - \tfrac{\beta_t}{\sqrt{1 - \bar{\alpha}_t}}\,\boldsymbol{\varepsilon}_\theta(\mathbf{x}_t, t)\right) + \sigma_t\,\boldsymbol{\varepsilon},
-  \qquad \boldsymbol{\varepsilon}\sim\mathcal{N}(\mathbf{0},\mathbf{I}),
+  x_{t-1}
+  = \tfrac{1}{\sqrt{1 - \beta_t}}\!\left(x_t - \tfrac{\beta_t}{\sqrt{1 - \bar{\alpha}_t}}\,\varepsilon_\theta(x_t, t)\right) + \tilde\sigma_t\,\varepsilon_t,
+  \qquad \varepsilon_t\sim\mathcal{N}(0, I_d),
   \label{eq:ddpm-reverse}
 \end{equation}
-from $\mathbf{x}_T\sim\mathcal{N}(\mathbf{0},\mathbf{I})$ down to $\mathbf{x}_0$, where $\boldsymbol{\varepsilon}_\theta$ is a learned noise prediction network.
-
-The Score-based Generative Model (SGM) formulation~\citep{song2019generative} instead works with the \emph{score} (the gradient of the log-density, distinct from the verifier score in \cref{def:verifier}). Data are perturbed at $T$ noise levels $0 < \varsigma_1 < \varsigma_2 < \cdots < \varsigma_T$, where $\varsigma_t$ denotes the noise scale at level $t$. A network $\mathbf{s}_\theta(\tilde{\mathbf{x}}, \varsigma_t)$ approximates the score at each level. Annealed Langevin dynamics generate samples by running, at each level $t = T, T{-}1,\ldots,1$, the inner iteration
-\begin{equation}
-  \mathbf{x}_{(i)} = \mathbf{x}_{(i-1)} + \delta_i^{(t)}\,\mathbf{s}_\theta(\mathbf{x}_{(i-1)}, \varsigma_t) + \sqrt{2\delta_i^{(t)}}\,\boldsymbol{\varepsilon}_i,
-  \label{eq:sgm-langevin}
-\end{equation}
-where $\delta_i^{(t)} > 0$ is the Langevin step size for the $i$-th inner iteration at noise level $t$. We emphasize that $\varsigma_t$ (a noise level) and $\delta_i^{(t)}$ (an inner step size) are distinct objects: $\varsigma_t$ indexes the outer denoising trajectory, while $\delta_i^{(t)}$ governs the inner Langevin dynamics within a single level.
-
-Both formulations traverse $T$ discrete timesteps, with each transition driven by a stochastic noise variable. This shared structure underpins the transition abstraction in \cref{sec:framework}.
+from $x_T\sim\mathcal{N}(0, I_d)$ to $x_0$, where $\varepsilon_\theta$ is a learned noise predictor, $\tilde\sigma_t$ is the (fixed) reverse-process noise scale, and $\varepsilon_t \in \mathbb{R}^d$ is the per-step injected Gaussian noise (with $I_d$ the $d{\times}d$ identity). Score-based~\citep{song2019generative} and flow-based samplers~\citep{lipman2023flow,liu2023flow} share the same structure: a $T$-step backward trajectory driven by per-step stochastic noise $\varepsilon_t$.
 
 \paragraph{Inference-time noise search.}
 
-\begin{definition}[Noise trajectory search problem]
-\label{def:nts}
-Given a pretrained diffusion model with transition function $F_\theta$, a conditioning signal $c$, a verifier $v(\cdot, c)$, and a total compute budget of $B$ function evaluations, find a sequence $\{\varepsilon_t^*\}_{t=1}^T$ that maximizes the verifier score of the final sample subject to total NFE $\le B$.
-\end{definition}
-
-The core difficulty is sequential: the noise $\varepsilon_t$ at timestep $t$ shapes the latent $x_{t-1}$, which determines which noises are effective at later steps. This sequential dependence motivates the two-level decomposition in \cref{sec:framework}.
-
 \begin{definition}[Verifier]
 \label{def:verifier}
-A \emph{verifier} $v : \mathcal{X} \times \mathcal{C} \to \mathbb{R}$ scores a generated sample against its conditioning signal, returning a scalar quality measure. The verifier is fixed during search and treated as a black box; results hold for any bounded, query-efficient $v$.
+Let $\mathcal{X} \subseteq \mathbb{R}^d$ denote the sample space (e.g., images or latents) and $\mathcal{C}$ the space of conditioning signals (e.g., text prompts or class labels). A \emph{verifier} $v : \mathcal{X} \times \mathcal{C} \to \mathbb{R}$ scores a generated sample $x \in \mathcal{X}$ against its conditioning signal $c \in \mathcal{C}$, returning a scalar quality measure. The verifier is fixed during search and treated as a black box; results hold for any bounded, query-efficient $v$.
 \end{definition}
 
 \begin{definition}[NFE budget]
 \label{def:nfe}
-A single \emph{function evaluation} (NFE) is one forward pass through the denoising network, the dominant cost in diffusion sampling. Standard sampling consumes exactly $T$ NFE; noise trajectory search spends the remaining $B - T$ NFE on local refinement.
+A single \emph{function evaluation} (NFE) is one forward pass through the denoising network, the dominant cost in diffusion sampling. Standard sampling consumes exactly $T$ NFE; noise trajectory search spends the remaining $B - T$ NFE on local refinement, where $B \ge T$ is the total budget.
 \end{definition}
+
+\begin{definition}[Noise trajectory search problem]
+\label{def:nts}
+Given a pretrained diffusion model with one-step transition $F_\theta : \mathbb{R}^d \times \{1, \dots, T\} \times \mathbb{R}^d \to \mathbb{R}^d$ that maps $(x_t, t, \varepsilon_t)$ to $x_{t-1}$ (the abstraction of \cref{eq:ddpm-reverse}, formalized in \cref{eq:transition}), a conditioning signal $c \in \mathcal{C}$, a verifier $v(\cdot, c)$ (\cref{def:verifier}), and a total budget of $B$ function evaluations (\cref{def:nfe}), find a sequence $\{\varepsilon_t^*\}_{t=1}^T$ that maximizes the verifier score of the final sample $x_0$ subject to total NFE $\le B$.
+\end{definition}
+
+The difficulty is sequential: $\varepsilon_t$ shapes $x_{t-1}$, which determines which $\varepsilon_{t'}$ are effective at later $t' < t$. This motivates the two-level decomposition of \cref{sec:framework}.

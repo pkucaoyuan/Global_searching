@@ -1,62 +1,121 @@
-## Test-Time Scaling of Diffusion Models via Noise Trajectory Search<br><sub>Official PyTorch implementation</sub>
+# GAINS: Global Adaptive Inference-time Noise Scheduling
 
-![Teaser image](./assets/teaser.png)
+PyTorch implementation accompanying the NeurIPS 2026 submission *"Global Adaptive Inference-time Noise Scheduling for Diffusion Models"*. This repository contains code, scripts, and experiment configurations for reproducing the EDM, Stable Diffusion, and flow-based (PixArt-Sigma) results in the paper.
 
-**Test-Time Scaling of Diffusion Models via Noise Trajectory Search**<br>
-Vignav Ramesh, Morteza Mardani
-<br>https://arxiv.org/abs/2506.03164<br>
+The implementation builds on the noise-trajectory-search (NTS) baseline of Ramesh & Mardani (2025) and extends it with: (i) an offline sensitivity-profiling stage that yields a non-uniform per-timestep allocation $\{K_t\}$, and (ii) an online controller that performs windowed early stopping driven by recent score gain and within-step candidate variance, redistributing saved NFE under a strict total-budget constraint.
 
-Abstract: *The iterative and stochastic nature of diffusion models enables test-time scaling, whereby spending additional compute during denoising generates higher-fidelity samples. Increasing the number of denoising steps is the primary scaling axis, but this yields quickly diminishing returns. Instead optimizing the noise trajectory--the sequence of injected noise vectors--is promising, as the specific noise realizations critically affect sample quality; but this is challenging due to a high-dimensional search space, complex noise-outcome interactions, and costly trajectory evaluations. We address this by first casting diffusion as a Markov Decision Process (MDP) with a terminal reward, showing tree-search methods such as Monte Carlo tree search (MCTS) to be meaningful but impractical. To balance performance and efficiency, we then resort to a relaxation of MDP, where we view denoising as a sequence of independent contextual bandits. This allows us to introduce an ϵ-greedy search algorithm that globally explores at extreme timesteps and locally exploits during the intermediate steps where de-mixing occurs. Experiments on EDM and Stable Diffusion reveal state-of-the-art scores for class-conditioned/text-to-image generation, exceeding baselines by up to 164% and matching/exceeding MCTS performance. To our knowledge, this is the first practical method for test-time noise trajectory optimization of arbitrary (non-differentiable) rewards.*
+## Repository layout
+
+```
+.
+├── main.py                       # Top-level dispatcher (EDM / SD backends)
+├── prompts.csv                   # Prompt set for SD experiments
+├── eps1_gain_probe.py            # Offline sensitivity profiling tool (per-step gain)
+├── eps1_gain_plot.py             # Plotting utilities for offline profiles
+├── SEARCH_METHODS_ANALYSIS.md    # Detailed walkthrough of each search method
+├── edm/                          # EDM backend (class-conditional ImageNet)
+│   ├── main.py                   # EDM sampling loop with all search methods
+│   ├── scorers.py                # Brightness / Compressibility / ImageNet
+│   └── ...
+├── sd/                           # Stable Diffusion backend (text-to-image)
+│   ├── main.py
+│   ├── scorers.py                # Brightness / Compressibility / CLIP
+│   └── diffusers/                # Vendored diffusers fork
+├── flux/                         # Flow-based experiments (PixArt-Sigma)
+│   ├── stochastic_flow_scheduler.py   # ODE-to-SDE conversion
+│   ├── real_flow_experiment.py        # Naive vs GAINS scheduling on flows
+│   └── EXPERIMENT_REPORT.md
+├── literature/                   # Reference papers in arxiv source form
+├── environment.yml
+└── LICENSE.md
+```
 
 ## Requirements
 
-* Linux and Windows are supported, but we recommend Linux for performance and compatibility reasons.
-* 1+ high-end NVIDIA GPU for sampling. We have done all testing and development using A100 GPUs.
-* Python libraries: See [environment.yml](./environment.yml) for exact library dependencies. You can use the following commands with Miniconda3 to create and activate your Python environment:
-  - `conda env create -f environment.yml -n diffusion-tts`
-  - `conda activate diffusion-tts`
+* Linux with one high-end NVIDIA GPU (we used A100 80GB).
+* Python 3.10, PyTorch ≥ 2.1, CUDA 12.1.
+* Install via Miniconda:
+  ```bash
+  conda env create -f environment.yml -n diffusion-tts
+  conda activate diffusion-tts
+  ```
 
-## Getting started
+## Sampling methods
 
-To generate images using a given model and sampling method, run `main.py` as follows:
+The `--method` flag selects the search strategy. All methods consume a fixed total NFE budget; methods that perform per-step search use an inner `K_t` candidate count.
 
-```.bash
-# Generate image with either EDM/SD and save to file. Example usage:
-python main.py --backend sd --scorer brightness --method naive --prompt "A beautiful landscape"
+| Method | Description | Source |
+|--------|-------------|--------|
+| `naive` | Baseline sampler, no search | — |
+| `rejection` | Best-of-$N$ at every timestep | — |
+| `beam` | Beam search over noise candidates | — |
+| `mcts` | Monte Carlo Tree Search | — |
+| `zero_order` | Zero-order local perturbation | Tang et al. 2024 |
+| `eps_greedy` | $\epsilon$-greedy noise search, uniform $K_t$ | Ramesh & Mardani 2025 |
+| `epsilon_1` | **GAINS offline**: high/low-value region split with $K_1, K_2$ | This work |
+| `epsilon_online` | **GAINS online**: offline allocation + windowed early stopping with budget redistribution | This work |
 
+## Quick start
+
+Generate a single image with a chosen backend, scorer, and search method:
+
+```bash
+# Stable Diffusion + brightness reward + uniform baseline
+python main.py --backend sd --scorer brightness --method naive \
+    --prompt "A beautiful landscape"
+
+# EDM + ImageNet classifier reward + zero-order local search
 python main.py --backend edm --scorer imagenet --method zero_order
+
+# GAINS offline (epsilon_1) on SD with compressibility reward
+python main.py --backend sd --scorer compressibility --method epsilon_1 \
+    --K1 25 --K2 15 --prompt_csv prompts.csv
+
+# GAINS online (epsilon_online) with strict total budget
+python main.py --backend edm --scorer compressibility --method epsilon_online \
+  --num_steps 18 --K1 11 --eps 0.4 --lambda_ 0.15 --total_budget 144 --n_runs 20 \
+  --N 4 --high_slack 2  --thresh_gain_coef 0.3 --revert_on_negative \
+  --thresh_var_coef 0.7 \
 ```
 
-```.bash
-Arguments:
-    --backend   : 'sd' or 'edm' (required)
-    --scorer    : 'brightness', 'compressibility', 'clip', or 'imagenet' (required)
-    --method    : Sampling method (available: 'naive', 'rejection', 'beam', 'mcts', 'zero_order', 'eps_greedy') (default: 'naive')
-    --prompt    : Prompt for SD (default: 'A beautiful landscape')
-    --output    : Output filename
-    --N, --lambda_, --eps, --K, --B, --S : sampling parameters (see code for defaults)
-    --seed      : Random seed (default: 0)
-    --device    : Device (default: 'cuda')
-```
+### Common flags
+
+| Flag | Meaning |
+|------|---------|
+| `--backend`              | `sd` or `edm` |
+| `--scorer`               | `brightness`, `compressibility`, `clip` (SD), `imagenet` (EDM) |
+| `--method`               | See table above |
+| `--prompt` / `--prompt_csv` | Single prompt string or CSV with prompts (SD only) |
+| `--num_steps`            | Number of denoising steps (SD only; default 50) |
+| `--seed`, `--n_runs`, `--repeat_per_prompt` | Seeding and averaging |
+| `--K`, `--N`, `--lambda_`, `--eps` | Local-operator hyperparameters |
+| `--K1`, `--K2`           | Offline split |
+| `--total_budget`         | Strict NFE budget (`epsilon_online`) |
+| `--high_slack`           | Watch-region slack for early stopping (`epsilon_online`) |
+| `--thresh_gain_coef`, `--thresh_var_coef` | Online thresholds $\beta_g$, $\beta_\sigma$ |
+| `--revert_on_negative`   | Keep previous pivot when an iteration's gain is negative |
+| `--log_gain`             | Dump per-timestep gains for analysis |
+
+Run `python main.py --help` for the full list.
 
 ## License
 
-All material is licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License](http://creativecommons.org/licenses/by-nc-sa/4.0/).
+Released under [CC BY-NC-SA 4.0](http://creativecommons.org/licenses/by-nc-sa/4.0/).
 
 ## Citation
 
+This is anonymous code accompanying a NeurIPS 2026 submission. A citation block will be added on acceptance.
+
+For the underlying noise-trajectory-search baseline that this work extends:
+
 ```
 @misc{ramesh2025testtimescalingdiffusionmodels,
-      title={Test-Time Scaling of Diffusion Models via Noise Trajectory Search}, 
-      author={Vignav Ramesh and Morteza Mardani},
-      year={2025},
-      eprint={2506.03164},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG},
-      url={https://arxiv.org/abs/2506.03164}, 
+  title  = {Test-Time Scaling of Diffusion Models via Noise Trajectory Search},
+  author = {Vignav Ramesh and Morteza Mardani},
+  year   = {2025},
+  eprint = {2506.03164},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG},
+  url    = {https://arxiv.org/abs/2506.03164}
 }
 ```
-
-## Development
-
-This is a research reference implementation and is treated as a one-time code drop. As such, we do not accept outside code contributions in the form of pull requests.

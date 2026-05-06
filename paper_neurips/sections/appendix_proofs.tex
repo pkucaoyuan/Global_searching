@@ -1,84 +1,177 @@
 \section{Proofs}
 \label{sec:proofs}
-
-\subsection{Proof of \texorpdfstring{\cref{thm:loc-scale}}{Theorem (Location-scale)}}
-\label{sec:proof-loc-scale}
-
-\paragraph{Setup.}
-By construction, $X_{t-h} = \bar{X}_{t-h} + g_t\sqrt{h}\,\xi$ with $\xi\sim\mathcal{N}(0,I)$. A second-order Taylor expansion of $\Psi_t(\cdot;c)$ around $\bar{X}_{t-h}$ gives
-\[
-  \Psi_t(X_{t-h}; c) = \Psi_t(\bar{X}_{t-h}; c) + \langle \nabla\Psi_t(\bar{X}_{t-h}; c), X_{t-h} - \bar{X}_{t-h}\rangle + R_t,
-\]
-where $R_t = \tfrac{1}{2}(X_{t-h}-\bar{X}_{t-h})^\top \nabla^2\Psi_t(\widetilde{X}; c)(X_{t-h}-\bar{X}_{t-h})$ for some $\widetilde{X}$ on the segment. Substituting $X_{t-h}-\bar{X}_{t-h} = g_t\sqrt{h}\,\xi$ and using \cref{asm:smooth} gives $|R_t|\le\tfrac{1}{2}L_t g_t^2 h\|\xi\|^2$ a.s.
-
-\paragraph{Part (i).}
-When $\|\nabla\Psi_t(\bar{X}_{t-h};c)\|>0$, write $\langle\nabla\Psi_t,\xi\rangle = \|\nabla\Psi_t\|\,Z_t$ where $Z_t := \langle\nabla\Psi_t/\|\nabla\Psi_t\|,\xi\rangle$. Since $\nabla\Psi_t/\|\nabla\Psi_t\|$ is a fixed unit vector conditional on $(X_t,c)$ and $\xi\sim\mathcal{N}(0,I)$, $Z_t\sim\mathcal{N}(0,1)$. (When $\nabla\Psi_t = 0$, $\sigma_t=0$ and the result is trivial.)
-
-\paragraph{Part (ii).}
-$\mathrm{Var}(S_t\mid X_t,c) = \mathrm{Var}(\sigma_t Z_t + R_t) = \sigma_t^2 + 2\,\mathrm{Cov}(\sigma_t Z_t, R_t) + \mathrm{Var}(R_t)$. By Cauchy--Schwarz, $|\mathrm{Cov}(\sigma_t Z_t,R_t)|\le\sigma_t\sqrt{\mathbb{E}[R_t^2]}$. Using $|R_t|\le\tfrac{1}{2}L_t g_t^2 h\|\xi\|^2$ and $\mathbb{E}[\|\xi\|^4]=d(d+2)$, we get $\mathbb{E}[R_t^2]\le\tfrac{1}{4}L_t^2 g_t^4 h^2 d(d+2)$, hence $|\mathrm{Cov}|\le\tfrac{1}{2}L_t\sqrt{d(d+2)}\sigma_t g_t^2 h = O_d(g_t^3 h^{3/2})$ and $\mathrm{Var}(R_t) = O_d(g_t^4 h^2)$, lower order than the covariance term.
-
-\paragraph{Part (iii).}
-Write $S_t^{(k)} = \mu_t + \sigma_t Z_k + R_t^{(k)}$ for each candidate. Using $|\max_k(a_k+b_k)-\max_k a_k|\le\max_k|b_k|$,
-\[
-\bigl|\max_k S_t^{(k)} - (\mu_t + \sigma_t \max_k Z_k)\bigr| \le \max_k |R_t^{(k)}| \le \sum_k |R_t^{(k)}|.
-\]
-Taking conditional expectations: $\mathbb{E}[\max_k|R_t^{(k)}|\mid X_t,c]\le K\cdot\tfrac{1}{2}L_t g_t^2 h\, d$, hence $G_t(K) = \sigma_t a_K + O_{K,d,L_t}(g_t^2 h)$. \qed
-
-\subsection{Proof of \texorpdfstring{\cref{thm:offline}}{Theorem (Offline optimality)}}
-\label{sec:proof-offline}
-
-\paragraph{Part (i).}
-Under prompt-independence, $G_t(K_t)$ depends only on $(t,K_t)$, so $\sum_t G_t(K_t)$ is the same function of $\{K_t\}$ for every $(c,x_t)$; any $\{K_t^*\}$ solving \cref{eq:alloc} is simultaneously optimal.
-
-\paragraph{Part (ii): water-filling monotonicity.}
-Treating $K$ as continuous, $G_t(K) = \sigma_t a_K$ is strictly concave (since $a_K$ is strictly concave for the Gaussian case~\citep{david2003order}). Writing the Lagrangian of \cref{eq:alloc} as $\mathcal{L} = \sum_t G_t(K_t) - \lambda(\sum_t K_t - B) + \sum_t\mu_t(K_t - 1)$, KKT gives $G_t'(K_t^*) = \lambda^* - \mu_t^*$, $\mu_t^*\ge 0$, $\mu_t^*(K_t^*-1)=0$. If $K_t^*>1$ then $\mu_t^*=0$ and $\sigma_t\Delta a_{K_t^*}=\lambda^*$, hence $\Delta a_{K_t^*}=\lambda^*/\sigma_t$. Because $a_K$ is the same function for every $t$ (location-scale), $\sigma_{t_1}>\sigma_{t_2}\Rightarrow\Delta a_{K_{t_1}^*}<\Delta a_{K_{t_2}^*}\Rightarrow K_{t_1}^*>K_{t_2}^*$.
-
-\paragraph{Part (iii): strict suboptimality of uniform.}
-At $K_t\equiv B/T$, the marginal gains $G_t'(B/T)=\sigma_t a_{B/T}'$ differ whenever any $\sigma_{t_1}\ne\sigma_{t_2}$, violating KKT. The budget-neutral perturbation $K_{t_1}=B/T+\epsilon$, $K_{t_2}=B/T-\epsilon$ yields $\epsilon(\sigma_{t_1}-\sigma_{t_2})a_{B/T}' + O(\epsilon^2) > 0$ for small $\epsilon>0$, so uniform is non-stationary; concavity over the convex constraint set then gives strict suboptimality. \qed
-
-\subsection{Proof of \texorpdfstring{\cref{lem:lower}}{Lemma (Regret lower bound)}}
-\label{sec:proof-lower}
-
-Fix any adaptive policy. We construct two instances; both share identical first $B$ rounds, with $\mathcal{D}_t = \delta_{1/2}$ (a Dirac mass at reward $1/2$) for $t=1,\ldots,B$. Allocating one unit at any of these rounds yields deterministic reward $1/2$.
-
-For the remaining $B$ rounds ($t = B+1,\ldots,2B$), consider two continuations:
-\[
-\text{Instance A: } \mathcal{D}_t = \delta_0, \qquad \text{Instance B: } \mathcal{D}_t = \delta_1.
-\]
-Let $S = \mathbb{E}[\sum_{t=1}^B K_t]$ denote the expected budget spent in the first $B$ rounds. Since the first $B$ rounds are identical, $S$ is the same in both instances.
-
-In Instance A, last $B$ rounds yield zero reward. The offline benchmark spends all $B$ units in the first $B$ rounds, achieving total reward $B/2$. The learner achieves expected reward $S/2$, giving regret $R_T \ge B/2 - S/2$.
-
-In Instance B, last $B$ rounds yield reward 1. The offline benchmark spends all $B$ units in the last $B$ rounds, achieving total reward $B$. The learner spends $S$ in the first $B$ rounds (reward $S/2$) and at most $B-S$ in the last $B$ rounds (reward $B-S$), totaling at most $S/2 + (B-S) = B - S/2$. Hence $R_T \ge B - (B - S/2) = S/2$.
-
-Therefore for any adaptive policy, $R_T \ge \max\{(B-S)/2, S/2\} \ge B/4 = \Omega(T)$. \qed
-
-\subsection{Proof of \texorpdfstring{\cref{thm:regret-upper}}{Theorem (Regret upper bound for GAINS)}}
-\label{sec:proof-regret-upper}
-
-Let $V^*(\boldsymbol\sigma) := \max_{\sum K_t=B,K_t\ge 1}\sum_t \sigma_t a_{K_t}$ be the static oracle value for the true sensitivity profile and $\hat{\boldsymbol\sigma}$ the profiled sensitivity. The regret decomposes as
+%
+This appendix collects complete proofs of the theoretical results stated in \cref{sec:theory}. The proofs are presented in the same order as the main text. We begin with an auxiliary Taylor expansion of the verifier score, then prove the location-scale structure (\cref{thm:loc-scale}), the offline water-filling characterization (\cref{thm:offline}), and finally the worst-case regret lower bound (\cref{lem:lower}).
+%
+\subsection{Auxiliary: Taylor Expansion of the Verifier Score}
+\label{sec:proof-taylor}
+%
+Before turning to \cref{thm:loc-scale}, we record a one-step Taylor expansion of the verifier score around the deterministic Euler point. This expansion is the source of the linear-in-noise leading term that drives the location-scale structure.
+%
+\begin{proposition}[Score Taylor expansion]
+\label{prop:taylor}
+Under \cref{asm:smooth}, conditional on $(X_t, c)$,
 \begin{equation}
-V_{\mathrm{MDP}}^* - V_{\textsc{GAINS}} = \underbrace{V_{\mathrm{MDP}}^* - V^*(\boldsymbol\sigma)}_{\text{(dynamic gap)}} + \underbrace{V^*(\boldsymbol\sigma) - V^*(\hat{\boldsymbol\sigma})}_{\text{(profiling error)}} + \underbrace{V^*(\hat{\boldsymbol\sigma}) - V_{\textsc{GAINS}}}_{\text{(online adjustment)}}.
-\label{eq:regret-decomp-app}
+  S_t \;=\; \Psi_t(\bar{X}_{t-h};\, c)
+        \;+\; g_t\sqrt{h}\,\bigl\langle \nabla\Psi_t(\bar{X}_{t-h};\, c),\, \xi \bigr\rangle
+        \;+\; R_t,
+  \label{eq:taylor-score}
 \end{equation}
-We bound each term.
-
-\paragraph{(i) Dynamic gap: $|V_{\mathrm{MDP}}^* - V^*(\boldsymbol\sigma)| = O(g_t^2 h\cdot T)$.}
-The static oracle treats $\boldsymbol\sigma$ as fixed; the MDP oracle can steer $\sigma_{t-1}$ by selecting noise at step $t$. At step $t+1$, searching $K_{t+1}$ candidates shifts the selected noise from a single random draw to the best-of-$K_{t+1}$ draw; by \cref{thm:loc-scale}\textup{(iii)}, this deviation is $O(g_{t+1}\sqrt{h}\,a_{K_{t+1}})$ in norm. Propagating to $x_t$ and perturbing $\bar X_{t-h}$ by the same order, the resulting change in $\sigma_t$ is
+where the remainder satisfies $|R_t| \le \tfrac{1}{2}\,L_t\,g_t^2\,h\,\|\xi\|^2$ almost surely, and hence $\mathbb{E}[\,|R_t|\mid X_t, c\,] \le \tfrac{1}{2}\,L_t\,g_t^2\,h\,d$.
+\end{proposition}
+%
+\begin{proof}
+The Euler-Maruyama update gives $X_{t-h} = \bar{X}_{t-h} + g_t\sqrt{h}\,\xi$, so $\Psi_t(X_{t-h}; c)$ is the verifier score evaluated at a Gaussian perturbation of the deterministic point $\bar{X}_{t-h}$. A second-order Taylor expansion of $\Psi_t(\cdot\,; c)$ around $\bar{X}_{t-h}$ gives
 \[
-|\Delta\sigma_t| \le g_t\sqrt{h}\,\|\nabla^2\Psi_t\|_{\mathrm{op}}\,O(g_{t+1}\sqrt{h}\,a_{K_{t+1}}) = O(L_t\,g_t\,g_{t+1}\,h\,a_{K_{t+1}}).
+  \Psi_t(X_{t-h}; c) = \Psi_t(\bar{X}_{t-h}; c) + \bigl\langle \nabla\Psi_t(\bar{X}_{t-h}; c),\, X_{t-h} - \bar{X}_{t-h} \bigr\rangle + R_t,
 \]
-For bounded budgets $K_{t+1}\le B$ (so $a_{K_{t+1}} = O(\sqrt{\log B})$), this is $O(g_t^2 h)$ up to logarithmic factors, the same order as the existing remainder in \cref{thm:loc-scale}\textup{(iii)}. Summing over $T$ steps yields $O(g_t^2 h\cdot T)$.
-
-\paragraph{(ii) Profiling error: $|V^*(\boldsymbol\sigma) - V^*(\hat{\boldsymbol\sigma})| = O(g_t^2 h\cdot T)$.}
-$V^*$ is the pointwise maximum of linear functions in $\boldsymbol\sigma$ with coefficients in $[a_1, a_B]$, hence Lipschitz in $\boldsymbol\sigma$ with constant $a_B$. By the path-dependence argument above, $|\sigma_t - \hat\sigma_t| = O(g_t^2 h)$, so $|V^*(\boldsymbol\sigma) - V^*(\hat{\boldsymbol\sigma})|\le a_B\|\boldsymbol\sigma - \hat{\boldsymbol\sigma}\|_1 = O(a_B\cdot g_t^2 h\cdot T)$.
-
-\paragraph{(iii) Online adjustment: empirically bounded.}
-The online controller targets the Jensen gap $\mathbb{E}_{\boldsymbol\sigma}[V^*(\boldsymbol\sigma)] - V^*(\bar{\boldsymbol\sigma})\ge 0$ (\cref{rmk:online-value}). For independent $\sigma_t$ with means $\bar\sigma_t$ and variances $\nu_t^2$, a second-order Taylor expansion of $V^*$ around $\bar{\boldsymbol\sigma}$ gives
+where $R_t = \tfrac{1}{2}(X_{t-h} - \bar{X}_{t-h})^\top \nabla^2\Psi_t(\widetilde{X}; c)\,(X_{t-h} - \bar{X}_{t-h})$ for some $\widetilde{X}$ on the segment joining $\bar{X}_{t-h}$ and $X_{t-h}$. Substituting $X_{t-h} - \bar{X}_{t-h} = g_t\sqrt{h}\,\xi$ yields \cref{eq:taylor-score}. The remainder bound follows from
 \[
-\mathbb{E}[V^*(\boldsymbol\sigma)] - V^*(\bar{\boldsymbol\sigma}) = \frac{1}{2}\sum_{t=1}^T \frac{[\phi'(K_t^*)]^2}{\gamma_t}\cdot\frac{\sum_{s\ne t}\gamma_s^{-1}}{\sum_s \gamma_s^{-1}}\,\nu_t^2 + O\Bigl(\sum_t\mathbb{E}[|\sigma_t-\bar\sigma_t|^3]\Bigr),
+  |R_t| \le \tfrac{1}{2}\|\nabla^2\Psi_t(\widetilde{X}; c)\|_{\mathrm{op}}\,\|g_t\sqrt{h}\,\xi\|^2 \le \tfrac{1}{2}L_t\,g_t^2\,h\,\|\xi\|^2,
 \]
-where $\gamma_t := \bar\sigma_t|\phi''(K_t^*)|$. A full characterization of how much the controller recovers requires a dynamic-programming analysis of the stopping rule, which we leave to future work; the ablation in \cref{tab:sd_400_ablation} provides empirical evidence that online control consistently improves upon offline-only on every metric.
+using \cref{asm:smooth}. Taking conditional expectations and using $\mathbb{E}[\|\xi\|^2 \mid X_t, c] = d$ completes the proof.
+\end{proof}
+%
+\subsection{Proof of \texorpdfstring{\cref{thm:loc-scale}}{Theorem 5 (Location-Scale Structure)}}
+\label{sec:proof-loc-scale}
+%
+The proof has three parts. Part (i) reduces the verifier score at a noisy candidate to a one-dimensional Gaussian by projecting the noise onto the gradient direction. Part (ii) controls the conditional variance using the remainder bound from \cref{prop:taylor}. Part (iii) lifts the single-candidate result to the maximum over $K$ candidates and identifies the dependence on $K$ through the Gaussian order-statistic constant $a_K$.
+%
+\paragraph{Part (i): location-scale form.}
+When $\|\nabla\Psi_t(\bar{X}_{t-h}; c)\| > 0$, write
+\[
+  \langle \nabla\Psi_t, \xi \rangle = \|\nabla\Psi_t\|\,Z_t,
+  \qquad
+  Z_t := \langle \nabla\Psi_t / \|\nabla\Psi_t\|,\, \xi \rangle.
+\]
+Conditional on $(X_t, c)$, the unit vector $\nabla\Psi_t / \|\nabla\Psi_t\|$ is deterministic, and $\xi \sim \mathcal{N}(0, I)$. The projection of an isotropic Gaussian onto a fixed unit vector is standard normal, so $Z_t \sim \mathcal{N}(0,1)$. Substituting into \cref{prop:taylor} yields $S_t = \mu_t + \sigma_t Z_t + R_t$ with $\sigma_t = g_t\sqrt{h}\,\|\nabla\Psi_t\|$. In the degenerate case $\nabla\Psi_t(\bar{X}_{t-h}; c) = 0$, we have $\sigma_t = 0$ and the linear term vanishes, so the result holds trivially with $Z_t$ defined arbitrarily.
+%
+\paragraph{Part (ii): variance approximation.}
+We now show that the conditional variance of $S_t$ is dominated by the linear term $\sigma_t Z_t$. Decompose
+\[
+  \operatorname{Var}(S_t \mid X_t, c) = \operatorname{Var}(\sigma_t Z_t + R_t) = \sigma_t^2 + 2\,\operatorname{Cov}(\sigma_t Z_t, R_t) + \operatorname{Var}(R_t).
+\]
+By Cauchy-Schwarz,
+\[
+  |\operatorname{Cov}(\sigma_t Z_t, R_t)| \le \sqrt{\operatorname{Var}(\sigma_t Z_t)}\,\sqrt{\operatorname{Var}(R_t)} \le \sigma_t\,\sqrt{\mathbb{E}[R_t^2]}.
+\]
+Using \cref{prop:taylor}, $|R_t| \le \tfrac{1}{2}L_t g_t^2 h \|\xi\|^2$, hence
+\[
+  \mathbb{E}[R_t^2 \mid X_t, c] \le \tfrac{1}{4}L_t^2 g_t^4 h^2\,\mathbb{E}[\|\xi\|^4] = \tfrac{1}{4}L_t^2 g_t^4 h^2\,d(d+2),
+\]
+because $\xi\sim\mathcal{N}(0,I)$ implies $\mathbb{E}[\|\xi\|^4] = d(d+2)$. Therefore
+\[
+  |\operatorname{Cov}(\sigma_t Z_t, R_t)| \le \tfrac{1}{2}L_t\sqrt{d(d+2)}\,\sigma_t g_t^2 h = O_{d, L_t, \|\nabla\Psi_t\|}(g_t^3 h^{3/2}),
+\]
+where the implicit constant absorbs $L_t$ and $\|\nabla\Psi_t\|$. Likewise,
+\[
+  \operatorname{Var}(R_t) \le \mathbb{E}[R_t^2] \le \tfrac{1}{4}L_t^2 g_t^4 h^2\,d(d+2) = O_{d, L_t}(g_t^4 h^2),
+\]
+which is lower order than the covariance term as $g_t\sqrt{h}\to 0$. Combining yields $\operatorname{Var}(S_t \mid X_t, c) = \sigma_t^2 + O_{d, L_t, \|\nabla\Psi_t\|}(g_t^3 h^{3/2})$.
+%
+\paragraph{Part (iii): expected gain factorization.}
+Apply Part (i) to each of the $K$ independent candidates: $S_t^{(k)} = \mu_t + \sigma_t Z_t^{(k)} + R_t^{(k)}$, where $Z_t^{(k)} = \langle \nabla\Psi_t / \|\nabla\Psi_t\|, \xi^{(k)}\rangle \sim \mathcal{N}(0,1)$ are i.i.d.\ across $k$. Taking the maximum,
+\[
+  \max_k S_t^{(k)} = \mu_t + \max_k\bigl(\sigma_t Z_t^{(k)} + R_t^{(k)}\bigr).
+\]
+Using the elementary inequality $\bigl|\max_k(a_k + b_k) - \max_k a_k\bigr| \le \max_k |b_k|$, we obtain
+\[
+  \bigl|\max_k S_t^{(k)} - (\mu_t + \sigma_t \max_k Z_t^{(k)})\bigr| \le \max_k |R_t^{(k)}|.
+\]
+Since $\max_k |R_t^{(k)}| \le \sum_k |R_t^{(k)}|$, taking conditional expectations gives
+\[
+  \mathbb{E}\bigl[\max_k |R_t^{(k)}| \mid X_t, c\bigr] \le K \cdot \tfrac{1}{2} L_t g_t^2 h\,d.
+\]
+Therefore
+\[
+  G_t(K) = \mathbb{E}\bigl[\max_k S_t^{(k)} \mid X_t, c\bigr] - \mu_t = \sigma_t\,a_K + O_{K,d,L_t}(g_t^2 h),
+\]
+where the implicit constant in $O_{K,d,L_t}(\cdot)$ depends on $K$, the dimension $d$, and the Hessian bound $L_t$ from \cref{asm:smooth}, but not on the diffusion coefficient $g_t$ or the verifier gradient $\nabla\Psi_t$. Substituting $\sigma_t = g_t\sqrt{h}\,\|\nabla\Psi_t(\bar{X}_{t-h}; c)\|$ yields the explicit form. \qed
+%
+\begin{remark}[Sensitivity-scaling mechanism]
+\cref{thm:loc-scale} identifies the per-step sensitivity $\sigma_t$ as the product of three quantities: the diffusion coefficient $g_t$, the discretization step $\sqrt{h}$, and the verifier gradient norm $\|\nabla\Psi_t(\bar{X}_{t-h}; c)\|$ at the deterministic Euler point. Timesteps with large $g_t$ (strong noise injection) or large $\|\nabla\Psi_t\|$ (large verifier gradient) therefore benefit most from noise search, which explains the non-uniform sensitivity patterns observed in offline profiling. The $C^2$ smoothness assumption on $\Psi_t$ amounts to requiring that both the denoising network $D_\theta$ and the verifier $v$ are twice differentiable, which holds for neural networks with standard smooth activation functions. The per-timestep Hessian bound $L_t$ is typically larger at early timesteps, where the verifier score function has more curvature, and smaller at late timesteps, where denoised predictions are nearly converged.
+\end{remark}
+%
+\begin{corollary}[SDE-based approximate allocation]
+\label{cor:sde-alloc}
+Under \cref{asm:smooth}, with step size $h$ and diffusion coefficients $\{g_t\}_{t=1}^T$, for any fixed budget allocation $\{K_t\}_{t=1}^T$, the following equality holds conditional on the trajectory $\{X_t\}_{t=1}^T$ (equivalently, almost surely along each realized path):
+\begin{equation}
+  \sum_{t=1}^{T} G_t(K_t) = \sum_{t=1}^{T} g_t\sqrt{h}\,\|\nabla\Psi_t(\bar{X}_{t-h}; c)\|\,a_{K_t} + \sum_{t=1}^{T} O_{K_t,d,L_t}(g_t^2 h).
+  \label{eq:aggregate-gain}
+\end{equation}
+Dropping the second-order remainder reduces the offline allocation problem to a concave resource allocation with per-step weights $\sigma_t = g_t\sqrt{h}\,\|\nabla\Psi_t\|$, which is the formulation~\eqref{eq:alloc} in \cref{sec:theory}.
+\end{corollary}
+%
+\subsection{Proof of \texorpdfstring{\cref{thm:offline}}{Theorem 6 (Offline Water-Filling)}}
+\label{sec:proof-offline}
+%
+The proof has three parts. Part (i) shows that the prompt-independence assumption collapses the per-prompt allocation into a single deterministic problem. Part (ii) derives a discrete KKT sandwich via an exchange argument and establishes weak monotonicity $\sigma_{t_1} > \sigma_{t_2} \Rightarrow K_{t_1}^* \ge K_{t_2}^*$ at the integer level. Part (iii) shows that the uniform allocation $K_t \equiv B/T$ is strictly suboptimal whenever the sensitivities $\{\sigma_t\}$ are not all equal.
+%
+\paragraph{Part (i): prompt-independence.}
+Under the theorem's assumption that $\sigma_t$ depends only on the timestep index, the leading-order term $\sigma_t a_{K_t}$ in $G_t(K_t)$ depends only on $(t, K_t)$. By the additional uniformity assumption that the $O_{K,d,L_t}(g_t^2 h)$ remainder in \cref{thm:loc-scale}\textup{(iii)} is bounded uniformly in $(c, x_t)$, the surrogate objective $\sum_t \sigma_t a_{K_t}$ in \cref{eq:alloc} is the same function of $\{K_t\}$ across all prompts and initial states, up to a uniform $O(g_t^2 h \cdot T)$ remainder absorbed in the dropping. Any $\{K_t^*\}$ solving \cref{eq:alloc} is therefore simultaneously optimal for the surrogate across all prompts.
+%
+\paragraph{Part (ii): discrete KKT sandwich and weak monotonicity.}
+We work directly with the integer problem via a discrete-exchange argument. By concavity of $a_K$ (\citealt{david2003order}, Ch.~4) restricted to $K \ge 1$, the marginal gain $\Delta a_K := a_{K+1} - a_K$ is non-increasing for $K \ge 1$. The location-scale structure makes $a_K$ the same function across all timesteps, so $\Delta a_K$ is $t$-independent.
 
-\paragraph{Combining.}
-Terms (i) and (ii) are each $O(g_t^2 h\cdot T)$; term (iii) is non-negative and bounded by the Jensen gap. Hence $V_{\mathrm{MDP}}^* - V_{\textsc{GAINS}} = O(g_t^2 h\cdot T)$, matching the lower bound in \cref{lem:lower} up to the SDE linearization scale. \qed
+\emph{Discrete KKT sandwich.} At any optimum $\{K_t^*\}$, define the discrete marginal price $\lambda^* := \min_{t:\,K_t^* > 1}\,\sigma_t\,\Delta a_{K_t^* - 1}$ (or $\lambda^* := 0$ if all $K_t^* = 1$). For every active timestep ($K_t^* > 1$), the inequality
+\[
+  \sigma_t\,\Delta a_{K_t^* - 1} \;\ge\; \lambda^* \;\ge\; \sigma_t\,\Delta a_{K_t^*}
+\]
+holds: the lower bound is by definition of $\lambda^*$. For the upper bound, let $s \in \arg\min_{r:\,K_r^* > 1}\,\sigma_r\,\Delta a_{K_r^*-1}$ achieve $\lambda^*$, and consider the \emph{reverse} exchange: move one unit from $s$ to $t$ (feasible since $K_s^* > 1$, and budget-neutral). The objective change is $\sigma_t \Delta a_{K_t^*} - \sigma_s \Delta a_{K_s^* - 1}$, which must be $\le 0$ at optimality, yielding $\sigma_t \Delta a_{K_t^*} \le \sigma_s \Delta a_{K_s^*-1} = \lambda^*$. For inactive timesteps ($K_t^* = 1$) only the right inequality $\sigma_t\,\Delta a_1 \le \lambda^*$ is required (otherwise moving a unit \emph{into} $t$ would improve).
+
+\emph{Weak monotonicity.} Suppose $\sigma_{t_1} > \sigma_{t_2}$ but $K_{t_1}^* < K_{t_2}^*$ for some pair. The swap $(K_{t_1}^*, K_{t_2}^*) \to (K_{t_1}^* + 1, K_{t_2}^* - 1)$ (feasible since $K_{t_2}^* \ge 2$) changes the objective by
+\[
+  \sigma_{t_1}\,\Delta a_{K_{t_1}^*} - \sigma_{t_2}\,\Delta a_{K_{t_2}^* - 1} > 0,
+\]
+since $\Delta a_{K_{t_1}^*} \ge \Delta a_{K_{t_2}^* - 1}$ (because $K_{t_1}^* + 1 \le K_{t_2}^*$ and $\Delta a$ is non-increasing for $K \ge 1$) and $\sigma_{t_1} > \sigma_{t_2}$. This contradicts optimality, so $K_{t_1}^* \ge K_{t_2}^*$.
+
+\emph{Strictness at the integer level.} The integer problem does \emph{not} guarantee strict monotonicity even when both timesteps are interior. Concretely, if $\sigma_{t_1}/\sigma_{t_2} \le \Delta a_{K-1}/\Delta a_K$ at the relevant $K$, the sandwich admits $K_{t_1}^* = K_{t_2}^* = K$. (Example: $T=2$, $B=6$, $\sigma_1=1.01$, $\sigma_2=1$; the optimum is $(3, 3)$.) The continuous relaxation $a_K \mapsto \tilde a_K \in C^1([1,\infty))$ recovers strict monotonicity unconditionally, but the integer optimum can have ties.
+
+Steps stuck at the floor $K_t^* = 1$ may have arbitrary $\sigma_t$ ordering: a small budget $B$ relative to $T$ can pin many timesteps at the floor regardless of their sensitivity. (Example: $T = 3$, $B = 4$, $(\sigma_1, \sigma_2, \sigma_3) = (10, 1, 0.5)$ optimally allocates $(2, 1, 1)$, even though $\sigma_2 > \sigma_3$.) Weak monotonicity concerns only the active set.
+%
+\paragraph{Part (iii): dominance of non-uniform allocation.}
+We separate two cases.
+
+\emph{Case $B = T$.} The constraints $\sum_t K_t = B$ and $K_t \ge 1$ force $K_t \equiv 1$, so the uniform allocation is the unique feasible point and dominates trivially. There is no room for reallocation, regardless of $\{\sigma_t\}$.
+
+\emph{Case $B > T$ (continuous relaxation).} Uniform allocation $K_t \equiv B/T$ is feasible only when $T \mid B$; otherwise the closest integer uniform is feasible up to a $\pm 1$ rounding. The strictness statement in the theorem is a property of the continuous relaxation, in which $\{K_t\}$ are allowed to range over $[1, \infty)^T$. To work in this relaxation, extend $a_K$ to a $C^1$ strictly concave function $\tilde a$ on $[1, \infty)$ that interpolates the integer values $\{a_K\}_{K \ge 1}$. Such an extension exists because the discrete first-differences $\{\Delta a_K\}_{K \ge 1}$ form a strictly decreasing positive sequence (\citealt{david2003order}, Ch.~4): any smooth interpolant whose derivative is strictly decreasing and matches $\Delta a_K$ in average across each unit interval works (e.g., a $C^1$ Hermite spline with derivative values $\tilde a'(K) := \tfrac12(\Delta a_{K-1} + \Delta a_K)$ at each integer $K \ge 2$ and $\tilde a'(1) := \Delta a_1$). At the uniform point, the marginal gains are $\tilde G_t'(B/T) = \sigma_t\, \tilde a'(B/T)$. Whenever $\sigma_{t_1} \neq \sigma_{t_2}$ for some pair $(t_1, t_2)$, these marginals differ, so the stationarity condition from Part (ii) is violated. Because $B > T$ (with both integers), $B/T \ge 1 + 1/T > 1$, so the lower-bound constraint $K_t \ge 1$ is inactive at the uniform point, and the budget-neutral perturbation $K_{t_1} = B/T + \epsilon$, $K_{t_2} = B/T - \epsilon$ stays feasible for small $\epsilon > 0$. Expanding to first order,
+\begin{align*}
+  &\bigl[\tilde G_{t_1}(B/T + \epsilon) + \tilde G_{t_2}(B/T - \epsilon)\bigr] - \bigl[\tilde G_{t_1}(B/T) + \tilde G_{t_2}(B/T)\bigr] \\
+  &\quad= \epsilon\,(\sigma_{t_1} - \sigma_{t_2})\,\tilde a'(B/T) + O(\epsilon^2) > 0
+\end{align*}
+when $\sigma_{t_1} > \sigma_{t_2}$ (relabel if needed), where the common factor $\tilde a'(B/T)$ can be extracted because the location-scale structure makes $a_K$ (and hence $\tilde a$) independent of $t$. Hence the uniform allocation is not a stationary point of the continuous relaxation, and strict concavity of $\tilde a$ together with concavity of the constraint set yields strict suboptimality: $\sum_t \sigma_t\,\tilde a(K_t^\star) > \sum_t \sigma_t\,\tilde a(B/T)$ for the continuous optimizer $\{K_t^\star\}$ when $\{\sigma_t\}$ are not all equal. The local first-order improvement at the uniform point scales linearly in any pairwise $\sigma$-gap $|\sigma_{t_1} - \sigma_{t_2}|$ (a directional, not global, statement); we adopt the across-timestep variance as our dispersion measure but do not claim a global monotonicity of the gap in this measure. The integer optimum can fall short of the continuous one by a discrete-marginal step (cf.\ the example in Part (ii) where ties at the integer level absorb small $\sigma$-gaps); strictness in the integer problem is therefore conditional on the $\sigma$-gap exceeding a discrete-marginal step, while the continuous relaxation gives strictness unconditionally. \qed
+%
+\subsection{Proof of \texorpdfstring{\cref{lem:lower}}{Lemma 7 (Regret Lower Bound)}}
+\label{sec:proof-lower}
+%
+The proof proceeds by an indistinguishability argument. We construct two problem instances that are statistically identical over the first $B$ rounds, so that any adaptive policy must commit to the same expected first-half spending on both. We then show that the two continuations have opposite optimal allocations, forcing linear regret on at least one instance.
+
+Fix any adaptive policy and let $T = 2B$. For $t = 1, \ldots, B$, both instances set $\mathcal{D}_t = \delta_{1/2}$, the Dirac mass at reward $1/2$. Each unit allocated in this first half therefore returns deterministic reward $1/2$.
+
+The two instances diverge in the second half $t = B+1, \ldots, 2B$:
+\[
+  \text{Instance A: } \mathcal{D}_t = \delta_0,
+  \qquad
+  \text{Instance B: } \mathcal{D}_t = \delta_1.
+\]
+Let $S = \mathbb{E}\bigl[\sum_{t=1}^B K_t\bigr]$ denote the expected budget the policy spends in the first half. The learner's only observations during rounds $1, \ldots, B$ are the distributions $\mathcal{D}_t$, which agree across the two instances, so its expected first-half allocation $S$ is the same on both instances.
+
+\emph{Instance A.} The second half returns zero reward, so the offline benchmark spends all $B$ units in the first half, achieving total reward $B/2$. The learner's expected reward is $S/2$, since each first-half unit returns $1/2$ and second-half units return $0$. The expected regret is therefore
+\[
+  \mathbb{E}[R_T] \;\ge\; \frac{B}{2} - \frac{S}{2}.
+\]
+
+\emph{Instance B.} The second half returns reward $1$ per unit, so the offline benchmark spends all $B$ units there, achieving total reward $B$. The learner spends $S$ in expectation in the first half (expected reward $S/2$) and at most $B - S$ in expectation in the second half (expected reward at most $B - S$), giving total expected reward at most $S/2 + (B - S) = B - S/2$. The expected regret is therefore
+\[
+  \mathbb{E}[R_T] \;\ge\; B - \Bigl(B - \frac{S}{2}\Bigr) = \frac{S}{2}.
+\]
+
+Combining the two cases, for any adaptive policy with expected first-half spending $S \in [0, B]$,
+\[
+  \mathbb{E}[R_T] \;\ge\; \max\Bigl\{\frac{B - S}{2},\;\frac{S}{2}\Bigr\} \;\ge\; \frac{B}{4} = \Omega(T),
+\]
+where the last inequality holds because $\max\{(B-S)/2, S/2\} \ge B/4$ for all $S \in [0, B]$, with the minimum attained at $S = B/2$. Since the bound applies for every choice of $S$, at least one of the two instances satisfies $\mathbb{E}[R_T] \ge B/4$, which establishes the worst-case lower bound. \qed
+%
+\begin{remark}[Interpretation of the lower bound]
+\cref{lem:lower} establishes that linear regret is unavoidable for any fully adaptive policy when the underlying distributions $\{\mathcal{D}_t\}$ are drawn from a worst-case adversarial family. The construction exploits hidden information in the second half of the trajectory. Until round $t$ is reached, the learner cannot distinguish Instance~A from Instance~B based on the observable history, so any commitment to spend in the first half (which is correct when the future is bad) or to save for the second half (which is correct when the future is good) is provably suboptimal on the other instance. In the diffusion setting, this means a worst-case adversarial choice of per-prompt sensitivities $\boldsymbol{\sigma}(c, x_t)$ would force linear regret on any online controller. The Jensen-gap argument (\cref{rmk:online-value}) sidesteps this worst case by exploiting the convexity of $V^*$ in $\boldsymbol{\sigma}$: when sensitivities are drawn from a structured (non-adversarial) distribution, the online controller recovers a positive fraction of the gap, as confirmed empirically by the offline-vs-online ablation in \cref{tab:sd_400_ablation}.
+\end{remark}
