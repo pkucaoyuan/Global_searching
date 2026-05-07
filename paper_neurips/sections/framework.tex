@@ -13,7 +13,7 @@ where $x_t$ is the latent at timestep $t$, $c$ is the conditioning signal, and $
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.78\linewidth]{figures/fig_architecture.pdf}
+\includegraphics[width=0.62\linewidth]{figures/fig_architecture.pdf}
 \caption{Two-level view of noise trajectory search. The \emph{global scheduler}~$\mathcal{G}$ (top) receives budget~$B$ and distributes per-step budgets $\{K_t\}$ across the trajectory. At each timestep, the \emph{local search operator}~$\mathcal{L}_t$ (bottom) evaluates $K_t$ noise candidates and selects the best. Bars depict the non-uniform allocation: timesteps where replacing the noise candidate yields larger quality gains receive bigger budgets.}
 \label{fig:architecture}
 \end{figure}
