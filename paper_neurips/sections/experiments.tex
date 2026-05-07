@@ -63,7 +63,7 @@ EDM ($T=18$): $\epsilon = 0.4$, $\lambda = 0.15$, $N = 4$, $\beta_g = 0.3$, $\be
 \end{minipage}
 \end{table}
 
-\textsc{GAINS} improves both absolute scores and the \emph{rate} at which quality scales with NFE (\cref{tab:sd_budget,tab:edm_budget}). On SD, the Brightness margin widens from $+0.0223$ (400 NFE) to $+0.0321$ (800 NFE); \textsc{GAINS}/400 beats Uniform/500 (\textbf{20\%} fewer) and \textsc{GAINS}/400 Compressibility exceeds Uniform/800 (\textbf{50\%} fewer). On EDM, \textsc{GAINS}/144 matches or beats Uniform/288 (\textbf{50\%} / \textbf{37.5\%} fewer). The larger EDM margin tracks \cref{thm:offline}\textup{(iii)}: EDM's $\{\sigma_t\}$ concentrate on a middle segment, giving higher $\mathrm{Var}(\sigma_t)$ than SD's early-spread profile (\cref{sec:appendix-experiments}). Seed-to-seed std also tightens (e.g., $\pm 0.005$ vs.\ $\pm 0.015$ at EDM/144).
+\textsc{GAINS} improves both absolute scores and the \emph{rate} at which quality scales with NFE (\cref{tab:sd_budget,tab:edm_budget}). On SD, the Brightness margin widens from $+0.0223$ (400 NFE) to $+0.0321$ (800 NFE); \textsc{GAINS}/400 beats Uniform/500 (\textbf{20\%} fewer) and matches Uniform/800 on Compressibility (\textbf{50\%} fewer). On EDM, \textsc{GAINS}/144 matches or beats Uniform/288 (\textbf{50\%}/\textbf{37.5\%} fewer); the larger EDM margin tracks \cref{thm:offline}\textup{(iii)}, since EDM's $\{\sigma_t\}$ concentrate on a middle segment with higher $\mathrm{Var}(\sigma_t)$ than SD's early-spread profile. Seed-to-seed std also tightens ($\pm 0.005$ vs.\ $\pm 0.015$ at EDM/144).
 
 \subsection{Ablation, Generalization, Operator and Flow Compatibility}
 \label{sec:exp-ablation}
