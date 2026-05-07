@@ -35,8 +35,8 @@ Empirically, on text-to-image (Stable Diffusion), class-conditional (EDM~\citep{
 \label{sec:related-lit}
 
 \paragraph{Inference-time noise search.}
-A growing body of work improves diffusion sample quality by refining noise variables at generation time.
-Early approaches select among multiple full trajectories~\citep{ma2024inference} or optimize noise via gradient- or zero-order updates at every timestep~\citep{tang2024dno,qi2024noises,zhou2025golden}.
+A growing body of work improves diffusion sample quality by refining noise variables at generation time, paralleling LLM inference-time scaling~\citep{snell2024scaling,brown2024monkeys}.
+Early approaches select among multiple full trajectories~\citep{ma2024inference} or optimize noise via gradient- or zero-order updates per timestep~\citep{tang2024dno,qi2024noises,zhou2025golden}.
 More recent methods introduce richer local operators along three threads: greedy or two-phase search at each step~\citep{ramesh2025nts,kim2025rbf,zhang2025tscend,lee2025abcd,ttsnap2025}, particle- and tree-based search with non-uniform particle budgets across stages~\citep{singhal2025fk,kim2025psi,zhang2025classical}, and amortized or learned per-step compute~\citep{eyring2025hypernetworks,zhang2025adadiff,ye2025tpdm,yeh2025demons,sundaresha2025vt}.
 The third thread modifies per-step effort but primarily adapts the base sampler rather than scheduling additional search compute.
 These methods improve sample quality by designing richer \emph{local} search operators applied within each timestep. The complementary question of \emph{how much} budget each timestep should receive is typically resolved by uniform allocation or a hand-tuned schedule (e.g., particle counts fixed in advance in~\citet{singhal2025fk,kim2025psi}); we build on these local operators and address the global allocation question directly.
@@ -44,12 +44,12 @@ These methods improve sample quality by designing richer \emph{local} search ope
 
 \paragraph{Connections to bandits and resource allocation.}
 Each component of the problem has a classical counterpart.
-The local operator (evaluate $K$ noise candidates, keep the best) is a fixed-budget best-arm identification problem: split a sample budget across arms with unknown means and return the empirical best~\citep{chen2000simulation}.
-The global scheduler is a sequential budget-allocation problem across the $T$ steps~\citep{ibaraki1988resource}.
+The local operator (evaluate $K$ noise candidates, keep the best) is a fixed-budget best-arm identification problem: split a sample budget across arms with unknown means and return the empirical best~\citep{chen2000simulation,kaufmann2016complexity,lattimore2020bandit}.
+The global scheduler is a sequential budget-allocation problem across the $T$ steps~\citep{ibaraki1988resource,boyd2004convex}.
 Our contribution to this perspective is a result specific to the diffusion setting (\cref{thm:loc-scale}) that decomposes the per-step expected gain into a sensitivity factor and a sample-size factor; this decomposition reduces the across-timestep allocation problem to a closed-form water-filling solution and gives a matching regret lower bound of order $T$.
 
 \paragraph{Theoretical foundations of diffusion models.}
 Several recent theoretical results provide useful context.
 \citet{gao2024reward} develop a continuous-time RL framework for reward-directed diffusion and show that the optimal exploration policy has time-varying variance, a structure consistent with the location-scale model we adopt.
-\citet{tang2024contractive} characterize a per-timestep error sensitivity function governing how score estimation errors propagate through the backward process; their sensitivity function is conceptually related to our per-step sensitivity, though it captures estimation error rather than verifier-score sensitivity.
+\citet{tang2024contractive} characterize a per-timestep error sensitivity for score-estimation propagation, conceptually related to our per-step sensitivity but capturing estimation rather than verifier-score sensitivity; \citet{chen2023sampling} establish polynomial convergence of score-based samplers under minimal data assumptions, foundational for the SDE discretization we use in \cref{sec:theory}.
 Our work complements these analyses by focusing on the budget allocation problem: we show that per-step gains decompose into a sensitivity factor and a sample-size effect, and use this structure to characterize optimal scheduling.

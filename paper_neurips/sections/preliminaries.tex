@@ -11,13 +11,13 @@ A diffusion model generates a sample in $\mathbb{R}^d$ over $T$ discrete denoisi
   \qquad \varepsilon_t\sim\mathcal{N}(0, I_d),
   \label{eq:ddpm-reverse}
 \end{equation}
-from $x_T\sim\mathcal{N}(0, I_d)$ to $x_0$, where $\varepsilon_\theta$ is a learned noise predictor, $\tilde\sigma_t$ is the (fixed) reverse-process noise scale, and $\varepsilon_t \in \mathbb{R}^d$ is the per-step injected Gaussian noise (with $I_d$ the $d{\times}d$ identity). Score-based~\citep{song2019generative} and flow-based samplers~\citep{lipman2023flow,liu2023flow} share the same structure: a $T$-step backward trajectory driven by per-step stochastic noise $\varepsilon_t$.
+from $x_T\sim\mathcal{N}(0, I_d)$ to $x_0$, where $\varepsilon_\theta$ is a learned noise predictor, $\tilde\sigma_t$ is the (fixed) reverse-process noise scale, and $\varepsilon_t \in \mathbb{R}^d$ is the per-step injected Gaussian noise (with $I_d$ the $d{\times}d$ identity). Score-based~\citep{song2019generative}, flow-based~\citep{lipman2023flow,liu2023flow}, and accelerated samplers~\citep{song2021ddim,lu2022dpm} share the same structure: a $T$-step backward trajectory driven by per-step stochastic noise $\varepsilon_t$.
 
 \paragraph{Inference-time noise search.}
 
 \begin{definition}[Verifier]
 \label{def:verifier}
-Let $\mathcal{X} \subseteq \mathbb{R}^d$ denote the sample space (e.g., images or latents) and $\mathcal{C}$ the space of conditioning signals (e.g., text prompts or class labels). A \emph{verifier} $v : \mathcal{X} \times \mathcal{C} \to \mathbb{R}$ scores a generated sample $x \in \mathcal{X}$ against its conditioning signal $c \in \mathcal{C}$, returning a scalar quality measure. The verifier is fixed during search and treated as a black box; results hold for any bounded, query-efficient $v$.
+Let $\mathcal{X} \subseteq \mathbb{R}^d$ denote the sample space (e.g., images or latents) and $\mathcal{C}$ the space of conditioning signals (e.g., text prompts or class labels). A \emph{verifier} $v : \mathcal{X} \times \mathcal{C} \to \mathbb{R}$ scores a sample $x \in \mathcal{X}$ against signal $c \in \mathcal{C}$ (analogous to outcome/process verifiers for LLMs~\citep{cobbe2021gsm8k,lightman2023verify}). It is fixed during search and treated as a black box; results hold for any bounded, query-efficient $v$.
 \end{definition}
 
 \begin{definition}[NFE budget]
