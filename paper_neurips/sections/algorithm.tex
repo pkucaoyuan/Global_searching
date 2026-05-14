@@ -71,7 +71,7 @@ $\Psi_t(\cdot\,;c)\in C^2(\mathbb{R}^d)$, and there exists $L_t<\infty$ such tha
 Under \cref{asm:smooth}, define $\mu_t := \Psi_t(\bar{X}_{t-h};c)$ and $\sigma_t := g_t\sqrt{h}\,\|\nabla\Psi_t(\bar{X}_{t-h};c)\|$. Conditional on $(X_t,c)$:
 \begin{enumerate}
 \item[\textup{(i)}] there exists $Z_t\sim\mathcal{N}(0,1)$ (the projection of $\xi$ onto the unit gradient direction $\nabla\Psi_t(\bar X_{t-h};c)/\|\nabla\Psi_t(\bar X_{t-h};c)\|$ when $\sigma_t>0$; arbitrary when $\sigma_t=0$, in which case the linear term vanishes) such that $S_t = \mu_t + \sigma_t Z_t + R_t$ with remainder $|R_t|\le\tfrac{1}{2}L_t g_t^2 h\|\xi\|^2$ a.s.\ ($Z_t$ and $R_t$ are not in general independent);
-\item[\textup{(ii)}] as $g_t\sqrt{h}\to 0$, $\mathrm{Var}(S_t\mid X_t,c) = \sigma_t^2 + O_{d, L_t, \|\nabla\Psi_t\|}(g_t^3 h^{3/2})$, where the implicit constant depends on dimension $d$, the local Hessian bound $L_t$, and the gradient norm at $\bar X_{t-h}$;
+\item[\textup{(ii)}] as $g_t\sqrt{h}\to 0$, $\mathrm{Var}(S_t\mid X_t,c) = \sigma_t^2 + O_{d, L_t, \|\nabla\Psi_t\|}(g_t^3 h^{3/2})$, where the implicit constant depends on $d$, the Hessian bound $L_t$, and the gradient norm at $\bar X_{t-h}$;
 \item[\textup{(iii)}] for $K$ i.i.d.\ noise candidates $\xi^{(k)}\stackrel{\text{iid}}\sim\mathcal N(0,I)$ at step $t$ (random search), let $S_t^{(k)}:=\Psi_t(\bar X_{t-h}+g_t\sqrt h\,\xi^{(k)};c)$. Then
 \begin{equation}
 G_t(K) := \mathbb{E}\Bigl[\max_{1\le k\le K} S_t^{(k)}\,\Big|\,X_t,c\Bigr] - \mu_t = \sigma_t\,a_K + O_{K,d,L_t}(g_t^2 h),
