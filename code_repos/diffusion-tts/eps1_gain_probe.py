@@ -12,7 +12,7 @@ from main import import_sd, import_edm, get_scorer
 
 
 def run_sd_probe(args, output_csv: Path):
-    StableDiffusionPipeline, DDIMScheduler, BrightnessScorer, CompressibilityScorer, CLIPScorer = import_sd()
+    StableDiffusionPipeline, DDIMScheduler, BrightnessScorer, CompressibilityScorer, CLIPScorer, ImageRewardScorer = import_sd()
     scorer = get_scorer("sd", args.scorer, BrightnessScorer, CompressibilityScorer, CLIPScorer=CLIPScorer)
 
     model_id = "runwayml/stable-diffusion-v1-5"

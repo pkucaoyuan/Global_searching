@@ -1072,6 +1072,93 @@ class StableDiffusionPipeline(
                 f"revert_on_negative={params.get('revert_on_negative', False)}"
             )
         
+        # Initialize rollover-style online-only baselines
+        # RBF (Kim et al. 2025, rollover budget forcing): uniform base quota; accept first candidate
+        #   beating global incumbent r*, roll unused quota to next step; on exhaust take step-best.
+        # VT (verifier threshold): accept first candidate above per-step threshold tau_i; roll leftovers.
+        # Both reuse the eps-greedy local operator so only the scheduling rule differs from GAINS.
+        if method in ("rbf", "vt"):
+            _steps_n = len(timesteps)
+            rv_budget = int(params.get("total_budget") or params.get("K", 8) * _steps_n)
+            # Per-step quota is RBF/VT's own tunable. Either set directly via step_quota
+            # (e.g. 12), or derived from budget (optionally inflated by quota_scale under
+            # force_spend). force_spend additionally hard-caps cumulative spend at
+            # rv_budget and tops up at the final step, so measured NFE == total_budget.
+            if params.get("step_quota"):
+                _kq = int(params["step_quota"])
+                base_quota = [_kq] * _steps_n
+            else:
+                _scale = float(params.get("quota_scale", 1.5)) if params.get("force_spend") else 1.0
+                _pool = int(round(rv_budget * _scale))
+                _kf = max(1, _pool // _steps_n)
+                _extra = max(0, _pool - _kf * _steps_n)
+                base_quota = [_kf + 1] * _extra + [_kf] * (_steps_n - _extra)
+            search_carry = 0
+            rv_spent_total = 0
+            rbf_r_star = None
+            vt_tau_list = params.get("vt_tau")
+            if method == "vt" and vt_tau_list is None:
+                # calibration mode: threshold never triggers -> uniform consumption, logs step_best
+                vt_tau_list = [float("inf")] * _steps_n
+            print(
+                f"[SD][{method.upper()}] base quota: pool={sum(base_quota)}, per-step~{base_quota[0]}, "
+                f"budget={rv_budget}, force_spend={bool(params.get('force_spend'))}"
+            )
+
+        # Offline-only (eps_greedy_1) with explicit total_budget: scale the legacy two-level
+        # profile (head 20 steps @K1=25 : rest @K2=15, i.e. pool ratio 500:450) to the budget,
+        # preserving the water-filling shape. Without total_budget, legacy K1/K2 are used as-is.
+        if method == "eps_greedy_1" and params.get("eps1_quota"):
+            # Explicit per-step allocation {K_t} (e.g. water-filling from a verifier-specific probe)
+            eps1_quota = [int(k) for k in params["eps1_quota"]]
+            assert len(eps1_quota) >= len(timesteps), "eps1_quota shorter than num steps"
+            print(f"[SD][EPS_GREEDY_1] explicit quota: total={sum(eps1_quota[:len(timesteps)])}, "
+                  f"head~{eps1_quota[0]}, mid~{eps1_quota[len(timesteps)//2]}, tail~{eps1_quota[len(timesteps)-1]}")
+        elif method == "eps_greedy_1" and params.get("total_budget"):
+            _steps_n = len(timesteps)
+            _head_n = min(20, _steps_n)
+            _low_n = _steps_n - _head_n
+            _K1_leg = params.get("K1", 25)
+            _K2_leg = params.get("K2", 15)
+            _leg_high = _head_n * _K1_leg
+            _leg_total = _leg_high + _low_n * _K2_leg
+            _tb = int(params["total_budget"])
+            _high_pool = max(_head_n, round(_tb * _leg_high / _leg_total))
+            _low_pool = max(_low_n, _tb - _high_pool)
+            eps1_quota = [0] * _steps_n
+            _k, _r = divmod(_high_pool, _head_n)
+            for _j in range(_head_n):
+                eps1_quota[_j] = _k + (1 if _j < _r else 0)
+            if _low_n:
+                _k, _r = divmod(_low_pool, _low_n)
+                for _j in range(_low_n):
+                    eps1_quota[_head_n + _j] = _k + (1 if _j < _r else 0)
+            print(
+                f"[SD][EPS_GREEDY_1] budget-scaled quota: total={sum(eps1_quota)} "
+                f"(requested {_tb}), head K~{eps1_quota[0]}, low K~{eps1_quota[-1]}"
+            )
+        else:
+            eps1_quota = None
+
+        # E5 hand-tuned window baseline: all search budget concentrated in one third of the steps
+        if method == "window":
+            _steps_n = len(timesteps)
+            _tb = params.get("total_budget") or params.get("K", 8) * _steps_n
+            _region = params.get("window_region", "early")
+            _third = _steps_n // 3
+            if _region == "early":
+                _win = list(range(0, _third))
+            elif _region == "middle":
+                _win = list(range(_third, 2 * _third))
+            else:
+                _win = list(range(2 * _third, _steps_n))
+            _kw = int(_tb) // len(_win)
+            _rem = int(_tb) - _kw * len(_win)
+            window_quota = [0] * _steps_n
+            for _j, _s in enumerate(_win):
+                window_quota[_s] = _kw + (1 if _j < _rem else 0)
+            print(f"[SD][WINDOW] region={_region}, total={_tb}, K_in_window={_kw}, window_steps={len(_win)}")
+
         # Initialize gain logger once (avoid per-step reset)
         if method in ("eps_greedy", "zero_order", "eps_greedy_1", "eps_greedy_online") and params.get("log_gain", False):
             gains_per_step = []
@@ -1403,7 +1490,7 @@ class StableDiffusionPipeline(
 
                 pivot = torch.randn_like(latents)
 
-                if method in ("eps_greedy", "zero_order", "eps_greedy_1", "eps_greedy_online"):
+                if method in ("eps_greedy", "zero_order", "eps_greedy_1", "eps_greedy_online", "rbf", "vt", "window"):
                     log_gain = params.get("log_gain", False)
                     thresh_gain_coef = params.get("thresh_gain_coef", 1.0)
                     thresh_var_coef = params.get("thresh_var_coef", 1.0)
@@ -1415,8 +1502,26 @@ class StableDiffusionPipeline(
                     if method == "eps_greedy_1":
                         total_steps = len(timesteps)
                         head_count = min(20, total_steps)
-                        K_cur = params.get("K1", 25) if i < head_count else params.get("K2", 15)
+                        if eps1_quota is not None:
+                            K_cur = eps1_quota[i]
+                        else:
+                            K_cur = params.get("K1", 25) if i < head_count else params.get("K2", 15)
                         revert_on_negative = params.get("revert_on_negative", False)
+                    elif method in ("rbf", "vt"):
+                        K_cur = base_quota[i] + search_carry
+                        search_carry = 0
+                        rv_no_accept_break = False
+                        if params.get("force_spend"):
+                            _left = rv_budget - rv_spent_total
+                            if i == len(timesteps) - 1:
+                                K_cur = max(0, _left)          # top up: spend exactly rv_budget
+                                rv_no_accept_break = True
+                            else:
+                                K_cur = max(0, min(K_cur, _left))  # hard cap at rv_budget
+                        revert_on_negative = False
+                    elif method == "window":
+                        K_cur = window_quota[i]
+                        revert_on_negative = False
                     elif method == "eps_greedy_online":
                         total_steps = len(timesteps)
                         head_count = min(20, total_steps)
@@ -1447,6 +1552,8 @@ class StableDiffusionPipeline(
 
                     prev_best_score = None
                     iterations_run = 0
+                    step_best_score = None
+                    step_best_noise = None
                     per_iter_gains = [] if log_gain else None
                     # For online variance: accumulate candidate scores across iterations within a timestep
                     timestep_scores_flat = [] if method == "eps_greedy_online" else None
@@ -1592,7 +1699,8 @@ class StableDiffusionPipeline(
                             # Smooth gain_cur by averaging last 2 gains (current + previous)
                             if recent_gains_window is not None:
                                 recent_gains_window.append(gain_raw)
-                                if len(recent_gains_window) > 2:
+                                _wg = int(params.get("gain_window", 2))
+                                while len(recent_gains_window) > _wg:
                                     recent_gains_window.pop(0)
                                 gain_cur = float(np.mean(recent_gains_window))
                             else:
@@ -1695,11 +1803,27 @@ class StableDiffusionPipeline(
                             # In replay mode, pivot already provided; skip search
                             pass
                         else:
+                            if method == "rbf" and rbf_r_star is None:
+                                # Faithful RBF init: r* = r(x0-prediction of the initial latent), costs 0 extra unet
+                                _, _pred_x0_init = self.scheduler.step(
+                                    noise_pred, t, latents, variance_noise=pivot, **extra_step_kwargs, return_dict=False
+                                )
+                                with torch.no_grad():
+                                    _img0 = self.vae.decode(
+                                        _pred_x0_init / self.vae.config.scaling_factor, return_dict=False, generator=generator
+                                    )[0]
+                                _s0 = score_function(
+                                    images=[(_img0 * 127.5 + 128).clip(0, 255).to(torch.uint8)],
+                                    prompts=[prompt],
+                                    timesteps=None,
+                                )
+                                rbf_r_star = _s0.item() if torch.is_tensor(_s0) else float(_s0)
+                                print(f"[SD][RBF] init r_star={rbf_r_star:.6f} (x0-pred of initial latent)")
                             for _k in range(K_cur):
                                 noise_candidates = []
                                 for _ in range(params["N"]):
                                     r = torch.rand(1).item()
-                                    if r < params["eps"] if method in ("eps_greedy", "eps_greedy_1") else 0.0:
+                                    if r < params["eps"] if method in ("eps_greedy", "eps_greedy_1", "rbf", "vt", "window") else 0.0:
                                         noise_candidates.append(torch.randn_like(latents))
                                     else:
                                         to_add = torch.randn_like(latents)
@@ -1770,6 +1894,29 @@ class StableDiffusionPipeline(
                                 gain_cur = 0.0 if prev_best_score is None else (best_score - prev_best_score)
                                 if log_gain:
                                     per_iter_gains.append(gain_cur)
+                                if method in ("rbf", "vt"):
+                                    iterations_run += 1
+                                    if step_best_score is None or best_score > step_best_score:
+                                        step_best_score = best_score
+                                        step_best_noise = best_noise
+                                    # pivot walks to the best noise seen this step (fallback k* = argmax)
+                                    pivot = step_best_noise
+                                    prev_best_score = best_score
+                                    _accept = False
+                                    if method == "rbf":
+                                        if rbf_r_star is not None and best_score > rbf_r_star:
+                                            rbf_r_star = best_score
+                                            _accept = True
+                                    else:
+                                        _tau_i = vt_tau_list[i] if i < len(vt_tau_list) else float("inf")
+                                        if best_score > _tau_i:
+                                            _accept = True
+                                    if _accept and not rv_no_accept_break:
+                                        # rollover: unused quota moves to the next timestep
+                                        search_carry = K_cur - iterations_run
+                                        pivot = best_noise
+                                        break
+                                    continue
                                 if method == "eps_greedy_1" and revert_on_negative and prev_best_score is not None and gain_cur < 0:
                                     continue  # keep previous pivot; do not update prev_best_score
 
@@ -1786,6 +1933,14 @@ class StableDiffusionPipeline(
                 if method == "eps_greedy_online":
                     k_used = iterations_run
                     print(f"[SD][EPS_GREEDY_ONLINE] step {i}: K_used={k_used}")
+                if method in ("rbf", "vt"):
+                    rv_spent_total += iterations_run
+                    print(
+                        f"[SD][{method.upper()}] step {i}: K_used={iterations_run}, "
+                        f"quota={base_quota[i] if i < len(base_quota) else 0}, carry_out={search_carry}, "
+                        f"step_best={step_best_score if step_best_score is not None else float('nan'):.6f}"
+                        + (f", r_star={rbf_r_star:.6f}" if method == "rbf" else "")
+                    )
                 if "log_gain" in params and params.get("log_gain", False):
                     gains_per_step.append(per_iter_gains if per_iter_gains else [0.0])
                     if method == "eps_greedy_1":

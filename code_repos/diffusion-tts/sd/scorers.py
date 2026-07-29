@@ -212,3 +212,40 @@ class CLIPScorer(Scorer):
         similarities = torch.sum(image_embeds * text_embeds, dim=1)
         
         return similarities
+
+class ImageRewardScorer(Scorer):
+    """Human-preference verifier (THUDM ImageReward-v1.0). Score range roughly [-2.5, 2]."""
+
+    def __init__(self, dtype=torch.float32, device=None):
+        super().__init__(dtype)
+        import ImageReward as _ir
+        self._device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+        self.model = _ir.load("ImageReward-v1.0", device=self._device)
+        self.model.eval()
+
+    @torch.no_grad()
+    def __call__(self, images, prompts, timesteps=None):
+        if not isinstance(images, list):
+            images = [images]
+        if prompts is None:
+            prompts = [""] * len(images)
+        if not isinstance(prompts, list):
+            prompts = [prompts] * len(images)
+        elif len(prompts) == 1 and len(images) > 1:
+            prompts = prompts * len(images)
+        scores = []
+        for img, pr in zip(images, prompts):
+            if isinstance(img, torch.Tensor):
+                t = img.detach().cpu()
+                if t.dim() == 4:
+                    t = t[0]
+                if t.dtype != torch.uint8:
+                    t = (t.clamp(0, 1) * 255).to(torch.uint8) if float(t.max()) <= 1.0 else t.clamp(0, 255).to(torch.uint8)
+                pil = Image.fromarray(t.permute(1, 2, 0).numpy())
+            elif isinstance(img, Image.Image):
+                pil = img
+            else:
+                pil = Image.fromarray(np.asarray(img))
+            scores.append(float(self.model.score(pr, pil)))
+        out = torch.tensor(scores, dtype=self.dtype)
+        return out.squeeze(0) if out.numel() == 1 else out

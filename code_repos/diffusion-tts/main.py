@@ -51,13 +51,13 @@ def import_sd():
     spec.loader.exec_module(sys.modules['diffusers'])
     from diffusers import StableDiffusionPipeline, DDIMScheduler
     sys.path.insert(0, str(sd_dir))
-    from scorers import BrightnessScorer, CompressibilityScorer, CLIPScorer
-    return StableDiffusionPipeline, DDIMScheduler, BrightnessScorer, CompressibilityScorer, CLIPScorer
+    from scorers import BrightnessScorer, CompressibilityScorer, CLIPScorer, ImageRewardScorer
+    return StableDiffusionPipeline, DDIMScheduler, BrightnessScorer, CompressibilityScorer, CLIPScorer, ImageRewardScorer
 
 # =========================
 # Scorer Factory
 # =========================
-def get_scorer(backend, scorer_name, BrightnessScorer, CompressibilityScorer, CLIPScorer=None, ImageNetScorer=None):
+def get_scorer(backend, scorer_name, BrightnessScorer, CompressibilityScorer, CLIPScorer=None, ImageNetScorer=None, ImageRewardScorer=None):
     """Return the appropriate scorer instance for the backend and scorer name."""
     if scorer_name == 'brightness':
         return BrightnessScorer(dtype=torch.float32)
@@ -65,6 +65,8 @@ def get_scorer(backend, scorer_name, BrightnessScorer, CompressibilityScorer, CL
         return CompressibilityScorer(dtype=torch.float32)
     elif scorer_name == 'clip' and backend == 'sd':
         return CLIPScorer(dtype=torch.float32)
+    elif scorer_name == 'imagereward' and backend == 'sd':
+        return ImageRewardScorer(dtype=torch.float32)
     elif scorer_name == 'imagenet' and backend == 'edm':
         return ImageNetScorer(dtype=torch.float32)
     else:
@@ -82,7 +84,7 @@ def main():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument('--backend', type=str, choices=['edm', 'sd'], required=True, help='Backend: edm or sd')
-    parser.add_argument('--scorer', type=str, choices=['brightness', 'compressibility', 'clip', 'imagenet'], required=True, help='Scorer name')
+    parser.add_argument('--scorer', type=str, choices=['brightness', 'compressibility', 'clip', 'imagenet', 'imagereward'], required=True, help='Scorer name')
     parser.add_argument('--method', type=str, default='naive', help='Sampling method (naive, rejection, beam, mcts, zero_order, eps_greedy, epsilon_1, epsilon_online)')
     parser.add_argument('--prompt', type=str, default='YOUR PROMPT HERE', help='Prompt for SD (ignored if prompt_csv set)')
     parser.add_argument('--prompt_csv', type=str, default=None, help='CSV with prompts (first column); SD only')
@@ -107,6 +109,13 @@ def main():
     parser.add_argument('--thresh_gain_coef', type=float, default=1.0, help='epsilon_online: gain threshold coefficient (hist_mean_gain / hist_mean_var * coef)')
     parser.add_argument('--thresh_var_coef', type=float, default=1.0, help='epsilon_online: variance threshold coefficient (hist_mean_gain / hist_mean_var * coef)')
     parser.add_argument('--repeat_per_prompt', type=int, default=1, help='For SD: repeat each prompt with different seeds')
+    parser.add_argument('--vt_tau', type=str, default=None, help='VT baseline: JSON file with per-step thresholds (omit = calibration mode, logs step_best)')
+    parser.add_argument('--window_region', type=str, default='early', choices=['early', 'middle', 'late'], help='window baseline: which third of steps gets the whole budget')
+    parser.add_argument('--force_spend', action='store_true', help='RBF/VT: inflate per-step quota (quota_scale), hard-cap cumulative spend at total_budget, top up at final step -> measured NFE == total_budget')
+    parser.add_argument('--quota_scale', type=float, default=1.5, help='RBF/VT force_spend: per-step quota inflation factor (1.5 -> 12/step at budget 400/50steps)')
+    parser.add_argument('--step_quota', type=int, default=None, help='RBF/VT: set the per-step quota directly (overrides quota_scale derivation)')
+    parser.add_argument('--gain_window', type=int, default=2, help='epsilon_online: smoothing window W_g over recent per-iter gains (paper SD config: 4)')
+    parser.add_argument('--eps1_quota', type=str, default=None, help='epsilon_1: JSON file with explicit per-step K_t allocation (water-filling profile)')
     args = parser.parse_args()
 
     # -----------
@@ -123,8 +132,8 @@ def main():
     if args.backend == 'sd':
         if args.prompt_csv and args.backend != 'sd':
             raise ValueError('prompt_csv is only supported for sd backend')
-        StableDiffusionPipeline, DDIMScheduler, BrightnessScorer, CompressibilityScorer, CLIPScorer = import_sd()
-        scorer = get_scorer('sd', args.scorer, BrightnessScorer, CompressibilityScorer, CLIPScorer=CLIPScorer)
+        StableDiffusionPipeline, DDIMScheduler, BrightnessScorer, CompressibilityScorer, CLIPScorer, ImageRewardScorer = import_sd()
+        scorer = get_scorer('sd', args.scorer, BrightnessScorer, CompressibilityScorer, CLIPScorer=CLIPScorer, ImageRewardScorer=ImageRewardScorer)
 
         model_id = "runwayml/stable-diffusion-v1-5"
         local_scheduler = DDIMScheduler.from_pretrained(model_id, subfolder="scheduler")
@@ -144,6 +153,9 @@ def main():
             'eps_greedy': 'eps_greedy',
             'epsilon_1': 'eps_greedy_1',
             'epsilon_online': 'eps_greedy_online',
+            'rbf': 'rbf',
+            'vt': 'vt',
+            'window': 'window',
         }
         if args.method not in method_map_sd:
             raise ValueError(f"Unknown method for sd backend: {args.method}")
@@ -164,6 +176,19 @@ def main():
             'B': args.B,
             'S': args.S,
         }
+        if args.vt_tau:
+            import json
+            with open(args.vt_tau) as _f:
+                MASTER_PARAMS['vt_tau'] = json.load(_f)
+        MASTER_PARAMS['window_region'] = args.window_region
+        MASTER_PARAMS['force_spend'] = args.force_spend
+        MASTER_PARAMS['quota_scale'] = args.quota_scale
+        MASTER_PARAMS['step_quota'] = args.step_quota
+        MASTER_PARAMS['gain_window'] = args.gain_window
+        if args.eps1_quota:
+            import json as _json
+            with open(args.eps1_quota) as _f:
+                MASTER_PARAMS['eps1_quota'] = _json.load(_f)
 
         # prompt handling
         prompts = []
@@ -235,7 +260,7 @@ def main():
         scorer = get_scorer('edm', args.scorer, BrightnessScorer, CompressibilityScorer, ImageNetScorer=ImageNetScorer)
 
         # EDM defaults
-        model_root = 'https://nvlabs-fi-cdn.nvidia.com/edm/pretrained'
+        model_root = '/mindopt/caoyuan/weights'
         network_pkl = f'{model_root}/edm-imagenet-64x64-cond-adm.pkl'
         gridw = gridh = 6  # 生成36张图 (6x6 grid)
         num_images = gridw * gridh  # 36

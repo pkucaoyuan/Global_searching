@@ -996,7 +996,37 @@ def generate_image_grid(
         head_count = min(2, num_steps_total)  # 前2步（若存在）
         tail_count = min(4, max(num_steps_total - head_count, 0))  # 后4步（若存在）
         tail_start = num_steps_total - tail_count
-        
+
+        # Budget-scaled offline quota. Region structure mirrors the ONLINE controller
+        # (which produced the paper's EDM numbers): sensitivity concentrates on the MIDDLE
+        # segment, so high pool goes to middle steps; low = first 2 + last 8 steps.
+        # Pools follow the 25:15 (K1:K2) shape, scaled to total_budget.
+        # (The legacy head2+tail4 @K1 split predates the online structure and contradicts
+        #  the measured sigma_t profile; it is kept only for the no-budget legacy path.)
+        eps1_quota = None
+        _tb = sampling_params.get("total_budget", None)
+        if _tb:
+            _lo_head = min(2, num_steps_total)
+            _lo_tail = min(8, max(num_steps_total - _lo_head, 0))
+            _hi_idx = list(range(_lo_head, num_steps_total - _lo_tail))
+            _lo_idx = [s for s in range(num_steps_total) if s not in _hi_idx]
+            _hi_n, _lo_n = len(_hi_idx), len(_lo_idx)
+            _leg_hi = _hi_n * K1
+            _leg_total = _leg_hi + _lo_n * K2
+            _hi_pool = max(_hi_n, round(int(_tb) * _leg_hi / _leg_total))
+            _lo_pool = max(_lo_n, int(_tb) - _hi_pool)
+            eps1_quota = [0] * num_steps_total
+            _k, _r = divmod(_hi_pool, _hi_n)
+            for _j, _s in enumerate(_hi_idx):
+                eps1_quota[_s] = _k + (1 if _j < _r else 0)
+            _k, _r = divmod(_lo_pool, _lo_n)
+            for _j, _s in enumerate(_lo_idx):
+                eps1_quota[_s] = _k + (1 if _j < _r else 0)
+            print(
+                f"[EPS_GREEDY_1][EDM] budget-scaled quota (middle-high): total={sum(eps1_quota)} "
+                f"(requested {_tb}), K_mid~{eps1_quota[num_steps_total // 2]}, K_low~{eps1_quota[-1]}"
+            )
+
         print(
             f"EPS_GREEDY_1 parameters: lambda={lambda_param / np.sqrt(3 * 64 * 64)}, "
             f"N={N}, K1={K1} (head {head_count} steps + tail {tail_count} steps), "
@@ -1015,7 +1045,10 @@ def generate_image_grid(
             
             # Determine K based on current step: head/tail use K1, middle use K2
             is_head_tail = (i < head_count) or (i >= tail_start)
-            K = K1 if is_head_tail else K2
+            if eps1_quota is not None:
+                K = eps1_quota[i]
+            else:
+                K = K1 if is_head_tail else K2
             iterations_run = 0
             prev_best_scores = None  # 用于跨迭代比较（首迭代不触发负增益回退）
             
